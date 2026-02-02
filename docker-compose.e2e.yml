@@ -1,0 +1,17 @@
+# E2E test environment overrides
+# Usage: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
+
+services:
+  postgres:
+    # Use separate volume for E2E tests to isolate from dev data
+    volumes:
+      - e2e_postgres_data:/var/lib/postgresql/data
+
+  backend:
+    environment:
+      APP_ENV: testing
+      # Disable rate limiting for E2E tests
+      RATE_LIMIT_ENABLED: "false"
+
+volumes:
+  e2e_postgres_data:

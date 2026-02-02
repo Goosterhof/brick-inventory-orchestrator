@@ -1,4 +1,4 @@
-.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint submodule-update
+.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint submodule-update e2e e2e-ui e2e-headed e2e-up e2e-down e2e-install e2e-report
 
 # Start all services
 up:
@@ -81,3 +81,37 @@ init:
 	docker compose exec backend php artisan key:generate
 	docker compose exec backend php artisan migrate
 	@echo "Setup complete! Backend: http://localhost:8000 | Frontend: http://localhost:5173"
+
+# E2E Tests
+# ---------
+
+# Install E2E dependencies
+e2e-install:
+	cd e2e && npm install && npx playwright install
+
+# Run E2E tests (starts services if not running)
+e2e:
+	cd e2e && npx playwright test
+
+# Run E2E tests with UI mode
+e2e-ui:
+	cd e2e && npx playwright test --ui
+
+# Run E2E tests in headed mode (visible browser)
+e2e-headed:
+	cd e2e && npx playwright test --headed
+
+# Start services with E2E config (isolated database)
+e2e-up:
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
+	@echo "Waiting for services to be ready..."
+	@timeout 60 bash -c 'until curl -sf http://localhost:8000/api/health > /dev/null 2>&1; do sleep 2; done' || echo "Warning: API health check timed out"
+	@echo "E2E environment ready!"
+
+# Stop E2E services and remove test data
+e2e-down:
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v
+
+# View E2E test report
+e2e-report:
+	cd e2e && npx playwright show-report
