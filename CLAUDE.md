@@ -9,6 +9,12 @@ Orchestrator for the LEGO inventory management ecosystem. Uses git submodules to
 - `backend/` - Laravel 12 API (lego-storage)
 - `frontend/` - Vue 3 SPA (lego-storage-frontend)
 
+## Submodule Guidelines
+
+@backend/CLAUDE.md
+
+@frontend/CLAUDE.md
+
 ## Commands
 
 ```bash
