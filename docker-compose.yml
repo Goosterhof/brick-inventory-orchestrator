@@ -34,6 +34,7 @@ services:
       DB_DATABASE: lego_storage
       DB_USERNAME: lego
       DB_PASSWORD: secret
+      DB_SSLMODE: disable
     depends_on:
       postgres:
         condition: service_healthy
