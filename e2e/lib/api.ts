@@ -68,9 +68,9 @@ export async function loginViaUi(
     password: string
 ): Promise<void> {
     await page.goto("/login");
-    await page.fill('[name="email"], [data-testid="email-input"]', email);
-    await page.fill('[name="password"], [data-testid="password-input"]', password);
-    await page.click('button[type="submit"]');
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password").fill(password);
+    await page.getByRole("button", {name: /log\s*in|sign\s*in|submit/i}).click();
 
     // Wait for redirect after successful login
     await page.waitForURL((url) => !url.pathname.includes("/login"));

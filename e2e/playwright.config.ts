@@ -1,5 +1,25 @@
 import {defineConfig, devices} from "@playwright/test";
 
+const allBrowsers = [
+    {
+        name: "chromium",
+        use: {...devices["Desktop Chrome"]},
+    },
+    {
+        name: "firefox",
+        use: {...devices["Desktop Firefox"]},
+    },
+    {
+        name: "webkit",
+        use: {...devices["Desktop Safari"]},
+    },
+];
+
+// Use all browsers in CI, only Chromium locally (fewer deps required)
+const projects = process.env.CI
+    ? allBrowsers
+    : [allBrowsers[0]];
+
 export default defineConfig({
     testDir: "./tests",
     fullyParallel: true,
@@ -15,20 +35,7 @@ export default defineConfig({
         trace: "on-first-retry",
         screenshot: "only-on-failure",
     },
-    projects: [
-        {
-            name: "chromium",
-            use: {...devices["Desktop Chrome"]},
-        },
-        {
-            name: "firefox",
-            use: {...devices["Desktop Firefox"]},
-        },
-        {
-            name: "webkit",
-            use: {...devices["Desktop Safari"]},
-        },
-    ],
+    projects,
     /* Start services before running tests */
     webServer: {
         command: "cd .. && make up",
