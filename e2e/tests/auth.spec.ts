@@ -34,8 +34,7 @@ test.describe("Authentication", () => {
         // The test passes if we got this far (form was fillable and submittable)
     });
 
-    test.skip("can login with existing user", async ({page}) => {
-        // Skip: Login page not implemented yet
+    test("can login with existing user", async ({page}) => {
         const email = testEmail();
         const password = "password123";
 
@@ -50,8 +49,7 @@ test.describe("Authentication", () => {
         await page.waitForURL((url) => !url.pathname.includes("/login"));
     });
 
-    test.skip("shows error for invalid credentials", async ({page}) => {
-        // Skip: Login page not implemented yet
+    test("shows error for invalid credentials", async ({page}) => {
         await page.goto("/login");
 
         await page.getByRole("textbox", {name: /email/i}).fill("nonexistent@example.com");
@@ -64,7 +62,7 @@ test.describe("Authentication", () => {
     });
 
     test.skip("can logout", async ({page}) => {
-        // Skip: Login page not implemented yet
+        // Skip: Logout button UI not implemented yet
         const email = testEmail();
         const password = "password123";
 
