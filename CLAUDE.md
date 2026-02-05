@@ -82,6 +82,20 @@ Services run on:
 - Frontend: http://localhost:5173
 - PostgreSQL: localhost:5432
 
+### Authentication (SPA session-based)
+
+The frontend uses cookie-based auth (`withCredentials: true`), NOT token-based. Key config in `docker-compose.yml`:
+
+- `SANCTUM_STATEFUL_DOMAINS`: must include `localhost:5173` (frontend host:port) for Sanctum to apply session middleware
+- `SESSION_DOMAIN`: set to `localhost` for cross-port cookie sharing between frontend (5173) and backend (8000)
+- CSRF is excluded for `api/*` routes in `backend/bootstrap/app.php`
+
+### Docker Tips
+
+- Use `docker compose up -d` (not `restart`) to pick up `docker-compose.yml` env changes — `restart` only stops/starts containers without recreating
+- After `docker compose down -v`, the vendor volume is recreated from the image; may need `composer install`
+- `public/frankenphp-worker.php` runs before the PHP autoloader — never use Laravel classes in it; `composer lint` may incorrectly modify this file
+
 ## Submodule Workflow
 
 ```bash
