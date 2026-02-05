@@ -61,8 +61,7 @@ test.describe("Authentication", () => {
         ).toBeVisible();
     });
 
-    test.skip("can logout", async ({page}) => {
-        // Skip: Logout button UI not implemented yet
+    test("can logout", async ({page}) => {
         const email = testEmail();
         const password = "password123";
 
@@ -74,11 +73,14 @@ test.describe("Authentication", () => {
         await page.getByRole("button", {name: /log\s*in|sign\s*in|submit/i}).click();
         await page.waitForURL((url) => !url.pathname.includes("/login"));
 
-        const logoutButton = page.getByRole("button", {name: /logout|sign\s*out/i}).or(
-            page.getByRole("link", {name: /logout|sign\s*out/i})
-        );
+        // Verify logout button is visible when logged in
+        const logoutButton = page.getByRole("button", {name: /logout|sign\s*out/i});
+        await expect(logoutButton).toBeVisible();
 
+        // Click logout
         await logoutButton.click();
-        await expect(page.locator("body")).toContainText(/login/i);
+
+        // Verify logout button disappears (user is logged out)
+        await expect(logoutButton).not.toBeVisible();
     });
 });
