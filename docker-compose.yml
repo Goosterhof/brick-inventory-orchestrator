@@ -28,6 +28,8 @@ services:
       APP_ENV: local
       APP_DEBUG: "true"
       APP_URL: http://localhost:8000
+      SANCTUM_STATEFUL_DOMAINS: "localhost,localhost:5173,localhost:8000,127.0.0.1"
+      SESSION_DOMAIN: localhost
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: 5432
