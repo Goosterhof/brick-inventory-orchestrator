@@ -77,10 +77,8 @@ test.describe("Authentication", () => {
         const logoutButton = page.getByRole("button", {name: /logout|sign\s*out/i});
         await expect(logoutButton).toBeVisible();
 
-        // Click logout
+        // Click logout and wait for redirect to login page
         await logoutButton.click();
-
-        // Verify logout button disappears (user is logged out)
-        await expect(logoutButton).not.toBeVisible();
+        await page.waitForURL((url) => url.pathname.includes("/login"));
     });
 });
