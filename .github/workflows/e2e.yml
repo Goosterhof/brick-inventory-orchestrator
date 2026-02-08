@@ -54,6 +54,11 @@ jobs:
         env:
           CI: true
 
+      - name: Show container logs
+        if: failure()
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
