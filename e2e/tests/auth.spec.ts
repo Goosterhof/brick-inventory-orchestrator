@@ -61,7 +61,8 @@ test.describe("Authentication", () => {
         ).toBeVisible();
     });
 
-    test("can logout", async ({page}) => {
+    test("can logout", async ({page, browserName}) => {
+        test.skip(browserName === "webkit", "WebKit restricts cross-origin cookies in CI");
         const email = testEmail();
         const password = "password123";
 
