@@ -40,7 +40,7 @@ export default defineConfig({
     webServer: {
         command: "cd .. && make up",
         url: "http://localhost:5173",
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: true,
         timeout: 120_000,
     },
     /* Global timeout for each test */

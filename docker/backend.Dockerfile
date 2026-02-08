@@ -11,6 +11,10 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Install FrankenPHP binary (outside volume mount so it persists)
+RUN curl -fsSL https://github.com/dunglas/frankenphp/releases/latest/download/frankenphp-linux-$(uname -m) -o /usr/local/bin/frankenphp \
+    && chmod +x /usr/local/bin/frankenphp
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

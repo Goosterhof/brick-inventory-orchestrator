@@ -16,6 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          token: ${{ secrets.SUBMODULE_PAT }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -52,6 +53,11 @@ jobs:
           npx playwright test
         env:
           CI: true
+
+      - name: Show container logs
+        if: failure()
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs
 
       - name: Upload test results
         if: always()
