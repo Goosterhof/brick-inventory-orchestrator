@@ -56,9 +56,7 @@ test.describe("Authentication", () => {
         await page.getByRole("textbox", {name: /password/i}).fill("wrongpassword");
         await page.getByRole("button", {name: /log\s*in|sign\s*in|submit/i}).click();
 
-        await expect(
-            page.getByText(/invalid|incorrect|failed/i)
-        ).toBeVisible();
+        await expect(page.getByRole("alert")).toBeVisible();
     });
 
     test("can logout", async ({page, browserName}) => {
