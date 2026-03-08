@@ -10,8 +10,6 @@ services:
   backend:
     environment:
       APP_ENV: testing
-      # Disable rate limiting for E2E tests
-      RATE_LIMIT_ENABLED: "false"
 
 volumes:
   e2e_postgres_data:
