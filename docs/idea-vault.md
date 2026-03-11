@@ -52,11 +52,11 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Inventory Dashboard Expansion Pack
 - **Date:** 2026-03-03
 - **Focus Area:** general
-- **Status:** In Progress
+- **Status:** Shipped
 - **Piece Count:** Large
 - **Summary:** Three new frontend domains (sets, storage, parts) consuming existing backend CRUD APIs. The core product UI that turns the headless API into a usable application.
 - **Progress:**
   - Slice 1 — Sets domain: **Shipped** (PR #88 Brick, PR #41 Plate, PR #5 Baseplate). Backend enriched with nested `SetSummaryResourceData` in family-set responses. Plate has overview, add, detail, and edit pages with full test coverage. Profile type updated with `familyId`/`emailVerifiedAt`.
   - Slice 2 — Storage domain: **Shipped** (PR #50 Plate). Overview, add, detail, and edit pages consuming existing `storage-options` API. Full unit test coverage (39 tests). Nav integration (desktop + mobile) and EN/NL translations.
-  - Slice 3 — Parts domain: Not started
+  - Slice 3 — Parts display: **Shipped** (PR #94 Brick, PR #51 Plate). Backend enriched `SetPart` and `StorageOptionPart` resources with nested Part and Color data. Plate displays parts inline within SetDetailView and StorageDetailView. Shared part types in `types/part.ts`.
 - **Key Concern:** AdapterStore has never been used in production and may surface design issues — slice 1 used direct HTTP calls instead. Remaining slices (storage, parts) may benefit from revisiting this decision.
