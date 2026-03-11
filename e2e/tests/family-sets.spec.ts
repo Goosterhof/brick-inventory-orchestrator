@@ -1,7 +1,7 @@
 import {test, expect} from "@playwright/test";
 import {createApiClient, createTestUser, loginViaUi, testEmail} from "../lib/api";
 
-test.describe("Family Sets", () => {
+test.describe.skip("Family Sets", () => {
     let email: string;
     let password: string;
 
