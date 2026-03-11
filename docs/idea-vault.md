@@ -17,6 +17,46 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 
 ## Ideas
 
+### The Rebrickable Import Station
+- **Date:** 2026-03-11
+- **Focus Area:** frontend
+- **Status:** Ship It
+- **Piece Count:** Medium
+- **Summary:** Settings page for Rebrickable API token + one-click "Import My Collection" button that syncs owned sets via existing backend endpoints (`PUT /family/rebrickable-token`, `POST /family-sets/import-from-rebrickable`).
+- **Key Concern:** No progress feedback mechanism for large imports — users with 500+ sets see a spinner with no indication of progress. ProfileResourceData doesn't expose `isHead` flag needed for the family-head-only import policy.
+
+### The Part Locator Map
+- **Date:** 2026-03-11
+- **Focus Area:** fullstack
+- **Status:** Prototype First
+- **Piece Count:** Medium
+- **Summary:** Cross-reference set parts against storage inventory — show "stored in: Drawer X" badges on set detail parts list, and "needed by: Set Y" on storage detail parts list.
+- **Key Concern:** Requires a new backend join endpoint. Only useful after users have assigned parts to storage (depends on The Sorting Station). Overlaps with The Build Planner Set concept.
+
+### The Sorting Station
+- **Date:** 2026-03-11
+- **Focus Area:** frontend
+- **Status:** Ship It
+- **Piece Count:** Medium
+- **Summary:** UI for assigning parts to storage locations — from set detail page, click a part → pick storage location → assign with quantity. Uses existing `POST /storage-options/{id}/parts` endpoint.
+- **Key Concern:** UX design is the hard part — part picker modal needs to feel natural. Users work with part_id/color_id internally but see names and images. Starting from set parts list avoids needing a free-text search endpoint.
+
+### The Collection Dashboard
+- **Date:** 2026-03-11
+- **Focus Area:** fullstack
+- **Status:** Ship It
+- **Piece Count:** Small
+- **Summary:** Replace static home page with a logged-in dashboard showing collection stats (total sets, parts count, storage locations, sets by status). Needs a new `GET /family/stats` backend endpoint.
+- **Key Concern:** Client-side aggregation doesn't scale — needs a dedicated backend stats endpoint to avoid fetching all data on every page load.
+
+### The Instruction Booklet (E2E Unskip)
+- **Date:** 2026-03-11
+- **Focus Area:** testing
+- **Status:** Ship It
+- **Piece Count:** Small
+- **Summary:** Unskip the `family-sets.spec.ts` E2E tests — they're fully written but disabled. Wire up with existing `loginViaUi()` helper and verify selectors match current UI.
+- **Key Concern:** Tests were written before the sets domain shipped — selectors may need updating to match current component structure.
+
 ### The Smart Sorter Accessory Pack
 - **Date:** 2026-03-03
 - **Focus Area:** general
