@@ -51,11 +51,10 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 
 ### The Instruction Booklet (E2E Unskip)
 - **Date:** 2026-03-11
-- **Focus Area:** testing
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Small
-- **Summary:** Unskip the `family-sets.spec.ts` E2E tests — they're fully written but disabled. Wire up with existing `loginViaUi()` helper and verify selectors match current UI.
-- **Key Concern:** Tests were written before the sets domain shipped — selectors may need updating to match current component structure.
+- **Summary:** Unskipped and aligned `family-sets.spec.ts` E2E tests with current UI. Some tests remain skipped because their corresponding UI pages (edit, delete) aren't built yet.
+- **Shipped:** 2026-03-12
 
 ### The Smart Sorter Accessory Pack
 - **Date:** 2026-03-03
