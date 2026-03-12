@@ -44,10 +44,10 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Collection Dashboard
 - **Date:** 2026-03-11
 - **Focus Area:** fullstack
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Small
-- **Summary:** Replace static home page with a logged-in dashboard showing collection stats (total sets, parts count, storage locations, sets by status). Needs a new `GET /family/stats` backend endpoint.
-- **Key Concern:** Client-side aggregation doesn't scale — needs a dedicated backend stats endpoint to avoid fetching all data on every page load.
+- **Summary:** Replace static home page with a logged-in dashboard showing collection stats (total sets, parts count, storage locations, sets by status). New `GET /family/stats` backend endpoint with `GetFamilyStatsAction`. Frontend conditionally renders dashboard for logged-in users, landing page for guests.
+- **Shipped:** 2026-03-12 (PR #92 Brick, PR #56 Plate, PR #8 Baseplate)
 
 ### The Instruction Booklet (E2E Unskip)
 - **Date:** 2026-03-11
