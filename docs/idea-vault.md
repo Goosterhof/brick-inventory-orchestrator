@@ -17,29 +17,93 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 
 ## Ideas
 
-### The Rebrickable Import Station
-- **Date:** 2026-03-11
+### The Dashboard Command Center
+- **Date:** 2026-03-15
+- **Focus Area:** frontend
+- **Status:** Shipped
+- **Piece Count:** Small
+- **Summary:** Expanded dashboard quick-actions from 2 links to a 6-card responsive grid: My Sets, Storage, Parts, Scan Set, Identify Brick, Import Collection. Makes all features discoverable from the landing page.
+- **Shipped:** 2026-03-15 (PR #84 Plate)
+
+### The Storage Tree Display
+- **Date:** 2026-03-15
 - **Focus Area:** frontend
 - **Status:** Ship It
 - **Piece Count:** Medium
-- **Summary:** Settings page for Rebrickable API token + one-click "Import My Collection" button that syncs owned sets via existing backend endpoints (`PUT /family/rebrickable-token`, `POST /family-sets/import-from-rebrickable`).
-- **Key Concern:** No progress feedback mechanism for large imports — users with 500+ sets see a spinner with no indication of progress. ProfileResourceData doesn't expose `isHead` flag needed for the family-head-only import policy.
+- **Summary:** Render storage options as a nested tree on the overview page, showing children indented under their parents instead of a flat list. Uses existing parentId/childIds data.
+- **Key Concern:** Grouping logic + mobile responsiveness. Need to decide rendering approach (indentation vs. collapsible groups).
+
+### The Collection Export Crate
+- **Date:** 2026-03-15
+- **Focus Area:** frontend
+- **Status:** Ship It
+- **Piece Count:** Medium
+- **Summary:** Export sets or parts as CSV from the overview pages. Client-side generation from already-loaded data — no backend needed. Useful for sharing, insurance, or backup.
+- **Key Concern:** CSV is simple for flat data but nested fields (set name inside family set) need flattening. No library needed.
+
+### The Wishlist Wing
+- **Date:** 2026-03-15
+- **Focus Area:** fullstack
+- **Status:** Prototype First
+- **Piece Count:** Medium
+- **Summary:** Track sets you want but don't own yet via a new "wishlist" FamilySet status or separate domain. Move to collection when acquired.
+- **Key Concern:** Adding a status to the enum changes FamilySet semantics. Dashboard stats, overview filters, and build check all need to exclude wishlisted sets. Moderate blast radius.
+
+### The Search & Sort Accessory Pack
+- **Date:** 2026-03-15
+- **Focus Area:** frontend
+- **Status:** Shipped
+- **Piece Count:** Medium
+- **Summary:** Client-side search and filter on sets overview (search by name/set number, filter by status with toggle buttons) and storage overview (search by name/description). Shows "No results" empty state when filters match nothing.
+- **Shipped:** 2026-03-15 (PR #81 Plate)
+
+### The Parts Warehouse Inventory
+- **Date:** 2026-03-15
+- **Focus Area:** fullstack
+- **Status:** Shipped
+- **Piece Count:** Medium
+- **Summary:** New "Parts" domain showing all stored parts across all storage locations, grouped by part+color with total quantity and per-location badges. New `GET /family/parts` backend endpoint joins storage_option_parts with parts, colors, and storage_options scoped to the family. Frontend groups client-side and shows in navigation.
+- **Shipped:** 2026-03-15 (PR #107 Brick, PR #79 Plate)
+
+### The Quick-Build Status Dial
+- **Date:** 2026-03-15
+- **Focus Area:** frontend
+- **Status:** Shipped
+- **Piece Count:** Small
+- **Summary:** Clickable status buttons (Sealed, In Progress, Built, Incomplete) on the set detail page replacing static text. Current status highlighted in yellow, clicking another calls PATCH to update instantly. No edit form navigation needed.
+- **Shipped:** 2026-03-15 (PR #80 Plate)
+
+### The Instruction Booklet Update (E2E Realignment)
+- **Date:** 2026-03-15
+- **Focus Area:** testing
+- **Status:** Ship It
+- **Piece Count:** Small
+- **Summary:** Unskip and realign family-sets E2E tests now that all UI pages (overview, add, detail, edit, scan) are shipped. Update selectors for *View → *Page renames and new features.
+- **Key Concern:** Need to verify E2E selectors match the current UI after extensive page changes since tests were written.
+
+### The Rebrickable Import Station
+- **Date:** 2026-03-11
+- **Focus Area:** frontend
+- **Status:** Shipped
+- **Piece Count:** Medium
+- **Summary:** Settings page for Rebrickable API token + one-click "Import My Collection" button that syncs owned sets via existing backend endpoints (`PUT /family/rebrickable-token`, `POST /family-sets/import-from-rebrickable`). Handles 403 (not family head) and 422 (no token) errors gracefully. Shows import results summary with created/updated/skipped counts.
+- **Shipped:** 2026-03-15 (PR #72 Plate)
 
 ### The Part Locator Map
 - **Date:** 2026-03-11
 - **Focus Area:** fullstack
-- **Status:** Prototype First
+- **Status:** Shipped
 - **Piece Count:** Medium
-- **Summary:** Cross-reference set parts against storage inventory — show "stored in: Drawer X" badges on set detail parts list, and "needed by: Set Y" on storage detail parts list.
-- **Key Concern:** Requires a new backend join endpoint. Only useful after users have assigned parts to storage (depends on The Sorting Station). Overlaps with The Build Planner Set concept.
+- **Summary:** Cross-reference set parts against storage inventory — yellow "Drawer X (5x)" badges on the set detail parts list show where each part is stored. New `GET /sets/{setNum}/storage-map` backend endpoint joins storage_option_parts with storage_options scoped to the user's family. Frontend fetches the map after loading parts and renders badges via a new default slot on PartListItem.
+- **Shipped:** 2026-03-15 (PR #106 Brick, PR #75 Plate)
 
 ### The Sorting Station
 - **Date:** 2026-03-11
 - **Focus Area:** frontend
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Medium
-- **Summary:** UI for assigning parts to storage locations — from set detail page, click a part → pick storage location → assign with quantity. Uses existing `POST /storage-options/{id}/parts` endpoint.
-- **Key Concern:** UX design is the hard part — part picker modal needs to feel natural. Users work with part_id/color_id internally but see names and images. Starting from set parts list avoids needing a free-text search endpoint.
+- **Summary:** UI for assigning parts to storage locations — click any part on the set detail page to open an assignment modal with storage location dropdown and quantity input. Uses existing `POST /storage-options/{id}/parts` endpoint (upsert).
+- **Shipped:** 2026-03-15 (PR #73 Plate)
 
 ### The Collection Dashboard
 - **Date:** 2026-03-11
@@ -58,11 +122,12 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 
 ### The Smart Sorter Accessory Pack
 - **Date:** 2026-03-03
-- **Focus Area:** general
-- **Status:** Return to Shelf
-- **Piece Count:** Medium
-- **Summary:** Sorting assistant that suggests which drawer to store each part in based on existing inventory patterns (same part, color, category).
-- **Key Concern:** Three layers removed from current state — needs storage UI, actual user data, and observed sorting patterns before suggestions become useful. The "right" sorting logic depends on user behavior not yet observed.
+- **Focus Area:** frontend
+- **Status:** Ship It *(was: Return to Shelf)*
+- **Revisited:** 2026-03-15 — Sorting Station is shipped, users actively assign parts. Scoped down from "AI suggestions" to "show where this part already lives" as a hint in the AssignPartModal.
+- **Piece Count:** Small
+- **Summary:** When assigning a part to storage, show a hint if the same part+color is already stored somewhere (e.g., "Already in Drawer A (3x)"). Uses existing storage map data. Simple, practical, no ML.
+- **Key Concern:** Needs one extra API call or client-side lookup in the modal to find existing assignments for the selected part.
 
 ### The Family Circle Set
 - **Date:** 2026-03-03
@@ -72,21 +137,29 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 - **Summary:** Invitation system for family members — head generates invite link/code, others join existing family. Enables shared household inventory.
 - **Key Concern:** Touches the auth flow (critical path), requires email sending (not available), and the current flat authorization model (family_id check only) would need role-based permissions — a significant architectural change.
 
+### The Set Barcode Scanner
+- **Date:** 2026-03-15
+- **Focus Area:** frontend
+- **Status:** Shipped
+- **Piece Count:** Small
+- **Summary:** Scan a LEGO box EAN barcode with the phone camera to look up the set via Rebrickable, then add it to the collection with one click. Uses the shared BarcodeScanner component and the existing `GET /sets/ean/{ean}` + `POST /family-sets` endpoints.
+- **Shipped:** 2026-03-15 (PR #71 Plate)
+
 ### The Brick Scanner Experience
 - **Date:** 2026-03-03
-- **Focus Area:** general
-- **Status:** Prototype First
+- **Focus Area:** frontend
+- **Status:** Shipped
 - **Piece Count:** Small
-- **Summary:** Wire existing CameraCapture component to the identify-brick API in a new scanner domain — point phone at brick, get identification, optionally assign to storage.
-- **Key Concern:** Brickognize accuracy is unvalidated in real use. Current action returns only top prediction with no confidence threshold or "did you mean?" flow. Shipping a scanner that's wrong 30% of the time is worse than no scanner.
+- **Summary:** New `/sets/identify` page using CameraCapture to photograph a LEGO brick, sends to `POST /identify-brick` (Brickognize API), and displays the identified part with name, number, and image. Includes loading state, error handling, and "Try again" button.
+- **Shipped:** 2026-03-15 (PR #82 Plate)
 
 ### The Build Planner Set
 - **Date:** 2026-03-03
-- **Focus Area:** general
-- **Status:** Prototype First
+- **Focus Area:** frontend
+- **Status:** Shipped
 - **Piece Count:** Medium
-- **Summary:** "Can I build this set?" — cross-reference set parts against storage inventory to show what's available, what's missing, and where each part lives.
-- **Key Concern:** Partially unblocked — sets domain shipped, but still needs storage domain (no storage data to cross-reference yet). Performance of multi-table join across large collections is unknown. "Reserved parts" concept (parts committed to in-progress builds) doesn't exist in schema.
+- **Summary:** "Can I build this set?" — Build Check summary card on the set detail page compares each part's needed quantity against stored quantity. Green/red status, unique parts and total pieces coverage stats, plus per-part availability badges. Uses existing storage map data from Part Locator Map.
+- **Shipped:** 2026-03-15 (PR #76 Plate)
 
 ### The Inventory Dashboard Expansion Pack
 - **Date:** 2026-03-03
