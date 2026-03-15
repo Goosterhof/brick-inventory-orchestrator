@@ -28,18 +28,18 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Storage Tree Display
 - **Date:** 2026-03-15
 - **Focus Area:** frontend
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Medium
-- **Summary:** Render storage options as a nested tree on the overview page, showing children indented under their parents instead of a flat list. Uses existing parentId/childIds data.
-- **Key Concern:** Grouping logic + mobile responsiveness. Need to decide rendering approach (indentation vs. collapsible groups).
+- **Summary:** Storage overview renders a tree: parents at root with children indented underneath (margin-left). Falls back to flat list when searching so results aren't hidden. Uses existing parentId/childIds data.
+- **Shipped:** 2026-03-15 (PR #86 Plate)
 
 ### The Collection Export Crate
 - **Date:** 2026-03-15
 - **Focus Area:** frontend
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Medium
-- **Summary:** Export sets or parts as CSV from the overview pages. Client-side generation from already-loaded data — no backend needed. Useful for sharing, insurance, or backup.
-- **Key Concern:** CSV is simple for flat data but nested fields (set name inside family set) need flattening. No library needed.
+- **Summary:** CSV export buttons on sets overview and parts page. Shared toCsv + downloadCsv utility generates files client-side from loaded data. Sets export includes all metadata; parts export includes storage locations. Exports respect active filters.
+- **Shipped:** 2026-03-15 (PR #87 Plate)
 
 ### The Wishlist Wing
 - **Date:** 2026-03-15
@@ -123,11 +123,11 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Smart Sorter Accessory Pack
 - **Date:** 2026-03-03
 - **Focus Area:** frontend
-- **Status:** Ship It *(was: Return to Shelf)*
-- **Revisited:** 2026-03-15 — Sorting Station is shipped, users actively assign parts. Scoped down from "AI suggestions" to "show where this part already lives" as a hint in the AssignPartModal.
+- **Status:** Shipped *(was: Return to Shelf)*
+- **Revisited:** 2026-03-15 — Scoped down from "AI suggestions" to "show where this part already lives." Uses existing storage map data passed from SetDetailPage — zero extra API calls.
 - **Piece Count:** Small
-- **Summary:** When assigning a part to storage, show a hint if the same part+color is already stored somewhere (e.g., "Already in Drawer A (3x)"). Uses existing storage map data. Simple, practical, no ML.
-- **Key Concern:** Needs one extra API call or client-side lookup in the modal to find existing assignments for the selected part.
+- **Summary:** Yellow "Already stored in: Drawer A (8x)" hint in the AssignPartModal when the same part+color exists in storage. Helps users keep same parts together.
+- **Shipped:** 2026-03-15 (PR #85 Plate)
 
 ### The Family Circle Set
 - **Date:** 2026-03-03
