@@ -20,10 +20,10 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Quality Gate Drawbridge
 - **Date:** 2026-03-16
 - **Focus Area:** devops
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Medium
 - **Summary:** Add a CI workflow for backend unit tests, PHPStan, frontend unit tests, and ESLint on every PR. Currently only E2E runs in CI — broken unit tests and lint violations can slip into main undetected.
-- **Key Concern:** Need to handle Docker build/startup for unit tests without duplicating the E2E workflow pattern. Consider reusable workflows or matrix strategy.
+- **Shipped:** 2026-03-16 — `.github/workflows/quality.yml` with two parallel jobs: Brick Quality Control (backend tests + lint with Postgres service) and Plate Clutch Power (frontend tests + lint).
 
 ### The Preflight Checklist
 - **Date:** 2026-03-16
