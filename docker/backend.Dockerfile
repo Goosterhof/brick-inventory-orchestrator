@@ -6,8 +6,12 @@ RUN apt-get update && apt-get install -y \
     curl \
     libpq-dev \
     libzip-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
     unzip \
-    && docker-php-ext-install pdo pdo_pgsql pcntl zip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_pgsql pcntl zip gd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
