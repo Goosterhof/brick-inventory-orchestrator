@@ -17,6 +17,46 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 
 ## Ideas
 
+### The Quality Gate Reinforcement Pack
+- **Date:** 2026-03-16
+- **Focus Area:** devops
+- **Status:** Shipped
+- **Piece Count:** Small
+- **Summary:** Add `type-check`, `build`, and `size` (bundle budget) steps to the frontend CI job in `quality.yml`. Pre-push hooks catch these locally but CI is the safety net.
+- **Shipped:** 2026-03-16 — Added `type-check`, `build`, and `size` steps to Plate Clutch Power job in `quality.yml`.
+
+### The Missing Brick Detector
+- **Date:** 2026-03-16
+- **Focus Area:** frontend
+- **Status:** Ship It
+- **Piece Count:** Small
+- **Summary:** Collapsible "Missing bricks" section on set detail page showing parts needed but not in storage, with quantities and BrickLink buy links. Computed client-side from existing storage map data — no backend changes.
+- **Key Concern:** None significant — data already available, purely additive UI.
+
+### The Notification Bell Tower
+- **Date:** 2026-03-16
+- **Focus Area:** fullstack
+- **Status:** Back to the Drawing Board
+- **Piece Count:** Medium
+- **Summary:** In-app notification feed for collection events (import results, build readiness, new parts). Bell icon + dropdown in nav.
+- **Key Concern:** No viable triggers exist — price data isn't tracked, build check is already visible, and most events are user-initiated. Infrastructure without a use case.
+
+### The Pagination Press
+- **Date:** 2026-03-16
+- **Focus Area:** fullstack
+- **Status:** Return to Shelf
+- **Piece Count:** Medium
+- **Summary:** Server-side pagination on list endpoints to handle large collections (500+ sets). Requires backend cursor pagination + frontend infinite scroll or page controls.
+- **Key Concern:** No users with large collections yet. Breaks client-side search/filter and CSV export patterns. Premature optimization.
+
+### The Collection Showroom
+- **Date:** 2026-03-16
+- **Focus Area:** fullstack
+- **Status:** Return to Shelf
+- **Piece Count:** Large
+- **Summary:** Public, shareable collection page at `/family/{slug}` — read-only view of sets, stats, and storage layout for showing off to other LEGO fans.
+- **Key Concern:** Large surface area (slug migration, public routes, privacy controls, read-only pages) for a social feature in an inventory app. No community or discovery mechanism to drive value.
+
 ### The Quality Gate Drawbridge
 - **Date:** 2026-03-16
 - **Focus Area:** devops
@@ -84,10 +124,10 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Wishlist Wing
 - **Date:** 2026-03-15
 - **Focus Area:** fullstack
-- **Status:** Prototype First
+- **Status:** Shipped *(was: Prototype First)*
 - **Piece Count:** Medium
 - **Summary:** Track sets you want but don't own yet via a new "wishlist" FamilySet status or separate domain. Move to collection when acquired.
-- **Key Concern:** Adding a status to the enum changes FamilySet semantics. Dashboard stats, overview filters, and build check all need to exclude wishlisted sets. Moderate blast radius.
+- **Shipped:** 2026-03-16 — Backend enum + frontend UI (PR #108/#91), then exclusions: stats exclude wishlist from totals, muted badge on overview, "Add to collection" button on detail, hidden build check + load parts (PR #109/#92).
 
 ### The Search & Sort Accessory Pack
 - **Date:** 2026-03-15

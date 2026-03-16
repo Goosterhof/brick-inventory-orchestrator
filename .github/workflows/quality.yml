@@ -62,11 +62,20 @@ jobs:
       - name: Start frontend
         run: docker compose up -d frontend
 
+      - name: Run frontend type-check
+        run: docker compose exec -T frontend npm run type-check
+
       - name: Run frontend tests
         run: docker compose exec -T frontend npm run test:unit
 
       - name: Run frontend lint
         run: docker compose exec -T frontend npm run lint
+
+      - name: Run frontend build
+        run: docker compose exec -T frontend npm run build
+
+      - name: Check bundle sizes
+        run: docker compose exec -T frontend npm run size
 
       - name: Show container logs
         if: failure()
