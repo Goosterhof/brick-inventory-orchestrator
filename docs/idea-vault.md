@@ -17,6 +17,46 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 
 ## Ideas
 
+### The Family Roster Display
+- **Date:** 2026-03-16
+- **Focus Area:** fullstack
+- **Status:** Shipped
+- **Piece Count:** Small
+- **Summary:** "Family members" section on settings page listing name and email of each member with head badge. New `GET /family/members` endpoint returning user profiles. Prerequisite for invite and member management.
+- **Shipped:** 2026-03-17 — New `GetFamilyMembersAction`, `FamilyMemberResourceData` with `is_head` flag, settings page members section with BadgeLabel (PR #110 Brick, PR #96 Plate).
+
+### The Invite Code Brick
+- **Date:** 2026-03-16
+- **Focus Area:** fullstack
+- **Status:** Ship It
+- **Piece Count:** Medium
+- **Summary:** Family head generates a short invite code (e.g., `BRICK-7X3K`) from settings. New users enter the code during registration to join that family instead of creating a new one. No email infrastructure needed.
+- **Key Concern:** Brute-force on short codes mitigated by existing registration throttle. Codes should be revocable.
+
+### The Member Removal Wrench
+- **Date:** 2026-03-16
+- **Focus Area:** fullstack
+- **Status:** Ship It
+- **Piece Count:** Small
+- **Summary:** Family head can remove a member, which creates a new empty family for the removed user (preserving their account). Remove button on settings page next to each non-head member.
+- **Key Concern:** Removed user's contributed data stays with original family (scoped by family_id, not user_id) — this is correct behavior but should be communicated.
+
+### The Magic Link Drawbridge
+- **Date:** 2026-03-16
+- **Focus Area:** fullstack
+- **Status:** Return to Shelf
+- **Piece Count:** Large
+- **Summary:** Shareable invite URL (`/join/abc123`) that auto-fills registration. Signed URLs with expiry.
+- **Key Concern:** Marginal UX gain over invite codes for significant complexity. Invite codes work fine for household sharing via direct message.
+
+### The Role Assignment Station
+- **Date:** 2026-03-16
+- **Focus Area:** fullstack
+- **Status:** Return to Shelf
+- **Piece Count:** Large
+- **Summary:** Role-based access (Head/Member/Viewer) with role column on users and policy checks throughout.
+- **Key Concern:** Over-engineering for a household app. Current head/member split is sufficient. No real use case for a "Viewer" role.
+
 ### The Quality Gate Reinforcement Pack
 - **Date:** 2026-03-16
 - **Focus Area:** devops
@@ -216,6 +256,7 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 - **Piece Count:** Medium
 - **Summary:** Invitation system for family members — head generates invite link/code, others join existing family. Enables shared household inventory.
 - **Key Concern:** Touches the auth flow (critical path), requires email sending (not available), and the current flat authorization model (family_id check only) would need role-based permissions — a significant architectural change.
+- **Revisited:** 2026-03-16 — Decomposed into 3 scoped ideas: Family Roster Display, Invite Code Brick, Member Removal Wrench. No email or role system needed — invite codes + existing head/member model is sufficient.
 
 ### The Set Barcode Scanner
 - **Date:** 2026-03-15
