@@ -28,10 +28,10 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Preflight Checklist
 - **Date:** 2026-03-16
 - **Focus Area:** devops
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Small
 - **Summary:** `make doctor` target that validates local environment: Docker running, containers healthy, API responding, frontend serving, database connectable, submodules initialized, .env present, required vars set. Traffic-light diagnostic report.
-- **Key Concern:** Minimal — read-only diagnostic tool with zero blast radius.
+- **Shipped:** 2026-03-16 — `scripts/doctor.sh` with 15 checks across 6 categories, `make doctor` Makefile target.
 
 ### The Modular Building Inspector
 - **Date:** 2026-03-16

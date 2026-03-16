@@ -1,4 +1,4 @@
-.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint submodule-update e2e e2e-ui e2e-headed e2e-up e2e-down e2e-install e2e-report
+.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint submodule-update doctor e2e e2e-ui e2e-headed e2e-up e2e-down e2e-install e2e-report
 
 # Start all services
 up:
@@ -81,6 +81,10 @@ init:
 	docker compose exec backend php artisan key:generate
 	docker compose exec backend php artisan migrate
 	@echo "Setup complete! Backend: http://localhost:8000 | Frontend: http://localhost:5173"
+
+# Preflight Checklist — verify local environment
+doctor:
+	@bash scripts/doctor.sh
 
 # E2E Tests
 # ---------
