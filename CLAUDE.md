@@ -65,6 +65,9 @@ make lint
 # Restock Parts (update submodules)
 make submodule-update
 
+# Check for submodule drift
+make submodule-check
+
 # Open a Modular Building (shell access)
 make backend-shell
 make frontend-shell

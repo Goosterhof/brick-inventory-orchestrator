@@ -44,10 +44,10 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Submodule Sync Conveyor
 - **Date:** 2026-03-16
 - **Focus Area:** devops
-- **Status:** Prototype First
+- **Status:** Shipped
 - **Piece Count:** Small
 - **Summary:** `make submodule-check` to report local submodule drift. Future: scheduled GitHub Actions workflow to auto-PR submodule updates weekly.
-- **Key Concern:** Auto-PRs could be noisy; PAT permissions need verification. Start with local diagnostic only.
+- **Shipped:** 2026-03-16 — `scripts/submodule-check.sh` with per-submodule drift detection (behind/ahead/in-sync), missing commit list, and `make submodule-check` Makefile target.
 
 ### The Hot-Swap Development Kit
 - **Date:** 2026-03-16

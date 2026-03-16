@@ -1,4 +1,4 @@
-.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint submodule-update doctor e2e e2e-ui e2e-headed e2e-up e2e-down e2e-install e2e-report
+.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint submodule-update submodule-check doctor e2e e2e-ui e2e-headed e2e-up e2e-down e2e-install e2e-report
 
 # Start all services
 up:
@@ -70,6 +70,10 @@ lint: lint-backend lint-frontend
 submodule-update:
 	git submodule update --remote
 	@echo "Submodules updated. Review changes and commit if desired."
+
+# Check submodule drift against remote
+submodule-check:
+	@bash scripts/submodule-check.sh
 
 # Initialize after clone
 init:
