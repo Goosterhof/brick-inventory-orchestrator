@@ -28,10 +28,10 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Missing Brick Detector
 - **Date:** 2026-03-16
 - **Focus Area:** frontend
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Small
 - **Summary:** Collapsible "Missing bricks" section on set detail page showing parts needed but not in storage, with quantities and BrickLink buy links. Computed client-side from existing storage map data — no backend changes.
-- **Key Concern:** None significant — data already available, purely additive UI.
+- **Shipped:** 2026-03-16 — Collapsible missing parts list inside build check card with part details, quantity shortfall, and BrickLink links (PR #94 Plate).
 
 ### The Notification Bell Tower
 - **Date:** 2026-03-16
