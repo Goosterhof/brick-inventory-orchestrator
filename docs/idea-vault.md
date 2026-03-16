@@ -17,6 +17,46 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 
 ## Ideas
 
+### The Quality Gate Drawbridge
+- **Date:** 2026-03-16
+- **Focus Area:** devops
+- **Status:** Ship It
+- **Piece Count:** Medium
+- **Summary:** Add a CI workflow for backend unit tests, PHPStan, frontend unit tests, and ESLint on every PR. Currently only E2E runs in CI — broken unit tests and lint violations can slip into main undetected.
+- **Key Concern:** Need to handle Docker build/startup for unit tests without duplicating the E2E workflow pattern. Consider reusable workflows or matrix strategy.
+
+### The Preflight Checklist
+- **Date:** 2026-03-16
+- **Focus Area:** devops
+- **Status:** Ship It
+- **Piece Count:** Small
+- **Summary:** `make doctor` target that validates local environment: Docker running, containers healthy, API responding, frontend serving, database connectable, submodules initialized, .env present, required vars set. Traffic-light diagnostic report.
+- **Key Concern:** Minimal — read-only diagnostic tool with zero blast radius.
+
+### The Modular Building Inspector
+- **Date:** 2026-03-16
+- **Focus Area:** testing
+- **Status:** Ship It
+- **Piece Count:** Medium
+- **Summary:** Expand E2E coverage: unskip/realign family-sets tests, add storage CRUD specs, add feature specs for CSV export, search/filter, and build planner. Subsumes the existing "Instruction Booklet Update" idea.
+- **Key Concern:** More E2E tests increase maintenance burden. Must focus on user-visible behavior, not implementation details, to avoid flakiness.
+
+### The Submodule Sync Conveyor
+- **Date:** 2026-03-16
+- **Focus Area:** devops
+- **Status:** Prototype First
+- **Piece Count:** Small
+- **Summary:** `make submodule-check` to report local submodule drift. Future: scheduled GitHub Actions workflow to auto-PR submodule updates weekly.
+- **Key Concern:** Auto-PRs could be noisy; PAT permissions need verification. Start with local diagnostic only.
+
+### The Hot-Swap Development Kit
+- **Date:** 2026-03-16
+- **Focus Area:** devops
+- **Status:** Return to Shelf
+- **Piece Count:** Medium
+- **Summary:** Alternative native (non-Docker) development mode with `docker-compose.dev.yml` running only Postgres and services running locally.
+- **Key Concern:** Maintaining two dev modes doubles "works on my machine" surface area. Docker with live code mounting already provides good DX.
+
 ### The Dashboard Command Center
 - **Date:** 2026-03-15
 - **Focus Area:** frontend
