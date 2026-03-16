@@ -36,10 +36,10 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Modular Building Inspector
 - **Date:** 2026-03-16
 - **Focus Area:** testing
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Medium
 - **Summary:** Expand E2E coverage: unskip/realign family-sets tests, add storage CRUD specs, add feature specs for CSV export, search/filter, and build planner. Subsumes the existing "Instruction Booklet Update" idea.
-- **Key Concern:** More E2E tests increase maintenance burden. Must focus on user-visible behavior, not implementation details, to avoid flakiness.
+- **Shipped:** 2026-03-16 — Unskipped and realigned `family-sets.spec.ts` (8 tests: CRUD + status buttons + search + filter + CSV export). New `storage.spec.ts` (7 tests: CRUD + search + tree structure). All selectors updated from Dutch to English to match default locale.
 
 ### The Submodule Sync Conveyor
 - **Date:** 2026-03-16
@@ -116,10 +116,10 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Instruction Booklet Update (E2E Realignment)
 - **Date:** 2026-03-15
 - **Focus Area:** testing
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Small
 - **Summary:** Unskip and realign family-sets E2E tests now that all UI pages (overview, add, detail, edit, scan) are shipped. Update selectors for *View → *Page renames and new features.
-- **Key Concern:** Need to verify E2E selectors match the current UI after extensive page changes since tests were written.
+- **Shipped:** 2026-03-16 — Subsumed by The Modular Building Inspector. All family-sets tests unskipped and realigned.
 
 ### The Rebrickable Import Station
 - **Date:** 2026-03-11
