@@ -32,6 +32,10 @@ This is the **Baseplate** — the orchestrator for the LEGO inventory management
 - `backend/` — **The Brick** (Laravel 12 API, lego-storage)
 - `frontend/` — **The Plate** (Vue 3 SPA, lego-storage-frontend)
 
+### War Room Governance
+
+This territory is also governed by war-room ADRs: **0002** (Cascade Deletion), **0004** (Import Atomicity), **0009** (ResourceData Pattern), **0011** (Action Architecture), **0012** (FormRequest → DTO Flow), **0016** (Config Attribute Injection). Canonical source: `adrs.script.nl`.
+
 ## Submodule Guidelines
 
 @backend/CLAUDE.md
