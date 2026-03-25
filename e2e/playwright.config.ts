@@ -1,24 +1,22 @@
-import {defineConfig, devices} from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 
 const allBrowsers = [
     {
         name: "chromium",
-        use: {...devices["Desktop Chrome"]},
+        use: { ...devices["Desktop Chrome"] },
     },
     {
         name: "firefox",
-        use: {...devices["Desktop Firefox"]},
+        use: { ...devices["Desktop Firefox"] },
     },
     {
         name: "webkit",
-        use: {...devices["Desktop Safari"]},
+        use: { ...devices["Desktop Safari"] },
     },
 ];
 
 // Use all browsers in CI, only Chromium locally (fewer deps required)
-const projects = process.env.CI
-    ? allBrowsers
-    : [allBrowsers[0]];
+const projects = process.env.CI ? allBrowsers : [allBrowsers[0]];
 
 export default defineConfig({
     testDir: "./tests",
@@ -26,10 +24,7 @@ export default defineConfig({
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
     workers: process.env.CI ? 1 : undefined,
-    reporter: [
-        ["html"],
-        ["list"],
-    ],
+    reporter: [["html"], ["list"]],
     use: {
         baseURL: "http://localhost:5173",
         trace: "on-first-retry",
