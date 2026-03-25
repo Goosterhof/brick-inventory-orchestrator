@@ -2,38 +2,29 @@ import { expect, test } from "@playwright/test";
 import { createTestUser, testEmail } from "../lib/api";
 
 test.describe("Authentication", () => {
-  test("can fill and submit registration form", async ({ page }) => {
+  test("can register a new account", async ({ page }) => {
     const email = testEmail();
     const password = "password123";
 
     await page.goto("/register");
 
-    // Verify the registration form is present
     await expect(page.getByRole("heading", { name: /create account/i })).toBeVisible();
 
-    // Fill registration form using role-based selectors
     await page.getByRole("textbox", { name: /family name/i }).fill("Test Family");
     await page.getByRole("textbox", { name: /^name/i }).fill("Test User");
     await page.getByRole("textbox", { name: /email/i }).fill(email);
     await page.getByRole("textbox", { name: /^password$/i }).fill(password);
     await page.getByRole("textbox", { name: /password confirmation/i }).fill(password);
 
-    // Click register button
     await page.getByRole("button", { name: "Register" }).click();
 
-    // Wait for either redirect OR an error message to appear
-    // This makes the test pass regardless of whether registration succeeds or fails
-    await Promise.race([
-      page.waitForURL((url) => !url.pathname.includes("/register"), {
-        timeout: 5000,
-      }),
-      page.waitForSelector('[role="alert"], .error, [data-testid="error"]', { timeout: 5000 }),
-      page.waitForTimeout(3000), // Fallback: just wait for any response
-    ]).catch(() => {
-      // Ignore timeout - form was submitted
-    });
+    // After successful registration, the user should be redirected away from /register
+    await page.waitForURL((url) => !url.pathname.includes("/register"), { timeout: 10000 });
 
-    // The test passes if we got this far (form was fillable and submittable)
+    // Verify we landed on an authenticated page (not redirected back to login)
+    await expect(page.getByRole("button", { name: /logout|sign\s*out/i })).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   test("can login with existing user", async ({ page }) => {
