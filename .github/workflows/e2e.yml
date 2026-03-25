@@ -39,7 +39,12 @@ jobs:
       - name: Lint E2E code
         run: |
           cd e2e
-          npm run lint:check
+          npm run lint
+
+      - name: Format-check E2E code
+        run: |
+          cd e2e
+          npm run format:check
 
       - name: Start services
         run: |
