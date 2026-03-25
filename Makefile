@@ -1,4 +1,4 @@
-.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint submodule-update submodule-check doctor e2e e2e-ui e2e-headed e2e-up e2e-down e2e-install e2e-report
+.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint lint-e2e format-e2e type-check-e2e submodule-update submodule-check doctor e2e e2e-ui e2e-headed e2e-up e2e-down e2e-install e2e-report
 
 # Start all services
 up:
@@ -62,6 +62,18 @@ lint-backend:
 # Lint frontend
 lint-frontend:
 	docker compose exec frontend npm run lint
+
+# Lint E2E tests
+lint-e2e:
+	cd e2e && npm run lint
+
+# Format-check E2E tests
+format-e2e:
+	cd e2e && npm run format:check
+
+# Type-check E2E tests
+type-check-e2e:
+	cd e2e && npm run type-check
 
 # Lint all
 lint: lint-backend lint-frontend
