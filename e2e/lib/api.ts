@@ -1,4 +1,4 @@
-import type {Page} from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 const API_BASE = "http://localhost:8000/api";
 
@@ -35,13 +35,16 @@ interface HealthResponse {
 export async function createTestUser(
     email: string,
     password: string,
-    options: {name?: string; familyName?: string} = {}
+    options: { name?: string; familyName?: string } = {},
 ): Promise<RegisterResponse> {
-    const {name = "Test User", familyName = "Test Family"} = options;
+    const { name = "Test User", familyName = "Test Family" } = options;
 
     const response = await fetch(`${API_BASE}/register`, {
         method: "POST",
-        headers: {"Content-Type": "application/json", Accept: "application/json"},
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
         body: JSON.stringify({
             family_name: familyName,
             name,
@@ -65,12 +68,14 @@ export async function createTestUser(
 export async function loginViaUi(
     page: Page,
     email: string,
-    password: string
+    password: string,
 ): Promise<void> {
     await page.goto("/login");
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Password").fill(password);
-    await page.getByRole("button", {name: /log\s*in|sign\s*in|submit/i}).click();
+    await page
+        .getByRole("button", { name: /log\s*in|sign\s*in|submit/i })
+        .click();
 
     // Wait for redirect after successful login
     await page.waitForURL((url) => !url.pathname.includes("/login"));
@@ -81,7 +86,7 @@ export async function loginViaUi(
  */
 export async function waitForApi(
     maxAttempts = 30,
-    intervalMs = 1000
+    intervalMs = 1000,
 ): Promise<void> {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
@@ -121,10 +126,12 @@ export function createApiClient(page: Page) {
         async post<T>(endpoint: string, data: unknown): Promise<T> {
             const response = await page.request.post(`${API_BASE}${endpoint}`, {
                 data,
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
             });
             if (!response.ok()) {
-                throw new Error(`POST ${endpoint} failed: ${response.status()}`);
+                throw new Error(
+                    `POST ${endpoint} failed: ${response.status()}`,
+                );
             }
             return response.json();
         },
@@ -132,7 +139,7 @@ export function createApiClient(page: Page) {
         async put<T>(endpoint: string, data: unknown): Promise<T> {
             const response = await page.request.put(`${API_BASE}${endpoint}`, {
                 data,
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
             });
             if (!response.ok()) {
                 throw new Error(`PUT ${endpoint} failed: ${response.status()}`);
@@ -141,9 +148,13 @@ export function createApiClient(page: Page) {
         },
 
         async delete(endpoint: string): Promise<void> {
-            const response = await page.request.delete(`${API_BASE}${endpoint}`);
+            const response = await page.request.delete(
+                `${API_BASE}${endpoint}`,
+            );
             if (!response.ok()) {
-                throw new Error(`DELETE ${endpoint} failed: ${response.status()}`);
+                throw new Error(
+                    `DELETE ${endpoint} failed: ${response.status()}`,
+                );
             }
         },
     };
