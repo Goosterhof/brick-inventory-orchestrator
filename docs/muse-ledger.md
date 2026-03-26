@@ -13,7 +13,9 @@
 | Metric | Count |
 |--------|-------|
 | Total Generated | 13 |
-| Approved | 4 |
+| Shipped | 3 |
+| In Progress | 1 |
+| Approved | 0 |
 | Mutated | 6 |
 | Shelved | 3 |
 | Killed | 0 |
@@ -35,13 +37,15 @@
 - **Fuel Cost:** Spark
 - **Blast Radius:** Local
 - **Tag:** Workhorse
-- **Verdict:** APPROVED
+- **Verdict:** SHIPPED
 
 **Pitch:** Search/filter/sort on the Parts page — the last major view without it. Follows the exact pattern from Sets and Storage pages.
 
 **Gift:** Surfaces "orphan parts" — parts in storage that don't belong to any owned set. Your loose brick bin, made visible.
 
 **Speaks to:** "I know I have red 2x4 bricks somewhere but I can't find them in this list."
+
+**Shipped:** 2026-03-25 — Search by name/number, color filter chips, sort (name/quantity/color), orphan badge + filter. 29 tests, 100% coverage.
 
 ---
 
@@ -53,7 +57,7 @@
 - **Fuel Cost:** Spark
 - **Blast Radius:** Local
 - **Tag:** Bold
-- **Verdict:** APPROVED
+- **Verdict:** SHIPPED
 
 **Pitch:** Group the sets overview by LEGO theme — collapsible sections with filter chips at the top. Data already exists in `Set.theme`, just never surfaced.
 
@@ -62,6 +66,8 @@
 **Speaks to:** "What kind of LEGO collector am I?"
 
 **Gauntlet note:** The filter is the utility, the grouping is the gift.
+
+**Shipped:** 2026-03-25 — Collapsible theme sections with count badges, multi-select filter chips, new shared `CollapsibleSection` component. 32 tests, 100% coverage.
 
 ---
 
@@ -73,7 +79,7 @@
 - **Fuel Cost:** Spark
 - **Blast Radius:** Local
 - **Tag:** Bold
-- **Verdict:** APPROVED
+- **Verdict:** SHIPPED
 
 **Pitch:** Release-year distribution visualization on the dashboard — bar chart or heat map from `Set.year`. Zero backend work.
 
@@ -82,6 +88,8 @@
 **Speaks to:** "Show me the shape of my collection."
 
 **Gauntlet note:** Closer to Vanity than Workhorse, but cheap enough that one-time delight earns its keep.
+
+**Shipped:** 2026-03-25 — Pure CSS horizontal bar chart on dashboard, no chart library. 14 tests, 100% coverage.
 
 ---
 
@@ -93,9 +101,11 @@
 - **Fuel Cost:** Burn
 - **Blast Radius:** District
 - **Tag:** Bold
-- **Verdict:** APPROVED
+- **Verdict:** IN PROGRESS
 
 **Pitch:** Collection analytics dashboard computing your "Brick DNA": top 10 most-owned colors, top 10 most-owned part types, rarest parts, and a collection diversity score. All from existing storage_option_parts joined with parts and colors.
+
+**Progress:** Backend shipped 2026-03-25 — `GetBrickDnaAction` with Shannon diversity index, DTO, ResourceData, endpoint, 9 tests. Frontend permit issued, not yet built.
 
 **Gift:** Portfolio differentiator. Turns BIO from "I track what I have" to "I understand what I have." The analytics page becomes the most screenshot-worthy feature.
 
