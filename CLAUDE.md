@@ -34,7 +34,7 @@ This is the **Baseplate** — the orchestrator for the LEGO inventory management
 
 ### War Room Governance
 
-This territory is also governed by war-room ADRs: **0002** (Cascade Deletion), **0004** (Import Atomicity), **0009** (ResourceData Pattern), **0011** (Action Architecture), **0012** (FormRequest → DTO Flow), **0014** (Domain-Driven Frontend Structure), **0016** (Config Attribute Injection). Canonical source: `adrs.script.nl`. Per **ADR-0015** (ADR Governance), BIO operates as the **ADR development laboratory** — full ADR content in sovereign numbering, not distilled projections.
+This territory is also governed by war-room ADRs: **0002** (Cascade Deletion), **0004** (Import Atomicity), **0009** (ResourceData Pattern), **0011** (Action Architecture), **0012** (FormRequest → DTO Flow), **0014** (Domain-Driven Frontend Structure), **0016** (Config Attribute Injection), **0019** (Explicit Model Hydration). Canonical source: `adrs.script.nl`. Per **ADR-0015** (ADR Governance), BIO operates as the **ADR development laboratory** — full ADR content in sovereign numbering, not distilled projections.
 
 ## Submodule Guidelines
 
