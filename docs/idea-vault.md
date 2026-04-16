@@ -20,26 +20,26 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Set Completion Gauge
 - **Date:** 2026-03-26
 - **Focus Area:** fullstack
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Medium
 - **Summary:** Visual build completion percentage on each set card in the overview — surfacing "can I build this?" without clicking into detail. Needs a bulk backend endpoint (`GET /family-sets/completion`) returning per-set completion stats in one query, since fetching individual storage maps per set would be N+1.
-- **Key Concern:** Cannot be pure frontend — requires a new backend endpoint joining family_sets → sets → set_parts against storage_option_parts grouped by set. Without it, loading the overview with 50 sets would fire 50 API calls.
+- **Shipped:** Backend 2026-03-26 (commit 34c4877 — bulk `GET /family-sets/completion` endpoint). Frontend 2026-04-16 (PR #185 Plate — per-set completion gauge on sets overview with unknown/empty/partial/complete states, wishlist exclusion, error-safe degradation).
 
 ### The Quick-Scan Conveyor
 - **Date:** 2026-03-26
 - **Focus Area:** frontend
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Small
 - **Summary:** Keep the barcode scanner camera open after successfully adding a set. Scan → confirm → toast "Added!" → camera ready for the next box. Currently the scanner navigates away after each add, requiring a round-trip through the UI for each set in a haul.
-- **Key Concern:** BarcodeScanner component lifecycle — need to verify it can be reset without a full remount, or use a key-swap to force re-initialization.
+- **Shipped:** 2026-03-27 (commit d13d1f0 — quick-scan conveyor flow with tests).
 
 ### The Duplicate Detector
 - **Date:** 2026-03-26
 - **Focus Area:** frontend
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Small
 - **Summary:** Warning when manually adding a set you already own. Check the local familySetStoreModule for matching setNum before submission and show "You already own this set (quantity: X, status: Y). Add another copy?" Pure frontend guard — no backend changes.
-- **Key Concern:** None significant. Trivial implementation (~15 lines + test). The store already has all family sets loaded.
+- **Shipped:** 2026-03-26 (commit 3057406 — duplicate set detection with warning on AddSetPage and ScanSetPage).
 
 ### The Sorting Assembly Line
 - **Date:** 2026-03-26
@@ -52,10 +52,10 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Brick Catalog Blueprint
 - **Date:** 2026-03-26
 - **Focus Area:** frontend
-- **Status:** Ship It
+- **Status:** Return to Shelf
 - **Piece Count:** Medium
 - **Summary:** Component documentation for all 32 shared components — props, slots, emits, and composition patterns. Three consecutive inspections have flagged the missing `brick-catalog.md` (dead link in domain-map, broken `lint:catalog` script). The Showcase app provides visual demos but not contract docs. For the portfolio, this is the product manual a technical reviewer would expect.
-- **Key Concern:** 32 components to document. Partially auto-generatable from the component registry JSON, but composition patterns and usage guidance need manual authorship.
+- **Key Concern:** Superseded 2026-03-27 by ADR-009 component health registry. The `brick-catalog.md` was previously deleted; all codebase references (domain-map link, lint:catalog script, `validate-brick-catalog.mjs`) were cleaned up in PR #133. Permit voided. The component registry JSON + Showcase app now serve this role.
 
 ### The Family Roster Display
 - **Date:** 2026-03-16
@@ -68,20 +68,18 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Invite Code Brick
 - **Date:** 2026-03-16
 - **Focus Area:** fullstack
-- **Status:** In Progress
+- **Status:** Shipped
 - **Piece Count:** Medium
 - **Summary:** Family head generates a short invite code (e.g., `BRICK-7X3K`) from settings. New users enter the code during registration to join that family instead of creating a new one. No email infrastructure needed.
-- **Key Concern:** Brute-force on short codes mitigated by existing registration throttle. Codes should be revocable.
-- **Progress:** Backend shipped 2026-03-25 — `InviteCode` model, `GenerateInviteCodeAction`, `RevokeInviteCodeAction`, `GetActiveInviteCodeAction`, controller, policy, 25 tests. Frontend permit issued, not yet built.
+- **Shipped:** Backend 2026-03-25 (`InviteCode` model, `GenerateInviteCodeAction`, `RevokeInviteCodeAction`, `GetActiveInviteCodeAction`, controller, policy, 25 tests). Frontend 2026-03-26 (commit 08d7f17 — invite code system for family member onboarding).
 
 ### The Member Removal Wrench
 - **Date:** 2026-03-16
 - **Focus Area:** fullstack
-- **Status:** In Progress
+- **Status:** Shipped
 - **Piece Count:** Small
 - **Summary:** Family head can remove a member, which creates a new empty family for the removed user (preserving their account). Remove button on settings page next to each non-head member.
-- **Key Concern:** Removed user's contributed data stays with original family (scoped by family_id, not user_id) — this is correct behavior but should be communicated.
-- **Progress:** Backend shipped 2026-03-25 — `RemoveFamilyMemberAction` with exception handlers, 19 tests. Frontend permit issued, not yet built.
+- **Shipped:** Backend 2026-03-25 (`RemoveFamilyMemberAction` with exception handlers, 19 tests). Frontend 2026-03-27 (commit cfe1815 — member removal for family head on settings page).
 
 ### The Magic Link Drawbridge
 - **Date:** 2026-03-16
@@ -367,7 +365,7 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 - **Date:** 2026-03-25
 - **Origin:** Muse's Ideas Ledger #06
 - **Focus Area:** fullstack
-- **Status:** In Progress
+- **Status:** Shipped
 - **Piece Count:** Medium
 - **Summary:** Collection analytics dashboard computing "Brick DNA": top 10 most-owned colors, top 10 most-owned part types, rarest parts, and a collection diversity score (Shannon Diversity Index). All from existing storage data.
-- **Progress:** Backend shipped 2026-03-25 — `GetBrickDnaAction`, `BrickDnaData` DTO, `BrickDnaResourceData`, `GET /family/brick-dna` endpoint, 9 tests. Frontend permit issued, not yet built.
+- **Shipped:** Backend 2026-03-25 (`GetBrickDnaAction`, `BrickDnaData` DTO, `BrickDnaResourceData`, `GET /family/brick-dna` endpoint, 9 tests). Frontend 2026-03-27 (commit 41c933f — Brick DNA analytics page with collection insights).
