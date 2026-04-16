@@ -17,6 +17,38 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 
 ## Ideas
 
+### The Master Shopping List
+- **Date:** 2026-04-16
+- **Focus Area:** fullstack
+- **Status:** Ship It
+- **Piece Count:** Small-Medium
+- **Summary:** Cross-set missing parts aggregator. New `GET /family-sets/missing-parts` backend endpoint returns shortfalls grouped by part+color (total needed, total stored, shortfall, list of family_set_ids needing each part). Frontend `/parts/missing` page renders the list with BrickLink wanted-list import and CSV export. Promotes the per-set Missing Brick Detector to a cross-collection view.
+- **Key Concern:** Requires a new bulk endpoint — per-set storage-map fan-out would N+1. Follow the Set Completion Gauge pattern (parallel fetch, error-safe degradation). BrickLink wanted-list XML format needs a small helper.
+
+### The Reverse Lookup Lens
+- **Date:** 2026-04-16
+- **Focus Area:** fullstack
+- **Status:** Ship It
+- **Piece Count:** Small
+- **Summary:** Click a part row on the parts page → show the family sets that need this part+color, with build status and quantity needed per set. Answers "I found this brick on the floor, where does it belong?" Needs a lookup endpoint (`GET /family/parts/{partNum}/{colorId}/usage`) to avoid bulk-preloading all family-set parts.
+- **Key Concern:** Real user frequency of this workflow is uncertain — may be 30-seconds-of-delight rather than everyday utility. But scope is small enough that it's worth shipping to find out.
+
+### The Shelf Pressure Gauge
+- **Date:** 2026-04-16
+- **Focus Area:** frontend
+- **Status:** Back to the Drawing Board
+- **Piece Count:** Small-Medium
+- **Summary:** Heat gradient on the storage tree showing which containers are densely packed vs lightly used. Relative density from summing `storage_option_parts.quantity` per container, no user-entered capacity needed.
+- **Key Concern:** "Relative density" is lossy — a 50-piece drawer of large Technic panels looks "empty" vs a 500-piece drawer of 1x1 plates even when physically the Technic drawer is fuller. To be honest it needs piece-size-weighted volume (Rebrickable dimensions may or may not be available per part). A fullness signal that doesn't match reality erodes trust faster than not having one. Needs a sharper model before shipping.
+
+### The Build Log
+- **Date:** 2026-04-16
+- **Focus Area:** fullstack
+- **Status:** Prototype First
+- **Piece Count:** Medium
+- **Summary:** Capture `acquired_at`, `build_started_at`, `built_at` timestamps on FamilySet status transitions. Surface "built in X days" on set detail, "total hours built this year" on dashboard, and a chronological Build Log page. Migration + DTO + status-transition Action updates.
+- **Key Concern:** Users rarely hit "start building" in real life — they typically mark sets "built" months after the fact, so the timestamps degrade to "when you marked it," which is noisy. Retroactive date entry would be needed. The data capture is cheap; the dashboard widget needs validation. Ship the capture without the widget first, then decide if the log page earns its place.
+
 ### The Set Completion Gauge
 - **Date:** 2026-03-26
 - **Focus Area:** fullstack
