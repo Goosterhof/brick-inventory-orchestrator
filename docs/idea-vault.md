@@ -20,18 +20,18 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Master Shopping List
 - **Date:** 2026-04-16
 - **Focus Area:** fullstack
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Small-Medium
 - **Summary:** Cross-set missing parts aggregator. New `GET /family-sets/missing-parts` backend endpoint returns shortfalls grouped by part+color (total needed, total stored, shortfall, list of family_set_ids needing each part). Frontend `/parts/missing` page renders the list with BrickLink wanted-list import and CSV export. Promotes the per-set Missing Brick Detector to a cross-collection view.
-- **Key Concern:** Requires a new bulk endpoint — per-set storage-map fan-out would N+1. Follow the Set Completion Gauge pattern (parallel fetch, error-safe degradation). BrickLink wanted-list XML format needs a small helper.
+- **Shipped:** Backend 2026-04-16 (commit `879e87b` — `GET /family-sets/missing-parts` with five bounded queries and `unknownFamilySetIds` surfacing). Frontend 2026-04-16 (commit `46d2b0b` — `/parts/missing` page with search, sort, BrickLink wanted-list XML export, and CSV export).
 
 ### The Reverse Lookup Lens
 - **Date:** 2026-04-16
 - **Focus Area:** fullstack
-- **Status:** Ship It
+- **Status:** Shipped
 - **Piece Count:** Small
 - **Summary:** Click a part row on the parts page → show the family sets that need this part+color, with build status and quantity needed per set. Answers "I found this brick on the floor, where does it belong?" Needs a lookup endpoint (`GET /family/parts/{partNum}/{colorId}/usage`) to avoid bulk-preloading all family-set parts.
-- **Key Concern:** Real user frequency of this workflow is uncertain — may be 30-seconds-of-delight rather than everyday utility. But scope is small enough that it's worth shipping to find out.
+- **Shipped:** Backend 2026-04-29 (commit `db9172c` — `GET /family/parts/{partNum}/{colorId}/usage` with three bounded queries, 100% mutation MSI, returns 200-with-empty for unknown parts). Frontend 2026-04-29 (commit `08c3107` — `PartUsageModal` opening from `PartsPage` row clicks; native `<dialog>` for Escape/focus restoration; 14 new tests). Orchestrator restock `1e5174b`. Cross-territory contract bug caught in dispatch review (`color_hex` vs `colorRgb`) and fixed before merge.
 
 ### The Shelf Pressure Gauge
 - **Date:** 2026-04-16
