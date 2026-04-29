@@ -112,6 +112,14 @@ The Modular Buildings run on:
 - The Plate (UI): http://localhost:5173
 - Parts Storage (PostgreSQL): localhost:5432
 
+### Host PHP Requirements (Backend Gauntlet)
+
+The backend gauntlet (`composer test`, `composer phpstan`, `composer test:coverage`, `composer mutation`, etc.) runs against host PHP — not the Modular Building's container. The host must satisfy:
+
+- **PHP 8.5** (matches `backend/composer.json` `platform.php = "8.5"` and `docker/backend.Dockerfile` `FROM php:8.5-cli`).
+- **`php8.5-pcov` extension** — required for `composer test:coverage` and `composer mutation` (the coverage driver). Install on Debian/Ubuntu via the `deb.sury.org` PPA: `sudo apt install php8.5 php8.5-pcov php8.5-cli php8.5-mbstring php8.5-xml php8.5-curl php8.5-sqlite3 ...`.
+- **`update-alternatives --display php`** must show `link currently points to /usr/bin/php8.5`. If the host has multiple PHPs installed, `sudo update-alternatives --set php /usr/bin/php8.5` aligns it. Dual-install drift between `php` and `php8.5` is a common silent root cause of "no coverage driver" or "extension X not loaded" failures.
+
 ### Minifig Badge (SPA session-based auth)
 
 The Plate uses cookie-based auth (`withCredentials: true`), NOT token-based. Key config in `docker-compose.yml`:

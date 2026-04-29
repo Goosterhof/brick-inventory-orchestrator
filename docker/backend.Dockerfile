@@ -1,4 +1,4 @@
-FROM php:8.4-cli
+FROM php:8.5-cli
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_pgsql pcntl zip gd \
+    && pecl install pcov \
+    && docker-php-ext-enable pcov \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
