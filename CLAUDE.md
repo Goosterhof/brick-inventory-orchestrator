@@ -51,6 +51,9 @@ make init
 # Stack the Modular Buildings (start services)
 make up
 
+# Run the queue worker (separate terminal — required for emails and async imports)
+make queue
+
 # Disassemble (stop services)
 make down
 
@@ -133,6 +136,16 @@ The Plate uses cookie-based auth (`withCredentials: true`), NOT token-based. Key
 - Use `docker compose up -d` (not `restart`) to pick up `docker-compose.yml` env changes — `restart` only stops/starts containers without rebuilding
 - After `docker compose down -v`, the vendor volume is recreated from the image; may need `composer install`
 - `public/frankenphp-worker.php` runs before the PHP autoloader — never use Laravel classes in it; `composer lint` may incorrectly modify this file
+
+### Queue Worker (`make queue`)
+
+The Brick uses the database queue driver. Async work — emails (e.g. `InviteCodeMail`), Rebrickable imports — is enqueued into the `jobs` table and drained by a worker process:
+
+- **Local dev:** `make queue` in a second terminal alongside `make up`. The worker runs `php artisan queue:work` inside the backend container with `--tries=3 --backoff=10 --timeout=60 --max-time=3600` (recycles hourly to bound memory).
+- **E2E tests:** the e2e profile uses **fakes** (`Mail::fake()`, `Queue::fake()`) inside the test process — no worker container required. The choice keeps e2e deterministic; running a real worker in e2e is a future call if/when we have email-flow assertions that need the round-trip.
+- **Production:** the Brick provisions a Railway `worker` service running the same `queue:work` command. See `backend/CLAUDE.md` → "Queue Worker" for the production command and verification procedure.
+
+If you hit the API endpoint that triggers a job and nothing happens, the most likely cause is "the worker isn't running" — check `make queue` is alive in another terminal.
 
 ## Restocking Parts (Submodule Workflow)
 

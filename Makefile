@@ -1,4 +1,4 @@
-.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint lint-e2e format-e2e type-check-e2e submodule-update submodule-check doctor e2e e2e-ui e2e-headed e2e-up e2e-down e2e-install e2e-report
+.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint lint-e2e format-e2e type-check-e2e submodule-update submodule-check doctor e2e e2e-ui e2e-headed e2e-up e2e-down e2e-install e2e-report queue
 
 # Start all services
 up:
@@ -23,6 +23,13 @@ logs:
 # Backend shell
 backend-shell:
 	docker compose exec backend bash
+
+# Queue worker (foreground — run in a second terminal alongside `make up`)
+# The Brick uses the database queue driver; the worker drains pending
+# jobs (mailables, async imports) from the `jobs` table.
+# Tries=3, backoff=10s, timeout=60s, max-time=3600s (recycle hourly).
+queue:
+	docker compose exec backend php artisan queue:work --queue=default --tries=3 --backoff=10 --timeout=60 --max-time=3600
 
 # Frontend shell
 frontend-shell:
