@@ -105,9 +105,23 @@ export async function waitForApi(maxAttempts = 30, intervalMs = 1000): Promise<v
  * Use this when you need to make API calls with authentication cookies from a page context
  */
 export function createApiClient(page: Page) {
+  // Origin must match SANCTUM_STATEFUL_DOMAINS — Playwright's page.request does
+  // not set it automatically, and without it Sanctum's stateful middleware
+  // skips the session cookie and the request is treated as unauthenticated.
+  // Accept: application/json keeps unauth responses as JSON 401 instead of a
+  // redirect to a non-existent "login" route (which surfaces as 500).
+  const jsonHeaders = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    "X-Requested-With": "XMLHttpRequest",
+    Origin: "http://localhost:5173",
+  };
+
   return {
     async get<T>(endpoint: string): Promise<T> {
-      const response = await page.request.get(`${API_BASE}${endpoint}`);
+      const response = await page.request.get(`${API_BASE}${endpoint}`, {
+        headers: jsonHeaders,
+      });
       if (!response.ok()) {
         throw new Error(`GET ${endpoint} failed: ${response.status()}`);
       }
@@ -117,7 +131,7 @@ export function createApiClient(page: Page) {
     async post<T>(endpoint: string, data: unknown): Promise<T> {
       const response = await page.request.post(`${API_BASE}${endpoint}`, {
         data,
-        headers: { "Content-Type": "application/json" },
+        headers: jsonHeaders,
       });
       if (!response.ok()) {
         throw new Error(`POST ${endpoint} failed: ${response.status()}`);
@@ -128,7 +142,7 @@ export function createApiClient(page: Page) {
     async put<T>(endpoint: string, data: unknown): Promise<T> {
       const response = await page.request.put(`${API_BASE}${endpoint}`, {
         data,
-        headers: { "Content-Type": "application/json" },
+        headers: jsonHeaders,
       });
       if (!response.ok()) {
         throw new Error(`PUT ${endpoint} failed: ${response.status()}`);
@@ -137,7 +151,9 @@ export function createApiClient(page: Page) {
     },
 
     async delete(endpoint: string): Promise<void> {
-      const response = await page.request.delete(`${API_BASE}${endpoint}`);
+      const response = await page.request.delete(`${API_BASE}${endpoint}`, {
+        headers: jsonHeaders,
+      });
       if (!response.ok()) {
         throw new Error(`DELETE ${endpoint} failed: ${response.status()}`);
       }

@@ -19,7 +19,7 @@ test.describe("Storage", () => {
     await page.goto("/storage");
 
     await expect(page.getByRole("heading", { name: "Storage" })).toBeVisible();
-    await expect(page.getByText("No storage locations yet.")).toBeVisible();
+    await expect(page.getByText("No storage bins yet. Every brick needs a home.")).toBeVisible();
   });
 
   test("can add a storage location", async ({ page }) => {
