@@ -1,10 +1,10 @@
 # The Muse's Ideas Ledger — Brick Inventory Orchestrator
 
-**Allied Agent:** The Muse (from the-laboratory)
+**Allied Agent:** The Muse (from a sovereign sister territory)
 **First Session:** 2026-03-25
 **Investor:** The Commander
 
-> The Muse was deployed as an allied agent from the-laboratory into BIO territory under war-room protocol. Ideas generated through the Muse's Spark Chamber (7 Expansion Vectors, Collision Engine) and cross-examined through the full gauntlet with Named Attack Patterns.
+> The Muse was deployed as an allied agent from a sovereign sister territory into BIO under war-room protocol. Ideas generated through the Muse's Spark Chamber (7 Expansion Vectors, Collision Engine) and cross-examined through the full gauntlet with Named Attack Patterns.
 
 ---
 
