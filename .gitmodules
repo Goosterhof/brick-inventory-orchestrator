@@ -1,6 +1,6 @@
 [submodule "backend"]
 	path = backend
-	url = git@github.com:Goosterhof/lego-storage.git
+	url = https://github.com/Goosterhof/lego-storage.git
 [submodule "frontend"]
 	path = frontend
-	url = git@github.com:Goosterhof/lego-storage-frontend.git
+	url = https://github.com/Goosterhof/lego-storage-frontend.git
