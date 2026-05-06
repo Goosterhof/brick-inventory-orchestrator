@@ -17,8 +17,8 @@ Please include:
 
 This repository is the **orchestrator** that coordinates two vassal repositories via git submodules and Docker Compose:
 
-- Backend (Laravel API): [`Goosterhof/lego-storage`](https://github.com/Goosterhof/lego-storage)
-- Frontend (Vue 3 SPA): [`Goosterhof/lego-storage-frontend`](https://github.com/Goosterhof/lego-storage-frontend)
+- Backend (Laravel API): [`Goosterhof/brick-inventory-backend`](https://github.com/Goosterhof/brick-inventory-backend)
+- Frontend (Vue 3 SPA): [`Goosterhof/brick-inventory-frontend`](https://github.com/Goosterhof/brick-inventory-frontend)
 
 Security issues in the **backend** or **frontend** code itself should be reported against those repositories directly (each ships its own `SECURITY.md` with the same disclosure address).
 

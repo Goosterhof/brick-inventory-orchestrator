@@ -37,7 +37,7 @@ frontend-shell:
 
 # Database shell
 db-shell:
-	docker compose exec postgres psql -U lego -d lego_storage
+	docker compose exec postgres psql -U brick_inventory -d brick_inventory
 
 # Run migrations
 migrate:

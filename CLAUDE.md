@@ -31,8 +31,8 @@ Use this terminology when communicating about the project:
 
 This is the **Baseplate** — the orchestrator for the LEGO inventory management ecosystem. It connects two submodules into one cohesive build:
 
-- `backend/` — **The Brick** (Laravel 12 API, lego-storage)
-- `frontend/` — **The Plate** (Vue 3 SPA, lego-storage-frontend)
+- `backend/` — **The Brick** (Laravel 12 API, brick-inventory-backend)
+- `frontend/` — **The Plate** (Vue 3 SPA, brick-inventory-frontend)
 
 ### War Room Governance
 
@@ -95,8 +95,8 @@ make e2e-report    # Review the inspection report
 
 ```
 brick-inventory-orchestrator/     # The Baseplate
-├── backend/              # The Brick (git submodule: lego-storage)
-├── frontend/             # The Plate (git submodule: lego-storage-frontend)
+├── backend/              # The Brick (git submodule: brick-inventory-backend)
+├── frontend/             # The Plate (git submodule: brick-inventory-frontend)
 ├── e2e/                  # Set Assembly Check (Playwright E2E)
 │   ├── tests/            # Test instructions
 │   ├── lib/              # Assembly helpers (API client, login utils)

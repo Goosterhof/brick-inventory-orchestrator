@@ -83,7 +83,7 @@ else
   red "Frontend not serving (localhost:5173)"
 fi
 
-if docker compose exec -T postgres pg_isready -U lego -d lego_storage &>/dev/null 2>&1; then
+if docker compose exec -T postgres pg_isready -U brick_inventory -d brick_inventory &>/dev/null 2>&1; then
   green "PostgreSQL accepting connections"
 else
   red "PostgreSQL not accepting connections"

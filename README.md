@@ -11,8 +11,8 @@ The project is split across three repositories:
 | Repository | Role | Stack |
 |---|---|---|
 | **This repository** | Orchestrator — Docker Compose harness, E2E suite, ops scripts | Docker Compose, Playwright |
-| [`Goosterhof/lego-storage`](https://github.com/Goosterhof/lego-storage) | Backend API ("the Brick") | Laravel, PHP 8.5, PostgreSQL |
-| [`Goosterhof/lego-storage-frontend`](https://github.com/Goosterhof/lego-storage-frontend) | Frontend SPA ("the Plate") | Vue 3, TypeScript, Vite |
+| [`Goosterhof/brick-inventory-backend`](https://github.com/Goosterhof/brick-inventory-backend) | Backend API ("the Brick") | Laravel, PHP 8.5, PostgreSQL |
+| [`Goosterhof/brick-inventory-frontend`](https://github.com/Goosterhof/brick-inventory-frontend) | Frontend SPA ("the Plate") | Vue 3, TypeScript, Vite |
 
 The two vassals are git submodules of this repository (`backend/` and `frontend/`). Each is independently buildable and deployable — the orchestrator coordinates them for the local-development and end-to-end-testing experience.
 
