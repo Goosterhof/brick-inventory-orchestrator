@@ -61,6 +61,13 @@ jobs:
         run: |
           docker compose exec -T backend php artisan migrate --force
 
+      - name: Seed reference data
+        # Family-set tests POST set_num "75192-1" (Millennium Falcon) and rely on
+        # the set existing in the local DB so CreateFamilySetAction skips the
+        # Rebrickable lookup. The set lives in SetSeeder.
+        run: |
+          docker compose exec -T backend php artisan db:seed --class=SetSeeder --force
+
       - name: Run E2E tests
         run: |
           cd e2e

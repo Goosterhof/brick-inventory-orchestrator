@@ -39,13 +39,13 @@ test.describe("Family Sets", () => {
 
   test("can view set details", async ({ page }) => {
     const api = createApiClient(page);
-    const response = await api.post<{ data: { id: number } }>("/family-sets", {
+    const response = await api.post<{ id: number }>("/family-sets", {
       set_num: "75192-1",
       quantity: 1,
       status: "sealed",
     });
 
-    await page.goto(`/sets/${response.data.id}`);
+    await page.goto(`/sets/${response.id}`);
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sealed" })).toBeVisible();
@@ -54,13 +54,13 @@ test.describe("Family Sets", () => {
 
   test("can update set status via status buttons", async ({ page }) => {
     const api = createApiClient(page);
-    const response = await api.post<{ data: { id: number } }>("/family-sets", {
+    const response = await api.post<{ id: number }>("/family-sets", {
       set_num: "75192-1",
       quantity: 1,
       status: "sealed",
     });
 
-    await page.goto(`/sets/${response.data.id}`);
+    await page.goto(`/sets/${response.id}`);
 
     // Sealed should be the active status (yellow background)
     const sealedButton = page.getByRole("button", { name: "Sealed" });
@@ -76,31 +76,31 @@ test.describe("Family Sets", () => {
 
   test("can edit set details", async ({ page }) => {
     const api = createApiClient(page);
-    const response = await api.post<{ data: { id: number } }>("/family-sets", {
+    const response = await api.post<{ id: number }>("/family-sets", {
       set_num: "75192-1",
       quantity: 1,
       status: "sealed",
     });
 
-    await page.goto(`/sets/${response.data.id}/edit`);
+    await page.goto(`/sets/${response.id}/edit`);
 
     await expect(page.getByRole("heading", { name: "Edit set" })).toBeVisible();
     await page.getByLabel("Status").selectOption("built");
     await page.getByRole("button", { name: "Save" }).click();
 
     // Should redirect to detail page
-    await page.waitForURL((url) => url.pathname === `/sets/${response.data.id}`);
+    await page.waitForURL((url) => url.pathname === `/sets/${response.id}`);
   });
 
   test("can delete a set from collection", async ({ page }) => {
     const api = createApiClient(page);
-    const response = await api.post<{ data: { id: number } }>("/family-sets", {
+    const response = await api.post<{ id: number }>("/family-sets", {
       set_num: "75192-1",
       quantity: 1,
       status: "sealed",
     });
 
-    await page.goto(`/sets/${response.data.id}/edit`);
+    await page.goto(`/sets/${response.id}/edit`);
 
     // Click the Delete button on the form to open the confirm dialog
     await page.getByRole("button", { name: "Delete" }).first().click();
