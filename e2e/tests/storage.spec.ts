@@ -157,11 +157,12 @@ test.describe("Storage", () => {
     await page.goto("/storage");
     await expect(page.getByRole("heading", { name: "Storage" })).toBeVisible();
 
-    // Both parent and child should be visible
+    // The overview lists parents with a sub-location count. The count is
+    // the visible signal that the parent→child relationship exists.
+    // Child names are not rendered on the overview today (the backend
+    // index returns top-level only; children surface as a count badge
+    // here and on the detail page).
     await expect(page.getByText("Cabinet")).toBeVisible();
-    await expect(page.getByText("Shelf 1")).toBeVisible();
-
-    // Parent should show sub-location count
     await expect(page.getByText("1 sub-locations")).toBeVisible();
   });
 });

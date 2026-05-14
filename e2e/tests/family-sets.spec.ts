@@ -148,8 +148,10 @@ test.describe("Family Sets", () => {
       quantity: 1,
       status: "sealed",
     });
+    // 42151-1 is Bugatti Bolide in SetSeeder. We need a seeded set so the
+    // POST short-circuits the Rebrickable lookup (CI has no API key).
     await api.post("/family-sets", {
-      set_num: "10281-1",
+      set_num: "42151-1",
       quantity: 1,
       status: "built",
     });
@@ -160,11 +162,15 @@ test.describe("Family Sets", () => {
     const builtChip = page.getByRole("button", { name: "Built", exact: true }).first();
     await expect(builtChip).toBeVisible();
 
+    // FilterChip is a UnoCSS attributify component — the active background
+    // is bound to the `bg` attribute, not className. Inactive chips render
+    // bg with the card-bg variable + hover yellow-100; active chips render
+    // bg="yellow-300".
     await builtChip.click();
-    await expect(builtChip).toHaveClass(/yellow-300/);
+    await expect(builtChip).toHaveAttribute("bg", "yellow-300");
 
     await builtChip.click();
-    await expect(builtChip).not.toHaveClass(/yellow-300/);
+    await expect(builtChip).not.toHaveAttribute("bg", "yellow-300");
   });
 
   test("shows export button when sets exist", async ({ page }) => {
