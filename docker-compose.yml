@@ -38,6 +38,14 @@ services:
       DB_USERNAME: brick_inventory
       DB_PASSWORD: secret
       DB_SSLMODE: disable
+      # RebrickableService takes a non-nullable `string $apiKey`. Without an
+      # explicit value the container env is empty, env() returns null,
+      # config() returns null (the `#[Config(..., '')]` default only fires on
+      # missing keys, not null values), and DI throws BindingResolutionException
+      # on every request that touches GetSetAction. Local dev usually has a
+      # backend/.env with the var defined (even if empty) so this is invisible
+      # there; CI has no .env so it 500s every POST /family-sets.
+      REBRICKABLE_API_KEY: ""
     depends_on:
       postgres:
         condition: service_healthy
