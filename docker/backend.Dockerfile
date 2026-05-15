@@ -17,6 +17,12 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Bump memory_limit above the php:8.5-cli default of 128M. `composer test`
+# runs the full Pest suite with pcov coverage and refresh-DB; 128M OOMs
+# before the suite finishes (and the OOM happens in a child process, so
+# `php -d memory_limit=...` on the parent doesn't propagate).
+RUN echo "memory_limit = 1G" > /usr/local/etc/php/conf.d/zz-memory.ini
+
 # Install FrankenPHP binary (outside volume mount so it persists)
 RUN curl -fsSL https://github.com/dunglas/frankenphp/releases/latest/download/frankenphp-linux-$(uname -m) -o /usr/local/bin/frankenphp \
     && chmod +x /usr/local/bin/frankenphp
