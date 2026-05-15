@@ -28,7 +28,9 @@ test.describe("Parts", () => {
     // EmptyState message comes from translation key parts.noParts (lines 194-196
     // in families/services/translation.ts).
     await expect(
-      page.getByText("No loose bricks yet. Assign parts from a set's detail page to start sorting."),
+      page.getByText(
+        "No loose bricks yet. Assign parts from a set's detail page to start sorting.",
+      ),
     ).toBeVisible();
   });
 
@@ -164,7 +166,9 @@ test.describe("Parts", () => {
     // The seeded part 1 is "Brick 2 x 4" (PartSeeder line 17). With at least
     // one part stored, the empty-state must NOT be rendered.
     await expect(
-      page.getByText("No loose bricks yet. Assign parts from a set's detail page to start sorting."),
+      page.getByText(
+        "No loose bricks yet. Assign parts from a set's detail page to start sorting.",
+      ),
     ).not.toBeVisible();
     await expect(page.getByText("Brick 2 x 4")).toBeVisible();
   });

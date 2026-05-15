@@ -59,8 +59,7 @@ test.describe("Settings", () => {
     await Promise.all([
       page.waitForResponse(
         (response) =>
-          /\/family\/invite-code$/.test(response.url()) &&
-          response.request().method() === "POST",
+          response.url().endsWith("/family/invite-code") && response.request().method() === "POST",
       ),
       page.getByRole("button", { name: "Generate Invite Code" }).click(),
     ]);
@@ -97,9 +96,7 @@ test.describe("Settings", () => {
       page.getByRole("button", { name: "Send invite by email" }).click(),
     ]);
 
-    await expect(
-      page.getByText("Invite email sent — the new code is shown above."),
-    ).toBeVisible();
+    await expect(page.getByText("Invite email sent — the new code is shown above.")).toBeVisible();
 
     // The code is persisted to the invite_codes table regardless of whether
     // the queued mail goes out — assert that here, where it actually matters.

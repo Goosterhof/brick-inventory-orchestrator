@@ -229,18 +229,19 @@ test.describe("Storage", () => {
     // API-only verification documents the wiring is alive.
     const api = createApiClient(page);
 
-    const grid = await api.post<{ id: number; grid_rows: number | null; grid_columns: number | null }>(
-      "/storage-options",
-      {
-        name: "Gridded Cabinet",
-        description: null,
-        parent_id: null,
-        row: null,
-        column: null,
-        grid_rows: 4,
-        grid_columns: 6,
-      },
-    );
+    const grid = await api.post<{
+      id: number;
+      grid_rows: number | null;
+      grid_columns: number | null;
+    }>("/storage-options", {
+      name: "Gridded Cabinet",
+      description: null,
+      parent_id: null,
+      row: null,
+      column: null,
+      grid_rows: 4,
+      grid_columns: 6,
+    });
 
     expect(grid.grid_rows).toBe(4);
     expect(grid.grid_columns).toBe(6);
