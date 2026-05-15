@@ -62,11 +62,21 @@ jobs:
           docker compose exec -T backend php artisan migrate --force
 
       - name: Seed reference data
-        # Family-set tests POST set_num "75192-1" (Millennium Falcon) and rely on
-        # the set existing in the local DB so CreateFamilySetAction skips the
-        # Rebrickable lookup. The set lives in SetSeeder.
+        # The four seeders are loadbearing for distinct test surfaces:
+        #   * SetSeeder        — family-set CRUD tests (POST family-sets short-
+        #                        circuits the Rebrickable lookup when the set
+        #                        already exists locally)
+        #   * ColorSeeder      — colors referenced by SetPart rows
+        #   * PartSeeder       — parts referenced by SetPart rows
+        #   * SetPartSeeder    — wires Boutique Hotel (10297-1) to 5 parts; the
+        #                        parts-management + place-part specs need a
+        #                        family-set with an actual parts list to drive
+        #                        the missing/unsorted endpoints
         run: |
+          docker compose exec -T backend php artisan db:seed --class=ColorSeeder --force
+          docker compose exec -T backend php artisan db:seed --class=PartSeeder --force
           docker compose exec -T backend php artisan db:seed --class=SetSeeder --force
+          docker compose exec -T backend php artisan db:seed --class=SetPartSeeder --force
 
       - name: Run E2E tests
         run: |
