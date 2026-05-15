@@ -163,8 +163,11 @@ e2e-up:
 	@timeout 60 bash -c 'until curl -sf http://localhost:5173 > /dev/null 2>&1; do sleep 2; done' || (echo "Frontend health check timed out" && exit 1)
 	@echo "Running migrations..."
 	docker compose exec -T backend php artisan migrate --force
-	@echo "Seeding reference Sets..."
+	@echo "Seeding reference data..."
+	docker compose exec -T backend php artisan db:seed --class=ColorSeeder --force
+	docker compose exec -T backend php artisan db:seed --class=PartSeeder --force
 	docker compose exec -T backend php artisan db:seed --class=SetSeeder --force
+	docker compose exec -T backend php artisan db:seed --class=SetPartSeeder --force
 	@echo "E2E environment ready!"
 
 # Stop E2E services and remove test data
