@@ -40,7 +40,7 @@ test.describe("Storage", () => {
 
   test("can view storage details", async ({ page }) => {
     const api = createApiClient(page);
-    const response = await api.post<{ data: { id: number } }>("/storage-options", {
+    const response = await api.post<{ id: number }>("/storage-options", {
       name: "Drawer B",
       description: "Bottom right drawer",
       parent_id: null,
@@ -48,7 +48,7 @@ test.describe("Storage", () => {
       column: 3,
     });
 
-    await page.goto(`/storage/${response.data.id}`);
+    await page.goto(`/storage/${response.id}`);
 
     await expect(page.getByRole("heading", { name: "Drawer B" })).toBeVisible();
     await expect(page.getByText("Bottom right drawer")).toBeVisible();
@@ -57,7 +57,7 @@ test.describe("Storage", () => {
 
   test("can edit a storage location", async ({ page }) => {
     const api = createApiClient(page);
-    const response = await api.post<{ data: { id: number } }>("/storage-options", {
+    const response = await api.post<{ id: number }>("/storage-options", {
       name: "Drawer C",
       description: null,
       parent_id: null,
@@ -65,7 +65,7 @@ test.describe("Storage", () => {
       column: null,
     });
 
-    await page.goto(`/storage/${response.data.id}/edit`);
+    await page.goto(`/storage/${response.id}/edit`);
 
     await expect(page.getByRole("heading", { name: "Edit storage" })).toBeVisible();
     await page.getByLabel("Name").clear();
@@ -73,13 +73,13 @@ test.describe("Storage", () => {
     await page.getByRole("button", { name: "Save" }).click();
 
     // Should redirect to detail page
-    await page.waitForURL((url) => url.pathname === `/storage/${response.data.id}`);
+    await page.waitForURL((url) => url.pathname === `/storage/${response.id}`);
     await expect(page.getByRole("heading", { name: "Drawer C Renamed" })).toBeVisible();
   });
 
   test("can delete a storage location", async ({ page }) => {
     const api = createApiClient(page);
-    const response = await api.post<{ data: { id: number } }>("/storage-options", {
+    const response = await api.post<{ id: number }>("/storage-options", {
       name: "Drawer To Delete",
       description: null,
       parent_id: null,
@@ -87,7 +87,7 @@ test.describe("Storage", () => {
       column: null,
     });
 
-    await page.goto(`/storage/${response.data.id}/edit`);
+    await page.goto(`/storage/${response.id}/edit`);
 
     // Click the Delete button to open the confirm dialog
     await page.getByRole("button", { name: "Delete" }).first().click();
@@ -137,7 +137,7 @@ test.describe("Storage", () => {
     const api = createApiClient(page);
 
     // Create parent
-    const parent = await api.post<{ data: { id: number } }>("/storage-options", {
+    const parent = await api.post<{ id: number }>("/storage-options", {
       name: "Cabinet",
       description: null,
       parent_id: null,
@@ -149,7 +149,7 @@ test.describe("Storage", () => {
     await api.post("/storage-options", {
       name: "Shelf 1",
       description: null,
-      parent_id: parent.data.id,
+      parent_id: parent.id,
       row: null,
       column: null,
     });
@@ -157,11 +157,12 @@ test.describe("Storage", () => {
     await page.goto("/storage");
     await expect(page.getByRole("heading", { name: "Storage" })).toBeVisible();
 
-    // Both parent and child should be visible
+    // The overview lists parents with a sub-location count. The count is
+    // the visible signal that the parent→child relationship exists.
+    // Child names are not rendered on the overview today (the backend
+    // index returns top-level only; children surface as a count badge
+    // here and on the detail page).
     await expect(page.getByText("Cabinet")).toBeVisible();
-    await expect(page.getByText("Shelf 1")).toBeVisible();
-
-    // Parent should show sub-location count
     await expect(page.getByText("1 sub-locations")).toBeVisible();
   });
 });

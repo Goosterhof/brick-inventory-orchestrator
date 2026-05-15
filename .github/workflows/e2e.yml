@@ -61,6 +61,13 @@ jobs:
         run: |
           docker compose exec -T backend php artisan migrate --force
 
+      - name: Seed reference data
+        # Family-set tests POST set_num "75192-1" (Millennium Falcon) and rely on
+        # the set existing in the local DB so CreateFamilySetAction skips the
+        # Rebrickable lookup. The set lives in SetSeeder.
+        run: |
+          docker compose exec -T backend php artisan db:seed --class=SetSeeder --force
+
       - name: Run E2E tests
         run: |
           cd e2e
@@ -72,6 +79,14 @@ jobs:
         if: failure()
         run: |
           docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs
+
+      - name: Dump Laravel application log
+        if: failure()
+        run: |
+          # Octane / artisan-serve does not surface application exceptions on stdout, only
+          # writes them to storage/logs/laravel.log. Surface that file so the family-set
+          # POST-500 root cause is no longer invisible in failure runs.
+          docker compose exec -T backend sh -c 'test -f storage/logs/laravel.log && tail -n 300 storage/logs/laravel.log || echo "(no laravel.log yet)"'
 
       - name: Upload test results
         if: always()

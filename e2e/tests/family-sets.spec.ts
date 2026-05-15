@@ -39,13 +39,13 @@ test.describe("Family Sets", () => {
 
   test("can view set details", async ({ page }) => {
     const api = createApiClient(page);
-    const response = await api.post<{ data: { id: number } }>("/family-sets", {
+    const response = await api.post<{ id: number }>("/family-sets", {
       set_num: "75192-1",
       quantity: 1,
       status: "sealed",
     });
 
-    await page.goto(`/sets/${response.data.id}`);
+    await page.goto(`/sets/${response.id}`);
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sealed" })).toBeVisible();
@@ -54,13 +54,13 @@ test.describe("Family Sets", () => {
 
   test("can update set status via status buttons", async ({ page }) => {
     const api = createApiClient(page);
-    const response = await api.post<{ data: { id: number } }>("/family-sets", {
+    const response = await api.post<{ id: number }>("/family-sets", {
       set_num: "75192-1",
       quantity: 1,
       status: "sealed",
     });
 
-    await page.goto(`/sets/${response.data.id}`);
+    await page.goto(`/sets/${response.id}`);
 
     // Sealed should be the active status (yellow background)
     const sealedButton = page.getByRole("button", { name: "Sealed" });
@@ -76,31 +76,31 @@ test.describe("Family Sets", () => {
 
   test("can edit set details", async ({ page }) => {
     const api = createApiClient(page);
-    const response = await api.post<{ data: { id: number } }>("/family-sets", {
+    const response = await api.post<{ id: number }>("/family-sets", {
       set_num: "75192-1",
       quantity: 1,
       status: "sealed",
     });
 
-    await page.goto(`/sets/${response.data.id}/edit`);
+    await page.goto(`/sets/${response.id}/edit`);
 
     await expect(page.getByRole("heading", { name: "Edit set" })).toBeVisible();
     await page.getByLabel("Status").selectOption("built");
     await page.getByRole("button", { name: "Save" }).click();
 
     // Should redirect to detail page
-    await page.waitForURL((url) => url.pathname === `/sets/${response.data.id}`);
+    await page.waitForURL((url) => url.pathname === `/sets/${response.id}`);
   });
 
   test("can delete a set from collection", async ({ page }) => {
     const api = createApiClient(page);
-    const response = await api.post<{ data: { id: number } }>("/family-sets", {
+    const response = await api.post<{ id: number }>("/family-sets", {
       set_num: "75192-1",
       quantity: 1,
       status: "sealed",
     });
 
-    await page.goto(`/sets/${response.data.id}/edit`);
+    await page.goto(`/sets/${response.id}/edit`);
 
     // Click the Delete button on the form to open the confirm dialog
     await page.getByRole("button", { name: "Delete" }).first().click();
@@ -148,8 +148,10 @@ test.describe("Family Sets", () => {
       quantity: 1,
       status: "sealed",
     });
+    // 42151-1 is Bugatti Bolide in SetSeeder. We need a seeded set so the
+    // POST short-circuits the Rebrickable lookup (CI has no API key).
     await api.post("/family-sets", {
-      set_num: "10281-1",
+      set_num: "42151-1",
       quantity: 1,
       status: "built",
     });
@@ -160,11 +162,15 @@ test.describe("Family Sets", () => {
     const builtChip = page.getByRole("button", { name: "Built", exact: true }).first();
     await expect(builtChip).toBeVisible();
 
+    // FilterChip is a UnoCSS attributify component — the active background
+    // is bound to the `bg` attribute, not className. Inactive chips render
+    // bg with the card-bg variable + hover yellow-100; active chips render
+    // bg="yellow-300".
     await builtChip.click();
-    await expect(builtChip).toHaveClass(/yellow-300/);
+    await expect(builtChip).toHaveAttribute("bg", "yellow-300");
 
     await builtChip.click();
-    await expect(builtChip).not.toHaveClass(/yellow-300/);
+    await expect(builtChip).not.toHaveAttribute("bg", "yellow-300");
   });
 
   test("shows export button when sets exist", async ({ page }) => {
