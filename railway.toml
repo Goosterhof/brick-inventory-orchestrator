@@ -1,0 +1,21 @@
+# Railway deploy config for the monorepo.
+#
+# Set the Railway service's Root Directory to `/` (the orchestrator root)
+# so the Dockerfile at this level builds the multi-stage image with the
+# frontend baked into backend/public/. The Cloudflare Pages deploy is
+# dropped in this layout — one Railway service serves both surfaces.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# config:cache and view:cache run at deploy time so APP_KEY and other
+# runtime env vars are resolved into the cached output. route:cache is
+# intentionally skipped — routes/web.php uses a closure for the SPA
+# fallback that can't be serialized.
+startCommand = "php artisan config:cache && php artisan view:cache && php artisan migrate --force && php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=${PORT:-8000}"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

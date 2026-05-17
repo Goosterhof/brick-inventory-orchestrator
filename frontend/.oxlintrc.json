@@ -1,0 +1,357 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "plugins": ["typescript", "import", "unicorn", "promise", "vue", "vitest", "jsx-a11y"],
+    "categories": {"correctness": "error"},
+    "env": {"builtin": true, "browser": true, "es2024": true},
+    "ignorePatterns": ["dist/**", "dist-ssr/**", "coverage/**", "node_modules/**", "public/**", "scripts/**"],
+    "rules": {
+        // Core rules
+        "no-console": "error",
+        "prefer-const": "error",
+        "eqeqeq": "error",
+        "no-var": "error",
+        "no-undef": "off", // handled by TypeScript
+        "no-unused-vars": "off", // handled by @typescript-eslint/no-unused-vars
+        "no-debugger": "error",
+        "no-empty": "error",
+        "no-duplicate-imports": "off", // import/no-duplicates handles this better with type imports
+        "no-self-compare": "error",
+        "no-template-curly-in-string": "error",
+        "no-unreachable": "error",
+        // no-unsafe-negation: covered by correctness category
+        // no-return-await: removed from oxlint (ESLint deprecated it in v8.46); superseded by typescript/return-await (type-aware)
+        "no-throw-literal": "error",
+        "no-unneeded-ternary": "warn",
+        "prefer-template": "warn",
+        "radix": "error",
+        "no-restricted-imports": [
+            "error",
+            {
+                "patterns": [
+                    {
+                        "regex": "\\.\\./apps/|\\.\\./(\\.\\./)*(apps/)",
+                        "message": "Use @app/ or @shared/ aliases instead of relative paths crossing module boundaries."
+                    },
+                    {
+                        "regex": "\\.\\./shared/|\\.\\./(\\.\\./)*(shared/)",
+                        "message": "Use @shared/ alias instead of relative paths crossing module boundaries."
+                    },
+                    {
+                        "regex": "^@/apps/",
+                        "message": "Use @app/ alias instead of @/apps/. Direct app references bypass the multi-app build boundary."
+                    }
+                ]
+            }
+        ],
+
+        // Complexity limits
+        "complexity": ["error", 10],
+        "max-params": ["error", 4],
+        "max-depth": ["warn", 4],
+        "max-nested-callbacks": ["warn", 3],
+        "max-lines-per-function": ["error", {"max": 80, "skipBlankLines": true, "skipComments": true}],
+
+        // Restricted globals — force usage of app storage services
+        "no-restricted-globals": [
+            "error",
+            {
+                "name": "localStorage",
+                "message": "Use the app storage service (e.g., familyStorageService) instead of direct localStorage access."
+            },
+            {
+                "name": "sessionStorage",
+                "message": "Use the app storage service instead of direct sessionStorage access."
+            }
+        ],
+
+        // TypeScript rules
+        "@typescript-eslint/no-non-null-assertion": "error",
+        "@typescript-eslint/no-explicit-any": "error",
+        "@typescript-eslint/no-unused-vars": "error",
+        "@typescript-eslint/no-empty-interface": "off", // superseded by typescript/no-empty-object-type
+        "@typescript-eslint/prefer-as-const": "error",
+        "@typescript-eslint/ban-ts-comment": "error",
+        "@typescript-eslint/no-duplicate-enum-values": "error",
+
+        // Type-aware rules (require --type-aware flag)
+        "typescript/no-floating-promises": "error",
+        "typescript/no-misused-promises": "error",
+        "typescript/await-thenable": "error",
+        "typescript/no-for-in-array": "error",
+        "typescript/only-throw-error": "error",
+        "typescript/no-unsafe-argument": "error",
+        "typescript/no-unsafe-assignment": "error",
+        "typescript/no-unsafe-call": "error",
+        "typescript/no-unsafe-member-access": "error",
+        "typescript/no-unsafe-return": "error",
+        "typescript/no-unnecessary-type-assertion": "error",
+        "typescript/no-redundant-type-constituents": "error",
+        "typescript/prefer-optional-chain": "warn",
+        "typescript/prefer-nullish-coalescing": "warn",
+        "typescript/switch-exhaustiveness-check": "error",
+        "typescript/consistent-type-imports": "error",
+        "typescript/no-import-type-side-effects": "error",
+        // Use the type-aware version of require-await; the core rule was removed from the general rules to avoid duplicate configuration.
+        "typescript/require-await": "warn",
+        "typescript/return-await": "error",
+        "typescript/consistent-type-exports": "error",
+        "typescript/no-empty-object-type": "error",
+        "typescript/no-confusing-non-null-assertion": "error",
+        "typescript/no-deprecated": "warn",
+        "typescript/no-unnecessary-condition": "error",
+        "typescript/no-unnecessary-template-expression": "warn",
+        "typescript/no-unnecessary-type-constraint": "warn",
+        "typescript/no-unnecessary-type-arguments": "warn",
+        "typescript/strict-boolean-expressions": "off", // too aggressive — idiomatic TS/Vue uses truthy/falsy checks extensively; explicit comparisons add verbosity without meaningful safety gains
+
+        // Import rules
+        "import/no-duplicates": "error",
+        "import/first": "error",
+        "import/no-self-import": "error",
+        "import/no-cycle": "error",
+        "import/no-mutable-exports": "error",
+        "import/no-named-default": "error",
+        "import/no-default-export": "off", // Vue components use default exports
+        "import/no-named-as-default": "warn",
+        "import/no-empty-named-blocks": "error",
+
+        // Unicorn rules - modern JS best practices
+        "unicorn/no-array-for-each": "error",
+        "unicorn/prefer-array-some": "warn",
+        "unicorn/prefer-includes": "warn",
+        "unicorn/prefer-string-starts-ends-with": "warn",
+        "unicorn/no-null": "off", // null is fine in this project
+        "unicorn/prefer-array-flat": "warn",
+        "unicorn/prefer-array-flat-map": "warn",
+        "unicorn/prefer-number-properties": "warn",
+        "unicorn/prefer-optional-catch-binding": "warn",
+        "unicorn/throw-new-error": "error",
+        "unicorn/no-useless-spread": "error",
+        "unicorn/no-nested-ternary": "error",
+        "unicorn/prefer-node-protocol": "warn",
+        "unicorn/prefer-ternary": "off", // can reduce readability
+        // unicorn/no-array-push-splice: phantom rule — never existed in oxlint or eslint-plugin-unicorn. Likely intended unicorn/no-array-push-push (renamed to prefer-single-call upstream), neither available in oxlint
+        "unicorn/prefer-spread": "warn",
+        "unicorn/no-lonely-if": "warn",
+        "unicorn/no-abusive-eslint-disable": "error",
+        "unicorn/prefer-event-target": "warn",
+        "unicorn/prefer-string-replace-all": "off", // disabled: oxlint type-aware resolves replaceAll() as any, causing no-unsafe-call cascades
+        "unicorn/prefer-structured-clone": "warn",
+        "unicorn/error-message": "error",
+        "unicorn/no-negation-in-equality-check": "error",
+        "unicorn/no-useless-promise-resolve-reject": "warn",
+        "unicorn/consistent-function-scoping": "warn",
+        "unicorn/prefer-at": "error",
+
+        // Promise rules
+        "promise/no-return-wrap": "error",
+        "promise/catch-or-return": "error",
+        "promise/no-nesting": "error",
+        "promise/param-names": "error",
+        "promise/no-multiple-resolved": "error",
+
+        // Vue rules
+        "vue/no-arrow-functions-in-watch": "error",
+        "vue/no-deprecated-destroyed-lifecycle": "error",
+        "vue/no-export-in-script-setup": "error",
+        "vue/no-lifecycle-after-await": "error",
+        "vue/prefer-import-from-vue": "error",
+        "vue/no-required-prop-with-default": "error",
+        "vue/require-typed-ref": "error",
+        // vue/no-ref-as-operand: never implemented in oxlint — requires Vue reactivity semantics
+        // vue/no-dupe-keys: never implemented in oxlint — requires Vue options API parsing
+        // vue/no-template-shadow: never implemented in oxlint — requires Vue template parsing (oxc-project/oxc#15761)
+        "vue/define-emits-declaration": "error",
+        "vue/define-props-declaration": "error",
+        "vue/define-props-destructuring": "error",
+        "vue/no-import-compiler-macros": "error",
+
+        // Accessibility (a11y) rules
+        "jsx-a11y/alt-text": "error",
+        "jsx-a11y/anchor-has-content": "error",
+        "jsx-a11y/anchor-is-valid": "warn",
+        "jsx-a11y/click-events-have-key-events": "warn",
+        "jsx-a11y/heading-has-content": "error",
+        "jsx-a11y/html-has-lang": "error",
+        "jsx-a11y/img-redundant-alt": "warn",
+        "jsx-a11y/no-autofocus": "warn",
+        "jsx-a11y/no-distracting-elements": "error",
+        "jsx-a11y/scope": "error",
+        "jsx-a11y/tabindex-no-positive": "warn",
+
+        // Vitest rules
+        "vitest/no-conditional-tests": "error",
+        "vitest/no-import-node-test": "error",
+        "vitest/consistent-test-filename": ["warn", {"pattern": ".*\\.spec\\.ts$"}],
+        "vitest/prefer-to-be-object": "warn",
+        // Activated by `categories.correctness: error` but disabled with rationale (both jest/* and vitest/* spellings — oxlint fires both from the correctness category):
+        "vitest/valid-expect": "off", // BIO uses Vitest's documented expect(value, message) API for richer arch-test failure diagnostics; rule is jest-shaped and rejects the second argument
+        "jest/valid-expect": "off", // see vitest/valid-expect note
+        "vitest/expect-expect": "off", // BIO integration tests intentionally smoke-test composition without explicit assertions (e.g., "navigates back via BackButton click" — see in-test comment)
+        "jest/expect-expect": "off" // see vitest/expect-expect note
+    },
+    "overrides": [
+        {"files": ["*.vue"], "rules": {"no-undef": "off"}},
+        {"files": ["src/shared/services/storage.ts"], "rules": {"no-console": "off", "no-restricted-globals": "off"}},
+        {
+            "files": ["src/tests/**"],
+            "rules": {
+                "no-restricted-imports": "off",
+                "no-restricted-globals": "off",
+                "max-lines-per-function": "off",
+                "max-nested-callbacks": "off",
+                "complexity": "off",
+                "vitest/no-disabled-tests": "error",
+                "vitest/no-focused-tests": "error",
+                "vitest/no-identical-title": "error",
+                "vitest/prefer-strict-equal": "error",
+                "vitest/prefer-to-be": "error",
+                "vitest/prefer-to-contain": "error",
+                "vitest/no-conditional-expect": "error",
+                "vitest/valid-describe-callback": "error",
+                "vitest/no-commented-out-tests": "error"
+            }
+        },
+        {
+            "files": ["src/shared/**"],
+            "rules": {
+                "no-restricted-imports": [
+                    "error",
+                    {
+                        "patterns": [
+                            {
+                                "regex": "\\.\\./apps/|\\.\\./(\\.\\./)*(apps/)",
+                                "message": "Use @app/ or @shared/ aliases instead of relative paths crossing module boundaries."
+                            },
+                            {
+                                "regex": "\\.\\./shared/|\\.\\./(\\.\\./)*(shared/)",
+                                "message": "Use @shared/ alias instead of relative paths crossing module boundaries."
+                            },
+                            {
+                                "regex": "^@/apps/",
+                                "message": "Use @app/ alias instead of @/apps/. Direct app references bypass the multi-app build boundary."
+                            },
+                            {
+                                "regex": "^@app/",
+                                "message": "Shared code must not import from @app/. Shared modules must remain app-agnostic."
+                            }
+                        ],
+                        "paths": [
+                            {
+                                "name": "vue-router",
+                                "importNames": ["RouterLink"],
+                                "message": "RouterLink is forbidden in shared components (ADR-001). Use <a> tags with click emits instead."
+                            },
+                            {
+                                "name": "vue-router",
+                                "importNames": ["useRouter", "useRoute"],
+                                "message": "Direct useRouter/useRoute is forbidden in shared code (ADR-001). Shared modules must remain router-agnostic."
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "files": ["src/apps/families/**"],
+            "rules": {
+                "no-restricted-imports": [
+                    "error",
+                    {
+                        "patterns": [
+                            {
+                                "regex": "\\.\\./apps/|\\.\\./(\\.\\./)*(apps/)",
+                                "message": "Use @app/ or @shared/ aliases instead of relative paths crossing module boundaries."
+                            },
+                            {
+                                "regex": "\\.\\./shared/|\\.\\./(\\.\\./)*(shared/)",
+                                "message": "Use @shared/ alias instead of relative paths crossing module boundaries."
+                            },
+                            {
+                                "regex": "^@/apps/",
+                                "message": "Use @app/ alias instead of @/apps/. Direct app references bypass the multi-app build boundary."
+                            },
+                            {
+                                "regex": "(\\.\\./)+admin(/|$)",
+                                "message": "Cannot import from the admin app. Apps must remain independent; use @shared/ for shared code."
+                            }
+                        ],
+                        "paths": [
+                            {
+                                "name": "vue-router",
+                                "importNames": ["useRouter", "useRoute"],
+                                "message": "Direct useRouter/useRoute is forbidden in apps (ADR-001). Use RouterService instead."
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "files": ["src/apps/admin/**"],
+            "rules": {
+                "no-restricted-imports": [
+                    "error",
+                    {
+                        "patterns": [
+                            {
+                                "regex": "\\.\\./apps/|\\.\\./(\\.\\./)*(apps/)",
+                                "message": "Use @app/ or @shared/ aliases instead of relative paths crossing module boundaries."
+                            },
+                            {
+                                "regex": "\\.\\./shared/|\\.\\./(\\.\\./)*(shared/)",
+                                "message": "Use @shared/ alias instead of relative paths crossing module boundaries."
+                            },
+                            {
+                                "regex": "^@/apps/",
+                                "message": "Use @app/ alias instead of @/apps/. Direct app references bypass the multi-app build boundary."
+                            },
+                            {
+                                "regex": "(\\.\\./)+families(/|$)",
+                                "message": "Cannot import from the families app. Apps must remain independent; use @shared/ for shared code."
+                            }
+                        ],
+                        "paths": [
+                            {
+                                "name": "vue-router",
+                                "importNames": ["useRouter", "useRoute"],
+                                "message": "Direct useRouter/useRoute is forbidden in apps (ADR-001). Use RouterService instead."
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "files": ["src/apps/*/domains/**"],
+            "rules": {
+                "no-restricted-imports": [
+                    "error",
+                    {
+                        "patterns": [
+                            {
+                                "regex": "\\.\\./apps/|\\.\\./(\\.\\./)*(apps/)",
+                                "message": "Use @app/ or @shared/ aliases instead of relative paths crossing module boundaries."
+                            },
+                            {
+                                "regex": "\\.\\./shared/|\\.\\./(\\.\\./)*(shared/)",
+                                "message": "Use @shared/ alias instead of relative paths crossing module boundaries."
+                            },
+                            {
+                                "regex": "^@/apps/",
+                                "message": "Use @app/ alias instead of @/apps/. Direct app references bypass the multi-app build boundary."
+                            },
+                            {
+                                "regex": "^@app/domains/",
+                                "message": "Cross-domain imports are forbidden. Domains must not import from other domains via @app/domains/."
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {"files": ["src/**/*.ts"], "rules": {"import/no-default-export": "error"}},
+        {"files": ["src/tests/**/*-reporter.ts"], "rules": {"import/no-default-export": "off", "no-console": "off"}},
+        {"files": ["uno.config.ts"], "rules": {"typescript/no-deprecated": "off"}}
+    ]
+}

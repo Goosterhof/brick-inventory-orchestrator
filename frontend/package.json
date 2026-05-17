@@ -1,0 +1,119 @@
+{
+    "name": "brick-inventory-frontend",
+    "version": "1.0.0",
+    "private": false,
+    "description": "Vue 3 multi-app monorepo for managing LEGO brick inventory",
+    "keywords": [
+        "inventory",
+        "lego",
+        "typescript",
+        "vite",
+        "vue",
+        "vue3"
+    ],
+    "homepage": "https://github.com/Goosterhof/brick-inventory-frontend#readme",
+    "license": "MIT",
+    "author": "Gerard Oosterhof",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Goosterhof/brick-inventory-frontend.git"
+    },
+    "type": "module",
+    "scripts": {
+        "build": "run-p type-check \"build:families {@}\" \"build:admin {@}\" \"build:showcase {@}\" --",
+        "build:admin": "cross-env APP_NAME=admin vite build --base=/admin/",
+        "build:families": "cross-env APP_NAME=families vite build",
+        "build:showcase": "cross-env APP_NAME=showcase vite build",
+        "dev": "cross-env APP_NAME=families vite",
+        "dev:admin": "cross-env APP_NAME=admin vite",
+        "dev:families": "cross-env APP_NAME=families vite",
+        "dev:showcase": "cross-env APP_NAME=showcase vite",
+        "format": "oxfmt --write .",
+        "format:check": "oxfmt --check .",
+        "knip": "knip",
+        "lint": "oxlint --type-aware",
+        "lint:vue": "node scripts/lint-vue-conventions.mjs",
+        "prepare": "echo 'frontend hooks are dispatched from .githooks/ at the orchestrator root'",
+        "pretest:coverage": "node -e \"require('fs').rmSync('coverage', {recursive: true, force: true})\"",
+        "preview": "cross-env APP_NAME=families vite preview",
+        "registry": "node scripts/generate-component-registry.mjs",
+        "registry:check": "node scripts/generate-component-registry.mjs --check",
+        "size": "size-limit",
+        "test:browser": "vitest --config vitest.browser.config.ts",
+        "test:browser:run": "vitest run --config vitest.browser.config.ts",
+        "test:coverage": "vitest run --coverage",
+        "test:integration": "vitest --config vitest.integration.config.ts",
+        "test:integration:run": "vitest run --config vitest.integration.config.ts",
+        "test:mutation": "stryker run",
+        "test:unit": "vitest",
+        "type-check": "vue-tsc --build"
+    },
+    "dependencies": {
+        "@phosphor-icons/vue": "^2.2.1",
+        "@script-development/fs-adapter-store": "^0.1.0",
+        "@script-development/fs-dialog": "^0.1.0",
+        "@script-development/fs-helpers": "^0.1.0",
+        "@script-development/fs-http": "^0.1.0",
+        "@script-development/fs-loading": "^0.1.0",
+        "@script-development/fs-router": "^0.1.1",
+        "@script-development/fs-storage": "^0.1.0",
+        "@script-development/fs-theme": "^0.1.0",
+        "@script-development/fs-toast": "^0.1.0",
+        "@script-development/fs-translation": "^0.1.0",
+        "axios": "^1.13.6",
+        "barcode-detector": "^3.1.1",
+        "vue": "^3.5.30",
+        "vue-router": "^5.0.3"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^20.4.3",
+        "@commitlint/config-conventional": "^20.4.3",
+        "@size-limit/file": "^12.0.0",
+        "@stryker-mutator/core": "^9.6.0",
+        "@stryker-mutator/vitest-runner": "^9.6.0",
+        "@tsconfig/node24": "^24.0.4",
+        "@types/node": "^24.11.0",
+        "@typescript/native-preview": "^7.0.0-dev.20260305.1",
+        "@unocss/reset": "^66.6.5",
+        "@vitejs/plugin-vue": "^6.0.5",
+        "@vitest/browser": "^4.1.0",
+        "@vitest/browser-playwright": "^4.1.0",
+        "@vitest/coverage-istanbul": "^4.1.0",
+        "@vue/test-utils": "^2.4.6",
+        "@vue/tsconfig": "^0.8.1",
+        "axios-mock-adapter": "^2.1.0",
+        "cross-env": "^10.1.0",
+        "happy-dom": "^20.8.4",
+        "jiti": "^2.6.1",
+        "knip": "^5.85.0",
+        "lint-staged": "^16.3.2",
+        "npm-run-all2": "^8.0.4",
+        "oxfmt": "0.43.0",
+        "oxlint": "^1.42.0",
+        "oxlint-tsgolint": "^0.22.0",
+        "playwright": "^1.58.2",
+        "size-limit": "^12.0.0",
+        "typescript": "~5.9.3",
+        "unocss": "^66.6.0",
+        "vite": "^8.0.0",
+        "vite-plugin-oxlint": "^2.0.1",
+        "vite-plugin-vue-devtools": "^8.1.0",
+        "vitest": "^4.1.0",
+        "vue-tsc": "^3.2.5"
+    },
+    "lint-staged": {
+        "*.{ts,vue}": [
+            "oxfmt --write",
+            "oxlint --type-aware"
+        ],
+        "*.vue": [
+            "node scripts/lint-vue-conventions.mjs"
+        ],
+        "*.{html,css,md,json}": [
+            "oxfmt --write"
+        ]
+    },
+    "engines": {
+        "node": ">=24"
+    }
+}

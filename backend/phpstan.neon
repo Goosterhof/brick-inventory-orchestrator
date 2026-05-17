@@ -1,0 +1,123 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+    - vendor/script-development/phpstan-warroom-rules/extension.neon
+    - phar://phpstan.phar/conf/bleedingEdge.neon
+
+parameters:
+    level: max
+
+    paths:
+        - app
+        - bootstrap
+        - config
+        - database
+        - routes
+        - tests
+
+    excludePaths:
+        - bootstrap/cache
+
+    # Larastan-specific rules
+    checkModelProperties: true
+    checkOctaneCompatibility: true
+    noModelMake: true
+    noUnnecessaryCollectionCall: true
+
+    # PHPStan strictness rules
+    reportUnmatchedIgnoredErrors: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+
+    ignoreErrors:
+        # Known Larastan + phpstan-strict-rules incompatibility (larastan/larastan#1272,
+        # phpstan/phpstan-strict-rules#140). Larastan re-declares Eloquent Builder methods
+        # as static on Models so Model::where() resolves, but this makes phpstan-strict-rules
+        # flag $builder->where() as a dynamic call on a static method. No upstream fix exists.
+        # This ignore is scoped by identifier (not fragile regex) and path-limited to app/.
+        # With reportUnmatchedIgnoredErrors: true, PHPStan will flag this if Larastan fixes
+        # the issue upstream, prompting removal. Reviewed 2026-03-24.
+        -
+            identifier: staticMethod.dynamicCall
+            path: app/*
+
+        # Pest test suite: Pest's DSL uses internal classes, dynamic method chaining,
+        # and returns mixed types that PHPStan at level max cannot resolve. These are
+        # scoped strictly to tests/ and do not mask app/ errors. With
+        # reportUnmatchedIgnoredErrors: true, any category that becomes resolvable
+        # upstream will surface for cleanup. Reviewed 2026-03-26.
+        -
+            identifier: method.notFound
+            path: tests/*
+        -
+            identifier: method.nonObject
+            path: tests/*
+        -
+            identifier: method.internalClass
+            path: tests/*
+        -
+            identifier: argument.type
+            path: tests/*
+        -
+            identifier: property.notFound
+            path: tests/*
+        -
+            identifier: offsetAccess.invalidOffset
+            path: tests/*
+        -
+            identifier: offsetAccess.nonOffsetAccessible
+            path: tests/*
+        -
+            identifier: property.nonObject
+            path: tests/*
+        -
+            identifier: method.dynamicName
+            path: tests/*
+        -
+            identifier: cast.string
+            path: tests/*
+        -
+            identifier: cast.useless
+            path: tests/*
+        -
+            identifier: missingType.generics
+            path: tests/*
+        -
+            identifier: missingType.iterableValue
+            path: tests/*
+        -
+            identifier: foreach.nonIterable
+            path: tests/*
+        -
+            identifier: binaryOp.invalid
+            path: tests/*
+        -
+            identifier: if.condNotBoolean
+            path: tests/*
+        -
+            identifier: return.type
+            path: tests/*
+        -
+            identifier: argument.templateType
+            path: tests/*
+        -
+            identifier: ternary.shortNotAllowed
+            path: tests/*
+        -
+            identifier: staticMethod.dynamicCall
+            path: tests/*
+        -
+            identifier: staticMethod.deprecated
+            path: tests/*
+        -
+            identifier: cast.int
+            path: tests/*
+        -
+            identifier: booleanNot.exprNotBoolean
+            path: tests/*
+        -
+            identifier: booleanAnd.rightNotBoolean
+            path: tests/*
+        -
+            identifier: booleanAnd.leftNotBoolean
+            path: tests/*

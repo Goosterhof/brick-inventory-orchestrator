@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Monorepo pre-push dispatcher.
+#
+# Inspect the pushed range and run each surface's pre-push gauntlet only
+# when that surface has files in the range:
+#   - backend/  → CaptainHook (PrePushPermitGate → composer test). The
+#     gate reads stdin per git's pre-push protocol, so we pipe our
+#     buffered stdin through unchanged.
+#   - frontend/ → Husky's pre-push script (type-check → knip → test:coverage → build).
+
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+# git invokes pre-push with one line per pushed ref on stdin:
+#   <local-ref> <local-sha> <remote-ref> <remote-sha>
+# Buffer it so we can both inspect the range AND replay it into the
+# delegated hook.
+stdin_buffer=$(cat || true)
+
+needs_backend=0
+needs_frontend=0
+
+if [ -n "$stdin_buffer" ]; then
+    while IFS=' ' read -r _local_ref local_sha _remote_ref remote_sha; do
+        [ -z "${local_sha:-}" ] && continue
+        # Skip ref deletes (all-zero local sha).
+        [[ "$local_sha" =~ ^0+$ ]] && continue
+
+        if [[ "${remote_sha:-}" =~ ^0+$ ]] || [ -z "${remote_sha:-}" ]; then
+            # New branch on the remote — diff against the merge-base with origin/main.
+            base=$(git merge-base "$local_sha" origin/main 2>/dev/null || true)
+            if [ -n "$base" ]; then
+                range="$base..$local_sha"
+            else
+                range="$local_sha"
+            fi
+        else
+            range="$remote_sha..$local_sha"
+        fi
+
+        changed=$(git diff --name-only "$range" 2>/dev/null || true)
+        if grep -qE '^backend/' <<< "$changed"; then
+            needs_backend=1
+        fi
+        if grep -qE '^frontend/' <<< "$changed"; then
+            needs_frontend=1
+        fi
+    done <<< "$stdin_buffer"
+fi
+
+if [ "$needs_backend" -eq 1 ]; then
+    echo "→ backend changes in push range; running backend pre-push gauntlet"
+    # --git-directory points at the parent's .git/ — captainhook would
+    # otherwise look for backend/.git/ which doesn't exist in the monorepo
+    # (the only git directory is at the orchestrator root).
+    (cd backend && printf '%s\n' "$stdin_buffer" | vendor/bin/captainhook hook:pre-push --git-directory=../.git)
+fi
+
+if [ "$needs_frontend" -eq 1 ]; then
+    echo "→ frontend changes in push range; running frontend pre-push gauntlet"
+    (cd frontend && bash .husky/pre-push)
+fi
+
+exit 0

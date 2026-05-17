@@ -1,56 +1,53 @@
 # Brick Inventory Orchestrator
 
-A LEGO storage and inventory management system — orchestrator for a three-repository project that lets families catalog their sets, track parts, organize physical storage, and sync collections from external suppliers.
+A LEGO storage and inventory management system that lets families catalog their sets, track parts, organize physical storage, and sync collections from external suppliers.
 
-This repository is the **orchestrator** (or "Baseplate" in the project's LEGO vocabulary). It does not contain application code; it ties together two vassal repositories under Docker Compose for local development, runs the end-to-end test suite, and provides the operational scripts.
+This is the **monorepo** (or "Baseplate" in the project's LEGO vocabulary). It carries both surfaces of the application plus the harness that ties them together — Docker Compose for local development, Playwright for end-to-end tests, and the operational scripts that drive the build.
 
 ## Repository Layout
 
-The project is split across three repositories:
+```
+brick-inventory-orchestrator/     # The Baseplate (this repo)
+├── backend/             # The Brick — Laravel 12 API (PHP 8.5, PostgreSQL)
+├── frontend/            # The Plate — Vue 3 SPA (TypeScript, Vite)
+├── e2e/                 # Set Assembly Check — Playwright E2E suite
+├── .githooks/           # Root pre-commit + pre-push dispatchers
+├── .github/             # CI workflows (backend-ci, frontend-ci, e2e) + dependabot
+├── docker/              # Local dev Dockerfiles (backend + frontend)
+├── Dockerfile           # Production image — multi-stage, backend serves frontend
+├── railway.toml         # Railway deploy config
+├── docker-compose.yml
+├── docker-compose.e2e.yml
+└── Makefile
+```
 
-| Repository | Role | Stack |
-|---|---|---|
-| **This repository** | Orchestrator — Docker Compose harness, E2E suite, ops scripts | Docker Compose, Playwright |
-| [`Goosterhof/brick-inventory-backend`](https://github.com/Goosterhof/brick-inventory-backend) | Backend API ("the Brick") | Laravel, PHP 8.5, PostgreSQL |
-| [`Goosterhof/brick-inventory-frontend`](https://github.com/Goosterhof/brick-inventory-frontend) | Frontend SPA ("the Plate") | Vue 3, TypeScript, Vite |
+Production ships as a single Railway service. The root `Dockerfile` multi-stages a Node frontend build, a Composer backend install, and a FrankenPHP runtime that overlays both shipping Vue apps onto `backend/public/` — `families` at the root, `admin` under `/admin/`. FrankenPHP serves everything from one origin: `/api/*` hits Laravel, `/admin*` serves the admin SPA, and any other route serves the families SPA. The Cloudflare Pages deploy that hosted the standalone frontend is retired.
 
-The two vassals are git submodules of this repository (`backend/` and `frontend/`). Each is independently buildable and deployable — the orchestrator coordinates them for the local-development and end-to-end-testing experience.
+Both surfaces were absorbed into this repo via `git subtree add` on 2026-05-17 (with full pre-merge history preserved); the standalone `Goosterhof/brick-inventory-backend` and `Goosterhof/brick-inventory-frontend` repos are archived as historical anchors.
 
-### Why Three Repositories
-
-- **Backend and frontend ship independently.** The backend deploys to Railway on push; the frontend deploys to Cloudflare Pages on push. Coupling them in a single repository would couple their release cadences for no operational benefit.
-- **The orchestrator is shared infrastructure.** The `Makefile`, the `docker-compose.yml` and the Playwright E2E suite belong neither to the API nor to the SPA — they live here so both vassals stay focused on application code.
-- **The split makes the showcase legible.** Each repository tells one story: the API, the SPA, the harness that ties them together. A reviewer can land in any of the three and understand its boundaries.
+Why a monorepo: cross-cutting changes that used to need three coordinated PRs (backend → frontend → orchestrator submodule bump) now land in one. CI runs from a single source of truth. The orchestrator owns the only `.git/`, and per-surface tooling is dispatched by path filters.
 
 ## Quick Start
 
-### Clone with submodules
-
 ```bash
-git clone --recurse-submodules https://github.com/Goosterhof/brick-inventory-orchestrator.git
+git clone https://github.com/Goosterhof/brick-inventory-orchestrator.git
 cd brick-inventory-orchestrator
-```
-
-If you cloned without `--recurse-submodules`, run `git submodule update --init --recursive` to pull the vassals.
-
-### First-time setup
-
-```bash
 make init
 ```
 
-`make init` initializes the submodules, copies `.env.example` to `.env`, builds the Docker images, starts the services, installs backend dependencies, generates the application key, and runs the database migrations.
+`make init` runs `make hooks-install` (wires git hooks to `.githooks/`), copies `.env.example` to `.env`, builds the Docker images, starts the services, installs backend dependencies, generates the application key, and runs the database migrations.
 
 ### Day-to-day commands
 
 ```bash
 make up               # start all services
-make queue            # run the queue worker (separate terminal — required for emails and async imports)
+make queue            # run the queue worker (second terminal — required for emails + async imports)
 make down             # stop all services
-make logs             # follow the combined logs
+make logs             # follow combined logs
 make migrate          # run pending migrations
 make test             # run the backend + frontend test suites
-make lint             # lint both vassals
+make lint             # lint both surfaces
+make doctor           # preflight checklist (containers, hooks, env)
 ```
 
 The full command list lives in the [Makefile](Makefile).
@@ -69,20 +66,19 @@ The Playwright E2E suite runs against an isolated stack:
 make e2e-install      # install Playwright + browsers (first time only)
 make e2e-up           # bring up the isolated stack
 make e2e              # run the suite
-make e2e-down         # tear down the isolated stack
+make e2e-down         # tear down
 ```
 
 ## Documentation
 
-- The orchestrator's conventions are documented in [`CLAUDE.md`](CLAUDE.md) (read primarily by AI coding assistants — see the preamble in that file).
-- Each vassal carries its own `README.md`, `CLAUDE.md`, `SECURITY.md`, and `LICENSE`. Start with the vassal's `README.md` for application-level orientation.
+- The orchestrator's conventions are documented in [`CLAUDE.md`](CLAUDE.md) (read primarily by AI coding assistants).
+- Each surface carries its own sovereign manifest: [`backend/CLAUDE.md`](backend/CLAUDE.md) (Stud & Sort Logistics) and [`frontend/CLAUDE.md`](frontend/CLAUDE.md) (Brick & Mortar Associates). Start there for surface-specific guidelines.
+- [`docs/monorepo-migration-plan.md`](docs/monorepo-migration-plan.md) records how this repo was assembled from its three former parts.
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for the vulnerability-disclosure policy. The vassals each carry their own `SECURITY.md` for application-level reports — please direct issues to the repository whose code is affected.
+See [SECURITY.md](SECURITY.md) for the vulnerability-disclosure policy.
 
 ## License
 
 [MIT](LICENSE) — Copyright (c) 2026 Gerard Oosterhof.
-
-The two vassal repositories ship under their own `LICENSE` files; both are MIT.

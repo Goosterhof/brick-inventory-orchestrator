@@ -1,0 +1,16 @@
+{
+    "extends": "./tsconfig.app.json",
+    "include": ["src/tests/**/*", "env.d.ts"],
+    "exclude": [],
+    "compilerOptions": {
+        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.vitest.tsbuildinfo",
+
+        "paths": {
+            "@/*": ["./src/*"],
+            "@shared/*": ["./src/shared/*"],
+            "@app/*": ["./src/apps/families/*", "./src/apps/admin/*"],
+            "@integration/*": ["./src/tests/integration/*"]
+        },
+        "types": ["node"]
+    }
+}

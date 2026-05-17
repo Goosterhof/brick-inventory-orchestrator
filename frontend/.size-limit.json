@@ -1,0 +1,4 @@
+[
+    {"name": "families app JS", "path": "dist/families/assets/*.js", "limit": "350 kB"},
+    {"name": "admin app JS", "path": "dist/admin/assets/*.js", "limit": "150 kB"}
+]

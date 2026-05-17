@@ -1,0 +1,53 @@
+# Keep the production build context lean. The root Dockerfile only needs
+# backend/ + frontend/ source; everything else is noise that slows the
+# `docker build` send-context phase and bloats intermediate layers.
+
+# Git history (large after the subtree merge)
+.git
+.gitignore
+.gitattributes
+.gitmodules
+
+# Tooling + local env
+.githooks
+.github
+.claude
+.husky
+.vscode
+.idea
+.devcontainer
+
+# Local dev artifacts
+backend/vendor
+backend/.env
+backend/.env.*
+backend/storage/logs/*.log
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/.phpunit.cache
+backend/coverage
+backend/node_modules
+
+frontend/node_modules
+frontend/dist
+frontend/.env
+frontend/.env.*
+frontend/coverage
+frontend/.vite
+
+# Cross-surface dev tooling that isn't needed in the prod image
+e2e
+docker
+docker-compose*.yml
+Makefile
+scripts
+docs
+
+# Records / paper-trail content
+**/.claude/records
+
+# OS noise
+.DS_Store
+Thumbs.db
+*.swp

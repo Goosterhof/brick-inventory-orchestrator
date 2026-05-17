@@ -1,0 +1,9 @@
+# Commits listed here are skipped by GitHub's blame view automatically.
+# Local git users can opt in via:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# Add large mechanical reformats here so line authorship stays on the
+# author of the logic, not the formatter.
+
+# chore(brick): reformat frontend under war-room oxfmt template (2026-04-23)
+a6a33f08a6c843dd0fa9bad0bae61e63ce1c1a39
