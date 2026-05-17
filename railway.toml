@@ -10,12 +10,15 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# config:cache and view:cache run at deploy time so APP_KEY and other
-# runtime env vars are resolved into the cached output. route:cache is
-# intentionally skipped — routes/web.php uses a closure for the SPA
-# fallback that can't be serialized.
-startCommand = "php artisan config:cache && php artisan view:cache && php artisan migrate --force && php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=${PORT:-8000}"
+# Keep the deploy chain minimal: migrate forward and start Octane. config:cache
+# and view:cache are perf optimizations, not correctness — and view:cache in
+# particular was failing silently in this API-only project (no Blade views to
+# compile), breaking the chain before octane:start could bind to PORT. If we
+# want config:cache later, add it via a separate `ARG`-driven build step in
+# the Dockerfile instead of the runtime chain. route:cache stays off because
+# routes/web.php uses a closure for the SPA fallback that can't be serialized.
+startCommand = "php artisan migrate --force && php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=${PORT:-8000}"
 healthcheckPath = "/api/health"
-healthcheckTimeout = 60
+healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
