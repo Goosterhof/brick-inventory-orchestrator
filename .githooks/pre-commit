@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Monorepo pre-commit dispatcher.
+#
+# Staged paths under backend/ run backend's CaptainHook pre-commit gauntlet
+# (lint:test → phpstan → phpstan:types → deptrac → test:arch).
+# Staged paths under frontend/ run frontend's lint-staged.
+# Other staged paths bypass both — the orchestrator itself has no hook.
+
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+staged_backend=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^backend/' || true)
+staged_frontend=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^frontend/' || true)
+
+if [ -n "$staged_backend" ]; then
+    echo "→ backend changes staged; running backend pre-commit gauntlet"
+    (cd backend && vendor/bin/captainhook hook:pre-commit)
+fi
+
+if [ -n "$staged_frontend" ]; then
+    echo "→ frontend changes staged; running frontend lint-staged"
+    (cd frontend && npx lint-staged --relative)
+fi
+
+exit 0

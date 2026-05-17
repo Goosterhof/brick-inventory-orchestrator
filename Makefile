@@ -1,4 +1,4 @@
-.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint lint-e2e format-e2e type-check-e2e submodule-update submodule-check doctor e2e e2e-ui e2e-headed e2e-up e2e-down e2e-install e2e-report queue
+.PHONY: up down build logs backend-shell frontend-shell db-shell migrate fresh seed test lint lint-e2e format-e2e type-check-e2e hooks-install doctor e2e e2e-ui e2e-headed e2e-up e2e-down e2e-install e2e-report queue
 
 # Start all services
 up:
@@ -85,18 +85,15 @@ type-check-e2e:
 # Lint all
 lint: lint-backend lint-frontend
 
-# Update submodules to latest
-submodule-update:
-	git submodule update --remote
-	@echo "Submodules updated. Review changes and commit if desired."
-
-# Check submodule drift against remote
-submodule-check:
-	@bash scripts/submodule-check.sh
+# Wire git hooks to the root dispatcher (.githooks/pre-commit + .githooks/pre-push).
+# Routes staged backend/ paths to backend's CaptainHook gauntlet and staged
+# frontend/ paths to lint-staged, without either side clobbering the other.
+hooks-install:
+	git config core.hooksPath .githooks
+	@echo "Git hooks routed to .githooks/ (pre-commit + pre-push dispatchers)"
 
 # Initialize after clone
-init:
-	git submodule update --init --recursive
+init: hooks-install
 	cp -n .env.example .env 2>/dev/null || true
 	docker compose build
 	docker compose up -d

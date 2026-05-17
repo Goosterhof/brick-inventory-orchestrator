@@ -91,18 +91,27 @@ fi
 
 echo ""
 
-# ── Submodules ──────────────────────────────
+# ── Git hooks ───────────────────────────────
 
-echo "Parts (Submodules)"
-echo "-------------------"
+echo "Clutch Power (Git Hooks)"
+echo "-------------------------"
 
-for mod in backend frontend; do
-  if [ -f "$mod/composer.json" ] || [ -f "$mod/package.json" ]; then
-    green "$mod/ submodule initialized"
-  elif [ -d "$mod" ] && [ -z "$(ls -A "$mod" 2>/dev/null)" ]; then
-    red "$mod/ submodule is empty (run: git submodule update --init --recursive)"
+hooks_path=$(git config --get core.hooksPath 2>/dev/null || echo "")
+if [ "$hooks_path" = ".githooks" ]; then
+  green "Hooks routed to .githooks/ (root dispatcher active)"
+elif [ -z "$hooks_path" ]; then
+  yellow "core.hooksPath not set (run: make hooks-install)"
+else
+  yellow "core.hooksPath = $hooks_path (expected .githooks)"
+fi
+
+for hook in pre-commit pre-push; do
+  if [ -x ".githooks/$hook" ]; then
+    green ".githooks/$hook present and executable"
+  elif [ -f ".githooks/$hook" ]; then
+    yellow ".githooks/$hook exists but is not executable (run: chmod +x .githooks/$hook)"
   else
-    red "$mod/ directory missing"
+    red ".githooks/$hook missing"
   fi
 done
 

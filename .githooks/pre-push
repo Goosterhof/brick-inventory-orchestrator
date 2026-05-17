@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Monorepo pre-push dispatcher.
+#
+# When any commit in the pushed range touches backend/, run backend's
+# CaptainHook pre-push gauntlet (PrePushPermitGate → composer test) from
+# backend/ cwd, piping git's stdin through so CaptainHook receives the
+# pushed-ref protocol intact.
+#
+# Frontend has no pre-push gauntlet today. Add a branch here if that changes.
+
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+# git invokes pre-push with one line per pushed ref on stdin:
+#   <local-ref> <local-sha> <remote-ref> <remote-sha>
+# Buffer it so we can both inspect the range AND replay it into the
+# delegated hook.
+stdin_buffer=$(cat || true)
+
+needs_backend=0
+
+if [ -n "$stdin_buffer" ]; then
+    while IFS=' ' read -r _local_ref local_sha _remote_ref remote_sha; do
+        [ -z "${local_sha:-}" ] && continue
+        # Skip ref deletes (all-zero local sha).
+        [[ "$local_sha" =~ ^0+$ ]] && continue
+
+        if [[ "${remote_sha:-}" =~ ^0+$ ]] || [ -z "${remote_sha:-}" ]; then
+            # New branch on the remote — diff against the merge-base with origin/main.
+            base=$(git merge-base "$local_sha" origin/main 2>/dev/null || true)
+            if [ -n "$base" ]; then
+                range="$base..$local_sha"
+            else
+                range="$local_sha"
+            fi
+        else
+            range="$remote_sha..$local_sha"
+        fi
+
+        if git diff --name-only "$range" 2>/dev/null | grep -qE '^backend/'; then
+            needs_backend=1
+        fi
+    done <<< "$stdin_buffer"
+fi
+
+if [ "$needs_backend" -eq 1 ]; then
+    echo "→ backend changes in push range; running backend pre-push gauntlet"
+    (cd backend && printf '%s\n' "$stdin_buffer" | vendor/bin/captainhook hook:pre-push)
+fi
+
+exit 0
