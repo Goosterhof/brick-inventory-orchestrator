@@ -21,7 +21,7 @@
     "type": "module",
     "scripts": {
         "build": "run-p type-check \"build:families {@}\" \"build:admin {@}\" \"build:showcase {@}\" --",
-        "build:admin": "cross-env APP_NAME=admin vite build",
+        "build:admin": "cross-env APP_NAME=admin vite build --base=/admin/",
         "build:families": "cross-env APP_NAME=families vite build",
         "build:showcase": "cross-env APP_NAME=showcase vite build",
         "dev": "cross-env APP_NAME=families vite",

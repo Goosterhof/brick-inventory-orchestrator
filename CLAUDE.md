@@ -36,7 +36,7 @@ This is the **Baseplate** — the orchestrator for the LEGO inventory management
 
 Both surfaces were absorbed into this repo via `git subtree add` on 2026-05-17, with full pre-merge history preserved.
 
-**Production deployment is a single Railway service.** The root `Dockerfile` multi-stages Node and PHP, builds the `families` Vue app, and overlays its dist onto `backend/public/`. FrankenPHP serves both surfaces from the same origin: `/api/*` flows through Laravel, every other route falls through to the SPA's `index.html` via `Route::fallback()` in `backend/routes/web.php`. Same-origin removes the cross-port session/Sanctum complexity in production while leaving local dev unchanged (Vite on `:5173`, backend on `:8000`).
+**Production deployment is a single Railway service.** The root `Dockerfile` multi-stages Node and PHP, builds two Vue apps (`families` and `admin`), and overlays their dists onto `backend/public/` — families at the root, admin under `public/admin/` (with Vite `--base=/admin/` so asset URLs and `import.meta.env.BASE_URL` are correctly scoped). FrankenPHP serves both surfaces from the same origin: `/api/*` flows through Laravel, `/admin` and `/admin/*` fall through to `public/admin/index.html`, every other route falls through to `public/index.html`. Routing happens in `Route::fallback()` in `backend/routes/web.php`. Same-origin removes the cross-port session/Sanctum complexity in production while leaving local dev unchanged (Vite on `:5173`, backend on `:8000`). The `showcase` app is dev-only and never ships.
 
 ### War Room Governance
 
@@ -212,7 +212,7 @@ make e2e-down   # Clear the table
 The whole set ships as one box: a single Railway service running the root `Dockerfile`.
 
 - Railway service Root Directory: `/` (the orchestrator root, where `Dockerfile` and `railway.toml` live).
-- The image multi-stages: node:24-alpine builds the families app, composer:2 resolves backend deps, php:8.5-cli + FrankenPHP assembles the runtime with the frontend dist overlaid into `backend/public/`.
+- The image multi-stages: node:24-alpine builds the families app (to `backend/public/`) and the admin app (to `backend/public/admin/`, with Vite `--base=/admin/`), composer:2 resolves backend deps, php:8.5-cli + FrankenPHP assembles the runtime.
 - FrankenPHP serves both surfaces from the same origin — no nginx, no separate Cloudflare Pages deploy.
 - Build-time arg: `VITE_API_BASE_URL` (defaults to `/api`). Override if the API moves to a different host.
 - Runtime: `php artisan config:cache && view:cache && migrate --force && octane:start` (see `railway.toml`). `route:cache` is skipped because the SPA fallback uses a closure.

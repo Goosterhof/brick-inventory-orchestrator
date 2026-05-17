@@ -36,7 +36,10 @@ COPY frontend/ ./
 ARG VITE_API_BASE_URL=/api
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
-RUN npm run build:families
+# Build both shipping apps. families goes to backend/public/, admin goes to
+# backend/public/admin/ (the admin script already passes --base=/admin/ so
+# Vite emits the right asset URLs and Vue Router picks up BASE_URL).
+RUN npm run build:families && npm run build:admin
 
 # ============================================================
 # Stage 2 — Composer install (no scripts, no dev)
@@ -85,11 +88,13 @@ WORKDIR /var/www/html
 COPY backend/ ./
 COPY --from=composer-deps /app/vendor ./vendor
 
-# Overlay the frontend dist onto Laravel's public/. The dist contains
-# index.html + assets/*; backend's public/ already has index.php, .htaccess,
-# favicon.ico, robots.txt. The two coexist — FrankenPHP serves static files
-# first and falls through to index.php for everything else.
+# Overlay the frontend dists onto Laravel's public/. families lives at the
+# root (index.html + assets/*); admin lives in a subdirectory (admin/index.html
+# + admin/assets/*). backend's public/ already has index.php, .htaccess,
+# favicon.ico, robots.txt. The dists coexist — FrankenPHP serves static
+# files first and falls through to index.php (Laravel) for everything else.
 COPY --from=frontend-builder /frontend/dist/families/ ./public/
+COPY --from=frontend-builder /frontend/dist/admin/ ./public/admin/
 
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 

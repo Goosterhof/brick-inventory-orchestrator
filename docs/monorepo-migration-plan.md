@@ -11,7 +11,7 @@ The goal is to collapse all three repos into one. The fact that `docker-compose.
 ## Decisions
 
 - **History:** preserve via `git subtree add`. The cost is repo size; the gain is intact `git blame`, PR cross-references, and ADR archaeology — load-bearing for a portfolio piece that markets itself as a showcase of engineering quality.
-- **Production deployment shape:** one Railway service running a root `Dockerfile` that multi-stages Node + Composer + FrankenPHP, with the frontend's dist overlaid into `backend/public/`. **Cloudflare Pages is retired.** FrankenPHP serves both surfaces from the same origin: `/api/*` flows through Laravel, every other route falls through to `Route::fallback()` in `backend/routes/web.php` returning the SPA's `index.html`.
+- **Production deployment shape:** one Railway service running a root `Dockerfile` that multi-stages Node + Composer + FrankenPHP, with both shipping Vue apps overlaid into `backend/public/` — `families` at `/`, `admin` at `/admin/`. **Cloudflare Pages is retired.** FrankenPHP serves everything from the same origin: `/api/*` flows through Laravel, `/admin` and `/admin/*` fall through to `public/admin/index.html`, every other route falls through to `public/index.html` via `Route::fallback()` in `backend/routes/web.php`. The `showcase` app is dev-only and never ships.
 - **Deployment reconfig:** lands **before** the monorepo merge, not after. See Phase 0. Merging first and reconfiguring later would let the next prod deploy fire against a broken Railway build (the standalone backend repo has no frontend dist to serve from).
 - **Old repos:** add a deprecation README pointing to the monorepo, then archive on GitHub — **after** Railway is verified green serving the monorepo image (see Phase 6).
 - **CI:** one workflow file per surface (`backend-ci.yml`, `frontend-ci.yml`, `e2e.yml`) at the monorepo root. Path filters cover both each surface's subtree AND the root infra it depends on (`Makefile`, `docker-compose*.yml`, `docker/<surface>.Dockerfile`, `.env.example`, `scripts/`).
@@ -260,7 +260,7 @@ After the monorepo PR merges to `main` **and** Phase 0's Railway service (the ne
 - `backend/nixpacks.toml` — **deleted** (Dockerfile takes precedence over Railpack)
 - `backend/railway.toml` — **moved to orchestrator root**
 - `backend/.github/` — delete (workflows + dependabot moved up)
-- `frontend/package.json` — replace `prepare: husky` with a no-op
+- `frontend/package.json` — replace `prepare: husky` with a no-op; add `--base=/admin/` to `build:admin` so the admin SPA's asset URLs and `import.meta.env.BASE_URL` are scoped to `/admin/`
 - `frontend/src/apps/families/services/http.ts` — default `VITE_API_BASE_URL` to `/api` (same-origin)
 - `frontend/CLAUDE.md` — note root-dispatcher for hooks
 - `frontend/.husky/` — keep as reference but no longer auto-installed
@@ -290,7 +290,6 @@ After the monorepo PR merges to `main` **and** Phase 0's Railway service (the ne
 
 ## Out of Scope (Follow-ups)
 
-- **Shipping the admin app at `/admin/`** — only the `families` app is built into the production image today. Adding admin means: a second `RUN npm run build:admin` step in the Dockerfile, copying that dist to `backend/public/admin/`, an extra `Route::fallback()` (or a path-specific fallback) returning `public/admin/index.html`. Modest follow-up.
 - **Showcase app shipping** — `showcase` is a developer-only component gallery; it does not ship in production.
 - **Route caching** — `Route::fallback(closure)` can't be serialized, so `php artisan route:cache` is skipped in production. Convert the closure to a `SpaController::class` (single-action, `__invoke`) when route caching becomes a measurable concern. The Controller architecture test currently enforces `JsonResponse|array` return types and would need a narrow carve-out for HTML responses.
 - **Optimising the `/` round-trip** — every request to `/` currently goes through PHP (Laravel's fallback) instead of being served directly as `index.html`. A Caddyfile rewrite for `path /` to serve `index.html` cuts the PHP overhead on the cold landing. Defer until traffic warrants it.

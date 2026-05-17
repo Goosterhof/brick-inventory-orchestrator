@@ -21,7 +21,7 @@ brick-inventory-orchestrator/     # The Baseplate (this repo)
 └── Makefile
 ```
 
-Production ships as a single Railway service. The root `Dockerfile` multi-stages a Node frontend build, a Composer backend install, and a FrankenPHP runtime that overlays the SPA's dist onto `backend/public/`. FrankenPHP serves both surfaces from the same origin — `/api/*` hits Laravel, everything else falls through to the SPA's `index.html`. The Cloudflare Pages deploy that hosted the standalone frontend is retired.
+Production ships as a single Railway service. The root `Dockerfile` multi-stages a Node frontend build, a Composer backend install, and a FrankenPHP runtime that overlays both shipping Vue apps onto `backend/public/` — `families` at the root, `admin` under `/admin/`. FrankenPHP serves everything from one origin: `/api/*` hits Laravel, `/admin*` serves the admin SPA, and any other route serves the families SPA. The Cloudflare Pages deploy that hosted the standalone frontend is retired.
 
 Both surfaces were absorbed into this repo via `git subtree add` on 2026-05-17 (with full pre-merge history preserved); the standalone `Goosterhof/brick-inventory-backend` and `Goosterhof/brick-inventory-frontend` repos are archived as historical anchors.
 
