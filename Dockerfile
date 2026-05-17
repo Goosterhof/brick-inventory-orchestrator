@@ -108,7 +108,7 @@ COPY --from=composer-deps /app/vendor ./vendor
 COPY --from=frontend-builder /frontend/dist/families/ ./public/
 COPY --from=frontend-builder /frontend/dist/admin/ ./public/admin/
 
-RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
+RUN composer dump-autoload --optimize --no-dev
 
 # Pre-install the FrankenPHP worker shim that Octane requires at runtime.
 # Otherwise `octane:start` lazily copies it from the vendor stub on first
