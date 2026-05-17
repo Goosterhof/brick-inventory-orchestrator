@@ -34,7 +34,9 @@ This is the **Baseplate** — the orchestrator for the LEGO inventory management
 - `backend/` — **The Brick** (Laravel 12 API, formerly the standalone `brick-inventory-backend` repo)
 - `frontend/` — **The Plate** (Vue 3 SPA, formerly the standalone `brick-inventory-frontend` repo)
 
-Both surfaces were absorbed into this repo via `git subtree add` on 2026-05-17, with full pre-merge history preserved. Each still ships independently (Railway for the Brick, Cloudflare Pages for the Plate), with each platform pointed at the appropriate subdirectory.
+Both surfaces were absorbed into this repo via `git subtree add` on 2026-05-17, with full pre-merge history preserved.
+
+**Production deployment is a single Railway service.** The root `Dockerfile` multi-stages Node and PHP, builds the `families` Vue app, and overlays its dist onto `backend/public/`. FrankenPHP serves both surfaces from the same origin: `/api/*` flows through Laravel, every other route falls through to the SPA's `index.html` via `Route::fallback()` in `backend/routes/web.php`. Same-origin removes the cross-port session/Sanctum complexity in production while leaving local dev unchanged (Vite on `:5173`, backend on `:8000`).
 
 ### War Room Governance
 
@@ -96,15 +98,17 @@ make e2e-report    # Review the inspection report
 
 ```
 brick-inventory-orchestrator/     # The Baseplate (monorepo root)
-├── backend/              # The Brick (Laravel API; deploys to Railway from this subpath)
-├── frontend/             # The Plate (Vue SPA; deploys to Cloudflare Pages from this subpath)
+├── backend/              # The Brick (Laravel API)
+├── frontend/             # The Plate (Vue SPA — production build is overlaid into backend/public/)
 ├── e2e/                  # Set Assembly Check (Playwright E2E)
 │   ├── tests/            # Test instructions
 │   ├── lib/              # Assembly helpers (API client, login utils)
 │   └── playwright.config.ts
-├── docker/               # Modular Building blueprints
-│   ├── backend.Dockerfile
-│   └── frontend.Dockerfile
+├── docker/               # Local dev Modular Building blueprints
+│   ├── backend.Dockerfile     # Local dev only — Octane on :8000
+│   └── frontend.Dockerfile    # Local dev only — Vite on :5173
+├── Dockerfile            # Production image — multi-stage, backend serves frontend
+├── railway.toml          # Railway deploy config (uses Dockerfile)
 ├── .githooks/            # Root pre-commit + pre-push dispatchers (route by staged path)
 ├── .github/              # CI workflows (backend-ci, frontend-ci, e2e) + dependabot
 ├── docker-compose.yml    # Local building table
@@ -205,8 +209,13 @@ make e2e-down   # Clear the table
 
 ## Boxing the Set (Production Deployment)
 
-Each piece ships independently:
-- The Brick: Railway (https://api.brick-inventory.com)
-- The Plate: Cloudflare Pages
+The whole set ships as one box: a single Railway service running the root `Dockerfile`.
 
-This Baseplate is for local building only.
+- Railway service Root Directory: `/` (the orchestrator root, where `Dockerfile` and `railway.toml` live).
+- The image multi-stages: node:24-alpine builds the families app, composer:2 resolves backend deps, php:8.5-cli + FrankenPHP assembles the runtime with the frontend dist overlaid into `backend/public/`.
+- FrankenPHP serves both surfaces from the same origin — no nginx, no separate Cloudflare Pages deploy.
+- Build-time arg: `VITE_API_BASE_URL` (defaults to `/api`). Override if the API moves to a different host.
+- Runtime: `php artisan config:cache && view:cache && migrate --force && octane:start` (see `railway.toml`). `route:cache` is skipped because the SPA fallback uses a closure.
+- A separate Railway `worker` service runs `php artisan queue:work` against the same image. See `backend/CLAUDE.md` → "Queue Worker" for the exact command.
+
+The Cloudflare Pages deploy that used to host the standalone frontend repo is retired with the monorepo migration.

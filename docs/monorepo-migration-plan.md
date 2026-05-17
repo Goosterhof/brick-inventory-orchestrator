@@ -11,8 +11,9 @@ The goal is to collapse all three repos into one. The fact that `docker-compose.
 ## Decisions
 
 - **History:** preserve via `git subtree add`. The cost is repo size; the gain is intact `git blame`, PR cross-references, and ADR archaeology — load-bearing for a portfolio piece that markets itself as a showcase of engineering quality.
-- **Deployment reconfig:** lands **before** the monorepo merge, not after. See Phase 0. Merging first and reconfiguring later would let the next prod deploy fire against a broken layout on both Railway and Cloudflare Pages.
-- **Old repos:** add a deprecation README pointing to the monorepo, then archive on GitHub — **after** deploy reconfig is verified green from the orchestrator (see Phase 6).
+- **Production deployment shape:** one Railway service running a root `Dockerfile` that multi-stages Node + Composer + FrankenPHP, with the frontend's dist overlaid into `backend/public/`. **Cloudflare Pages is retired.** FrankenPHP serves both surfaces from the same origin: `/api/*` flows through Laravel, every other route falls through to `Route::fallback()` in `backend/routes/web.php` returning the SPA's `index.html`.
+- **Deployment reconfig:** lands **before** the monorepo merge, not after. See Phase 0. Merging first and reconfiguring later would let the next prod deploy fire against a broken Railway build (the standalone backend repo has no frontend dist to serve from).
+- **Old repos:** add a deprecation README pointing to the monorepo, then archive on GitHub — **after** Railway is verified green serving the monorepo image (see Phase 6).
 - **CI:** one workflow file per surface (`backend-ci.yml`, `frontend-ci.yml`, `e2e.yml`) at the monorepo root. Path filters cover both each surface's subtree AND the root infra it depends on (`Makefile`, `docker-compose*.yml`, `docker/<surface>.Dockerfile`, `.env.example`, `scripts/`).
 - **Dependabot:** migrate `backend/.github/dependabot.yml` to a root `.github/dependabot.yml` with composer (`/backend`) and npm (`/frontend`) entries. Without this, GitHub silently stops opening backend dependency PRs after the move.
 
@@ -29,13 +30,16 @@ History-preserving subtree merge. `git subtree add --prefix=backend <backend-rep
 
 ## Phase 0 — Deployment Reconfig (Before the Merge)
 
-Railway (backend) and Cloudflare Pages (frontend) currently point at the standalone repos. They need to also work against the orchestrator's `backend/` and `frontend/` subpaths before the monorepo PR lands on `main`. Both platforms expose a "Root Directory" / "Build Directory" setting that makes this straightforward.
+The deploy shape changes: backend and frontend collapse into a single Railway service. Cloudflare Pages is retired. The orchestrator's root `Dockerfile` builds both surfaces into one image, served same-origin by FrankenPHP.
 
-1. **Railway** (backend): on the existing service, leave the standalone source wired. Add the orchestrator as an alternate source with Root Directory `backend/`. Trigger a manual deploy from the orchestrator's `main` (which is still pre-merge, with `backend/` as a submodule pointing at the same commit). Verify the build and a smoke endpoint.
-2. **Cloudflare Pages** (frontend): same approach — add a second project wired to the orchestrator with Build Directory `frontend/`. Verify.
-3. Keep both source paths live until Phase 6.
+1. **Add a new Railway service** wired to the orchestrator repo (`Goosterhof/brick-inventory-orchestrator`) with **Root Directory `/`** so Railway picks up `Dockerfile` and `railway.toml` at the orchestrator root. Leave the existing backend service on the standalone source untouched for now (rollback path).
+2. **Copy env vars** from the existing backend Railway service to the new one: `APP_KEY`, `APP_URL`, `DATABASE_URL`, `REBRICKABLE_API_KEY`, `RESEND_API_KEY`, `SANCTUM_STATEFUL_DOMAINS` (now just the prod domain — same-origin), and any others currently set.
+3. **Trigger a manual deploy** from the orchestrator's `chore/monorepo-migration` branch. Wait for healthcheck `/api/health` to come up green. Visit `/` in a browser — the families SPA should load.
+4. **Add the worker service** (queue:work) wired to the same image. Set its startCommand to `php artisan queue:work --queue=default --tries=3 --backoff=10 --timeout=60 --max-time=3600`. See `backend/CLAUDE.md` → "Queue Worker" for the procedure.
+5. **Point the production domain** (e.g., `brick-inventory.com`) at the new Railway service. The old `api.brick-inventory.com` either redirects to the new origin or is retired — your call.
+6. **Cloudflare Pages:** delete the project hosting the standalone frontend. The same-origin Railway service replaces it.
 
-If you'd rather flip in one shot: schedule a maintenance window for the merge, reconfigure Railway/Cloudflare to point at the orchestrator immediately after merge, and verify before the next prod push. Dual-source is the safer default.
+If you'd rather flip in one shot: keep both services running until the new one is verified, then DNS-cut traffic over.
 
 ## Phase 1 — Prep & Safety Net
 
@@ -209,12 +213,19 @@ End-to-end smoke before push:
 
 ## Phase 6 — Old Repos
 
-After the monorepo PR merges to `main` **and** Phase 0's deploy reconfig is verified green from the orchestrator:
+After the monorepo PR merges to `main` **and** Phase 0's Railway service (the new one) is verified green serving traffic:
 
 1. In `Goosterhof/brick-inventory-backend`: replace `README.md` with a deprecation notice — _"This repo has been absorbed into [brick-inventory-orchestrator](https://github.com/Goosterhof/brick-inventory-orchestrator) as of YYYY-MM-DD. The final standalone state is tagged `pre-monorepo-merge-YYYY-MM-DD`."_ Commit, push.
 2. Same for `Goosterhof/brick-inventory-frontend`.
-3. Confirm Railway and Cloudflare Pages no longer pull from the standalone repos (remove the old sources, leaving only the orchestrator-based ones).
-4. Archive both via GitHub Settings → Archive this repository (read-only state).
+3. Push the pre-merge tags to each standalone remote so the deprecation README's reference works:
+   ```bash
+   git push <backend-remote>  1f1d30d4c002c395d13068239e9f16705838b168:refs/tags/pre-monorepo-merge-2026-05-17
+   git push <frontend-remote> 70fcafe11bb8431d65d876365f6a0bfc078593e0:refs/tags/pre-monorepo-merge-2026-05-17
+   ```
+   The local tags created in Phase 1 lived inside `.git/modules/{backend,frontend}` and were lost when those gitdirs were deleted in Phase 2; recreating directly against the remote SHAs is the simplest path.
+4. Delete the old Railway service that pointed at the standalone backend repo (the new orchestrator-sourced service is now serving production). Delete the Cloudflare Pages project for the standalone frontend.
+5. Archive both standalone repos via GitHub Settings → Archive this repository (read-only state).
+6. Flip both permits (`backend/.claude/records/permits/2026-05-17-monorepo-migration.md` and the frontend counterpart) from `Status: In Progress` to `Status: Complete` via a small follow-up PR. The PR's diff is under the PrePushPermitGate threshold so it skips the gate cleanly.
 
 ---
 
@@ -237,12 +248,20 @@ After the monorepo PR merges to `main` **and** Phase 0's deploy reconfig is veri
 - `.github/dependabot.yml` (from `backend/.github/dependabot.yml`, with composer `/backend` and npm `/frontend` entries)
 - `.githooks/pre-commit` (root dispatcher)
 - `.githooks/pre-push` (root dispatcher)
+- `Dockerfile` (production multi-stage: node frontend build → composer install → FrankenPHP runtime with frontend overlaid on backend/public/)
+- `railway.toml` (Railway deploy config; builder = DOCKERFILE)
 
 **Modified inside subdirs:**
 - `backend/composer.json` — delete the `post-install-cmd` block
 - `backend/CLAUDE.md` — note root-dispatcher for hooks
+- `backend/bootstrap/app.php` — register `web:` routes so the SPA fallback fires
+- `backend/routes/web.php` — **new** — `Route::fallback()` returns `public/index.html`
+- `backend/Procfile` — **deleted** (Dockerfile CMD replaces it)
+- `backend/nixpacks.toml` — **deleted** (Dockerfile takes precedence over Railpack)
+- `backend/railway.toml` — **moved to orchestrator root**
 - `backend/.github/` — delete (workflows + dependabot moved up)
 - `frontend/package.json` — replace `prepare: husky` with a no-op
+- `frontend/src/apps/families/services/http.ts` — default `VITE_API_BASE_URL` to `/api` (same-origin)
 - `frontend/CLAUDE.md` — note root-dispatcher for hooks
 - `frontend/.husky/` — keep as reference but no longer auto-installed
 - `frontend/.github/` — delete
@@ -264,12 +283,16 @@ After the monorepo PR merges to `main` **and** Phase 0's deploy reconfig is veri
 4. **Pre-commit + pre-push gauntlets intact.** Phase 5 step 9 manual verification passes.
 5. **No drift artifacts left.** `git ls-files | grep -E '^\.gitmodules$'` returns nothing. `find backend frontend -maxdepth 2 -name .git` returns nothing.
 6. **Dependabot live.** GitHub's Dependabot tab on the orchestrator lists both ecosystems with recent runs.
-7. **Production deploys from the orchestrator.** Railway and Cloudflare Pages show successful deploys sourced from the orchestrator before either standalone repo is archived.
-8. **Old repos retired.** Both standalone repos show the GitHub "Archived" banner and a deprecation README.
+7. **Production deploys from the orchestrator.** The new Railway service shows a successful deploy of the root `Dockerfile`, the SPA loads at `/`, `/api/health` returns 200, and the worker service is draining the queue. Cloudflare Pages is decommissioned.
+8. **Old repos retired.** Both standalone repos show the GitHub "Archived" banner, a deprecation README, and the `pre-monorepo-merge-2026-05-17` tag.
 
 ---
 
 ## Out of Scope (Follow-ups)
 
+- **Shipping the admin app at `/admin/`** — only the `families` app is built into the production image today. Adding admin means: a second `RUN npm run build:admin` step in the Dockerfile, copying that dist to `backend/public/admin/`, an extra `Route::fallback()` (or a path-specific fallback) returning `public/admin/index.html`. Modest follow-up.
+- **Showcase app shipping** — `showcase` is a developer-only component gallery; it does not ship in production.
+- **Route caching** — `Route::fallback(closure)` can't be serialized, so `php artisan route:cache` is skipped in production. Convert the closure to a `SpaController::class` (single-action, `__invoke`) when route caching becomes a measurable concern. The Controller architecture test currently enforces `JsonResponse|array` return types and would need a narrow carve-out for HTML responses.
+- **Optimising the `/` round-trip** — every request to `/` currently goes through PHP (Laravel's fallback) instead of being served directly as `index.html`. A Caddyfile rewrite for `path /` to serve `index.html` cuts the PHP overhead on the cold landing. Defer until traffic warrants it.
 - **Consolidating `.claude/` workspaces** — three currently exist (orchestrator, backend, frontend). They can coexist as namespaced sovereign workspaces; consolidation is a separate discussion if desired.
 - **Unified composer/npm at root** — a true monorepo could have a root `package.json` orchestrating both surfaces (Turborepo, Nx, plain workspaces). This plan does **not** introduce that — the Makefile + docker-compose are already the orchestration layer. Worth considering later if local dev needs a tighter loop than `make up`.

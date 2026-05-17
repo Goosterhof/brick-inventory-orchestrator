@@ -8,18 +8,22 @@ This is the **monorepo** (or "Baseplate" in the project's LEGO vocabulary). It c
 
 ```
 brick-inventory-orchestrator/     # The Baseplate (this repo)
-├── backend/        # The Brick — Laravel 12 API (PHP 8.5, PostgreSQL)
-├── frontend/       # The Plate — Vue 3 SPA (TypeScript, Vite)
-├── e2e/            # Set Assembly Check — Playwright E2E suite
-├── .githooks/      # Root pre-commit + pre-push dispatchers
-├── .github/        # CI workflows (backend-ci, frontend-ci, e2e) + dependabot
-├── docker/         # Per-surface Dockerfiles
+├── backend/             # The Brick — Laravel 12 API (PHP 8.5, PostgreSQL)
+├── frontend/            # The Plate — Vue 3 SPA (TypeScript, Vite)
+├── e2e/                 # Set Assembly Check — Playwright E2E suite
+├── .githooks/           # Root pre-commit + pre-push dispatchers
+├── .github/             # CI workflows (backend-ci, frontend-ci, e2e) + dependabot
+├── docker/              # Local dev Dockerfiles (backend + frontend)
+├── Dockerfile           # Production image — multi-stage, backend serves frontend
+├── railway.toml         # Railway deploy config
 ├── docker-compose.yml
 ├── docker-compose.e2e.yml
 └── Makefile
 ```
 
-The two surfaces still ship independently — Railway deploys the Brick from `backend/`, Cloudflare Pages deploys the Plate from `frontend/`. They were absorbed into this repo via `git subtree add` on 2026-05-17 (with full pre-merge history preserved); the standalone `Goosterhof/brick-inventory-backend` and `Goosterhof/brick-inventory-frontend` repos are archived as historical anchors.
+Production ships as a single Railway service. The root `Dockerfile` multi-stages a Node frontend build, a Composer backend install, and a FrankenPHP runtime that overlays the SPA's dist onto `backend/public/`. FrankenPHP serves both surfaces from the same origin — `/api/*` hits Laravel, everything else falls through to the SPA's `index.html`. The Cloudflare Pages deploy that hosted the standalone frontend is retired.
+
+Both surfaces were absorbed into this repo via `git subtree add` on 2026-05-17 (with full pre-merge history preserved); the standalone `Goosterhof/brick-inventory-backend` and `Goosterhof/brick-inventory-frontend` repos are archived as historical anchors.
 
 Why a monorepo: cross-cutting changes that used to need three coordinated PRs (backend → frontend → orchestrator submodule bump) now land in one. CI runs from a single source of truth. The orchestrator owns the only `.git/`, and per-surface tooling is dispatched by path filters.
 
