@@ -1,0 +1,62 @@
+/*
+ * Theme CSS custom properties.
+ *
+ * The @script-development/fs-theme package uses a DOM attribute strategy:
+ *   - dark mode = no `data-theme` attribute (default)
+ *   - light mode = `data-theme="light"`
+ *
+ * The LEGO neo-brutalist palette uses bright yellow/white as its natural
+ * aesthetic, so light mode is the "on-brand" default. Dark mode provides
+ * a muted alternative with dark surfaces and light text.
+ *
+ * Brand colors (Yellow, Red, Blue, Green) remain constant across themes.
+ *
+ * Token inventory:
+ *   --brick-page-bg            page background
+ *   --brick-page-text          primary text on page bg
+ *   --brick-card-bg            elevated surface (cards, inputs, buttons)
+ *   --brick-muted-text         secondary / hint text
+ *   --brick-border-color       borders on chrome (brick-border shortcut)
+ *   --brick-divider-color      horizontal rules / dividers
+ *   --brick-surface-subtle     low-contrast inset (disabled bg, filled bars)
+ *   --brick-surface-highlight  warning / attention soft bg (yellow-tinted)
+ *   --brick-highlight-text     text that reads on --brick-surface-highlight
+ *   --brick-danger-text        error / danger text on page bg
+ *   --brick-shadow-color       brick-shadow drop color (4px offset block)
+ */
+
+:root {
+    --brick-page-bg: #1a1a2e;
+    --brick-page-text: #e0e0e0;
+    --brick-card-bg: #2d2d44;
+    --brick-muted-text: #a0a0b0;
+    --brick-border-color: #e0e0e0;
+    --brick-divider-color: #e0e0e0;
+    --brick-surface-subtle: #3a3a54;
+    --brick-surface-highlight: #4a3f1a;
+    --brick-highlight-text: #fdf0c4;
+    --brick-danger-text: #f8d0cf;
+    --brick-shadow-color: #ffffff;
+}
+
+:root[data-theme='light'] {
+    --brick-page-bg: #ffffff;
+    --brick-page-text: #000000;
+    --brick-card-bg: #ffffff;
+    --brick-muted-text: #4b5563;
+    --brick-border-color: #000000;
+    --brick-divider-color: #000000;
+    --brick-surface-subtle: #f3f4f6;
+    --brick-surface-highlight: #fef3c7;
+    --brick-highlight-text: #000000;
+    --brick-danger-text: #9b1510;
+    --brick-shadow-color: #000000;
+}
+
+body {
+    background-color: var(--brick-page-bg);
+    color: var(--brick-page-text);
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+}

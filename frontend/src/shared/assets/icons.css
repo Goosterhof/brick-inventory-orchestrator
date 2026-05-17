@@ -1,0 +1,14 @@
+/*
+ * Phosphor Icons global overrides for Brick Brutalism.
+ *
+ * Phosphor Bold primarily uses fill-based <path> elements, so these stroke
+ * overrides are a safety net: if any icon variant renders with stroke, it
+ * will get square caps and miter joins to match the brand's sharp aesthetic.
+ *
+ * Note: @phosphor-icons/vue renders inline <svg> elements directly (no <i>
+ * wrapper, no .ph-bold class), so we target SVG paths broadly.
+ */
+svg path {
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
+}

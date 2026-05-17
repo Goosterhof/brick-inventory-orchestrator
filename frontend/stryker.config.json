@@ -1,0 +1,17 @@
+{
+    "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker/master/packages/core/schema/stryker-core.schema.json",
+    "mutate": [
+        "src/shared/helpers/**/*.ts",
+        "src/shared/composables/**/*.ts",
+        "src/shared/errors/**/*.ts",
+        "src/shared/services/**/*.ts",
+        "!src/shared/**/*.d.ts",
+        "!src/shared/**/types.ts"
+    ],
+    "testRunner": "vitest",
+    "reporters": ["html", "clear-text", "progress"],
+    "htmlReporter": {"fileName": "reports/mutation/index.html"},
+    "thresholds": {"high": 90, "low": 80, "break": 80},
+    "tempDirName": ".stryker-tmp",
+    "concurrency": 2
+}

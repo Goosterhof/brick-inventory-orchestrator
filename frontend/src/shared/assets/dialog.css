@@ -1,0 +1,11 @@
+/*
+ * Backdrop styling for fs-dialog.
+ *
+ * The @script-development/fs-dialog package uses inline style resets on
+ * <dialog> elements but does not apply any backdrop styling. The old local
+ * service used UnoCSS `backdrop:bg-black` on the element directly. This
+ * global rule restores the dark overlay for all modal dialogs.
+ */
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}

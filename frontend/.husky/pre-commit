@@ -1,0 +1,4 @@
+node scripts/generate-component-registry.mjs
+npx oxfmt --write src/shared/generated/component-registry.json
+git add src/shared/generated/component-registry.json
+npx lint-staged

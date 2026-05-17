@@ -1,0 +1,15 @@
+/*
+ * Global accessibility overrides for Brick Brutalism.
+ *
+ * prefers-reduced-motion: Disables animations and transitions for users
+ * who have requested reduced motion in their OS settings. Complements
+ * the sound service which already respects this preference.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
