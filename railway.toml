@@ -10,20 +10,23 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# Keep the deploy chain minimal: migrate forward and start Octane. config:cache
-# and view:cache are perf optimizations, not correctness — and view:cache in
-# particular was failing silently in this API-only project (no Blade views to
-# compile), breaking the chain before octane:start could bind to PORT. If we
-# want config:cache later, add it via a separate `ARG`-driven build step in
-# the Dockerfile instead of the runtime chain. route:cache stays off because
-# routes/web.php uses a closure for the SPA fallback that can't be serialized.
-startCommand = "echo '=== START ==='; pwd; ls /var/www/html | head; echo '=== running migrate ==='; php artisan migrate --force; echo \"=== migrate done, exit=$? ===\"; echo '=== running frankenphp version ==='; /usr/local/bin/frankenphp version; echo \"=== version done, exit=$? ===\"; echo '=== sleeping 600 to keep container alive ==='; sleep 600"
-# Temporarily disabled — Railway was killing the container after the
-# healthcheck window before any output landed. Without a path here,
-# Railway falls back to a TCP-only liveness check, so the container
-# survives long enough to log whatever frankenphp/octane is actually
-# doing. Restore "/api/health" once we have a working deploy.
-# healthcheckPath = "/api/health"
-healthcheckTimeout = 300
+# Wrap in `bash -c '…'` because Railway's startCommand runner exec()s the
+# string directly without a shell — without this wrap, the first `&&` or
+# `;` terminates the chain silently and only the leading command runs.
+# This was the root cause of the prolonged deploy-failure debug session on
+# 2026-05-17 (PRs #44, #45, #46, #47, #48, #49, #50, #51, #52, #53 chasing
+# what turned out to be a missing shell). Octane's `Server running…` line
+# never appeared because `octane:start` was never actually invoked — only
+# `php artisan migrate --force` ran, then the chain dropped and the
+# container exited.
+#
+# route:cache stays off because routes/web.php uses a closure for the SPA
+# fallback that can't be serialized. config:cache and view:cache are perf
+# optimizations, deliberately omitted — view:cache is a no-op for this
+# API+SPA project, and config:cache is best added later via an ARG-driven
+# Dockerfile step rather than a runtime chain link.
+startCommand = "bash -c 'php artisan migrate --force && php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=${PORT:-8000}'"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 1
+restartPolicyMaxRetries = 3
