@@ -1,8 +1,7 @@
 import {createHttpService} from '@script-development/fs-http';
 import {deepCamelKeys, deepSnakeKeys} from '@shared/helpers/string';
 
-const API_BASE_URL: string =
-    (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'https://api.brick-inventory.com/api';
+const API_BASE_URL: string = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '/api';
 
 export const familyHttpService = createHttpService(API_BASE_URL);
 
