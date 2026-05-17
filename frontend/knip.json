@@ -11,5 +11,5 @@
     "project": ["src/**/*.ts", "src/**/*.vue"],
     "paths": {"@/*": ["src/*"], "@shared/*": ["src/shared/*"], "@app/*": ["src/apps/families/*", "src/apps/admin/*"]},
     "ignore": ["src/**/*.d.ts", "vitest.config.ts", "vitest.browser.config.ts", "vitest.integration.config.ts"],
-    "ignoreDependencies": ["@typescript/native-preview", "@vitest/browser"]
+    "ignoreDependencies": ["@typescript/native-preview", "@vitest/browser", "@commitlint/cli", "lint-staged"]
 }
