@@ -17,7 +17,7 @@ dockerfilePath = "Dockerfile"
 # want config:cache later, add it via a separate `ARG`-driven build step in
 # the Dockerfile instead of the runtime chain. route:cache stays off because
 # routes/web.php uses a closure for the SPA fallback that can't be serialized.
-startCommand = "php artisan migrate --force; echo '--- migrate done ---'; /usr/local/bin/frankenphp version; echo '--- about to run php-server ---'; /usr/local/bin/frankenphp php-server --listen=0.0.0.0:${PORT:-8000} --root=/var/www/html/public 2>&1; echo \"--- frankenphp exited with $? ---\""
+startCommand = "echo '=== START ==='; pwd; ls /var/www/html | head; echo '=== running migrate ==='; php artisan migrate --force; echo \"=== migrate done, exit=$? ===\"; echo '=== running frankenphp version ==='; /usr/local/bin/frankenphp version; echo \"=== version done, exit=$? ===\"; echo '=== sleeping 600 to keep container alive ==='; sleep 600"
 # Temporarily disabled — Railway was killing the container after the
 # healthcheck window before any output landed. Without a path here,
 # Railway falls back to a TCP-only liveness check, so the container
