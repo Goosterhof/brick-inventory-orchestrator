@@ -196,6 +196,8 @@ Middleware can be registered/unregistered at runtime. Services live in each app'
 
 Before any code leaves this building, Husky enforces: **type-check -> knip -> test:coverage -> build**. All must pass. There are no shortcuts. The `--no-verify` flag does not exist in this firm.
 
+In the monorepo end-state, this gauntlet is invoked by the orchestrator's `.githooks/pre-push` dispatcher when the push range touches `frontend/`. The dispatcher cds into `frontend/` and executes `.husky/pre-push` directly — the gauntlet content is unchanged, only the invocation path is. `frontend/package.json`'s `prepare` script is a no-op so Husky no longer auto-installs hooks; the root dispatcher is the single entry point.
+
 ### Coverage Policy
 
 **100% coverage on lines, functions, branches, and statements.** If you build it, you test it. This is structural engineering — we don't guess if a wall will hold.

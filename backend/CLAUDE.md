@@ -268,9 +268,13 @@ BrickognizeApiException           → 502
 
 CaptainHook enforces on every commit (PHP files only): **lint:test → phpstan → deptrac → test:arch**. All must pass. There are no shortcuts. The warehouse does not ship uninspected goods.
 
+In the monorepo end-state, hooks are dispatched from the orchestrator's `.githooks/pre-commit`, which runs `cd backend && vendor/bin/captainhook hook:pre-commit` only when the staged changeset touches `backend/**`. The gauntlet contents are unchanged; only the invocation path changed. `backend/composer.json`'s `post-install-cmd` no longer auto-installs hooks — the root dispatcher is the single entry point.
+
 ### The Pre-Push Gauntlet
 
 CaptainHook enforces on every push: **PrePushPermitGate → composer test**. Both must pass.
+
+In the monorepo end-state, `.githooks/pre-push` inspects the pushed range and routes to `cd backend && vendor/bin/captainhook hook:pre-push` only when `backend/` files are present. A frontend-only push pays nothing extra. The gauntlet contents and the gate logic are unchanged.
 
 - **PrePushPermitGate** (ADR-0013) — verifies that any non-trivial branch has a corresponding open permit on file. **Threshold:** more than 20 files OR more than 500 lines changed against `origin/main`. **Slug match:** strict equality between the branch slug (portion after the last `/`, lowercased) and the permit slug (filename minus the `YYYY-MM-DD-` prefix and `.md` suffix, lowercased). The permit's `**Status:**` must read `Open` or `In Progress`. Branches under the threshold and pushes from `main` skip the check entirely. Documented `--no-verify` escape — see [Documented Escape Hatch](#documented-escape-hatch).
 - **composer test** — full quality inspection rig.

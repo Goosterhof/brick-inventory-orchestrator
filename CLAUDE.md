@@ -11,8 +11,8 @@ Use this terminology when communicating about the project:
 | Aspect | LEGO Term | Meaning |
 |--------|-----------|---------|
 | Orchestrator repo | **Baseplate** | The foundation everything connects to |
-| Backend submodule | **Brick** | The solid structural element (data, logic, API) |
-| Frontend submodule | **Plate** | The visible surface layer (UI) |
+| Backend subdirectory | **Brick** | The solid structural element (data, logic, API) |
+| Frontend subdirectory | **Plate** | The visible surface layer (UI) |
 | Docker containers | **Modular Buildings** | Self-contained, stackable service units |
 | API endpoints | **Stud Connections** | The interface points where Brick and Plate click together |
 | Auth/sessions | **Minifig Badge** | Identity — how the system knows who you are |
@@ -21,7 +21,7 @@ Use this terminology when communicating about the project:
 | Code quality (lint/phpstan) | **Clutch Power** | How tightly and correctly pieces fit together |
 | Debugging | **Brick Separator** | The tool for pulling apart stuck pieces |
 | Deployment | **Boxing the Set** | Packaging and shipping to stores (production) |
-| Submodule updates | **Restocking Parts** | Getting the latest bricks from the warehouse |
+| Pulling latest main | **Restocking Parts** | Getting the latest bricks from the warehouse |
 | Anti-patterns | **Kragle** | Gluing bricks together — tightly coupled, rigid code |
 | Refactoring | **Rebuilding** | Taking apart and reassembling in a better way |
 | Dependencies | **Parts List** | The inventory of pieces needed for a build |
@@ -29,16 +29,20 @@ Use this terminology when communicating about the project:
 
 ## Project Overview
 
-This is the **Baseplate** — the orchestrator for the LEGO inventory management ecosystem. It connects two submodules into one cohesive build:
+This is the **Baseplate** — the orchestrator for the LEGO inventory management ecosystem. It is a single monorepo containing two surfaces as tracked subdirectories:
 
-- `backend/` — **The Brick** (Laravel 12 API, brick-inventory-backend)
-- `frontend/` — **The Plate** (Vue 3 SPA, brick-inventory-frontend)
+- `backend/` — **The Brick** (Laravel 12 API, formerly the standalone `brick-inventory-backend` repo)
+- `frontend/` — **The Plate** (Vue 3 SPA, formerly the standalone `brick-inventory-frontend` repo)
+
+Both surfaces were absorbed into this repo via `git subtree add` on 2026-05-17, with full pre-merge history preserved. Each still ships independently (Railway for the Brick, Cloudflare Pages for the Plate), with each platform pointed at the appropriate subdirectory.
 
 ### War Room Governance
 
 This territory is also governed by war-room ADRs: **0002** (Cascade Deletion), **0004** (Import Atomicity), **0009** (ResourceData Pattern), **0011** (Action Architecture), **0012** (FormRequest → DTO Flow), **0014** (Domain-Driven Frontend Structure), **0016** (Config Attribute Injection), **0019** (Explicit Model Hydration). Canonical source: `adrs.script.nl`. Per **ADR-0015** (ADR Governance), BIO operates as the **ADR development laboratory** — full ADR content in sovereign numbering, not distilled projections.
 
-## Submodule Guidelines
+## Surface Guidelines
+
+The two surfaces are sovereign per-territory persona zones with their own CLAUDE.md manifests. When working inside `backend/`, read it as **Stud & Sort Logistics** (warehouse persona, Logistics Director reporting to CEO). When working inside `frontend/`, read it as **Brick & Mortar Associates** (firm persona, CFO reporting to CEO). The orchestrator (this file) sits above both.
 
 @backend/CLAUDE.md
 
@@ -71,11 +75,8 @@ make test
 # Check Clutch Power (lint all code)
 make lint
 
-# Restock Parts (update submodules)
-make submodule-update
-
-# Check for submodule drift
-make submodule-check
+# Wire git hooks to the root dispatcher (.githooks/) — folded into `make init`
+make hooks-install
 
 # Open a Modular Building (shell access)
 make backend-shell
@@ -94,9 +95,9 @@ make e2e-report    # Review the inspection report
 ## Architecture (The Baseplate Layout)
 
 ```
-brick-inventory-orchestrator/     # The Baseplate
-├── backend/              # The Brick (git submodule: brick-inventory-backend)
-├── frontend/             # The Plate (git submodule: brick-inventory-frontend)
+brick-inventory-orchestrator/     # The Baseplate (monorepo root)
+├── backend/              # The Brick (Laravel API; deploys to Railway from this subpath)
+├── frontend/             # The Plate (Vue SPA; deploys to Cloudflare Pages from this subpath)
 ├── e2e/                  # Set Assembly Check (Playwright E2E)
 │   ├── tests/            # Test instructions
 │   ├── lib/              # Assembly helpers (API client, login utils)
@@ -104,6 +105,8 @@ brick-inventory-orchestrator/     # The Baseplate
 ├── docker/               # Modular Building blueprints
 │   ├── backend.Dockerfile
 │   └── frontend.Dockerfile
+├── .githooks/            # Root pre-commit + pre-push dispatchers (route by staged path)
+├── .github/              # CI workflows (backend-ci, frontend-ci, e2e) + dependabot
 ├── docker-compose.yml    # Local building table
 ├── docker-compose.e2e.yml # Isolated QC testing table
 ├── Makefile              # Master Builder's toolbox
@@ -149,29 +152,25 @@ The Brick uses the database queue driver. Async work — emails (e.g. `InviteCod
 
 If you hit the API endpoint that triggers a job and nothing happens, the most likely cause is "the worker isn't running" — check `make queue` is alive in another terminal.
 
-## Restocking Parts (Submodule Workflow)
+## Git Hooks (Root Dispatcher)
 
-```bash
-# Clone the full set
-git clone --recursive <repo-url>
+Pre-commit and pre-push hooks are dispatched from `.githooks/` at the repo root and route by staged/pushed paths.
 
-# Or initialize after unboxing
-git submodule update --init --recursive
+**Pre-commit:**
 
-# Restock to latest parts
-make submodule-update
-git add backend frontend
-git commit -m "chore: update submodules"
+- Staged `backend/**` → backend's CaptainHook gauntlet (`cd backend && vendor/bin/captainhook hook:pre-commit`) — runs `lint:test → phpstan → phpstan:types → deptrac → test:arch`.
+- Staged `frontend/**` → frontend's pre-commit pipeline — regenerates the component registry, formats the generated file, restages it, then runs `npx lint-staged --relative`. The `--relative` flag is required in monorepo cwd so lint-staged's patterns match the staged-path slice that git emits from `frontend/` cwd.
+- Both staged → both fire.
+- Other paths (root infra, docs) → neither fires.
 
-# Work inside a submodule
-cd backend
-git checkout main
-git pull
-# make changes, commit, push
-cd ..
-git add backend
-git commit -m "chore: update backend submodule"
-```
+**Pre-push** mirrors the same split:
+
+- Push range touches `backend/` → backend's `PrePushPermitGate → composer test` runs from `backend/` cwd, with git's pushed-ref stdin replayed through unchanged.
+- Push range touches `frontend/` → frontend's `.husky/pre-push` runs from `frontend/` cwd (`type-check → knip → test:coverage → build`).
+
+**Wire-up:** `make init` runs `make hooks-install`, which sets `git config core.hooksPath .githooks`. Clone-and-bootstrap is a single command.
+
+**Per-surface autoinstall is neutralized.** `backend/composer.json` no longer carries a `post-install-cmd` block that would auto-install CaptainHook into the parent `.git/hooks/`, and `frontend/package.json`'s `prepare` script is a no-op. The root dispatcher is the only path that fires hooks.
 
 ## Set Assembly Check (E2E Testing)
 
