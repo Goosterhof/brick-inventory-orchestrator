@@ -18,7 +18,12 @@ dockerfilePath = "Dockerfile"
 # the Dockerfile instead of the runtime chain. route:cache stays off because
 # routes/web.php uses a closure for the SPA fallback that can't be serialized.
 startCommand = "php artisan migrate --force && exec /usr/local/bin/frankenphp php-server --listen=0.0.0.0:${PORT:-8000} --root=/var/www/html/public 2>&1"
-healthcheckPath = "/api/health"
-healthcheckTimeout = 120
+# Temporarily disabled — Railway was killing the container after the
+# healthcheck window before any output landed. Without a path here,
+# Railway falls back to a TCP-only liveness check, so the container
+# survives long enough to log whatever frankenphp/octane is actually
+# doing. Restore "/api/health" once we have a working deploy.
+# healthcheckPath = "/api/health"
+healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 3
+restartPolicyMaxRetries = 1
