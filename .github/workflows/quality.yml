@@ -64,7 +64,7 @@ jobs:
         run: docker compose exec -T frontend npm run type-check
 
       - name: Run frontend tests
-        run: docker compose exec -T frontend npm run test:unit
+        run: docker compose exec -T frontend npm run test:coverage
 
       - name: Run frontend lint
         run: docker compose exec -T frontend npm run lint
