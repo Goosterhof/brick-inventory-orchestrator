@@ -1,0 +1,23 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/tomasvotruba/type-coverage/config/extension.neon
+
+parameters:
+    # Level 0: type-coverage only needs to count type declarations, not
+    # re-run the full analysis (that's phpstan.neon's job).
+    level: 0
+
+    paths:
+        - app
+
+    # Don't flag inline @phpstan-ignore annotations that target errors
+    # from higher levels — this config only counts type declarations.
+    reportUnmatchedIgnoredErrors: false
+
+    # Type coverage thresholds — the ratchet that prevents type regression.
+    # Scoped to app/ only so Pest test closures (untyped by design) don't
+    # pollute the numbers. All thresholds at 100% — no untyped code ships.
+    type_coverage:
+        return: 100
+        param: 100
+        property: 100

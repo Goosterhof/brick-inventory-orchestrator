@@ -1,0 +1,128 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "laravel/laravel",
+    "type": "project",
+    "description": "The skeleton application for the Laravel framework.",
+    "keywords": ["laravel", "framework"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "ext-pcntl": "*",
+        "laravel/framework": "^13.0",
+        "laravel/octane": "^2.13",
+        "laravel/sanctum": "^4.2",
+        "laravel/tinker": "^3.0.0",
+        "resend/resend-php": "^1.3"
+    },
+    "require-dev": {
+        "captainhook/captainhook": "*",
+        "captainhook/hook-installer": "*",
+        "dedoc/scramble": "^0.13.17",
+        "deptrac/deptrac": "^4.6",
+        "dg/bypass-finals": "^1.9",
+        "driftingly/rector-laravel": "^2.1",
+        "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.9",
+        "laravel/pail": "^1.2.2",
+        "laravel/pint": "^1.24",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "pestphp/pest": "^4.3",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "rector/rector": "^2.3",
+        "script-development/phpstan-warroom-rules": "^0.2.0",
+        "tomasvotruba/type-coverage": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/",
+            "Tools\\": "tools/"
+        }
+    },
+    "scripts": {
+        "setup": [
+            "composer install",
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate",
+            "@php artisan migrate --force"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan octane:start --watch"
+        ],
+        "test": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test"
+        ],
+        "test:arch": "./vendor/bin/pest tests/Architecture",
+        "test:coverage": "./vendor/bin/pest --coverage --configuration=phpunit.coverage.xml --min=100",
+        "test:feature-coverage": "./vendor/bin/pest --coverage --configuration=phpunit.feature-coverage.xml --min=90",
+        "lint": [
+            "@rector",
+            "@pint"
+        ],
+        "lint:test": [
+            "@rector:test",
+            "@pint:test"
+        ],
+        "rector": "./vendor/bin/rector process",
+        "rector:test": "./vendor/bin/rector process --dry-run",
+        "pint": "./vendor/bin/pint",
+        "pint:test": "./vendor/bin/pint --test",
+        "phpstan": "./vendor/bin/phpstan analyse",
+        "phpstan:types": "./vendor/bin/phpstan analyse --configuration=phpstan-type-coverage.neon",
+        "deptrac": "./vendor/bin/deptrac analyse",
+        "mutation": "php -d pcov.enabled=1 ./vendor/bin/pest --mutate --path=app/Actions,app/Services --testsuite=Unit --parallel --min=76",
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-install-cmd": [
+            "@php -r \"if (file_exists('.git') && file_exists('vendor/bin/captainhook')) { passthru('vendor/bin/captainhook install --force --skip-existing'); }\""
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --graceful --ansi"
+        ],
+        "pre-package-uninstall": [
+            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true,
+            "captainhook/hook-installer": false
+        },
+        "platform": {
+            "php": "8.5"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -1,0 +1,111 @@
+{
+    "config": {
+        "fail-on-first-error": true,
+        "verbosity": "normal",
+        "ansi-colors": true,
+        "run-path": "",
+        "bootstrap": "",
+        "run-mode": "local",
+        "git-directory": ".git",
+        "includes": [],
+        "custom": {}
+    },
+    "pre-commit": {
+        "enabled": true,
+        "actions": [
+            {
+                "action": "composer lint:test",
+                "options": [],
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileChanged\\Any",
+                        "args": ["*.php"]
+                    }
+                ]
+            },
+            {
+                "action": "composer phpstan",
+                "options": [],
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileChanged\\Any",
+                        "args": ["*.php"]
+                    }
+                ]
+            },
+            {
+                "action": "composer phpstan:types",
+                "options": [],
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileChanged\\Any",
+                        "args": ["*.php"]
+                    }
+                ]
+            },
+            {
+                "action": "composer deptrac",
+                "options": [],
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileChanged\\Any",
+                        "args": ["*.php"]
+                    }
+                ]
+            },
+            {
+                "action": "composer test:arch",
+                "options": [],
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileChanged\\Any",
+                        "args": ["*.php"]
+                    }
+                ]
+            }
+        ]
+    },
+    "pre-push": {
+        "enabled": true,
+        "actions": [
+            {
+                "action": "\\Tools\\CaptainHook\\PrePushPermitGate",
+                "options": [],
+                "conditions": []
+            },
+            {
+                "action": "composer test",
+                "options": [],
+                "conditions": []
+            }
+        ]
+    },
+    "commit-msg": {
+        "enabled": false,
+        "actions": []
+    },
+    "prepare-commit-msg": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-commit": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-merge": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-checkout": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-rewrite": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-change": {
+        "enabled": false,
+        "actions": []
+    }
+}

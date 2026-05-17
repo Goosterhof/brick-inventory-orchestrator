@@ -1,0 +1,63 @@
+{
+    "count": 2,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 987654,
+            "inv_part_id": 123456,
+            "part": {
+                "part_num": "3001",
+                "name": "Brick 2 x 4",
+                "part_cat_id": 11,
+                "part_url": "https://rebrickable.com/parts/3001/brick-2-x-4/",
+                "part_img_url": "https://cdn.rebrickable.com/media/parts/elements/300101.jpg",
+                "external_ids": {
+                    "BrickLink": ["3001"],
+                    "BrickOwl": ["3001"]
+                },
+                "print_of": null
+            },
+            "color": {
+                "id": 1,
+                "name": "White",
+                "rgb": "FFFFFF",
+                "is_trans": false,
+                "external_ids": {
+                    "BrickLink": {
+                        "ext_ids": [1],
+                        "ext_descrs": [["White"]]
+                    }
+                }
+            },
+            "quantity": 5,
+            "is_spare": false,
+            "element_id": "300101",
+            "num_sets": 1234
+        },
+        {
+            "id": 987655,
+            "inv_part_id": 123457,
+            "part": {
+                "part_num": "3022",
+                "name": "Plate 2 x 2",
+                "part_cat_id": 14,
+                "part_url": "https://rebrickable.com/parts/3022/plate-2-x-2/",
+                "part_img_url": null,
+                "external_ids": {},
+                "print_of": null
+            },
+            "color": {
+                "id": 0,
+                "name": "Black",
+                "rgb": "05131D",
+                "is_trans": false,
+                "external_ids": {}
+            },
+            "quantity": 12,
+            "is_spare": true,
+            "element_id": null,
+            "num_sets": 567
+        }
+    ]
+}

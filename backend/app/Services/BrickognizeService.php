@@ -1,0 +1,113 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace App\Services;
+
+use App\Contracts\BrickIdentificationServiceInterface;
+use App\DataTransferObjects\Input\Brickognize\BrickognizePredictionData;
+use App\Exceptions\BrickognizeApiException;
+use App\Exceptions\InvalidApiResponseException;
+use Illuminate\Container\Attributes\Config;
+use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\UploadedFile;
+
+use function array_key_exists;
+use function is_array;
+use function sprintf;
+
+final readonly class BrickognizeService implements BrickIdentificationServiceInterface
+{
+    private const array PREDICTION_REQUIRED_FIELDS = ['id', 'name', 'type', 'score'];
+
+    public function __construct(
+        private HttpFactory $httpFactory,
+        #[Config('services.brickognize.base_url', 'https://api.brickognize.com')]
+        private string $baseUrl,
+    ) {}
+
+    /**
+     * Identify a LEGO brick from an uploaded image.
+     *
+     * @throws BrickognizeApiException
+     * @throws InvalidApiResponseException
+     *
+     * @return list<BrickognizePredictionData>
+     */
+    public function identifyBrick(UploadedFile $uploadedFile): array
+    {
+        $response = $this->httpClient()
+            ->attach('query_image', $uploadedFile->getContent(), $uploadedFile->getClientOriginalName())
+            ->post('/predict/');
+
+        if ($response->failed()) {
+            throw BrickognizeApiException::fromResponse($response, 'Failed to identify brick');
+        }
+
+        $data = $response->json();
+
+        $this->validateResponse($data);
+
+        /** @var array{items: list<array{id: string, name: string, type: string, img_url?: string|null, score: float|int}>} $data */
+        $predictions = [];
+        foreach ($data['items'] as $item) {
+            $predictions[] = new BrickognizePredictionData(
+                id: $item['id'],
+                name: $item['name'],
+                type: $item['type'],
+                imageUrl: $item['img_url'] ?? null,
+                score: (float) $item['score'],
+            );
+        }
+
+        return $predictions;
+    }
+
+    private function httpClient(): PendingRequest
+    {
+        return $this->httpFactory->baseUrl($this->baseUrl)
+            ->acceptJson()
+            ->timeout(30)
+            ->retry(3, 100, throw: false);
+    }
+
+    /**
+     * @throws InvalidApiResponseException
+     */
+    private function validateResponse(mixed $data): void
+    {
+        if (!is_array($data)) {
+            throw InvalidApiResponseException::invalidStructure('Identifying brick', 'Expected array response');
+        }
+
+        if (!array_key_exists('items', $data) || !is_array($data['items'])) {
+            throw InvalidApiResponseException::invalidStructure('Identifying brick', "Missing or invalid 'items' field");
+        }
+
+        foreach ($data['items'] as $index => $item) {
+            $this->validatePredictionItem($item, $index);
+        }
+    }
+
+    /**
+     * @throws InvalidApiResponseException
+     */
+    private function validatePredictionItem(mixed $item, int $index): void
+    {
+        if (!is_array($item)) {
+            throw InvalidApiResponseException::invalidStructure('Identifying brick', sprintf('Prediction at index %d is not an array', $index));
+        }
+
+        $missingFields = [];
+        foreach (self::PREDICTION_REQUIRED_FIELDS as $field) {
+            if (!array_key_exists($field, $item)) {
+                $missingFields[] = $field;
+            }
+        }
+
+        if ($missingFields !== []) {
+            throw InvalidApiResponseException::missingFields($missingFields, sprintf('Prediction at index %d', $index));
+        }
+    }
+}

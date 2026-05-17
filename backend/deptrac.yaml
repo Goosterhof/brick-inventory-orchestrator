@@ -1,0 +1,191 @@
+deptrac:
+  paths:
+    - ./app
+  exclude_files:
+    - '#.*test.*#'
+    - '#.*PHPStan.*#'
+  layers:
+    # --- Leaf layers (no App\ dependencies allowed, except ResultDTO which may carry Models) ---
+    - name: Model
+      collectors:
+        - type: classLike
+          value: App\\Models\\.*
+    - name: InputDTO
+      collectors:
+        - type: classLike
+          value: App\\DataTransferObjects\\Input\\.*
+    - name: ResultDTO
+      collectors:
+        - type: classLike
+          value: App\\DataTransferObjects\\Result\\.*
+    - name: Enum
+      collectors:
+        - type: classLike
+          value: App\\Enums\\.*
+    - name: Exception
+      collectors:
+        - type: classLike
+          value: App\\Exceptions\\.*
+
+    # --- Interface layer ---
+    - name: Contract
+      collectors:
+        - type: classLike
+          value: App\\Contracts\\.*
+
+    # --- Infrastructure layers ---
+    - name: Service
+      collectors:
+        - type: classLike
+          value: App\\Services\\.*
+    - name: FormRequest
+      collectors:
+        - type: classLike
+          value: App\\Http\\Requests\\.*
+    - name: ResourceData
+      collectors:
+        - type: classLike
+          value: App\\Http\\Resources\\.*
+    - name: Policy
+      collectors:
+        - type: classLike
+          value: App\\Policies\\.*
+    - name: Middleware
+      collectors:
+        - type: classLike
+          value: App\\Http\\Middleware\\.*
+
+    # --- Orchestration layer ---
+    - name: Action
+      collectors:
+        - type: classLike
+          value: App\\Actions\\.*
+
+    # --- Queue layer ---
+    - name: Job
+      collectors:
+        - type: classLike
+          value: App\\Jobs\\.*
+
+    # --- Mail layer (App\ leaf — primitives only, no other App deps) ---
+    - name: Mail
+      collectors:
+        - type: classLike
+          value: App\\Mail\\.*
+
+    # --- Entry point layer ---
+    - name: Controller
+      collectors:
+        - type: classLike
+          value: App\\Http\\Controllers\\.*
+    - name: Console
+      collectors:
+        - type: classLike
+          value: App\\Console\\.*
+
+    # --- Wiring layer ---
+    - name: Provider
+      collectors:
+        - type: classLike
+          value: App\\Providers\\.*
+
+  ruleset:
+    # Leaf layers: Input DTOs must not reach Models (HTTP-boundary purity);
+    # Result DTOs MAY depend on Models and Enums (Actions hand these back).
+    Model:
+      - Enum
+      - Contract
+    InputDTO:
+      - Enum
+    ResultDTO:
+      - Enum
+      - Model
+    Enum: []
+    Exception: []
+
+    # Contracts define interfaces using DTOs, exceptions, and enums.
+    # Input DTOs cover supplier-response shapes (Rebrickable/Brickognize)
+    # that Services return and hand to Actions.
+    Contract:
+      - InputDTO
+      - Enum
+      - Exception
+
+    # Services implement contracts; they return Input DTOs (supplier shapes)
+    # and throw exceptions.
+    Service:
+      - Contract
+      - InputDTO
+      - Exception
+
+    # Form requests validate input, produce Input DTOs, reference enums and models
+    # (closure rules check ownership).
+    FormRequest:
+      - InputDTO
+      - Enum
+      - Model
+
+    # ResourceData shapes API responses from Models or Result DTOs.
+    ResourceData:
+      - Model
+      - Enum
+      - ResultDTO
+      - Exception
+      - Contract
+
+    # Policies check permissions using models
+    Policy:
+      - Model
+
+    # Middleware guards requests using models and contracts
+    Middleware:
+      - Model
+      - Contract
+
+    # Actions orchestrate business logic across all lower layers.
+    # Receive InputDTOs; return ResultDTOs (or Models, Collections, void).
+    Action:
+      - Action
+      - Job
+      - Contract
+      - Mail
+      - Model
+      - InputDTO
+      - ResultDTO
+      - Enum
+      - Exception
+
+    # Mail layer is an App\ leaf — Mailables receive primitives via constructor,
+    # so they must not depend on Models, DTOs, or any other App\ class.
+    Mail: []
+
+    # Jobs wrap Actions for async execution
+    Job:
+      - Action
+      - Contract
+      - Model
+      - Enum
+
+    # Controllers are thin HTTP handlers delegating to actions.
+    # They may reference Result DTOs when wiring Actions to ResourceData,
+    # and Enums when branching response codes on Action result statuses.
+    Controller:
+      - Action
+      - FormRequest
+      - ResourceData
+      - Model
+      - ResultDTO
+      - Enum
+
+    # Console commands are entry points for scheduled / operator-only flows.
+    # They delegate to Actions and surface Result DTO counts via the CLI.
+    Console:
+      - Action
+      - ResultDTO
+
+    # Providers wire interfaces to implementations and configure action dependencies
+    Provider:
+      - Action
+      - Contract
+      - Service
+      - Policy

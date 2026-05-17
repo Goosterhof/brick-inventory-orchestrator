@@ -1,0 +1,13 @@
+# Note: For FrankenPHP/Octane support, use Railway's Railpack builder instead of Nixpacks.
+# Railpack has FrankenPHP built-in and will use the Procfile automatically.
+
+[variables]
+NIXPACKS_PHP_VERSION = "8.4"
+
+[phases.setup]
+nixPkgs = ["php84", "php84Extensions.pdo_pgsql", "php84Extensions.pgsql"]
+
+[phases.install]
+cmds = ["composer install --optimize-autoloader --no-dev --no-scripts --no-interaction"]
+
+# Start command removed - uses Procfile instead (requires Railpack builder for FrankenPHP)

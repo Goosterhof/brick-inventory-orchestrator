@@ -1,0 +1,25 @@
+{
+    "items": [
+        {
+            "id": "3001",
+            "name": "Brick 2 x 4",
+            "type": "part",
+            "img_url": "https://img.brickognize.com/parts/3001.jpg",
+            "score": 0.95
+        },
+        {
+            "id": "3002",
+            "name": "Brick 2 x 3",
+            "type": "part",
+            "img_url": null,
+            "score": 0.72
+        },
+        {
+            "id": "6143",
+            "name": "Duplo Brick 2 x 2",
+            "type": "part",
+            "img_url": "https://img.brickognize.com/parts/6143.jpg",
+            "score": 0.15
+        }
+    ]
+}
