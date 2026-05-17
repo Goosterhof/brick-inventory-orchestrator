@@ -17,7 +17,7 @@ dockerfilePath = "Dockerfile"
 # want config:cache later, add it via a separate `ARG`-driven build step in
 # the Dockerfile instead of the runtime chain. route:cache stays off because
 # routes/web.php uses a closure for the SPA fallback that can't be serialized.
-startCommand = "set -x && /usr/local/bin/frankenphp version && php artisan migrate --force && exec php artisan octane:start --server=frankenphp -vvv --host=0.0.0.0 --port=${PORT:-8000} 2>&1"
+startCommand = "php artisan migrate --force && php artisan octane:start --server=frankenphp -vvv --host=0.0.0.0 --port=${PORT:-8000} 2>&1"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
