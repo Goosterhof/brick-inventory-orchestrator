@@ -74,4 +74,11 @@ jobs:
 
             - name: Lint commit messages
               if: github.event_name == 'pull_request'
-              run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to HEAD --verbose
+              # --first-parent scopes to the orchestrator-mainline commits so the
+              # 1500+ subtree-merged commits from the former standalone repos are
+              # not re-validated against today's commitlint config. --no-merges
+              # additionally excludes merge commits themselves (the two git
+              # subtree add commits have non-conventional messages of the form
+              # "Add 'backend/' from commit '...'", and any future PR merge
+              # commits would also fail without this).
+              run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to HEAD --verbose --git-log-args '--first-parent --no-merges'

@@ -52,7 +52,10 @@ fi
 
 if [ "$needs_backend" -eq 1 ]; then
     echo "→ backend changes in push range; running backend pre-push gauntlet"
-    (cd backend && printf '%s\n' "$stdin_buffer" | vendor/bin/captainhook hook:pre-push)
+    # --git-directory points at the parent's .git/ — captainhook would
+    # otherwise look for backend/.git/ which doesn't exist in the monorepo
+    # (the only git directory is at the orchestrator root).
+    (cd backend && printf '%s\n' "$stdin_buffer" | vendor/bin/captainhook hook:pre-push --git-directory=../.git)
 fi
 
 if [ "$needs_frontend" -eq 1 ]; then

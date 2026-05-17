@@ -19,7 +19,10 @@ staged_frontend=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^f
 
 if [ -n "$staged_backend" ]; then
     echo "→ backend changes staged; running backend pre-commit gauntlet"
-    (cd backend && vendor/bin/captainhook hook:pre-commit)
+    # --git-directory points at the parent's .git/ — captainhook would
+    # otherwise look for backend/.git/ which doesn't exist in the monorepo
+    # (the only git directory is at the orchestrator root).
+    (cd backend && vendor/bin/captainhook hook:pre-commit --git-directory=../.git)
 fi
 
 if [ -n "$staged_frontend" ]; then
