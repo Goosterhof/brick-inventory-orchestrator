@@ -3,8 +3,24 @@ name: E2E Tests
 on:
   push:
     branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'e2e/**'
+      - 'docker-compose*.yml'
+      - 'docker/**'
+      - 'Makefile'
+      - '.github/workflows/e2e.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'e2e/**'
+      - 'docker-compose*.yml'
+      - 'docker/**'
+      - 'Makefile'
+      - '.github/workflows/e2e.yml'
 
 jobs:
   e2e:
@@ -14,8 +30,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
