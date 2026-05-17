@@ -81,9 +81,16 @@ RUN apt-get update \
 RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/zz-memory.ini
 
 # FrankenPHP binary (Caddy + PHP, single process).
-RUN curl -fsSL "https://github.com/dunglas/frankenphp/releases/latest/download/frankenphp-linux-$(uname -m)" \
+# Use the `-gnu` variant — the base image is Debian (glibc). The
+# default `frankenphp-linux-x86_64` is the musl static build; mixing
+# musl with a glibc system has caused Octane to silently fail to
+# launch FrankenPHP at runtime. Octane's own downloader makes the same
+# distinction (vendor/laravel/octane/src/Commands/Concerns/InstallsFrankenPhpDependencies.php).
+RUN ARCH=$(uname -m) \
+    && curl -fsSL "https://github.com/dunglas/frankenphp/releases/latest/download/frankenphp-linux-${ARCH}-gnu" \
         -o /usr/local/bin/frankenphp \
-    && chmod +x /usr/local/bin/frankenphp
+    && chmod +x /usr/local/bin/frankenphp \
+    && /usr/local/bin/frankenphp version
 
 # Composer at runtime for deploy-step artisan commands.
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -102,6 +109,12 @@ COPY --from=frontend-builder /frontend/dist/families/ ./public/
 COPY --from=frontend-builder /frontend/dist/admin/ ./public/admin/
 
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
+
+# Pre-install the FrankenPHP worker shim that Octane requires at runtime.
+# Otherwise `octane:start` lazily copies it from the vendor stub on first
+# launch, which can hide failures behind silent retries. Copying it here
+# makes the build self-contained and the runtime startup deterministic.
+RUN cp vendor/laravel/octane/src/Commands/stubs/frankenphp-worker.php public/frankenphp-worker.php
 
 EXPOSE 8000
 
