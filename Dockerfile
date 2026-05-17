@@ -49,13 +49,18 @@ FROM composer:2 AS composer-deps
 WORKDIR /app
 
 COPY backend/composer.json backend/composer.lock ./
+# `composer:2` is Alpine with a minimal PHP — ext-pcntl is not loaded.
+# The vendor tree itself is platform-independent (composer just verifies
+# requirements at install time), and the final php:8.5-cli stage below
+# does install pcntl, so it's safe to skip the platform check here.
 RUN composer install \
     --no-scripts \
     --no-autoloader \
     --no-dev \
     --prefer-dist \
     --no-progress \
-    --no-interaction
+    --no-interaction \
+    --ignore-platform-req=ext-pcntl
 
 # ============================================================
 # Stage 3 — Final runtime image
