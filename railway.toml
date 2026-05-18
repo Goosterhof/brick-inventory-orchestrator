@@ -1,32 +1,35 @@
 # Railway deploy config for the monorepo.
 #
-# Set the Railway service's Root Directory to `/` (the orchestrator root)
-# so the Dockerfile at this level builds the multi-stage image with the
-# frontend baked into backend/public/. The Cloudflare Pages deploy is
-# dropped in this layout — one Railway service serves both surfaces.
+# Set each Railway service's Root Directory to `/` (the orchestrator
+# root) so this file applies and the Dockerfile at this level builds
+# the multi-stage image with the frontend baked into backend/public/.
+# The Cloudflare Pages deploy is dropped — one Railway service serves
+# both surfaces; a second service runs the queue worker against the
+# same image.
 
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# Wrap in `bash -c '…'` because Railway's startCommand runner exec()s the
-# string directly without a shell — without this wrap, the first `&&` or
-# `;` terminates the chain silently and only the leading command runs.
-# This was the root cause of the prolonged deploy-failure debug session on
-# 2026-05-17 (PRs #44, #45, #46, #47, #48, #49, #50, #51, #52, #53 chasing
-# what turned out to be a missing shell). Octane's `Server running…` line
-# never appeared because `octane:start` was never actually invoked — only
-# `php artisan migrate --force` ran, then the chain dropped and the
-# container exited.
+# Both services share this image; they differ only in the QUEUE_WORKER
+# env var. backend/bin/start.sh branches on it: unset → web (migrate +
+# octane:start); set → queue worker (php artisan queue:work). The
+# script is in version control rather than a per-service startCommand
+# because Railway locks values defined in railway.toml (dashboard
+# fields go read-only) and there is no per-service override syntax in
+# a single file.
 #
-# route:cache stays off because routes/web.php uses a closure for the SPA
-# fallback that can't be serialized. config:cache and view:cache are perf
-# optimizations, deliberately omitted — view:cache is a no-op for this
-# API+SPA project, and config:cache is best added later via an ARG-driven
-# Dockerfile step rather than a runtime chain link.
-startCommand = "bash -c 'php artisan migrate --force && php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=${PORT:-8000}'"
-healthcheckPath = "/api/health"
-healthcheckTimeout = 120
+# The `bash` wrap is required: Railway exec()s startCommand directly
+# without a shell, so any `&&`/`;` in the string would silently drop
+# everything after the first command (this was the root cause of the
+# 2026-05-17 deploy-failure session — PRs #44 through #53).
+#
+# healthcheckPath and healthcheckTimeout are *deliberately not set
+# here* — defining them locks the dashboard for both services, and the
+# queue worker has no HTTP listener to ping. The web service's
+# healthcheck is configured in the dashboard at `/api/health` with a
+# 120s timeout.
+startCommand = "bash bin/start.sh"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
