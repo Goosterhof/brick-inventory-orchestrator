@@ -1,0 +1,138 @@
+name: Gate
+
+# Umbrella aggregator that branch protection can require on every PR.
+# Each of the path-filtered CI workflows (backend-ci, frontend-ci, e2e)
+# may or may not run on a given PR depending on the touched paths.
+# Branch protection cannot express "this check is required when it runs,
+# optional otherwise", so we use this workflow as the single required check:
+# it always runs, detects which workflows should have triggered, waits for
+# their checks, and reports an aggregate pass/fail. A path-filter skip
+# (the workflow did not run at all) is treated as a pass — same as how a
+# human reviewer would interpret it.
+
+on:
+    pull_request:
+        branches: [main]
+
+permissions:
+    pull-requests: read
+    checks: read
+    contents: read
+
+jobs:
+    detect:
+        runs-on: ubuntu-latest
+        outputs:
+            backend: ${{ steps.filter.outputs.backend }}
+            frontend: ${{ steps.filter.outputs.frontend }}
+            e2e: ${{ steps.filter.outputs.e2e }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: dorny/paths-filter@v3
+              id: filter
+              with:
+                  filters: |
+                      backend:
+                        - 'backend/**'
+                        - '.github/workflows/backend-ci.yml'
+                        - 'docker/backend.Dockerfile'
+                        - 'docker-compose.yml'
+                        - 'docker-compose.e2e.yml'
+                        - 'Makefile'
+                        - '.env.example'
+                        - 'scripts/**'
+                      frontend:
+                        - 'frontend/**'
+                        - '.github/workflows/frontend-ci.yml'
+                        - 'docker/frontend.Dockerfile'
+                        - 'docker-compose.yml'
+                        - 'docker-compose.e2e.yml'
+                        - 'Makefile'
+                        - '.env.example'
+                        - 'scripts/**'
+                      e2e:
+                        - 'backend/**'
+                        - 'frontend/**'
+                        - 'e2e/**'
+                        - 'docker-compose*.yml'
+                        - 'docker/**'
+                        - 'Dockerfile'
+                        - 'railway.toml'
+                        - '.dockerignore'
+                        - 'Makefile'
+                        - '.github/workflows/e2e.yml'
+                        - '.github/workflows/gate.yml'
+
+    wait-backend:
+        needs: detect
+        if: needs.detect.outputs.backend == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 45
+        strategy:
+            fail-fast: false
+            matrix:
+                check: [audit, lint, test, coverage, feature-coverage, mutation, sast, seed]
+        steps:
+            - uses: lewagon/wait-on-check-action@v1.3.4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+                  check-name: ${{ matrix.check }}
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  wait-interval: 20
+                  allowed-conclusions: success
+
+    wait-frontend:
+        needs: detect
+        if: needs.detect.outputs.frontend == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - uses: lewagon/wait-on-check-action@v1.3.4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+                  check-name: ci
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  wait-interval: 20
+                  allowed-conclusions: success
+
+    wait-e2e:
+        needs: detect
+        if: needs.detect.outputs.e2e == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 45
+        steps:
+            - uses: lewagon/wait-on-check-action@v1.3.4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+                  check-name: e2e
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  wait-interval: 30
+                  allowed-conclusions: success
+
+    gate:
+        needs: [detect, wait-backend, wait-frontend, wait-e2e]
+        if: always()
+        runs-on: ubuntu-latest
+        steps:
+            - name: Aggregate required-check results
+              env:
+                  DETECT: ${{ needs.detect.result }}
+                  BACKEND: ${{ needs.wait-backend.result }}
+                  FRONTEND: ${{ needs.wait-frontend.result }}
+                  E2E: ${{ needs.wait-e2e.result }}
+              run: |
+                  set -e
+                  fail=0
+                  report() {
+                      local name="$1" result="$2"
+                      case "$result" in
+                          success|skipped) echo "PASS  $name: $result" ;;
+                          *)               echo "FAIL  $name: $result"; fail=1 ;;
+                      esac
+                  }
+                  report detect        "$DETECT"
+                  report wait-backend  "$BACKEND"
+                  report wait-frontend "$FRONTEND"
+                  report wait-e2e      "$E2E"
+                  exit $fail
