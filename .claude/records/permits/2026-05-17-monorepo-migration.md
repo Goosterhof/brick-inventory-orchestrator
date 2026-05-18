@@ -63,5 +63,5 @@ The orchestrator did not previously have its own permit system — both surfaces
 
 ---
 
-**Status:** In Progress
+**Status:** Completed
 **Shift Log:** _to be filed after PR merge and Phase 0 deploy verification_
