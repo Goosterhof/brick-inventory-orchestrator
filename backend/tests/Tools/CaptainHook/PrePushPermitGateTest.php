@@ -51,8 +51,8 @@ describe('PrePushPermitGate::permitSlugFromFilename', function(): void {
         expect(PrePushPermitGate::permitSlugFromFilename('2026-05-05-foo-bar.md'))->toBe('foo-bar');
     });
 
-    it('should returns null for the shipping order template', function(): void {
-        expect(PrePushPermitGate::permitSlugFromFilename('.shipping-order-template.md'))->toBeNull();
+    it('should returns null for the work-order template', function(): void {
+        expect(PrePushPermitGate::permitSlugFromFilename('.work-order-template.md'))->toBeNull();
     });
 
     it('should returns null for non-markdown files', function(): void {
@@ -228,9 +228,9 @@ describe('PrePushPermitGate::scanPermits', function(): void {
             ]);
     });
 
-    it('should skips the shipping order template', function(): void {
+    it('should skips the work-order template', function(): void {
         file_put_contents(
-            $this->permitDir . '/.shipping-order-template.md',
+            $this->permitDir . '/.work-order-template.md',
             "# Template\n\n**Status:** Open\n",
         );
 
