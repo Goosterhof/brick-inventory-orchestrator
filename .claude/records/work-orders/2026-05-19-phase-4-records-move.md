@@ -70,8 +70,8 @@ The original per-author commit history is still preserved in the pre-monorepo up
 
 ## Status
 
-**Status:** In Progress
+**Status:** Completed
 
 ## Build Record
 
-To be filed at `.claude/records/build-records/2026-05-19-phase-4-records-move.md` after the PR merges.
+This Phase 4 sub-Work-Order's outcome is absorbed into the umbrella [closing Build Record](../build-records/2026-05-19-form-the-brickworks.md), which covers all eight phases of the Brickworks merger.
