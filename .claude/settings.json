@@ -25,9 +25,9 @@
                     {
                         "type": "command",
                         "if": "Bash(git commit:*)",
-                        "command": "npx oxfmt --write .",
+                        "command": "cd \"$(git rev-parse --show-toplevel)/frontend\" && npx oxfmt --write .",
                         "timeout": 30,
-                        "statusMessage": "Auto-formatting before commit..."
+                        "statusMessage": "Auto-formatting Gallery Wing before commit..."
                     }
                 ]
             }
@@ -71,7 +71,7 @@
                         "type": "command",
                         "command": "bash .claude/hooks/journal-nudge.sh",
                         "timeout": 5,
-                        "statusMessage": "Checking for unfiled construction journals..."
+                        "statusMessage": "Checking for unfiled Build Records..."
                     }
                 ]
             }
