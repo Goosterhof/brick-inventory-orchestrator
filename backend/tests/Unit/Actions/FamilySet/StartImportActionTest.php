@@ -9,6 +9,7 @@ use App\Jobs\ImportOwnedSetsJob;
 use App\Models\Family;
 use App\Models\ImportJob;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 
@@ -42,7 +43,10 @@ describe('StartImportAction', function(): void {
         $dispatcher = \Mockery::mock(Dispatcher::class);
         $dispatcher->shouldReceive('dispatch')->once()->withArgs(fn(ImportOwnedSetsJob $importOwnedSetsJob): bool => $importOwnedSetsJob->familyId === 42);
 
-        $action = new StartImportAction($importJobModel, $dispatcher);
+        $connection = \Mockery::mock(ConnectionInterface::class);
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
+        $action = new StartImportAction($importJobModel, $dispatcher, $connection);
 
         // act
         $result = $action->execute($family);
@@ -74,7 +78,10 @@ describe('StartImportAction', function(): void {
         $dispatcher = \Mockery::mock(Dispatcher::class);
         $dispatcher->shouldNotReceive('dispatch');
 
-        $action = new StartImportAction($importJobModel, $dispatcher);
+        $connection = \Mockery::mock(ConnectionInterface::class);
+        $connection->shouldNotReceive('transaction');
+
+        $action = new StartImportAction($importJobModel, $dispatcher, $connection);
 
         // act & assert
         expect(fn(): ImportJob => $action->execute($family))
@@ -99,7 +106,10 @@ describe('StartImportAction', function(): void {
         $dispatcher = \Mockery::mock(Dispatcher::class);
         $dispatcher->shouldNotReceive('dispatch');
 
-        $action = new StartImportAction($importJobModel, $dispatcher);
+        $connection = \Mockery::mock(ConnectionInterface::class);
+        $connection->shouldNotReceive('transaction');
+
+        $action = new StartImportAction($importJobModel, $dispatcher, $connection);
 
         // act & assert
         expect(fn(): ImportJob => $action->execute($family))
@@ -130,7 +140,10 @@ describe('StartImportAction', function(): void {
         $dispatcher = \Mockery::mock(Dispatcher::class);
         $dispatcher->shouldNotReceive('dispatch');
 
-        $action = new StartImportAction($importJobModel, $dispatcher);
+        $connection = \Mockery::mock(ConnectionInterface::class);
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
+        $action = new StartImportAction($importJobModel, $dispatcher, $connection);
 
         // act & assert
         expect(fn(): ImportJob => $action->execute($family))

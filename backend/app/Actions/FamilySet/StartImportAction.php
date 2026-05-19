@@ -10,6 +10,7 @@ use App\Jobs\ImportOwnedSetsJob;
 use App\Models\Family;
 use App\Models\ImportJob;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\UniqueConstraintViolationException;
 
 final readonly class StartImportAction
@@ -17,6 +18,7 @@ final readonly class StartImportAction
     public function __construct(
         private ImportJob $importJob,
         private Dispatcher $dispatcher,
+        private ConnectionInterface $connection,
     ) {}
 
     /**
@@ -33,16 +35,19 @@ final readonly class StartImportAction
             throw ImportAlreadyInProgressException::forFamily($family->id);
         }
 
-        /** @var ImportJob $newImportJob */
-        $newImportJob = $this->importJob->newInstance();
-        $newImportJob->family_id = $family->id;
-        $newImportJob->status = ImportJobStatus::Pending;
-        $newImportJob->total_sets = 0;
-        $newImportJob->processed_sets = 0;
-        $newImportJob->failed_sets = 0;
-
         try {
-            $newImportJob->save();
+            $newImportJob = $this->connection->transaction(function() use ($family): ImportJob {
+                /** @var ImportJob $newImportJob */
+                $newImportJob = $this->importJob->newInstance();
+                $newImportJob->family_id = $family->id;
+                $newImportJob->status = ImportJobStatus::Pending;
+                $newImportJob->total_sets = 0;
+                $newImportJob->processed_sets = 0;
+                $newImportJob->failed_sets = 0;
+                $newImportJob->save();
+
+                return $newImportJob;
+            });
         } catch (UniqueConstraintViolationException) {
             throw ImportAlreadyInProgressException::forFamily($family->id);
         }
