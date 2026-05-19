@@ -1,6 +1,5 @@
 {
     "$schema": "./node_modules/oxfmt/configuration_schema.json",
-
     "printWidth": 120,
     "tabWidth": 4,
     "useTabs": false,
@@ -19,9 +18,7 @@
     "endOfLine": "lf",
     "insertFinalNewline": true,
     "embeddedLanguageFormatting": "auto",
-
-    "ignorePatterns": ["dist/**", "coverage/**", "node_modules/**", "CLAUDE.md"],
-
+    "ignorePatterns": ["dist/**", "coverage/**", "node_modules/**"],
     "experimentalSortImports": {
         "order": "asc",
         "ignoreCase": true,
@@ -38,6 +35,5 @@
             "unknown"
         ]
     },
-
     "experimentalSortPackageJson": {"sortScripts": true}
 }
