@@ -20,9 +20,9 @@ Without explicit documentation, both AI agents and junior developers default to 
 
 This is not a discipline problem. It's a structural problem: when the convention isn't declared, the default wins.
 
-### Relationship to ADR-008
+### Relationship to ADR-0010
 
-ADR-008 (Domain Isolation) governs how domains interact — specifically, that they cannot import from each other. This ADR governs how domains are _structured_. ADR-008 enforces boundaries between domains; this ADR defines what a domain _is_ and how it's laid out.
+ADR-0010 (Domain Isolation) governs how domains interact — specifically, that they cannot import from each other. This ADR governs how domains are _structured_. ADR-0010 enforces boundaries between domains; this ADR defines what a domain _is_ and how it's laid out.
 
 ## Options Considered
 
@@ -46,7 +46,7 @@ domains/[name]/
 └── types/             # Domain-specific types (optional, for types not shared cross-domain)
 ```
 
-Domain `index.ts` files export **only routes** — no components, no utilities, no types. This keeps the public surface area at zero, preventing domains from accidentally becoming import targets (enforced by ADR-008).
+Domain `index.ts` files export **only routes** — no components, no utilities, no types. This keeps the public surface area at zero, preventing domains from accidentally becoming import targets (enforced by ADR-0010).
 
 ### Shared Code Lives Outside Domains
 
@@ -79,14 +79,14 @@ Removing a domain is subtractive:
 2. Remove route registration
 3. If the domain promoted types to `@app/types/`, check for orphans
 
-No cross-domain imports to untangle — ADR-008 guarantees isolation.
+No cross-domain imports to untangle — ADR-0010 guarantees isolation.
 
 ## Consequences
 
 - New domains follow a predictable, scaffoldable pattern — AI agents and juniors can generate from any existing domain
 - Import paths are intuitive: `domains/sets/pages/SetsOverviewPage.vue` reads like what it is
 - Tests and domain-specific code live together — no cross-directory hunting
-- Deleting a domain is safe — ADR-008 guarantees no other domain imports from it
+- Deleting a domain is safe — ADR-0010 guarantees no other domain imports from it
 - Deep nesting is a real cost: `domains/sets/pages/SetsDetailPage.vue` is manageable, but nested domains (if ever needed) could go 5+ levels deep
 - Unfamiliar to developers trained on flat Vue tutorials — the convention must be documented (this ADR) and enforced (architecture tests)
 
@@ -96,17 +96,17 @@ No cross-domain imports to untangle — ADR-008 guarantees isolation.
 | ------------------------------------------------ | ------------------------------------------------ | ------------------------------- |
 | Domain directories follow the expected structure | Architecture test: `domain-structure.spec.ts`    | `src/apps/*/domains/`           |
 | Domain index files export only routes            | Architecture test: `domain-structure.spec.ts`    | `src/apps/*/domains/*/index.ts` |
-| Cross-domain imports prohibited                  | ADR-008 enforcement (oxlint + architecture test) | `src/apps/*/domains/`           |
+| Cross-domain imports prohibited                  | ADR-0010 enforcement (oxlint + architecture test) | `src/apps/*/domains/`           |
 
 ## Resolved Questions
 
 ### Should domains contain their own store files?
 
-**Resolved 2026-03-08.** App-level adapter stores (ADR-007) handle shared data fetching. Domains contain pages, modals, and route definitions — not stores. If a domain needs data, it uses the app-level store or fetches independently. This keeps domains thin and prevents store duplication.
+**Resolved 2026-03-08.** App-level adapter stores (ADR-0009) handle shared data fetching. Domains contain pages, modals, and route definitions — not stores. If a domain needs data, it uses the app-level store or fetches independently. This keeps domains thin and prevents store duplication.
 
 ### What about domains that share a visual component?
 
-**Resolved 2026-03-08.** Promote it to `@shared/components/`. The slight overhead of promotion is preferable to allowing cross-domain imports. ADR-008's isolation rule is non-negotiable.
+**Resolved 2026-03-08.** Promote it to `@shared/components/`. The slight overhead of promotion is preferable to allowing cross-domain imports. ADR-0010's isolation rule is non-negotiable.
 
 ## Open Questions
 

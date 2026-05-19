@@ -7,7 +7,7 @@
 
 ## Context
 
-Laravel provides `Route::apiResource()` to register standard CRUD routes in one call. This project uses per-route authorization via `->can()` middleware (ADR-0002), which requires each route to declare its policy method individually. `apiResource()` makes this awkward — you have to chain `->middleware()` with an array mapping actions to middleware, which is harder to read and audit than explicit route declarations.
+Laravel provides `Route::apiResource()` to register standard CRUD routes in one call. This project uses per-route authorization via `->can()` middleware (ADR-0014), which requires each route to declare its policy method individually. `apiResource()` makes this awkward — you have to chain `->middleware()` with an array mapping actions to middleware, which is harder to read and audit than explicit route declarations.
 
 The forces:
 - Every route must have explicit `->can()` authorization — omitting it is a security gap

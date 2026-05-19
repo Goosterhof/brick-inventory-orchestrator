@@ -2,10 +2,10 @@
 
 **Date**: 2026-03-17
 **Feature**: API communication layer
-**Status**: superseded by [ADR-016](./016-case-conversion-via-http-middleware.md) (2026-05-05)
+**Status**: superseded by [ADR-0029](./0029-case-conversion-via-http-middleware.md) (2026-05-05)
 **Transferability**: universal
 
-> **Superseded 2026-05-05.** The `fs-adapter-store` package migration on 2026-04-01 removed the centralized conversion choke point this ADR's reasoning depended on. The "explicit at every boundary" approach silently broke when the adapter no longer participated in conversion. ADR-016 adopts HTTP request/response middleware (matching a sibling territory's pattern) and accepts that the original middleware-rejection argument no longer holds in the post-migration world. The historical reasoning below is preserved for context.
+> **Superseded 2026-05-05.** The `fs-adapter-store` package migration on 2026-04-01 removed the centralized conversion choke point this ADR's reasoning depended on. The "explicit at every boundary" approach silently broke when the adapter no longer participated in conversion. ADR-0029 adopts HTTP request/response middleware (matching a sibling territory's pattern) and accepts that the original middleware-rejection argument no longer holds in the post-migration world. The historical reasoning below is preserved for context.
 
 ## Context
 
@@ -38,7 +38,7 @@ Type safety enforced by typing API responses as `DeepSnakeKeys<T>` and immediate
 
 ### Should conversion move into a shared base service pattern as more services need API access?
 
-**Resolved 2026-03-17.** No — stay explicit. The resource adapter already centralizes conversion for standard CRUD. Auth is the only non-CRUD service with its own conversion, and its endpoints (login, register, refresh) are inherently non-standard. A shared base service to deduplicate 2 call sites is premature abstraction, and it hides conversion points that are currently greppable (`toCamelCaseTyped`, `deepSnakeKeys`). This aligns with the visibility-over-magic principle from ADR-002. Revisit if a third non-CRUD service needs API access with conversion — that's a real pattern worth extracting.
+**Resolved 2026-03-17.** No — stay explicit. The resource adapter already centralizes conversion for standard CRUD. Auth is the only non-CRUD service with its own conversion, and its endpoints (login, register, refresh) are inherently non-standard. A shared base service to deduplicate 2 call sites is premature abstraction, and it hides conversion points that are currently greppable (`toCamelCaseTyped`, `deepSnakeKeys`). This aligns with the visibility-over-magic principle from ADR-0004. Revisit if a third non-CRUD service needs API access with conversion — that's a real pattern worth extracting.
 
 ### Are there string-ts edge cases that could break silently?
 

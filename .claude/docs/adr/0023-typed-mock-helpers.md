@@ -7,9 +7,9 @@
 
 ## Context
 
-ADR-010 established per-file factory mocking as the standard. Every `vi.mock()` call lives in the test file that needs it, uses a factory function, and is explicit about what it mocks. This works. The lint rule enforces it.
+ADR-0012 established per-file factory mocking as the standard. Every `vi.mock()` call lives in the test file that needs it, uses a factory function, and is explicit about what it mocks. This works. The lint rule enforces it.
 
-What ADR-010 explicitly deferred (line 142): _"factory helpers or `__mocks__` directories"_ to address two gaps:
+What ADR-0012 explicitly deferred (line 142): _"factory helpers or `__mocks__` directories"_ to address two gaps:
 
 1. **Duplication** — 18 test files repeat the same `@app/services` mock (~20-30 lines each, 90% identical). Axios, string-ts, form components, and icon mocks are duplicated across 9-18 files. ~558 lines of copy-pasted mock code total.
 2. **False safety** — handwritten factory mocks don't reference real interfaces. If `HttpService` gains a new method, the 18 files mocking it silently succeed with an incomplete mock. Tests pass, coverage is green, but the mock is wrong.
@@ -20,9 +20,9 @@ The question: how do we eliminate mock duplication while adding compile-time saf
 
 | Option                                                        | Pros                                                                                                                                                                                                                                                                               | Cons                                                                                                                                                                                                               | Why eliminated / Why chosen                                                                            |
 | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| **Do nothing — keep inline mocks**                            | No new infrastructure. Already ADR-010 compliant                                                                                                                                                                                                                                   | 558 lines of duplication. No drift detection. Every new page test copies 30 lines of boilerplate                                                                                                                   | Eliminated — duplication is growing linearly with domain count                                         |
-| **`__mocks__` directories (Vitest auto-mock)**                | Zero boilerplate in test files. Built-in Vitest convention                                                                                                                                                                                                                         | Implicit — violates ADR-010's explicit-per-file principle. Global mocks with per-test overrides are awkward. `__mocks__` directories sit next to production code. Test-specific customization fights the framework | Eliminated — trades explicitness for convenience, poor override ergonomics                             |
-| **Typed factory helpers with `MockedService<T>` mapped type** | Type-safe against real interfaces (catches added/removed members). Tests get typed mock access (`.mockResolvedValue()` with correct types). Each test file still owns its `vi.mock()` call. Override pattern for test-specific customization. One utility type, applied everywhere | Requires `as` cast in helper implementations (safe, controlled). Helpers must be maintained alongside interfaces                                                                                                   | **Chosen** — eliminates duplication, adds compile-time drift detection, preserves ADR-010 explicitness |
+| **Do nothing — keep inline mocks**                            | No new infrastructure. Already ADR-0012 compliant                                                                                                                                                                                                                                   | 558 lines of duplication. No drift detection. Every new page test copies 30 lines of boilerplate                                                                                                                   | Eliminated — duplication is growing linearly with domain count                                         |
+| **`__mocks__` directories (Vitest auto-mock)**                | Zero boilerplate in test files. Built-in Vitest convention                                                                                                                                                                                                                         | Implicit — violates ADR-0012's explicit-per-file principle. Global mocks with per-test overrides are awkward. `__mocks__` directories sit next to production code. Test-specific customization fights the framework | Eliminated — trades explicitness for convenience, poor override ergonomics                             |
+| **Typed factory helpers with `MockedService<T>` mapped type** | Type-safe against real interfaces (catches added/removed members). Tests get typed mock access (`.mockResolvedValue()` with correct types). Each test file still owns its `vi.mock()` call. Override pattern for test-specific customization. One utility type, applied everywhere | Requires `as` cast in helper implementations (safe, controlled). Helpers must be maintained alongside interfaces                                                                                                   | **Chosen** — eliminates duplication, adds compile-time drift detection, preserves ADR-0012 explicitness |
 | **Code generation from interfaces**                           | Perfect accuracy, auto-generated from source                                                                                                                                                                                                                                       | Build step dependency. Generated code is opaque. Overkill for ~8 service interfaces                                                                                                                                | Eliminated — complexity far exceeds the problem size                                                   |
 
 ## Decision
@@ -89,7 +89,7 @@ vi.mock('@app/services', () =>
 );
 ```
 
-3 lines replace 30. The `vi.mock()` call is still per-file, still explicit, still declares what it mocks. ADR-010 is preserved. The factory function is the second argument — the lint rule is satisfied.
+3 lines replace 30. The `vi.mock()` call is still per-file, still explicit, still declares what it mocks. ADR-0012 is preserved. The factory function is the second argument — the lint rule is satisfied.
 
 ### What this does NOT cover
 
@@ -111,14 +111,14 @@ vi.mock('@app/services', () =>
 | ------------------------------------- | ------------------------------------------------ | ---------------------------------------- |
 | Helpers typed against real interfaces | TypeScript return type annotations + `satisfies` | All helper files in `src/tests/helpers/` |
 | Override parameters typed             | `Partial<Interface>` constraint                  | All `createMock*` function signatures    |
-| Per-file `vi.mock()` still required   | ADR-010 lint rule (unchanged)                    | All `.spec.ts` files                     |
-| Factory function still required       | ADR-010 lint rule (unchanged)                    | All `vi.mock()` calls                    |
-| No mocks in setup files               | ADR-010 + ADR-011 (unchanged)                    | `setup.ts`                               |
+| Per-file `vi.mock()` still required   | ADR-0012 lint rule (unchanged)                    | All `.spec.ts` files                     |
+| Factory function still required       | ADR-0012 lint rule (unchanged)                    | All `vi.mock()` calls                    |
+| No mocks in setup files               | ADR-0012 + ADR-0022 (unchanged)                    | `setup.ts`                               |
 
 ## Relationship to other ADRs
 
-- **ADR-010** (test isolation): This ADR implements the "factory helpers" future work item from ADR-010 line 142. ADR-010's per-file explicitness and factory lint rule remain unchanged. Helpers provide the object, test files still own the `vi.mock()` call.
-- **ADR-011** (domain-based projects): No interaction. Helpers are shared across all projects via relative imports from `src/tests/helpers/`.
+- **ADR-0012** (test isolation): This ADR implements the "factory helpers" future work item from ADR-0012 line 142. ADR-0012's per-file explicitness and factory lint rule remain unchanged. Helpers provide the object, test files still own the `vi.mock()` call.
+- **ADR-0022** (domain-based projects): No interaction. Helpers are shared across all projects via relative imports from `src/tests/helpers/`.
 
 ## Open Questions
 

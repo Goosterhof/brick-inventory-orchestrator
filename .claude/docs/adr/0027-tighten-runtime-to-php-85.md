@@ -21,7 +21,7 @@ The forces:
 
 - The `require.php: "^8.4"` allowance was defensive theater — every real environment was already on 8.5
 - PHPStan does not honor `\PHP_VERSION_ID` runtime guards in static analysis — the deprecated branch shows up in the error count regardless
-- The codebase has a documented no-baseline, no-`@phpstan-ignore` standard (see ADR-0003 spirit; current `phpstan.neon` carries no baseline file)
+- The codebase has a documented no-baseline, no-`@phpstan-ignore` standard (see ADR-0015 spirit; current `phpstan.neon` carries no baseline file)
 - A `@phpstan-ignore` annotation on the legacy branch would suppress a real deprecation that the language version we actually run (8.5) actively flags
 - `composer.lock` regeneration with the tightened constraint is a no-op (no package versions force a bump) — confirmed by the `composer update --lock` diff being scoped to the content-hash and the `platform-php` line
 

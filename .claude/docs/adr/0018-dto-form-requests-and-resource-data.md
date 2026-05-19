@@ -13,7 +13,7 @@ Data crosses two boundaries: request → action (input) and model → response (
 - ApiResource wraps responses in a `data` key, has implicit lazy loading risks, and doesn't self-document relationship dependencies
 
 The forces:
-- Actions must receive typed input (ADR-0003) — no raw arrays or Request objects
+- Actions must receive typed input (ADR-0015) — no raw arrays or Request objects
 - Responses must be predictable — no surprise `data` wrappers, no N+1 queries from lazy loading
 - The pattern must be enforceable by architecture tests
 
@@ -26,7 +26,7 @@ The forces:
 | **FormRequest with `toDto()` bridge** | Type-safe; co-located with validation; controller stays thin; DTO construction uses `$this->safe()` for safety | FormRequest has two responsibilities (validation + DTO construction) | **Chosen** — the "two responsibilities" concern is minor; the bridge is trivially simple |
 | **Separate mapper/factory class** | Pure SRP; FormRequest only validates | Extra class per request; indirection for a simple mapping; controller must orchestrate | Eliminated — over-engineering for a direct field-to-property mapping |
 | **Pass `$request->validated()` array to Action** | No extra classes | Untyped; Action must validate array structure; loses type safety | Eliminated — defeats the purpose of typed parameters |
-| **Pass FormRequest directly to Action** | Simple | Violates ADR-0003 (Actions must not depend on Request objects); couples business logic to HTTP | Eliminated — architectural violation |
+| **Pass FormRequest directly to Action** | Simple | Violates ADR-0015 (Actions must not depend on Request objects); couples business logic to HTTP | Eliminated — architectural violation |
 
 ### Output Handling
 

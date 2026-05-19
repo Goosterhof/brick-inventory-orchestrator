@@ -4,7 +4,7 @@ import {nextTick} from 'vue';
 
 import MiddlewarePipelineVisualizer from '@/apps/showcase/components/MiddlewarePipelineVisualizer.vue';
 
-// Mock shared components to cut import chain cost (ADR-010).
+// Mock shared components to cut import chain cost (ADR-0012).
 const {mkButtonStub} = vi.hoisted(() => ({
     mkButtonStub: (name: string) => ({
         name,

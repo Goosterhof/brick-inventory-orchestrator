@@ -7,7 +7,7 @@
 
 ## Context
 
-The 2026-05-05 full sweep audit filed Finding 7 (medium): two substantive deliveries between April 17–27 shipped without permits or shift logs. The DTO Input/Result migration (PR #160) alone touched 91 files across seven commits and constituted material amendments to ADR-0010 — none of which were captured in the warehouse's paper trail until the Sorter's rebuttal proposed retroactive remediation.
+The 2026-05-05 full sweep audit filed Finding 7 (medium): two substantive deliveries between April 17–27 shipped without permits or shift logs. The DTO Input/Result migration (PR #160) alone touched 91 files across seven commits and constituted material amendments to ADR-0025 — none of which were captured in the warehouse's paper trail until the Sorter's rebuttal proposed retroactive remediation.
 
 This is the **third consecutive audit cycle** in which missing paper trail has appeared as a finding. The prior cycles' remediation was retroactive shift logs plus a reminder to the crew to file shipping orders. Discipline-based remediation has not held.
 

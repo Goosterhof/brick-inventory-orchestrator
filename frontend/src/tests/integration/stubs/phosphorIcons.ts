@@ -5,7 +5,7 @@
  * the ~800ms collect-time tax from the barrel export (4,536 components).
  * Only icons actually used in production code are stubbed here.
  *
- * See ADR-013 Resolved Questions for the rationale.
+ * See ADR-0024 Resolved Questions for the rationale.
  */
 
 const iconStub = {template: '<i />', props: ['size', 'weight']};

@@ -14,7 +14,7 @@ Separately, Laravel offers three mechanisms for attribute transformation: the `c
 The forces:
 - Different Actions may set different subsets of properties on the same model — `$fillable` can't express this
 - Mass assignment hides which properties are set — you have to cross-reference the `$fillable` array to know
-- The Action pattern (ADR-0003) already centralizes property assignment — mass assignment adds a second indirection layer
+- The Action pattern (ADR-0015) already centralizes property assignment — mass assignment adds a second indirection layer
 - Attribute transformations should have a single, predictable location — not scattered across three mechanisms
 
 ## Options Considered

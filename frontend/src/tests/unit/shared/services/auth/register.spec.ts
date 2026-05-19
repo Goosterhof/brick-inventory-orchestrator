@@ -11,7 +11,7 @@ interface TestProfile {
     createdAt: string;
 }
 
-// Mirrors the production wiring in `apps/families/services/http.ts` (ADR-016):
+// Mirrors the production wiring in `apps/families/services/http.ts` (ADR-0029):
 // the auth service relies on registered request/response middleware to
 // convert camelCase ↔ snake_case. The contract under test is the wired
 // service, not the raw httpService.

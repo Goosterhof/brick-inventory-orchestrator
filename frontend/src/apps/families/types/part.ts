@@ -96,7 +96,7 @@ export interface StorageOptionPart {
  *
  * Shape mirrors `App\Http\Resources\FamilyMissingPartsResourceData`'s
  * `shortfalls` array (camelCased at the HTTP boundary by the response
- * middleware on `familyHttpService` — see ADR-016). The backend ships both
+ * middleware on `familyHttpService` — see ADR-0029). The backend ships both
  * the LEGO catalog `part_num` string id AND an internal numeric `part_id`
  * (sourced from `parts.id`, added in backend PR #178). The numeric `partId`
  * is what the storage-options POST endpoint expects — see PlacePartModal.

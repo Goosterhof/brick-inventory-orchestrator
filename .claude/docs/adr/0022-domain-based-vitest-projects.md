@@ -7,7 +7,7 @@
 
 ## Context
 
-The test suite was split into three Vitest projects by test type (unit/components/apps) to create homogeneous worker pools for a collect-duration guard. That guard was subsequently demoted to informational — the execution-time guard (ADR-010) replaced it as the primary enforcer and doesn't need project-level baselines.
+The test suite was split into three Vitest projects by test type (unit/components/apps) to create homogeneous worker pools for a collect-duration guard. That guard was subsequently demoted to informational — the execution-time guard (ADR-0012) replaced it as the primary enforcer and doesn't need project-level baselines.
 
 The test-type split remained, but caused ongoing friction:
 
@@ -68,7 +68,7 @@ A single `setup.ts` shared by all projects. It contains only environment configu
 - `config.global.renderStubDefaultSlot = true` (Vue Test Utils)
 - Happy-dom polyfills for missing browser APIs (e.g., HTMLMediaElement constants)
 
-**No mocks in setup — ever.** All mocks live in the test file that needs them (per ADR-010). Happy-dom polyfills and browser API workarounds live in the test file until they appear in 3+ files, then they get extracted to a shared test helper.
+**No mocks in setup — ever.** All mocks live in the test file that needs them (per ADR-0012). Happy-dom polyfills and browser API workarounds live in the test file until they appear in 3+ files, then they get extracted to a shared test helper.
 
 This rule exists because of a recurring problem across projects: mocks in setup files cause invisible test failures. A developer adds a mock to setup, another developer's test silently changes behavior, and the failure surfaces far from the cause.
 
@@ -95,7 +95,7 @@ No judgment calls about environments, DOM globals, or test-utils usage. The sour
 | What                                                   | Mechanism                                                          | Scope                                                              |
 | ------------------------------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
 | Every test file covered by exactly one project         | Architecture test in `architecture.spec.ts`                        | All `*.spec.ts` files — catches missing domains and orphaned tests |
-| No mocks in setup files                                | ADR-010 lint rule (factory required on `vi.mock()`) + code review  | `setup.ts` and any future setup files                              |
+| No mocks in setup files                                | ADR-0012 lint rule (factory required on `vi.mock()`) + code review  | `setup.ts` and any future setup files                              |
 | Project naming convention (`app/domain`, `shared/dir`) | Factory function signature — name is a required parameter          | `vitest.config.ts`                                                 |
 | Missing domain detection                               | Architecture test compares domain directories against project list | All `src/apps/*/domains/*/` directories                            |
 

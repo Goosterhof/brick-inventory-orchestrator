@@ -10,7 +10,7 @@ const SectionHeading = {
     template: '<div>{{ number }} {{ title }}</div>',
 };
 
-// Mock the heavy component-registry.json (~54KB, 32 components) to cut import chain cost (ADR-010).
+// Mock the heavy component-registry.json (~54KB, 32 components) to cut import chain cost (ADR-0012).
 // The mock provides enough structure for all 14 tests: alphabetical ordering, badges, expansion,
 // zero-API-surface, required models, consumer maps, depth badges, and root domain labels.
 vi.mock('@shared/generated/component-registry.json', () => ({

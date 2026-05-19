@@ -22,7 +22,7 @@ import type {Reporter, TestRunEndReason} from 'vitest/reporters';
  * - Warning (300ms base / 600ms under coverage): printed but does not fail the suite
  * - Failure (2000ms base / 4000ms under coverage): fails the suite with exit code 1
  *
- * See ADR-010 for the full test isolation policy.
+ * See ADR-0012 for the full test isolation policy.
  */
 
 const WARN_THRESHOLD_MS = 300;
@@ -85,7 +85,7 @@ class TestGuardReporter implements Reporter {
                 ...lines,
                 '',
                 '  Consider: mock heavy dependencies, split large files, or reduce setup overhead.',
-                '  See ADR-010 for the test isolation policy.',
+                '  See ADR-0012 for the test isolation policy.',
                 '',
             ].join('\n');
 
@@ -108,7 +108,7 @@ class TestGuardReporter implements Reporter {
             ...lines,
             '',
             '  Fix: mock heavy dependencies, split large files, or reduce setup overhead.',
-            '  See ADR-010 for the test isolation policy.',
+            '  See ADR-0012 for the test isolation policy.',
             '',
         ].join('\n');
 

@@ -4,7 +4,7 @@ import {nextTick} from 'vue';
 
 import ToastServiceDemo from '@/apps/showcase/components/ToastServiceDemo.vue';
 
-// Mock heavy shared components to cut import chain cost (ADR-010).
+// Mock heavy shared components to cut import chain cost (ADR-0012).
 const {mkButtonStub, mkToastStub, mkStub} = vi.hoisted(() => ({
     mkButtonStub: (name: string) => ({
         name,

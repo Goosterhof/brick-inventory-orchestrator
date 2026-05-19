@@ -19,7 +19,7 @@ const mockStoreGetAll = vi.hoisted(() => ({value: [] as {setNum: string; quantit
 
 vi.mock('barcode-detector', () => ({BarcodeDetector: vi.fn<() => void>()}));
 
-// Mock heavy shared components to cut import chain cost (ADR-010).
+// Mock heavy shared components to cut import chain cost (ADR-0012).
 vi.mock('@shared/components/BackButton.vue', () => ({
     default: {name: 'BackButton', emits: ['click'], template: '<button @click="$emit(\'click\')"><slot /></button>'},
 }));

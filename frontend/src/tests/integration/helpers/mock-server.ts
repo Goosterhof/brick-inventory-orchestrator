@@ -11,7 +11,7 @@
  * before it reaches the page, exactly as it would in production. Similarly,
  * request payloads pass through registered request middleware so a future test
  * that asserts on the snake_case shape sent to the wire will see faithful
- * conversion. This is the regression safety net for ADR-016.
+ * conversion. This is the regression safety net for ADR-0029.
  *
  * Note: error-response middleware (`registerResponseErrorMiddleware`) is
  * recorded but not invoked here — `resolveRoute` only models the success path

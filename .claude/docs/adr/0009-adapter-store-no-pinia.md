@@ -11,7 +11,7 @@ Every domain needs to manage a collection of entities: fetch all sets from the A
 
 The Vue ecosystem's standard answer is Pinia (or its predecessor Vuex). Both provide reactive stores with actions, getters, and devtools integration. But in this project, state management is tightly coupled to three other concerns that Pinia doesn't handle:
 
-1. **The resource adapter** (ADR-006) — entities are adapted objects with CRUD methods attached. The store must return adapted objects, not raw data
+1. **The resource adapter** (ADR-0008) — entities are adapted objects with CRUD methods attached. The store must return adapted objects, not raw data
 2. **localStorage persistence** — the store must sync to localStorage on every mutation so the app works offline and loads instantly on return
 3. **Loading coordination** — looking up an entity by ID must wait for the initial data fetch to complete, or detail pages that load before the collection is ready will show false "not found" errors
 
@@ -36,7 +36,7 @@ Wiring these three concerns into Pinia would require plugins, custom composables
 - **`generateNew()`** — returns a `NewAdapted<T>` for create forms
 - **`retrieveAll()`** — fetches from the API, normalizes into an id-keyed dictionary, freezes each item, persists to localStorage
 
-Internal state is a `Ref<{[id: number]: Readonly<T>}>` — a normalized id-keyed dictionary. This gives O(1) lookups and immutable updates (spread a new object with the changed entry). Only two mutation paths exist: `setById` and `deleteById`, both internal to the module. They are passed to the adapter (ADR-006) so CRUD methods can update the store after successful API calls, but they are never exposed publicly.
+Internal state is a `Ref<{[id: number]: Readonly<T>}>` — a normalized id-keyed dictionary. This gives O(1) lookups and immutable updates (spread a new object with the changed entry). Only two mutation paths exist: `setById` and `deleteById`, both internal to the module. They are passed to the adapter (ADR-0008) so CRUD methods can update the store after successful API calls, but they are never exposed publicly.
 
 The store is the adapter's home. The adapter is the store's interface. They form a closed loop: the store creates adapted objects, the adapted objects' CRUD methods update the store.
 
@@ -52,6 +52,6 @@ No Pinia. No Vuex. No external state management dependency.
 
 ## Resolved Questions
 
-- ~~Like the resource adapter (ADR-006), this pattern is built and tested but not yet consumed by any domain. First integration will validate the API surface.~~ **Resolved**: Sets domain is the first consumer. All four CRUD pages (overview, detail, add, edit) are integrated and validated the API surface.
+- ~~Like the resource adapter (ADR-0008), this pattern is built and tested but not yet consumed by any domain. First integration will validate the API surface.~~ **Resolved**: Sets domain is the first consumer. All four CRUD pages (overview, detail, add, edit) are integrated and validated the API surface.
 - ~~`getAll` re-adapts every item on every computed access. For domains with hundreds of items, should we add memoization?~~ **Resolved**: Memoization was added via `adaptedCache` (Map keyed by ID). `getAll` calls `getAdapted()` which checks the cache before creating new adapted objects. The `Object.values()` iteration cost is trivial; the expensive part (adapter creation) is cached.
 - ~~Should the store expose a `clear()` method for logout scenarios, or should the auth service handle localStorage cleanup directly?~~ **Resolved**: Neither. Logout clears localStorage and triggers a full page refresh. All in-memory state (refs, caches, computed refs) is destroyed with the page. The store has no logout responsibility.
