@@ -45,3 +45,31 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - Whether the per-wing graduation log split should be folded back into a single Brickwright log once enough cross-wing learnings have surfaced — currently kept split because Foundry-Mockery learnings don't fire in the Gallery and Gallery-JSDOM learnings don't fire in the Foundry, but the split adds bookkeeping overhead
 
 ---
+
+## 2026-05-19 — PR triage session: war-room + dependabot batch
+
+### Decisions
+
+- **Merge order strategy**: war-room PRs first (smaller, structural), then dependabot in two passes — backend first (independent of frontend lockfile), then frontend serially because all 8 frontend bumps touch `package-lock.json`. Backend protection is `strict:false`, so siblings don't go stale, but file-level lockfile conflicts still force serial frontend merges.
+- **fs-dialog 0.2.0 spec adaptation**: keep `shallowMount` (arch-test enforces unit tests must not use `mount`). Fix is unstubbing `Suspense: false` and `DemoDialogContent: false` by name so the inline component renders. Rejected alternative: switch to `mount` — fails `mount boundary enforcement` arch-test.
+- **fs-http 0.3.0 sibling bumps**: ship `fs-loading 0.1.0 → 0.1.2` and `fs-adapter-store 0.1.4 → 0.1.6` in the same commit. The dependabot single-package bump can't resolve because the old siblings still pin peer `fs-http ^0.1.0`. Filed as one combined commit on the dependabot branch rather than a separate manual PR — keeps the dependabot PR's identity.
+- **PRs I modify lose dependabot rebase**: once a user commit lands on a dependabot branch, `@dependabot rebase` refuses ("PR has been edited by someone other than Dependabot"). Manual `git rebase origin/main && git push --force-with-lease` is the path.
+
+### Notes
+
+- **fs-dialog 0.1.0 vs 0.2.0 stubbing difference**: source-diff shows 0.1.0 caches one vnode per dialog (`dialog.node`) and replays it every container re-render; 0.2.0 calls `dialog.render()` per-tick, creating fresh vnodes. The fresh-render path causes `shallowMount` to stub the inline `DemoDialogContent` component where the cached-vnode path didn't. Suspense wrapper is in both versions (not the regression's cause). Root cause is the vnode-cache → fresh-render change interacting with `@vue/test-utils`'s shallow stub walk.
+- **Umbrella `gate` workflow gap on long-lived dependabot PRs**: gate landed in PR #57 on 2026-05-18; dependabot PRs filed on 2026-05-17 only ran the old `ci`/`e2e` workflows. Branch protection requires `gate`, so they showed mergeable: BLOCKED even with `ci:SUCCESS, e2e:SUCCESS`. A rebase re-fires CI under the new workflow shape.
+- **commitlint `--from base.sha` trap on stale PRs**: `.github/workflows/frontend-ci.yml` uses `${{ github.event.pull_request.base.sha }}` as the lint range start. On a PR whose dependabot rebase hasn't refreshed `base.sha`, that SHA stays at the original branch-point — for our 2026-05-17 dependabot PRs that was the monorepo migration commit (PR #28). The range then includes ~1500 historical commits absorbed by the subtree merge, some with header-length or subject-case violations. Manual rebase + force-push updates `base.sha` to current main HEAD and the range collapses to PR-only commits. War-room PRs and PRs that took dependabot's rebase don't hit this because their `base.sha` was refreshed.
+- **wait-e2e action flake on PR #73**: `lewagon/wait-on-check-action@v1.3.4` hit a transient `rubygems.org` network failure fetching `concurrent-ruby-1.2.2.gemspec.rz`, exited 17 and the umbrella `gate` aggregator reported FAIL because `E2E=failure`. The actual `e2e` job from the E2E Tests workflow completed SUCCESS ~3 min later. A `gh run rerun --failed` cleared it. Worth knowing the failure shape if it recurs.
+- **Dependabot's auto-supersession is helpful but silent**: #37 closed in favor of #75 (3-update group vs 2-update), #40 closed because vitest/browser-playwright was up-to-date after #43 landed, #42 closed for the same reason. The closure happens on receipt of `@dependabot rebase` when dependabot decides the PR is no longer the right way to express the update.
+
+### Action Items
+
+- [ ] CEO: file a follow-up to fix the commitlint `--from` range in `.github/workflows/frontend-ci.yml` so long-lived dependabot PRs don't trip on historical commits. Options: switch to `--from $(git merge-base HEAD ${{ github.event.pull_request.base.sha }})` with `--first-parent`, or use `head_sha` baselines, or scope to commits that touch `frontend/**`.
+- [ ] Steward: monitor whether the `vnode-cache → fresh-render` change in fs-dialog 0.2.0 affects other places that import fs-dialog (only DialogServiceDemo at the moment — the Gallery's other dialog consumers all use full `mount` already since they're integration tests).
+
+### Open Questions
+
+- Whether the `mount-boundary` arch-test should grow an explicit allow-list mechanism for cases like DialogServiceDemo — where the inline-defineComponent + shallowMount + Vue 3.5 reactive-vnode interaction makes the rule painful. Today the unstubbing-by-name workaround works; if it stops working on a future Vue or vue-test-utils bump, we'll need to revisit.
+
+---
