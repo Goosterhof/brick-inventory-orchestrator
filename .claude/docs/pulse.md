@@ -46,11 +46,9 @@ A consolidated, current-state assessment of both wings. Updated by The Steward a
 
 ## In-Progress Work
 
-**Assessed:** 2026-05-19 (Atrium-level, merger execution)
+**Assessed:** 2026-05-19 (Atrium-level, post-merger residue cleanup)
 
-| Work Item | Status | Next Step |
-|---|---|---|
-| Brickworks merger (umbrella) | In Progress | Phases 0–6 completed; Phase 7 (wing shrink) and Phase 8 (closing Build Record + war-room follow-up) remain |
+_None in progress._ The Brickworks merger closed 2026-05-19 — see the closing Build Record at [`.claude/records/build-records/2026-05-19-form-the-brickworks.md`](../records/build-records/2026-05-19-form-the-brickworks.md) for the canonical record of the eight-phase consolidation. Post-merger war-room follow-up (Adjutant M4 + Cartographer M11 refresh + Engineer/Armorer/Engineer dispatches PR #72/#73/#74) completed 2026-05-19.
 
 ## Pattern Maturity
 

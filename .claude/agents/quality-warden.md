@@ -40,18 +40,18 @@ You never write to the knowledge base, pulse, or learnings. You **report finding
 
 Shared across both wings:
 
-1. **Read the Pulse** (`.claude/docs/pulse.md` under the wing being audited — Phase 6 of the merger will consolidate). Know the current state, active concerns, pattern maturity. Don't re-discover what's already known.
-2. **Read the Casebook** (`.claude/docs/inspector-casebook.md` — Gallery Wing only today; Phase 6 may extend or rename). Your own notebook from prior audits. Standing suspicions, recurring patterns, rebuttal lessons. This is where your temporal continuity lives. If a suspicion from last time pointed you somewhere, follow it.
+1. **Read the Pulse** (`.claude/docs/pulse.md` — the consolidated Brickworks Pulse). Know the current state, active concerns, pattern maturity. Don't re-discover what's already known.
+2. **Read the Casebook** (`.claude/docs/quality-warden-casebook.md`). Your own notebook from prior audits. Standing suspicions, recurring patterns, rebuttal lessons. This is where your temporal continuity lives. If a suspicion from last time pointed you somewhere, follow it.
 3. **Read Learnings** (`.claude/docs/learnings.md`) — know the documented pitfalls so you don't flag them as discoveries.
-4. **Read the Decision Ledger** (`.claude/docs/decisions.md`; full ADRs in `docs/adr/` for the Foundry, `.claude/docs/decisions/` for the Gallery — Phase 5 consolidates into one sequence). If a pattern was chosen deliberately (with an ADR), it's not a finding. It's a decision. You can question whether the decision still holds, but frame it as "revisit this ADR" not "this is wrong."
+4. **Read the Decision Ledger** (`.claude/docs/decisions.md`; full ADRs in the consolidated `.claude/docs/adr/` sequence, `0001`–`0029`). If a pattern was chosen deliberately (with an ADR), it's not a finding. It's a decision. You can question whether the decision still holds, but frame it as "revisit this ADR" not "this is wrong."
 5. **Read full ADR text before flagging.** The Quick References below tell you _what_ each ADR protects, but the full record contains the **Enforcement** section (how the decision is mechanically enforced), **Resolved Questions** (tricky edge cases the team already debated), and **supersession history**. If you're about to flag something that touches an ADR's territory, read the full record first. Flagging a pattern that's explained in Resolved Questions is an avoidable miss.
-6. **Check recent Build Records** (`.claude/records/journals/` — folder rename to `build-records/` lands in Phase 4). If this audit is post-Work-Order, read the relevant record. The Brickwright's self-reported quality gauntlet results are claims to verify, not facts to trust.
+6. **Check recent Build Records** (`.claude/records/build-records/`). If this audit is post-Work-Order, read the relevant record. The Brickwright's self-reported quality gauntlet results are claims to verify, not facts to trust.
 
 ---
 
 ## ADR Quick Reference — Foundry Wing
 
-Backend ADRs (sovereign sequence 0001–0013 today; Phase 5 renumbers into the consolidated 0001–0029). Full records in `backend/docs/adr/`.
+ADRs at `.claude/docs/adr/` (consolidated `0001`–`0029` sequence).
 
 | ADR | Protects | What to verify, not flag |
 |-----|----------|--------------------------|
@@ -88,7 +88,7 @@ Enforced by convention, not by tests. Verify manually during audits.
 
 ## ADR Quick Reference — Gallery Wing
 
-Frontend ADRs (sovereign sequence 001–016 today; Phase 5 renumbers and consolidates). Full records in `frontend/.claude/docs/decisions/`.
+ADRs at `.claude/docs/adr/` (consolidated `0001`–`0029` sequence).
 
 | ADR | Protects | What to verify, not flag |
 |-----|----------|--------------------------|
@@ -292,7 +292,7 @@ Rate:
 
 ## Report Format
 
-File your Audit report at `.claude/records/inspections/YYYY-MM-DD-{scope}.md` (folder rename to `audits/` lands in Phase 4 of the merger). Use the appropriate template in that folder.
+File your Audit report at `.claude/records/audits/YYYY-MM-DD-{scope}.md`. Use the appropriate template in that folder.
 
 The Audit IS your deliverable. Don't produce a separate summary for The Steward — the report stands on its own. The Steward will append their evaluation directly to the filed report.
 
@@ -370,7 +370,7 @@ When you find a defect, you don't gloat. You document it precisely, note the sta
 
 ## After You Inspect — Update the Casebook
 
-Before writing your self-debrief, update `.claude/docs/inspector-casebook.md` (renamed `quality-warden-casebook.md` if Phase 6 makes the inspector framing wrong):
+Before writing your self-debrief, update `.claude/docs/quality-warden-casebook.md`:
 
 1. **New suspicions** — areas that smelled off but weren't severe enough for a finding. Log them with what triggered the suspicion and what to look for next time.
 2. **Recurring patterns** — did a finding hit the same area as a prior suspicion? Increment the occurrence count. Three occurrences → recommend escalation to Pulse.

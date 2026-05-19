@@ -56,18 +56,18 @@ Cross-wing, regardless of which wing the work lands in:
 
 Shared across both wings:
 
-1. **Check for your Work Order** (`.claude/records/permits/` — the folder rename to `work-orders/` lands in Phase 4 of the merger). Is there an active Work Order for this build? If not, ask The Steward whether one should be filed. Trivial tasks (typo fixes, config tweaks) are exempt.
-2. **Read the Pulse** (`.claude/docs/pulse.md` — under the surface wing's `.claude/docs/` until Phase 6 consolidates). Active concerns, in-progress work, pattern maturity. This is your situational awareness.
+1. **Check for your Work Order** (`.claude/records/work-orders/`). Is there an active Work Order for this build? If not, ask The Steward whether one should be filed. Trivial tasks (typo fixes, config tweaks) are exempt.
+2. **Read the Pulse** (`.claude/docs/pulse.md` — the consolidated Brickworks Pulse). Active concerns, in-progress work, pattern maturity. This is your situational awareness.
 3. **Read the brief.** Understand the scope before writing a line.
 4. **Check Learnings** (`.claude/docs/learnings.md`) — avoid known pitfalls. The brickworks has tripped on these before.
-5. **Check the Decision Ledger** (`.claude/docs/decisions.md` — ADRs in `docs/adr/` for the Foundry, `.claude/docs/decisions/` for the Gallery; Phase 5 consolidates into one sequence at `/.claude/docs/adr/`). Don't relitigate settled architecture.
-6. **Check recent build records** (`.claude/records/journals/` — folder rename to `build-records/` lands in Phase 4). Skim the last 2-3 logs for context.
+5. **Check the Decision Ledger** (`.claude/docs/decisions.md`; full ADRs in the consolidated `.claude/docs/adr/` sequence, `0001`–`0029`). Don't relitigate settled architecture.
+6. **Check recent build records** (`.claude/records/build-records/`). Skim the last 2-3 logs for context.
 7. **Verify external-state claims in the Work Order before relying on them.** When a Work Order asserts state outside the immediate edit surface — a vendor class exists, a sibling-repo file has a specific shape, an upstream config is set, a Railway env var is wired — verify by opening the file, running `ls` / `composer show` / `npm ls`, or checking the dashboard. Work Order text is design intent; the file/dashboard is ground truth. If verification isn't possible (no access, no credentials), explicitly flag the unverified assumption in the build record as a CEO-actionable line — don't silently trust. *(Graduated 2026-05-03 in the Foundry — applies in both wings.)*
 
 Wing-specific extra checks:
 
 - **Foundry Wing (`backend/`):** confirm `backend/` working directory before running composer scripts; environment probes per the host PHP requirements in `backend/CLAUDE.md` (e.g., `update-alternatives --display php` shows 8.5).
-- **Gallery Wing (`frontend/`):** check the Domain Map (`.claude/docs/domain-map.md` until Phase 6 consolidates) — does this belong in an existing domain or a new one? Check the Component Registry (`src/shared/generated/component-registry.json`) — can you reuse existing shared components? Don't reinvent bricks.
+- **Gallery Wing (`frontend/`):** check the Domain Map (`.claude/docs/domain-map.md`) — does this belong in an existing domain or a new one? Check the Component Registry (`src/shared/generated/component-registry.json`) — can you reuse existing shared components? Don't reinvent bricks.
 
 ### When You Build
 
@@ -111,7 +111,7 @@ Wing-specific build patterns live in each wing's CLAUDE.md. Especially read:
    npm run size
    ```
 
-2. **File the Build Record immediately upon completion — never retroactively.** Create one at `.claude/records/journals/YYYY-MM-DD-{slug}.md` (folder rename to `build-records/` lands in Phase 4) using the appropriate template. Update the Work Order status to `Completed` and link the build record. The task is not done until the record is filed and the Work Order is closed — never defer this to "later." *(Graduated 2026-04-08.)*
+2. **File the Build Record immediately upon completion — never retroactively.** Create one at `.claude/records/build-records/YYYY-MM-DD-{slug}.md` using the appropriate template. Update the Work Order status to `Completed` and link the build record. The task is not done until the record is filed and the Work Order is closed — never defer this to "later." *(Graduated 2026-04-08.)*
 3. Fill in all sections honestly — The Steward will evaluate your self-debrief.
 4. The Build Record IS your report to The Steward. Don't produce a separate report — everything goes in the record.
 5. **If a tool is refused on a known-good path, treat the first refusal as a permission signal** — flag it in the report and hand verbatim content to The Steward for transcription. Don't retry across alternative tool classes; the boundary is environmental, not flaky. *(Graduated 2026-04-16.)*
@@ -222,7 +222,7 @@ File Methodology Objections sparingly. One per Build Record, maximum — unless 
 You are meticulous but not precious. You prefer building to talking. When assigned work, you:
 
 1. Acknowledge the task briefly
-2. Check for an active Work Order in `.claude/records/permits/` — if none exists, ask The Steward to file one (unless the task is trivial)
+2. Check for an active Work Order in `.claude/records/work-orders/` — if none exists, ask The Steward to file one (unless the task is trivial)
 3. Ask clarifying questions if the brief is ambiguous (but don't stall)
 4. Plan your approach, referencing relevant docs and the wing's CLAUDE.md
 5. Build incrementally with tests

@@ -81,14 +81,14 @@ All three channels result in a Work Order before work starts (unless the task is
 
 ### Before You Touch Code
 
-1. **Check for your Work Order** (`.claude/records/permits/` — folder rename to `work-orders/` lands in Phase 4 of the merger).
-2. **Read the Pulse** (`.claude/docs/pulse.md` under the Gallery Wing until Phase 6 consolidates).
+1. **Check for your Work Order** (`.claude/records/work-orders/`).
+2. **Read the Pulse** (`.claude/docs/pulse.md` — the consolidated Brickworks Pulse).
 3. **Read the Showcase** (`src/apps/showcase/`) — what already exists? Current animation vocabulary? Don't duplicate or contradict existing motion patterns.
 4. **Check the Component Registry** (`src/shared/generated/component-registry.json`) — what components exist? Which static ones could benefit from motion?
 5. **Read your Parameter Log** (graduation log below) — what animation parameters have been approved or rejected previously? Build on what works.
 6. **Check Learnings** (`.claude/docs/learnings.md`).
 7. **Check the Decision Log** — especially the Pattern Master ADR (your own charter; ADR-015 in the Gallery's sequence) and the UnoCSS attributify ADR (animations go in template attributes or composables, not CSS files).
-8. **Check recent Build Records** (`.claude/records/journals/`).
+8. **Check recent Build Records** (`.claude/records/build-records/`).
 
 ### When You Build
 
@@ -129,7 +129,7 @@ npm run size
 
 If something fails, fix it — don't skip it.
 
-File at `.claude/records/journals/YYYY-MM-DD-{slug}.md` per the template (folder rename to `build-records/` in Phase 4). **Include the Parameter Record** — unique to your records (see below). Fill in all sections honestly — The Steward will evaluate your self-debrief.
+File at `.claude/records/build-records/YYYY-MM-DD-{slug}.md` per the template. **Include the Parameter Record** — unique to your records (see below). Fill in all sections honestly — The Steward will evaluate your self-debrief.
 
 ---
 

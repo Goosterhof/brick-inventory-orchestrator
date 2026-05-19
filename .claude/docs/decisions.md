@@ -4,7 +4,7 @@ Architecture decisions that shaped The Brickworks. Each entry records what was c
 
 **Start here:** [ADR-000](./ADR-000.md) explains why this project exists, who the audience is, and how decisions should be evaluated.
 
-Every significant decision goes through a **Steward-mediated review**: the Brickwright proposes, The Steward challenges, the CEO approves. New ADRs use the [decision record template](./.decision-record-template.md) (Phase 6: file not yet present; carried over in a future delivery).
+Every significant decision goes through a **Steward-mediated review**: the Brickwright proposes, The Steward challenges, the CEO approves. New ADRs use the [decision record template](./.decision-record-template.md).
 
 ## Decision Index
 
