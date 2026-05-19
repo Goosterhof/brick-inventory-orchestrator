@@ -23,9 +23,9 @@ final class PrePushPermitGate implements Action
 
     public const int LINE_THRESHOLD = 500;
 
-    public const string PERMIT_DIRECTORY = '.claude/records/permits';
+    public const string PERMIT_DIRECTORY = '.claude/records/work-orders';
 
-    public const string TEMPLATE_FILENAME = '.shipping-order-template.md';
+    public const string TEMPLATE_FILENAME = '.work-order-template.md';
 
     public const string COMPARE_BASE = 'origin/main';
 
