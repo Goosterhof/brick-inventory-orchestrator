@@ -30,23 +30,25 @@ The Brickworks is a single firm with two named production wings and a central at
 
 ### The Paper Trail
 
-| Artifact | Filed When | Filed By | Folder (current) | Folder (post-Phase-4) |
-|---|---|---|---|---|
-| **Work Order** | Before work starts | CEO, Steward, or General | `.claude/records/permits/` | `.claude/records/work-orders/` |
-| **Build Record** | After work completes | Brickwright | `.claude/records/journals/` | `.claude/records/build-records/` |
-| **Audit** | After an inspection | Quality Warden | `.claude/records/inspections/` | `.claude/records/audits/` |
-
-The folder renames land in Phase 4 of the merger plan (`MERGER_PLAN.md` at repo root). Until then, new artifacts may use the new vocabulary in their body even though the folder still carries the old name — `.claude/records/permits/2026-05-18-form-the-brickworks.md` is the precedent.
+| Artifact | Filed When | Filed By | Folder |
+|---|---|---|---|
+| **Work Order** | Before work starts | CEO, Steward, or General | `.claude/records/work-orders/` |
+| **Build Record** | After work completes | Brickwright | `.claude/records/build-records/` |
+| **Audit** | After an inspection | Quality Warden | `.claude/records/audits/` |
 
 ### Vocabulary Source of Truth
 
-`vocabulary-lock.md` at repo root records the CEO-locked name choices and the alternative that was declined. If this charter and the lock-file disagree, the lock-file wins until a new lock-file is filed.
+[`docs/vocabulary-lock.md`](docs/vocabulary-lock.md) records the CEO-locked name choices and the alternative that was declined. If this charter and the lock-file disagree, the lock-file wins until a new lock-file is filed.
 
-### Transitional State (during merger execution)
+### Merger Historical Context
 
-The merger plan is executed phase-by-phase. Until Phase 7 lands, the two wing manuals (`backend/CLAUDE.md`, `frontend/CLAUDE.md`) still carry their pre-merger personas (**Stud & Sort Logistics** / Logistics Director in The Foundry Wing; **Brick & Mortar Associates** / CFO in The Gallery Wing). The Steward sits above both and is unambiguously the identity at root.
+The Brickworks was formed by merging two pre-existing governance systems (Brick & Mortar Associates in `frontend/` and Stud & Sort Logistics in `backend/`) into a single firm over an eight-phase migration completed 2026-05-19. The migration plan, reviews, vocabulary lock, and the closing Build Record are archived at:
 
-When you enter a wing during the transition, follow the wing manual's conventions — but treat its persona language as a wing-local accent of the same Steward-deputed crew. The merged crew agents (Brickwright, Quality Warden, Pattern Master) arrive in Phase 2.
+- [`docs/MERGER_PLAN.md`](docs/MERGER_PLAN.md) — the rev-4 runbook
+- [`docs/MERGER_PLAN_REVIEW.md`](docs/MERGER_PLAN_REVIEW.md) — lab review
+- [`docs/MERGER_PLAN_WAR_ROOM_REVIEW.md`](docs/MERGER_PLAN_WAR_ROOM_REVIEW.md) — war-room review
+- [`docs/vocabulary-lock.md`](docs/vocabulary-lock.md) — locked role/artifact/place names
+- [`.claude/records/build-records/2026-05-19-form-the-brickworks.md`](.claude/records/build-records/2026-05-19-form-the-brickworks.md) — closing Build Record with BE/FE Divergences Resolved drift log
 
 ## Brick Vocabulary
 
@@ -90,10 +92,8 @@ This territory is also governed by war-room ADRs: **0002** (Cascade Deletion), *
 
 The two production wings of The Brickworks each carry their own operational manual. The Atrium (this file) holds the umbrella identity and the paper-trail vocabulary; each wing manual holds the surface-specific conventions, machinery, and quality gauntlets.
 
-- `backend/CLAUDE.md` — **The Foundry Wing manual**. Carries the Stud & Sort Logistics persona until Phase 7 of the merger plan reduces it to a wing-only operational manual. Read it as the working reference when forging Laravel code.
-- `frontend/CLAUDE.md` — **The Gallery Wing manual**. Carries the Brick & Mortar Associates persona until Phase 7. Read it as the working reference when shaping Vue surfaces.
-
-The persona/governance content in each wing manual is duplicative of this Atrium file during the transition. After Phase 7 lands, each wing manual will be a focused operational reference with no persona content; The Steward at root is the single identity.
+- [`backend/CLAUDE.md`](backend/CLAUDE.md) — **The Foundry Wing manual.** Working reference when forging Laravel code.
+- [`frontend/CLAUDE.md`](frontend/CLAUDE.md) — **The Gallery Wing manual.** Working reference when shaping Vue surfaces.
 
 @backend/CLAUDE.md
 
