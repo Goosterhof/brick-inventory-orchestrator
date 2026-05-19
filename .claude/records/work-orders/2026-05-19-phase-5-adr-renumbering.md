@@ -195,8 +195,8 @@ Occurrences observed (35+ lines across the FE ADRs).
 
 ## Status
 
-**Status:** In Progress
+**Status:** Completed
 
 ## Build Record
 
-To be filed at `.claude/records/build-records/2026-05-19-phase-5-adr-renumbering.md` after the PR merges.
+This Phase 5 sub-Work-Order's outcome is absorbed into the umbrella [closing Build Record](../build-records/2026-05-19-form-the-brickworks.md), which covers all eight phases of the Brickworks merger.

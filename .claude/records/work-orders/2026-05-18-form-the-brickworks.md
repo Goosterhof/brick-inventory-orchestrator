@@ -109,5 +109,5 @@ The plan went through two independent review passes (lab + war room) and four re
 
 ---
 
-**Status:** In Progress
-**Build Record:** _to be filed at `/.claude/records/build-records/` (under the new vocabulary post-Phase-4) after all phases ship_
+**Status:** Completed
+**Build Record:** [`2026-05-19-form-the-brickworks.md`](../build-records/2026-05-19-form-the-brickworks.md) (filed Phase 8, merged 2026-05-19)
