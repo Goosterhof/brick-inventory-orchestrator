@@ -15,14 +15,9 @@ Please include:
 
 ## Scope
 
-This repository is the **orchestrator** that coordinates two vassal repositories via git submodules and Docker Compose:
+This repository is **The Brickworks** — a single monorepo containing the backend API (Laravel, `backend/`, the Foundry Wing) and the frontend SPA (Vue 3, `frontend/`, the Gallery Wing), both served from a single Railway service in production.
 
-- Backend (Laravel API): [`Goosterhof/brick-inventory-backend`](https://github.com/Goosterhof/brick-inventory-backend)
-- Frontend (Vue 3 SPA): [`Goosterhof/brick-inventory-frontend`](https://github.com/Goosterhof/brick-inventory-frontend)
-
-Security issues in the **backend** or **frontend** code itself should be reported against those repositories directly (each ships its own `SECURITY.md` with the same disclosure address).
-
-Issues that are specific to **this orchestrator** — for example the docker-compose harness, the Playwright E2E suite, the Makefile, or the GitHub Actions workflows in this repository — fall under this policy.
+Security issues in any part of the codebase — backend, frontend, deployment, or infrastructure (docker-compose harness, the Playwright E2E suite, the Makefile, the GitHub Actions workflows) — should be reported through the channel above.
 
 ## Response Timeline
 
