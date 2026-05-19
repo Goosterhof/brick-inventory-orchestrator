@@ -35,7 +35,7 @@ it('should not have fillable property in models', function(): void {
         $hasFillable = array_any($reflection->getProperties(), fn($property): bool => $property->getDeclaringClass()->getName() === $className && $property->getName() === 'fillable');
 
         expect($hasFillable)->toBeFalse(
-            \sprintf('Model %s should not have $fillable property - use explicit property assignment instead (ADR-0005 / War Room ADR-0019)', $className),
+            \sprintf('Model %s should not have $fillable property - use explicit property assignment instead (ADR-0017 / War Room ADR-0019)', $className),
         );
     }
 });
@@ -46,7 +46,7 @@ it('should not have guarded property in models', function(): void {
         $hasGuarded = array_any($reflection->getProperties(), fn($property): bool => $property->getDeclaringClass()->getName() === $className && $property->getName() === 'guarded');
 
         expect($hasGuarded)->toBeFalse(
-            \sprintf('Model %s should not have $guarded property - use explicit property assignment instead (ADR-0005 / War Room ADR-0019)', $className),
+            \sprintf('Model %s should not have $guarded property - use explicit property assignment instead (ADR-0017 / War Room ADR-0019)', $className),
         );
     }
 });
@@ -73,7 +73,7 @@ it('should not use mass-assignment methods in application code', function(): voi
             $relativePath = str_replace($appDir . '/', '', $file->getPathname());
 
             expect(str_contains($contents, $pattern))->toBeFalse(
-                \sprintf('%s uses %s - use explicit property assignment instead (ADR-0005 / War Room ADR-0019)', $relativePath, $description),
+                \sprintf('%s uses %s - use explicit property assignment instead (ADR-0017 / War Room ADR-0019)', $relativePath, $description),
             );
         }
     }

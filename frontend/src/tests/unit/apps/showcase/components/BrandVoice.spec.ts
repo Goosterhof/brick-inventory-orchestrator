@@ -4,7 +4,7 @@ import {describe, expect, it, vi} from 'vitest';
 import BrandVoice from '@/apps/showcase/components/BrandVoice.vue';
 import SectionHeading from '@/apps/showcase/components/SectionHeading.vue';
 
-// Mock heavy icon library to cut import chain cost (ADR-010).
+// Mock heavy icon library to cut import chain cost (ADR-0012).
 vi.mock('@phosphor-icons/vue', () => ({
     PhCheckCircle: {template: '<i />'},
     PhTrash: {template: '<i />'},

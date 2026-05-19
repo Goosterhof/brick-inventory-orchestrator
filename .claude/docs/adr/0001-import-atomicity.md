@@ -71,7 +71,7 @@ foreach ($paginatedResults as $page) {
 
 ### Partial-Failure Try-Catch
 
-This decision is the origin of the **partial-failure resilience** exception documented in ADR-0003 (resolved question: "Why no try-catch in Actions?"). The import Action catches typed external API exceptions only when at least one page has already succeeded. Total failures (no pages processed) re-throw the exception. This is the only approved use of try-catch in Actions for external API pagination.
+This decision is the origin of the **partial-failure resilience** exception documented in ADR-0015 (resolved question: "Why no try-catch in Actions?"). The import Action catches typed external API exceptions only when at least one page has already succeeded. Total failures (no pages processed) re-throw the exception. This is the only approved use of try-catch in Actions for external API pagination.
 
 ### Frontend Behavior
 
@@ -97,7 +97,7 @@ This decision is the origin of the **partial-failure resilience** exception docu
 |------|-----------|-------|
 | Import result must include `complete` flag | Unit tests assert all three scenarios (complete, partial, total failure) | `tests/Unit/Actions/Sync/` |
 | Per-page transactions (not one big transaction) | Unit tests verify partial-success preserves earlier pages | `tests/Unit/Actions/Sync/` |
-| Try-catch only on typed API exceptions | ADR-0003 approved exception constraints; `ActionArchitectureTest` enforces no generic catch | `app/Actions/Sync/` |
+| Try-catch only on typed API exceptions | ADR-0015 approved exception constraints; `ActionArchitectureTest` enforces no generic catch | `app/Actions/Sync/` |
 
 ## Open Questions
 

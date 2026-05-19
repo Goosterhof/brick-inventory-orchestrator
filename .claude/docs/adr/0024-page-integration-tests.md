@@ -7,7 +7,7 @@
 
 ## Context
 
-The test suite enforces 100% coverage via unit tests (ADR-005) with heavy per-file mocking (ADR-010). Every page test stubs its child components — `BadgeLabel` becomes `<span><slot /></span>`, `ConfirmDialog` becomes a shell. This proves each page's logic works in isolation, but it cannot prove the page works when real components compose together.
+The test suite enforces 100% coverage via unit tests (ADR-0007) with heavy per-file mocking (ADR-0012). Every page test stubs its child components — `BadgeLabel` becomes `<span><slot /></span>`, `ConfirmDialog` becomes a shell. This proves each page's logic works in isolation, but it cannot prove the page works when real components compose together.
 
 The failure mode is concrete and recurring: a developer renames a prop on a shared component, updates the component's unit test, and all tests pass. But three pages that use that component are now broken — the stub never validated the prop contract. The developer pushes, CI passes, and the breakage is discovered manually in the browser.
 
@@ -82,11 +82,11 @@ Page integration tests verify **composition correctness**, not business logic (t
 - Form components (`FormField`, `FormLabel`, etc.)
 - Icon components (use real `@phosphor-icons/vue` or a lightweight global stub if collect-time is prohibitive)
 
-The icon library question deserves attention: `@phosphor-icons/vue` re-exports ~700 components and adds significant collect time (ADR-010). Page integration tests that import real pages will transitively import icons. Options: accept the collect-time cost (integration tests are expected to be slower), or register a global lightweight icon stub in the integration test setup. This is left as an open question to resolve based on measured performance.
+The icon library question deserves attention: `@phosphor-icons/vue` re-exports ~700 components and adds significant collect time (ADR-0012). Page integration tests that import real pages will transitively import icons. Options: accept the collect-time cost (integration tests are expected to be slower), or register a global lightweight icon stub in the integration test setup. This is left as an open question to resolve based on measured performance.
 
 ### File organization
 
-Following ADR-011's domain-based structure:
+Following ADR-0022's domain-based structure:
 
 ```
 src/tests/integration/
@@ -108,7 +108,7 @@ A separate Vitest config (`vitest.integration.config.ts`) with its own project d
 
 ### Coverage accounting
 
-Page integration tests are a **separate suite** that does not contribute to the 100% unit coverage threshold (ADR-005). This is deliberate:
+Page integration tests are a **separate suite** that does not contribute to the 100% unit coverage threshold (ADR-0007). This is deliberate:
 
 - The 100% threshold drives developers to write unit tests for every file. If integration tests counted, a developer could skip a unit test because "the page integration test covers that line." That erodes isolation discipline.
 - Integration tests exist to catch composition failures, not to prove coverage. A line "covered" by an integration test that mounts 15 components deep is not meaningfully tested — it's incidentally executed.
@@ -130,7 +130,7 @@ A component like `ModalDialog` has all three: unit tests (logic), page integrati
 - **Catches the specific failure mode** — prop renames, slot changes, and event contract breaks are caught before they reach a browser
 - **Low infrastructure cost** — happy-dom, same Vitest setup, no Playwright needed
 - **Second test pass over pages** — pages now have two test files each. Accepted cost — they test different things
-- **Slower than unit tests** — real component trees are heavier than stubs. Expected ~100-300ms per page test file vs ~50-150ms for unit tests. Monitored by the test-guard reporter (ADR-010)
+- **Slower than unit tests** — real component trees are heavier than stubs. Expected ~100-300ms per page test file vs ~50-150ms for unit tests. Monitored by the test-guard reporter (ADR-0012)
 - **Icon library resolved via Vite alias** — `@phosphor-icons/vue` (4,536 exports, only 7 used) is aliased to a lightweight stub module in the integration Vitest config. This avoids the ~800ms collect-time tax per file without polluting test files or setup files. See Resolved Questions
 - **Incremental expansion** — starting with 16 domain pages. Scope expands based on where breakage is found, not upfront guessing
 
@@ -153,14 +153,14 @@ Four options were evaluated:
 
 | Option                              | Pros                                                                                              | Cons                                                                                                 | Verdict                                                    |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Global stub in integration setup.ts | Simple, one-time                                                                                  | Breaks "no mocks in setup" rule (ADR-011). Mixes test infrastructure concerns into setup file        | Eliminated                                                 |
+| Global stub in integration setup.ts | Simple, one-time                                                                                  | Breaks "no mocks in setup" rule (ADR-0022). Mixes test infrastructure concerns into setup file        | Eliminated                                                 |
 | Vite resolve.alias in vitest config | Config-level, no test file pollution, no setup file mocking. Automatic for all transitive imports | Requires maintaining a stub module                                                                   | **Chosen**                                                 |
 | Switch source code to deep imports  | Fixes root cause for all consumers                                                                | Package doesn't expose individual imports via `exports` field. Depends on internal package structure | Eliminated — fragile dependency on undocumented internals  |
 | Accept the cost                     | Zero effort                                                                                       | ~13s of icon tax across 16 page tests, grows linearly with pages                                     | Eliminated — unnecessary overhead with a clean alternative |
 
 The implementation: `vitest.integration.config.ts` adds a Vite `resolve.alias` that redirects `@phosphor-icons/vue` to a lightweight module exporting stub components (`{template: "<i />"}`) for each used icon. This operates at the build/transform level — test files and source files are unchanged. The stub module lives in `src/tests/integration/stubs/` and only needs updating when a new icon is added to the codebase (rare — 7 icons over the project's lifetime so far).
 
-This does NOT violate ADR-011's "no mocks in setup" rule because it operates at the Vite config level, not the Vitest setup file. The distinction matters: a Vite alias is a build-time module redirect (like a path alias), not a test-time mock that could silently change test behavior.
+This does NOT violate ADR-0022's "no mocks in setup" rule because it operates at the Vite config level, not the Vitest setup file. The distinction matters: a Vite alias is a build-time module redirect (like a path alias), not a test-time mock that could silently change test behavior.
 
 ## Mock Boundary Evolution
 
@@ -229,6 +229,6 @@ The async `vi.mock` with dynamic import is necessary because `vi.mock` factories
 
 ## Open Questions
 
-- **Threshold calibration** — the test-guard reporter (ADR-010) thresholds are calibrated for unit tests. Integration tests mounting real component trees will be heavier. May need separate thresholds or a separate reporter instance for the integration config.
+- **Threshold calibration** — the test-guard reporter (ADR-0012) thresholds are calibrated for unit tests. Integration tests mounting real component trees will be heavier. May need separate thresholds or a separate reporter instance for the integration config.
 - **Coverage threshold for integration tests** — currently no coverage requirement. Once all 16 pages have integration tests, consider whether a minimum coverage threshold (e.g., 80% of page files) is worth enforcing.
 - **Expanding scope** — after running page integration tests for a cycle, evaluate whether modals or sub-views show up as composition failure points. Expand based on evidence, not prediction.

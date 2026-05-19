@@ -16,7 +16,7 @@ The forces pulling in different directions:
 - **Forms need mutable reactive data** — Vue's `v-model` requires a `Ref` or `reactive` target
 - **Canonical state must not be corrupted by in-progress edits** — if a user cancels, the original must be untouched
 - **CRUD operations should live close to the data** — calling `update()` on an entity is more discoverable than dispatching an action to a store that calls an API that updates another store
-- **snake_case/camelCase conversion must happen consistently** — every HTTP boundary needs conversion (ADR-004), and doing it per-component is a bug magnet
+- **snake_case/camelCase conversion must happen consistently** — every HTTP boundary needs conversion (ADR-0006), and doing it per-component is a bug magnet
 
 ### Scope
 
@@ -48,7 +48,7 @@ The adapter attaches context-appropriate CRUD methods:
 
 This is enforced at both the type level (function overloads with `Adapted<T>` vs `NewAdapted<T>`) and at runtime (the `isExisting()` type guard determines which branch executes). You cannot call `update()` on something that doesn't exist yet — TypeScript won't let you.
 
-The internal `adapterRepositoryFactory` handles all HTTP communication: response validation and store synchronization. Snake_case ↔ camelCase conversion happens at the HTTP middleware layer (ADR-016), one level below the adapter. Domain code never touches HTTP directly through the adapter — it calls `adapted.update()` and the pipeline handles the rest.
+The internal `adapterRepositoryFactory` handles all HTTP communication: response validation and store synchronization. Snake_case ↔ camelCase conversion happens at the HTTP middleware layer (ADR-0029), one level below the adapter. Domain code never touches HTTP directly through the adapter — it calls `adapted.update()` and the pipeline handles the rest.
 
 ### Memoization
 
@@ -66,7 +66,7 @@ This means updating one entity in a collection of 100 only recreates the adapted
 
 - **Forms are simple**: bind to `adapted.mutable.value`, call `adapted.update()` on submit, call `adapted.reset()` on cancel. No manual state copying or restoration
 - **Canonical state is protected**: `Object.freeze` prevents accidental mutation. The frozen properties are the source of truth for display
-- **Case conversion is invisible**: handled by HTTP middleware on the underlying http service per ADR-016 (originally claimed to be inside the repository factory; the factory's conversion was lost in the 2026-04-01 `fs-adapter-store` migration and restored as middleware)
+- **Case conversion is invisible**: handled by HTTP middleware on the underlying http service per ADR-0029 (originally claimed to be inside the repository factory; the factory's conversion was lost in the 2026-04-01 `fs-adapter-store` migration and restored as middleware)
 - **Type safety narrows the API**: impossible to call `delete()` on a new resource or `create()` on an existing one
 - **Memoization is cheap and correct**: `Object.freeze` gives us reference equality for free. Cache invalidation is deterministic — the only way a frozen reference changes is through `setById` or `retrieveAll`
 - **The `Ref` type assertion**: Vue's `UnwrapRef` widens generic `T` to `unknown`, requiring a cast. This is safe for POJOs but would break if someone passed a resource with nested Vue refs. The adapter is designed for API-sourced data, not arbitrary reactive objects

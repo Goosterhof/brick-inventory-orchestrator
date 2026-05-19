@@ -12,7 +12,7 @@ The system isolates data by "families" in a shared database. Every request touch
 The forces:
 - Tenant isolation (does this resource belong to your family?) is separate from permission (can you do this action?)
 - Authorization must be enforced structurally — a missed check in one controller leaks data
-- Controllers must stay thin (ADR-0009) — authorization logic shouldn't live in controller methods
+- Controllers must stay thin (ADR-0021) — authorization logic shouldn't live in controller methods
 - The system needs a "family head" concept (one member with elevated privileges) but not a full role hierarchy
 - Tenant isolation must be automatic, not opt-in per endpoint
 - Failed ownership checks should return 404 (not 403) to avoid leaking resource existence

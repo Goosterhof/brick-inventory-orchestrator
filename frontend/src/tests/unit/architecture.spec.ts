@@ -66,17 +66,6 @@ const dirExists = (dir: string): boolean => {
     }
 };
 
-const parseAdrNumbers = (content: string): string[] => {
-    const numbers: string[] = [];
-    for (const line of content.split('\n')) {
-        const match = /^\|\s*(\d{3})\s*\|/.exec(line);
-        if (match?.[1]) {
-            numbers.push(match[1]);
-        }
-    }
-    return numbers;
-};
-
 describe('Architecture', () => {
     describe('shared code must not import from app code', () => {
         it('should not contain imports from @app/ or app directories', () => {
@@ -522,7 +511,7 @@ describe('Architecture', () => {
         });
     });
 
-    describe('page integration test coverage — ADR-013', () => {
+    describe('page integration test coverage — ADR-0024', () => {
         it('every domain page should have a corresponding integration test', () => {
             const integrationDir = join(SRC_DIR, 'tests/integration/apps');
             const appNames = getAppNames();
@@ -569,39 +558,17 @@ describe('Architecture', () => {
                 }
             }
 
-            expect(violations, 'Every domain page must have a corresponding integration test (ADR-013)').toStrictEqual(
+            expect(violations, 'Every domain page must have a corresponding integration test (ADR-0024)').toStrictEqual(
                 [],
             );
         });
     });
 
-    describe('ADR sync — decision log index must match inspector Quick Reference', () => {
-        it('every ADR in the decision log index should appear in the inspector Quick Reference', () => {
-            const decisionLog = readFileSync(join(ROOT_DIR, '.claude/docs/decisions.md'), 'utf-8');
-            const inspector = readFileSync(join(ROOT_DIR, '.claude/agents/building-inspector.md'), 'utf-8');
-
-            const logAdrs = parseAdrNumbers(decisionLog);
-            const inspectorAdrs = parseAdrNumbers(inspector);
-
-            const missingFromInspector = logAdrs.filter((adr) => !inspectorAdrs.includes(adr));
-            const inspectorOnly = inspectorAdrs.filter((adr) => !logAdrs.includes(adr) && adr !== '000');
-
-            const violations: string[] = [];
-
-            for (const adr of missingFromInspector) {
-                violations.push(`ADR-${adr} is in the decision log but missing from the inspector Quick Reference`);
-            }
-
-            for (const adr of inspectorOnly) {
-                violations.push(`ADR-${adr} is in the inspector Quick Reference but missing from the decision log`);
-            }
-
-            expect(
-                violations,
-                'The decision log index and inspector ADR Quick Reference must stay in sync. ADR-000 (meta) is exempt.',
-            ).toStrictEqual([]);
-        });
-    });
+    // ADR sync — decision log index vs. agent Quick Reference: removed during Phase 5 of the
+    // Brickworks merger. The Gallery-Wing decision-log index (frontend/.claude/docs/decisions.md)
+    // and the per-wing inspector agent are both retired in this phase; Phase 6 will rebuild the
+    // consolidated index at .claude/docs/decisions.md and re-target this check against the
+    // Quality Warden agent's ADR Quick Reference.
 
     describe('dark mode enforcement — no hardcoded light-mode colors in non-showcase Vue files', () => {
         const SHOWCASE_DIR = join(APPS_DIR, 'showcase');

@@ -63,9 +63,9 @@ The architecture test is the most thorough: it resolves relative imports to abso
 
 - **Each domain is independently understandable** — you can read the `sets` domain without knowing anything about `storage`, `parts`, or `auth`
 - **Refactoring is local** — changing the internal structure of one domain cannot break another. This is critical for a team of juniors who may not understand the ripple effects of changes
-- **Some data fetching is duplicated** — `sets` and `storage` may both fetch storage options from the API. This is intentional: the HTTP cost is negligible, and the coupling cost of sharing would be permanent. In practice, most shared data is fetched once by app-level adapter stores (ADR-007); only domain-specific queries for fast-changing data (e.g., paginated lists) are fetched independently
+- **Some data fetching is duplicated** — `sets` and `storage` may both fetch storage options from the API. This is intentional: the HTTP cost is negligible, and the coupling cost of sharing would be permanent. In practice, most shared data is fetched once by app-level adapter stores (ADR-0009); only domain-specific queries for fast-changing data (e.g., paginated lists) are fetched independently
 - **Duplication of small utilities is accepted** — if a domain needs a helper that already exists in another domain, the correct action is to copy it or promote it to `@shared/`. Duplication is a separate concern with its own fix path (promotion to `@shared/` when spotted), not a reason to punch holes in isolation
-- **Navigation uses string-based route names** — a typo in a route name is caught by the RouterService's type system (ADR-001), not by an import. This is the deliberate tradeoff: slightly less discoverable than imported constants, but zero coupling
+- **Navigation uses string-based route names** — a typo in a route name is caught by the RouterService's type system (ADR-0003), not by an import. This is the deliberate tradeoff: slightly less discoverable than imported constants, but zero coupling
 - **Domain index files are minimal** — they export only routes. No barrel of utilities, no shared components. This keeps the surface area at zero
 
 ## Subdomain Principle
@@ -78,7 +78,7 @@ This makes the rule fractal: a developer who learns the isolation pattern once a
 
 ## Open Questions
 
-- As domains grow, will the "fetch independently" pattern lead to noticeable duplicate API calls on pages that span multiple domains? Current assessment: unlikely, since pages live within a single domain. App-level adapter stores (ADR-007) handle shared data; only domain-specific queries are fetched independently. But if a future design requires a dashboard pulling from multiple domains simultaneously, a shared data layer above the domain level might be needed.
+- As domains grow, will the "fetch independently" pattern lead to noticeable duplicate API calls on pages that span multiple domains? Current assessment: unlikely, since pages live within a single domain. App-level adapter stores (ADR-0009) handle shared data; only domain-specific queries are fetched independently. But if a future design requires a dashboard pulling from multiple domains simultaneously, a shared data layer above the domain level might be needed.
 - Should domain-level types (e.g., a type used only within the `sets` domain) live at `@app/types/` or within the domain directory? Current decision: types that any domain might reference live at `@app/types/`, keeping domain index files minimal and avoiding any reason to import cross-domain. As domains grow, domain-local types may make sense for types that are truly internal.
 
 ## Adoption Strategy

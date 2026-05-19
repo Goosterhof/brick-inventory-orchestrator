@@ -2,12 +2,12 @@
 
 **Date**: 2026-05-05
 **Feature**: API communication layer — restoring snake_case ↔ camelCase conversion after the fs-adapter-store package migration silently dropped it
-**Status**: accepted (supersedes ADR-004)
+**Status**: accepted (supersedes ADR-0006)
 **Transferability**: universal
 
 ## Context
 
-ADR-004 (2026-03-17) chose explicit `deepSnakeKeys` / `toCamelCaseTyped` calls at every API boundary, explicitly rejecting HTTP middleware on the grounds that it was "too broad, too invisible." That decision was made when BIO owned its own `resource-adapter.ts` and `adapter-store.ts`, both of which performed the conversion internally as a centralized choke point. ADR-006 likewise asserted that "case conversion is invisible — handled inside the repository factory."
+ADR-0006 (2026-03-17) chose explicit `deepSnakeKeys` / `toCamelCaseTyped` calls at every API boundary, explicitly rejecting HTTP middleware on the grounds that it was "too broad, too invisible." That decision was made when BIO owned its own `resource-adapter.ts` and `adapter-store.ts`, both of which performed the conversion internally as a centralized choke point. ADR-0008 likewise asserted that "case conversion is invisible — handled inside the repository factory."
 
 On 2026-04-01 (PR #158, commit `09f5795`) those local files were deleted in favor of `@script-development/fs-adapter-store@0.1.4`. The migration permit (`2026-04-01-fs-helpers-adapter-store-migration.md:75`) assumed BIO already had an HTTP-level middleware doing the conversion:
 
@@ -15,9 +15,9 @@ On 2026-04-01 (PR #158, commit `09f5795`) those local files were deleted in favo
 
 That middleware did not exist. It was never registered. The published `fs-adapter-store` package posts `mutable.value` straight to the HTTP service with no conversion, and `retrieveAll` stores the raw response with no conversion. The migration silently regressed every adapter-driven create/update/patch/retrieve in the codebase. The bug surfaced when a user reported "Set number is required" on `AddSetPage`: the form posted `{setNum: '75192-1', ...}`, the Laravel backend looked for `set_num`, and rejected the request as missing.
 
-The forces have shifted since ADR-004:
+The forces have shifted since ADR-0006:
 
-- **Adapter is now external** — we no longer own the conversion choke point. The pattern that ADR-004 relied on (centralized in our own repository factory) no longer applies.
+- **Adapter is now external** — we no longer own the conversion choke point. The pattern that ADR-0006 relied on (centralized in our own repository factory) no longer applies.
 - **War-room precedent** — sibling territories adopted HTTP middleware for the same conversion, and the pattern has held up in production.
 - **The "invisibility" objection has flipped** — explicit per-call-site conversion was supposed to be greppable and visible, but in practice it produced a 20+ call-site footprint, easy to forget at new boundaries, and silently broken when the adapter regressed. Visibility didn't prevent the bug; it just spread the responsibility thin enough that no one noticed it was missing.
 
@@ -25,9 +25,9 @@ The forces have shifted since ADR-004:
 
 | Option                                                                      | Pros                                                                                                                                                                                                                                                      | Cons                                                                                                                                                                                                                                                                            | Why eliminated / Why chosen                                                                                                                            |
 | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Restore explicit conversion at every adapter call site**                  | Honors the original ADR-004 spirit. No new middleware abstraction.                                                                                                                                                                                        | Bypasses the adapter's `create()` / `update()` / `patch()` methods, which is the API surface ADR-006 designed for. Forces every domain page to know about case conversion. Already proven brittle — the migration regression is exactly this failure mode at the package level. | Eliminated — it papers over the symptom and contradicts ADR-006's "case conversion is invisible" promise.                                              |
+| **Restore explicit conversion at every adapter call site**                  | Honors the original ADR-0006 spirit. No new middleware abstraction.                                                                                                                                                                                        | Bypasses the adapter's `create()` / `update()` / `patch()` methods, which is the API surface ADR-0008 designed for. Forces every domain page to know about case conversion. Already proven brittle — the migration regression is exactly this failure mode at the package level. | Eliminated — it papers over the symptom and contradicts ADR-0008's "case conversion is invisible" promise.                                              |
 | **Patch / fork `fs-adapter-store` upstream to restore internal conversion** | Most architecturally pure — restores the pre-migration contract.                                                                                                                                                                                          | We don't own the package's release cadence. Fork creates ongoing maintenance debt. Other Armory consumers would need to coordinate. Doesn't help inbound conversion for non-adapter HTTP calls (auth, settings, scan, etc.).                                                    | Eliminated for now — useful as a longer-term cleanup but not the right fix for today's regression.                                                     |
-| **HTTP request/response middleware (per a sibling territory's pattern)**    | Single registration point. Catches every HTTP call — adapter and non-adapter alike. Already battle-tested in a sibling territory. Fixes the bug for all current and future call sites at once. Mirrors what the migration permit assumed already existed. | Reverses ADR-004's explicit rejection of middleware. Risk of converting things that shouldn't be converted (FormData, Blob) — addressed by guards.                                                                                                                              | **Chosen** — the world ADR-004 was written for no longer exists. Aligning with a sibling territory also lowers the cost of the next package migration. |
+| **HTTP request/response middleware (per a sibling territory's pattern)**    | Single registration point. Catches every HTTP call — adapter and non-adapter alike. Already battle-tested in a sibling territory. Fixes the bug for all current and future call sites at once. Mirrors what the migration permit assumed already existed. | Reverses ADR-0006's explicit rejection of middleware. Risk of converting things that shouldn't be converted (FormData, Blob) — addressed by guards.                                                                                                                              | **Chosen** — the world ADR-0006 was written for no longer exists. Aligning with a sibling territory also lowers the cost of the next package migration. |
 
 ## Decision
 
@@ -50,7 +50,7 @@ The shape is byte-for-byte the same as a sibling territory's. Cross-territory co
 - **Outbound** — skip `FormData` instances. Multipart bodies (e.g., `IdentifyBrickPage` image upload) must reach the wire untouched.
 - **Inbound** — skip non-object responses (strings, numbers, `null`, `undefined`). The `typeof === 'object'` check is sufficient for the families app today; if blob downloads (`responseType: 'blob'`) are added, this guard must be tightened to also exclude `Blob` / `ArrayBuffer`.
 
-**ADR-004 is superseded.** ADR-006's "case conversion is invisible" claim is preserved but now points at this middleware as the actual mechanism rather than the (now-external) repository factory.
+**ADR-0006 is superseded.** ADR-0008's "case conversion is invisible" claim is preserved but now points at this middleware as the actual mechanism rather than the (now-external) repository factory.
 
 ## Consequences
 
@@ -71,13 +71,13 @@ Automated detection of the regression (i.e., a test that catches "the middleware
 
 ## Resolved Questions
 
-### Why not restore explicit conversion and leave ADR-004 standing?
+### Why not restore explicit conversion and leave ADR-0006 standing?
 
-**Resolved 2026-05-05.** Because the migration regression already proved that explicit conversion is brittle when the choke point moves out of our repo. ADR-004's strongest argument — "you can grep for `deepSnakeKeys` and `toCamelCaseTyped` to find every API boundary" — assumed those calls were the only mechanism. With the package now stripping internal conversion, callers who relied on the adapter (`AddSetPage`, `EditSetPage`, etc.) had no `deepSnakeKeys` call to grep for, so the bug was invisible to that detection method. Middleware moves the choke point back inside our repo where we control it.
+**Resolved 2026-05-05.** Because the migration regression already proved that explicit conversion is brittle when the choke point moves out of our repo. ADR-0006's strongest argument — "you can grep for `deepSnakeKeys` and `toCamelCaseTyped` to find every API boundary" — assumed those calls were the only mechanism. With the package now stripping internal conversion, callers who relied on the adapter (`AddSetPage`, `EditSetPage`, etc.) had no `deepSnakeKeys` call to grep for, so the bug was invisible to that detection method. Middleware moves the choke point back inside our repo where we control it.
 
-### Does this contradict ADR-002 (visibility-over-magic) and the cited "junior follows literally" principle from ADR-000?
+### Does this contradict ADR-0004 (visibility-over-magic) and the cited "junior follows literally" principle from ADR-000?
 
-**Resolved 2026-05-05.** No — and this is the same reasoning a sibling territory arrived at. A junior who reads `apps/families/services/http.ts` sees the conversion in 4 lines of code. A junior who debugs why `setNum` shows up as `set_num` in the network tab follows the http service to the same file. The middleware is invisible from a single component's perspective but central and grep-able from the architectural perspective. ADR-004's "visibility" was visibility in 20+ places; this ADR's visibility is in 1 place. Both are visible — this one is just more honest about where the responsibility lives.
+**Resolved 2026-05-05.** No — and this is the same reasoning a sibling territory arrived at. A junior who reads `apps/families/services/http.ts` sees the conversion in 4 lines of code. A junior who debugs why `setNum` shows up as `set_num` in the network tab follows the http service to the same file. The middleware is invisible from a single component's perspective but central and grep-able from the architectural perspective. ADR-0006's "visibility" was visibility in 20+ places; this ADR's visibility is in 1 place. Both are visible — this one is just more honest about where the responsibility lives.
 
 ### Why not patch the package and bump the version?
 

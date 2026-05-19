@@ -7,7 +7,7 @@
 
 ## Context
 
-The test suite runs under a strict 100% coverage policy (ADR-005). Test execution time matters — it runs on every pre-push via Husky, so a slow suite directly blocks developer velocity.
+The test suite runs under a strict 100% coverage policy (ADR-0007). Test execution time matters — it runs on every pre-push via Husky, so a slow suite directly blocks developer velocity.
 
 Vitest measures two distinct phases per test file: **collect** (importing the test module and all transitive dependencies) and **execute** (running the actual test functions). In practice, collect duration dominates wall-clock time. A single unmocked barrel export — like `@phosphor-icons/vue`, which re-exports ~700 icon components — can add 500–1500ms to every component test that transitively imports it.
 

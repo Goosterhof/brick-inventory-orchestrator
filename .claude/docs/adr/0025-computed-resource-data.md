@@ -7,7 +7,7 @@
 
 ## Context
 
-ADR-0006 established `ResourceData` as the API response layer — `final readonly` classes extending an abstract `ResourceData<TModel of Model>` base with a `from(Model)` factory, `collection()` for lists, `EAGER_LOAD` for relationship management, and `validateRelationsLoaded()` for runtime safety.
+ADR-0018 established `ResourceData` as the API response layer — `final readonly` classes extending an abstract `ResourceData<TModel of Model>` base with a `from(Model)` factory, `collection()` for lists, `EAGER_LOAD` for relationship management, and `validateRelationsLoaded()` for runtime safety.
 
 This works when the source is an Eloquent Model. But three endpoints now return computed/aggregated data that was never a Model:
 
@@ -89,9 +89,9 @@ The duplication trigger for extraction is explicit: if a third abstract variant 
 
 ## Resolved Questions
 
-### Why not amend ADR-0006 instead of a new ADR?
+### Why not amend ADR-0018 instead of a new ADR?
 
-**Resolved 2026-03-28.** ADR-0006 covers both FormRequest→DTO input handling and ResourceData output handling. This decision only affects the output side and introduces new infrastructure (interface, abstract class, Deptrac rule, architecture test changes). Amending ADR-0006 would make it cover too much ground. A separate ADR that references 0006 keeps both focused.
+**Resolved 2026-03-28.** ADR-0018 covers both FormRequest→DTO input handling and ResourceData output handling. This decision only affects the output side and introduces new infrastructure (interface, abstract class, Deptrac rule, architecture test changes). Amending ADR-0018 would make it cover too much ground. A separate ADR that references 0006 keeps both focused.
 
 ### Where does `ResourceDataSource` live — `App\Contracts` or `App\Data`?
 

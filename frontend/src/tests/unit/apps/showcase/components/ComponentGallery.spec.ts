@@ -6,7 +6,7 @@ import {nextTick} from 'vue';
 
 import ComponentGallery from '@/apps/showcase/components/ComponentGallery.vue';
 
-// Mock heavy shared components to keep import chain under 1000ms (ADR-010).
+// Mock heavy shared components to keep import chain under 1000ms (ADR-0012).
 // Using globalThis stubs: vi.mock factories are hoisted above imports, so we
 // use vi.hoisted to make the factory function available in the hoisted scope.
 const {mkStub, mkDialogStub, mkModelStub, mkButtonStub, mkToastStub} = vi.hoisted(() => ({

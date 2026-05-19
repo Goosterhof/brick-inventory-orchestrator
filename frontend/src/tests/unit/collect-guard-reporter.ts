@@ -25,7 +25,7 @@ import type {Reporter, TestRunEndReason} from 'vitest/reporters';
  * When coverage is enabled, thresholds are doubled to avoid false failures
  * from instrumentation overhead.
  *
- * See ADR-010 for the full test isolation policy.
+ * See ADR-0012 for the full test isolation policy.
  */
 
 const median = (values: number[]): number => {
@@ -131,7 +131,7 @@ class CollectGuardReporter implements Reporter {
                 ...lines,
                 '',
                 '  Consider mocking heavy dependencies with vi.mock(() => ({...})).',
-                '  See ADR-010 for the test isolation policy.',
+                '  See ADR-0012 for the test isolation policy.',
                 '',
             ].join('\n');
 
@@ -156,7 +156,7 @@ class CollectGuardReporter implements Reporter {
             ...lines,
             '',
             '  Fix: mock heavy dependencies with vi.mock(() => ({...})) so the import chain stays shallow.',
-            '  See ADR-010 for the test isolation policy.',
+            '  See ADR-0012 for the test isolation policy.',
             '',
         ].join('\n');
 

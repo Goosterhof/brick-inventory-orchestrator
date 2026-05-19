@@ -7,13 +7,13 @@
 
 ## Context
 
-Controllers can receive dependencies via constructor injection or method injection. With the Action pattern (ADR-0003), controllers are thin dispatchers — they receive a request, hand it to an Action, and return the response. Each controller method may need different Actions, but a constructor-injected controller front-loads all dependencies even for unused methods.
+Controllers can receive dependencies via constructor injection or method injection. With the Action pattern (ADR-0015), controllers are thin dispatchers — they receive a request, hand it to an Action, and return the response. Each controller method may need different Actions, but a constructor-injected controller front-loads all dependencies even for unused methods.
 
 The forces:
 - Controllers should be thin — 3-5 lines per method, not business logic
 - Each method needs different dependencies (different Actions, different FormRequests)
 - Exception handling must be consistent across all endpoints — not scattered in try-catch blocks
-- Authorization is handled in the routing layer (ADR-0002) — controllers must not duplicate it
+- Authorization is handled in the routing layer (ADR-0014) — controllers must not duplicate it
 
 ## Options Considered
 
@@ -43,7 +43,7 @@ public function store(
 Additional rules:
 - **No try-catch blocks** — exceptions handled globally in `bootstrap/app.php`
 - **Return `JsonResponse` or `array`** — never ResourceData directly (controllers call `->toResponse()`)
-- **No `Gate` injection, no `->authorize()` calls** — authorization is a routing concern (ADR-0002)
+- **No `Gate` injection, no `->authorize()` calls** — authorization is a routing concern (ADR-0014)
 - **No query builders** — controllers don't browse the shelves directly
 
 ## Consequences

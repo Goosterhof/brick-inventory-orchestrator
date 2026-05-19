@@ -8,7 +8,7 @@ import {nextTick} from 'vue';
 
 import ResourceAdapterPlayground from '@/apps/showcase/components/ResourceAdapterPlayground.vue';
 
-// Mock heavy shared components to keep import chain under 1000ms (ADR-010).
+// Mock heavy shared components to keep import chain under 1000ms (ADR-0012).
 const {mkStub, mkModelStub, mkButtonStub} = vi.hoisted(() => ({
     mkStub: (name: string) => ({
         name,

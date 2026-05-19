@@ -4,7 +4,7 @@
 **Feature**: Test coverage infrastructure
 **Status**: accepted
 **Transferability**: universal
-**Supersedes**: Previous ADR-005 (v-show for testable conditional rendering — deprecated, workaround no longer needed)
+**Supersedes**: Previous ADR-0007 (v-show for testable conditional rendering — deprecated, workaround no longer needed)
 
 ## Context
 
@@ -12,7 +12,7 @@ The project enforces 100% coverage on lines, functions, branches, and statements
 
 With V8 coverage (`@vitest/coverage-v8`), branch tracking relies on runtime byte-range data remapped to source locations via source maps. Vue's compiler hoists static elements to module scope and shifts byte offsets in ways that break this remapping. The result: false positives (hoisted code reported as covered when it wasn't exercised) and false negatives (unmapped branches silently dropped from reports). Multiple issues remain open as of March 2026. This meant our 100% branch coverage number was unreliable — it could be lying in both directions.
 
-The previous workaround (ADR-005, now deprecated) used `v-show` instead of `v-if` to avoid generating branches that V8 couldn't track. This solved the symptom but misused `v-show` — a rendering performance tool — as a coverage workaround, and forced semantic compromises in templates.
+The previous workaround (ADR-0007, now deprecated) used `v-show` instead of `v-if` to avoid generating branches that V8 couldn't track. This solved the symptom but misused `v-show` — a rendering performance tool — as a coverage workaround, and forced semantic compromises in templates.
 
 ## Options Considered
 
@@ -21,7 +21,7 @@ The previous workaround (ADR-005, now deprecated) used `v-show` instead of `v-if
 | **V8 coverage** (`@vitest/coverage-v8`)             | Faster, lower memory, no instrumentation overhead, ships as Vitest default                                                                                                     | Known false positives and false negatives for Vue SFC branches due to source map remapping bugs. 100% branch coverage becomes unreliable | Eliminated — an unreliable coverage number is worse than no coverage number |
 | **Istanbul coverage** (`@vitest/coverage-istanbul`) | Injects explicit counter statements into compiled JS — counters are physically in the code, not dependent on source map remapping. More mechanically reliable branch detection | Slower execution, higher memory usage due to instrumentation overhead. Still instruments compiled output, not original templates         | **Chosen** — reliable branch detection is worth the performance cost        |
 | **Custom coverage provider**                        | Vitest supports custom providers via config                                                                                                                                    | No viable third-party options exist as of March 2026                                                                                     | Eliminated — nothing to evaluate                                            |
-| **v-show workaround** (previous ADR-005)            | Avoids generating untestable branches                                                                                                                                          | Misuses v-show semantics, forces template compromises, doesn't fix the root cause                                                        | Eliminated — treats the symptom, not the disease                            |
+| **v-show workaround** (previous ADR-0007)            | Avoids generating untestable branches                                                                                                                                          | Misuses v-show semantics, forces template compromises, doesn't fix the root cause                                                        | Eliminated — treats the symptom, not the disease                            |
 
 ## Decision
 

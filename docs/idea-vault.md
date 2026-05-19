@@ -87,7 +87,7 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 - **Status:** Return to Shelf
 - **Piece Count:** Medium
 - **Summary:** Component documentation for all 32 shared components — props, slots, emits, and composition patterns. Three consecutive inspections have flagged the missing `brick-catalog.md` (dead link in domain-map, broken `lint:catalog` script). The Showcase app provides visual demos but not contract docs. For the portfolio, this is the product manual a technical reviewer would expect.
-- **Key Concern:** Superseded 2026-03-27 by ADR-009 component health registry. The `brick-catalog.md` was previously deleted; all codebase references (domain-map link, lint:catalog script, `validate-brick-catalog.mjs`) were cleaned up in PR #133. Permit voided. The component registry JSON + Showcase app now serve this role.
+- **Key Concern:** Superseded 2026-03-27 by ADR-0011 component health registry. The `brick-catalog.md` was previously deleted; all codebase references (domain-map link, lint:catalog script, `validate-brick-catalog.mjs`) were cleaned up in PR #133. Permit voided. The component registry JSON + Showcase app now serve this role.
 
 ### The Family Roster Display
 - **Date:** 2026-03-16
