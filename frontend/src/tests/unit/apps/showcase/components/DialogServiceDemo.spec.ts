@@ -1,13 +1,21 @@
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {shallowMount} from '@vue/test-utils';
+import {flushPromises, shallowMount} from '@vue/test-utils';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {nextTick} from 'vue';
 
 import DialogServiceDemo from '@/apps/showcase/components/DialogServiceDemo.vue';
 import SectionHeading from '@/apps/showcase/components/SectionHeading.vue';
 
 describe('DialogServiceDemo', () => {
-    const stubs = {SectionHeading, PrimaryButton, DialogContainer: false as const};
+    // fs-dialog 0.2+ wraps content in <Suspense> and re-renders the vnode each
+    // tick. Unstub both Suspense and the inline DemoDialogContent so the dialog
+    // body actually renders for the interactive tests.
+    const stubs = {
+        SectionHeading,
+        PrimaryButton,
+        DialogContainer: false as const,
+        DemoDialogContent: false as const,
+        Suspense: false as const,
+    };
 
     afterEach(() => {
         document.body.style.overflowY = '';
@@ -58,7 +66,7 @@ describe('DialogServiceDemo', () => {
         // Act
         const openButton = wrapper.findAll('button').find((b) => b.text().includes('Open Dialog'));
         await openButton?.trigger('click');
-        await nextTick();
+        await flushPromises();
 
         // Assert
         expect(wrapper.findAll('dialog')).toHaveLength(1);
@@ -75,7 +83,7 @@ describe('DialogServiceDemo', () => {
         // Act
         const stackButton = wrapper.findAll('button').find((b) => b.text().includes('Open Stackable'));
         await stackButton?.trigger('click');
-        await nextTick();
+        await flushPromises();
 
         // Assert
         expect(wrapper.findAll('dialog')).toHaveLength(1);
@@ -92,13 +100,13 @@ describe('DialogServiceDemo', () => {
 
         const stackButton = wrapper.findAll('button').find((b) => b.text().includes('Open Stackable'));
         await stackButton?.trigger('click');
-        await nextTick();
+        await flushPromises();
 
         // Act
         const dialogButtons = wrapper.findAll('dialog button');
         const openStackedBtn = dialogButtons.find((b) => b.text() === 'Open Stacked');
         await openStackedBtn?.trigger('click');
-        await nextTick();
+        await flushPromises();
 
         // Assert
         expect(wrapper.findAll('dialog')).toHaveLength(2);
@@ -114,13 +122,13 @@ describe('DialogServiceDemo', () => {
 
         const openButton = wrapper.findAll('button').find((b) => b.text().includes('Open Dialog'));
         await openButton?.trigger('click');
-        await nextTick();
+        await flushPromises();
         expect(wrapper.findAll('dialog')).toHaveLength(1);
 
         // Act
         const closeBtn = wrapper.findAll('dialog button').find((b) => b.text() === 'Close');
         await closeBtn?.trigger('click');
-        await nextTick();
+        await flushPromises();
 
         // Assert
         expect(wrapper.findAll('dialog')).toHaveLength(0);
@@ -136,17 +144,17 @@ describe('DialogServiceDemo', () => {
         // Open stackable + stacked
         const stackButton = wrapper.findAll('button').find((b) => b.text().includes('Open Stackable'));
         await stackButton?.trigger('click');
-        await nextTick();
+        await flushPromises();
 
         const openStackedBtn = wrapper.findAll('dialog button').find((b) => b.text() === 'Open Stacked');
         await openStackedBtn?.trigger('click');
-        await nextTick();
+        await flushPromises();
         expect(wrapper.findAll('dialog')).toHaveLength(2);
 
         // Act
         const closeAllBtn = wrapper.findAll('button').find((b) => b.text() === 'Close All');
         await closeAllBtn?.trigger('click');
-        await nextTick();
+        await flushPromises();
 
         // Assert
         expect(wrapper.findAll('dialog')).toHaveLength(0);
