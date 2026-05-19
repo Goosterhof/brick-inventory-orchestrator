@@ -274,7 +274,7 @@ Each domain gets its own brick color — reinforcing the identity the design sys
 
 ---
 
-## Open Questions for the Architect
+## Open Questions for the Brickwright
 
 1. **EmptyState slot:** The stub adds a `<slot />` for CTA buttons. This means existing `<EmptyState>` calls (which pass no slot content) will simply render the message — no visual change. But if any existing callers already have adjacent CTA buttons, consider migrating them into the slot for consistency. Your call.
 
