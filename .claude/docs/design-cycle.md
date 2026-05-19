@@ -71,8 +71,8 @@ npm run knip
     - Link to feature brief
 - Update the domain map if new domains were added
 - Update CLAUDE.md if new services or patterns were introduced
-- Architect **proposes** decision records and learnings in the report-back
-- CFO **reviews critically** — challenges reasoning, flags gaps, evaluates quality
+- Brickwright **proposes** decision records and learnings in the report-back
+- Steward **reviews critically** — challenges reasoning, flags gaps, evaluates quality
 - CEO **approves** what gets committed to the [Decision Log](./decisions.md) and [Learnings](./learnings.md)
 
 **Output**: Merged PR, updated documentation, reviewed decisions recorded.

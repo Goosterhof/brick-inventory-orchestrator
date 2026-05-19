@@ -485,7 +485,8 @@ describe('Architecture', () => {
 
     describe('domain map completeness — every domain directory must be documented', () => {
         it('every domain directory should have a corresponding entry in domain-map.md', () => {
-            const domainMap = readFileSync(join(ROOT_DIR, '.claude/docs/domain-map.md'), 'utf-8');
+            // domain-map.md moved to the orchestrator root during Phase 6 of the Brickworks merger
+            const domainMap = readFileSync(join(ROOT_DIR, '..', '.claude/docs/domain-map.md'), 'utf-8');
             const appNames = getAppNames();
             const violations: string[] = [];
 
