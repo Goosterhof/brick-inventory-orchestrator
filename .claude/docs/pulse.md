@@ -44,6 +44,12 @@ A consolidated, current-state assessment of both wings. Updated by The Steward a
 | Deferred mutation drill from 2026-04-19 L13 upgrade | Low | Open — depends on `php8.5-pcov` install | The L13 upgrade journal deferred mutation across three timed-out shifts. PHPStan-green precondition is now satisfied (ADR-0027); only the driver install remains. |
 | Dockerfile build verification (`docker compose build backend`) | Low | Open — environmental | The 2026-04-29 PCOV install + PHP 8.5 alignment shifts both modified `docker/backend.Dockerfile`. Diff committed-ready; verification blocked in dev shell (no Docker daemon). |
 
+### Atrium
+
+| Concern | Severity | Status | Notes |
+|---|---|---|---|
+| No SOP for doc-sweep step after framework version upgrades | Low | Open — preventative | The Laravel 13 upgrade shipped 2026-04-19; four governance docs still claimed "Laravel 12" thirty-one days later, surfaced by [`2026-05-20-post-merger-baseline`](../records/audits/2026-05-20-post-merger-baseline.md) Finding 2. SOP shape: framework upgrade Build Records should include an acceptance criterion of the form `rg -n "<old-framework-name> <old-version>" backend/CLAUDE.md CLAUDE.md .claude/docs/ .claude/agents/` returning no hits in active (non-historical) docs. Closes out when either (a) the next framework upgrade Build Record carries this AC unprompted, or (b) the convention is codified into the Build Record template at `.claude/records/build-records/.build-record-template.md`. |
+
 ## In-Progress Work
 
 **Assessed:** 2026-05-19 (Atrium-level, post-merger residue cleanup)

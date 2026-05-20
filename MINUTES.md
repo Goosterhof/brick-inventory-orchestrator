@@ -73,3 +73,44 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - Whether the `mount-boundary` arch-test should grow an explicit allow-list mechanism for cases like DialogServiceDemo — where the inline-defineComponent + shallowMount + Vue 3.5 reactive-vnode interaction makes the rule painful. Today the unstubbing-by-name workaround works; if it stops working on a future Vue or vue-test-utils bump, we'll need to revisit.
 
 ---
+
+## 2026-05-20 — First Post-Merger Audit + Follow-Up Tracking
+
+### Decisions
+
+- **Dispatch the Quality Warden for a baseline audit one day after merger close**: First inspection since the eight-phase Brickworks formation completed 2026-05-19. Scoped to drift and consistency (vocabulary, doc accuracy, paper-trail structure, gauntlet wiring, pattern spot-check) rather than deep code review — the right shape for a post-reorg baseline.
+- **Bundle the three lowest-impact audit findings into a single Work Order**: The MEDIUM (Laravel 12→13 doc sweep, 4 files) and both LOW items (vocabulary-lock Authority path, Pulse stale clause) go into `2026-05-20-laravel-13-doc-sweep`. Per the audit's own recommendation — three separate Work Orders for one-line edits would be more paper trail than the fixes are worth.
+- **File the HIGH finding as its own Work Order**: `2026-05-20-rekey-quality-warden-adr-tables` — the Warden's own ADR Quick Reference tables still use pre-merger sovereign numbering and point to the wrong ADR files. Operationally impactful; deserved isolation.
+- **Both Training Proposals from the audit accepted as Candidates**: Methodology lesson ("check agent-file ADR tables after renumbering events") and SOP proposal ("framework upgrade Build Records should include doc-sweep AC") both filed permanently rather than dropped.
+- **Methodology lesson lives in the Casebook; SOP proposal lives in the Pulse**: Casebook is Warden-private (read before every inspection) — right cadence for the agent-file check. Pulse is crew-visible — right surface for a process/governance change that affects future Build Records.
+
+### Action Items
+
+- [x] Quality Warden: file post-merger baseline audit (filed: `.claude/records/audits/2026-05-20-post-merger-baseline.md`)
+- [x] Steward: draft Work Orders for both remediation tracks (filed: `2026-05-20-rekey-quality-warden-adr-tables.md`, `2026-05-20-laravel-13-doc-sweep.md`)
+- [x] Steward: fill in audit's Steward Evaluation section with Training Proposal dispositions
+- [x] Steward: file Methodology Notes section in `quality-warden-casebook.md`
+- [x] Steward: file Atrium Active Concern in `pulse.md` with SOP shape sketched out
+- [ ] Brickwright: pick up `2026-05-20-rekey-quality-warden-adr-tables` (HIGH severity; the Warden's own cross-reference system is broken)
+- [ ] Brickwright: pick up `2026-05-20-laravel-13-doc-sweep` (MEDIUM + 2 LOW, single commit acceptable)
+
+### Notes
+
+- **CEO course-corrected the Steward on tracking discipline**: Steward initially claimed two follow-up items were "flagged" — they were actually buried in the "Notes from the Issuer" sections of the two Work Orders, where they would die when those Work Orders close. CEO asked "where did you flag those items? How do we keep track of these two follow up items?" — a precise correction. The right answer existed (audit's Steward Evaluation → Training Proposal Dispositions table, plus downstream destinations) and the Steward had skipped using it.
+- **New Pulse subsection created**: Active Concerns previously had only Gallery and Foundry tables. Added an Atrium subsection — the merger created cross-wing governance concerns that didn't fit either wing. Pattern likely to recur as the firm matures.
+- **New Casebook section created**: "Methodology Notes" — distinct from Standing Suspicions (active investigations), Recurring Patterns (multi-occurrence drift), Rebuttal Lessons (Brickwright pushback), and Crossed-Out (resolved). Format: Trigger Event → Check → Source. Fires when the named trigger event recurs.
+- **Audit finding summary**: 1 HIGH (ADR table numbering), 1 MEDIUM (Laravel 12 in 4 docs), 2 LOW (vocab-lock path, Pulse clause). Overall Health: 8.5/10 cross-wing — consistent with pre-merger ratings; merger itself rated a net positive for structural clarity.
+- **Self-Debrief was productive**: Warden's "Methodology Gaps" section identified that governance-doc self-reference consistency wasn't covered by any existing SOP — surfaced only because this audit's brief explicitly included vocabulary coherence. Worth keeping the post-reorg audit shape in the Warden's repertoire.
+- **Quality Warden agent ID for continuation**: `a5a1c4399d0a31c47` (returned at end of audit run; not used this session).
+
+### Rejected Alternatives
+
+- **Filing the two follow-up items as their own Work Orders**: Considered, rejected. Both are too small (one is a Warden-private methodology note, one is a process suggestion with no immediate implementation). Pulse + Casebook are the right surfaces — Work Orders would imply someone needs to build something.
+- **Filing the SOP proposal in the Casebook instead of the Pulse**: Considered. Rejected because the Casebook is the Warden's private notebook — the SOP change is crew-wide governance and belongs where the whole crew sees it.
+
+### Open Questions
+
+- Whether `brickwright.md` and `pattern-master.md` agent files have ADR Quick Reference tables that also drifted post-Phase-5. The Warden noted this in the Self-Debrief ("did not check") — worth verifying on the next audit cycle. If they do, the Casebook Methodology Note already covers them since it names "and by extension `brickwright.md` / `pattern-master.md` if they grow such tables".
+- When/whether to codify the framework-upgrade doc-sweep step into `.claude/records/build-records/.build-record-template.md` (one of the close-out conditions on the Atrium Pulse entry). Today it's a suggestion; making it template-level acceptance criteria would harden it.
+
+---

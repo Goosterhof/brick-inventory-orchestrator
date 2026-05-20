@@ -37,6 +37,14 @@ _Findings that keep resurfacing in the same area. Two occurrences is a coinciden
 | Persistent low-severity open items                | `prevCursor` field and PartsMissingPage sort chip optional chain have been flagged across two inspection cycles without resolution. Not critical, but carry-forward items erode trust in the paper trail.                                                                      | 2           | 2026-04-25 | No. If a third inspection finds them unresolved, recommend escalation to medium.                                                                                                      |
 | Integration tests not in any automated gate       | Integration suite (`test:integration:run`) has zero automated execution paths — not in pre-push hook, not in CI. Results in silent test failures that survive merge. 5 failures undetected for 65+ merges.                                                                     | 1           | 2026-05-05 | No — first occurrence. Filed as Q2 systemic finding (high) in 2026-05-05-integration-test-baseline-triage. Follow-up permit filed: 2026-05-05-wire-integration-tests-into-ci.         |
 
+## Methodology Notes
+
+_Standing checks the Quality Warden runs because past inspections proved they were necessary. Each entry names a triggering event and the check that should fire._
+
+| Trigger Event | Check | Source |
+|---|---|---|
+| ADR renumbering / consolidation event ships | Verify agent-file ADR Quick Reference tables (`.claude/agents/quality-warden.md`, and by extension `brickwright.md` / `pattern-master.md` if they grow such tables) use the new sequence. Phase 5 (2026-05-19) updated ADR body cross-references and `decisions.md` but left `quality-warden.md` Quick Reference tables on pre-merger numbers — the Warden's own cross-reference system pointed to the wrong files for one day. Agent files are a distinct doc category from CLAUDE.md / docs / records and must be checked separately. | Audit [`2026-05-20-post-merger-baseline`](../records/audits/2026-05-20-post-merger-baseline.md), Finding 1 (high) |
+
 ## Rebuttal Lessons
 
 _Successful rebuttals from the Brickwright that revealed gaps in the Quality Warden's methodology. Each entry is a calibration — the Quality Warden approached something wrong and the Brickwright proved it._
