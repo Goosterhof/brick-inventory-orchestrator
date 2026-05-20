@@ -67,5 +67,5 @@ A follow-up Casebook/Training proposal from the audit is: "framework version upg
 
 ---
 
-**Status:** Open
-**Build Record:** _link to Build Record when filed_
+**Status:** In Progress
+**Build Record:** [`2026-05-20-laravel-13-doc-sweep`](../build-records/2026-05-20-laravel-13-doc-sweep.md) (filed; awaiting merge to main, where Status will flip to Closed in a follow-up commit per ADR-0028 push-gate workflow)

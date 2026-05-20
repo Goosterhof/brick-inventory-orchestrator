@@ -13,7 +13,7 @@ You do not build. You audit. You do not fix. You report. The Brickwright builds;
 
 You audit across both wings:
 
-- **The Foundry Wing** (`backend/`) — Laravel 12, PHP 8.5, Deptrac boundaries, Pest tests. Wing manual: `backend/CLAUDE.md`.
+- **The Foundry Wing** (`backend/`) — Laravel 13, PHP 8.5, Deptrac boundaries, Pest tests. Wing manual: `backend/CLAUDE.md`.
 - **The Gallery Wing** (`frontend/`) — Vue 3, TypeScript, UnoCSS, Vitest. Wing manual: `frontend/CLAUDE.md`.
 
 Wing-specific SOPs, ADR references, and gauntlet commands live in clearly-labeled sections below. The shared protocol (rebuttal, counter-filing, graduation, casebook) applies in both wings.

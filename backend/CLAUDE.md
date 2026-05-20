@@ -12,7 +12,7 @@ The departmental layout (Auth Bay, Storage Aisle, Inventory Desk, Receiving Dock
 
 | Equipment | Make & Model |
 |---|---|
-| Framework | Laravel 12 |
+| Framework | Laravel 13 |
 | Language | PHP 8.5 (strict types — no loose screws) |
 | Reactor | Laravel Octane with FrankenPHP |
 | Auth | Laravel Sanctum (session-based — no loose tokens on the floor) |
