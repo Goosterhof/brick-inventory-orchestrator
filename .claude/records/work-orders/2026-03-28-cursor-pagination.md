@@ -59,5 +59,9 @@ Key decisions for the Sorter:
 
 ---
 
-**Status:** Open
+**Status:** Completed (closed retroactively 2026-05-20 in paper-trail sweep)
 **Shift Log:** _link to shift log when filed_
+
+---
+
+_**Closed retroactively 2026-05-20** during paper-trail-drift sweep. Build Record (already filed): [`2026-03-28-cursor-pagination`](../build-records/2026-03-28-cursor-pagination.md). See sweep Build Record: [`2026-05-20-wo-closure-sweep`](../build-records/2026-05-20-wo-closure-sweep.md)._

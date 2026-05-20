@@ -103,5 +103,9 @@ Run the gauntlet before filing the shift log. Include the per-rule discovery cou
 
 ---
 
-**Status:** Open
+**Status:** Completed (closed retroactively 2026-05-20 in paper-trail sweep)
 **Shift Log:** _to be filed at `.claude/records/journals/2026-04-29-phpstan-warroom-rules-adoption.md`_
+
+---
+
+_**Closed retroactively 2026-05-20** during paper-trail-drift sweep. Build Record (already filed): [`2026-04-29-phpstan-warroom-rules-adoption`](../build-records/2026-04-29-phpstan-warroom-rules-adoption.md). See sweep Build Record: [`2026-05-20-wo-closure-sweep`](../build-records/2026-05-20-wo-closure-sweep.md)._

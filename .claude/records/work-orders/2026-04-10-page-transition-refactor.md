@@ -69,5 +69,9 @@ The refactor must preserve identical behavior. No animation changes, no new feat
 
 ---
 
-**Status:** Open
+**Status:** Completed (closed retroactively 2026-05-20 in paper-trail sweep)
 **Journal:** _link to construction journal when filed_
+
+---
+
+_**Closed retroactively 2026-05-20** during paper-trail-drift sweep. Build Record (already filed): [`2026-04-10-page-transition-refactor`](../build-records/2026-04-10-page-transition-refactor.md). See sweep Build Record: [`2026-05-20-wo-closure-sweep`](../build-records/2026-05-20-wo-closure-sweep.md)._

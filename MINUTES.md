@@ -153,3 +153,55 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - **What does the 500-line / 20-file threshold gate after the amendment, if uniform-rule wins**: Currently it gates permit lookup vs. skip. If WO Status no longer varies by threshold, the threshold's remaining semantic is "this PR needs a recorded Work Order at all" — still useful, but worth confirming the amendment doesn't render it meaningless.
 
 ---
+
+## 2026-05-20 — Post-Merger Team-Structure Review + First /standup Cycle
+
+### Decisions
+
+- **Codify The Steward as a dispatchable agent (not just docs)**: `.claude/agents/steward.md` with frontmatter so the role is both the main conversation agent's binding reference AND dispatchable as a subagent for fresh-context evaluations. Closes a portfolio-visible asymmetry (Brickwright/Warden/Pattern Master had agent files; deputy didn't).
+- **Build `/standup` as the firm's first standing-meeting ritual**: skill at `.claude/skills/standup/SKILL.md` reads firm state (Pulse, records, casebook, parameter log, open WOs), composes roll-call per crew member, surfaces cross-wing concerns + stale flags, files note at `.claude/records/standups/`. Steward + Standup ship together — role defines convener, skill defines procedure.
+- **Preserve 6 deferred governance moves as Pulse Seeds**: Tension Doctrine doc, Agent Teams PR Review trial, Retrospective ritual (all greenlit-but-deferred); Foundry creative counterpart + Brickwright graduation log unification (held back); Audit peer-review pass (Steward-added unprompted). Each carries explicit trigger condition.
+- **Pulse refresh authorization (Gallery)**: Warden audit verdict committed verbatim — Gallery rating 9 → 8/10, Pattern Maturity ADR-0024 Battle-tested → Established (5 integration test failures + Permits A/B open 15 days), 2 new medium Active Concerns, prevCursor escalated from Casebook (3rd occurrence).
+- **Pattern Master Proposal C picked, ordered C → A → B**: Build WO filed for Proposal C (Brick-DNA Snap-and-Pull) — touches HomePage hero, retires unused SoundService.snap/thud primitives, exercises dual mandate in one deliverable. A and B sequenced after C earns trust; their parameter vocabulary should echo C's.
+- **Grant Quality Warden `Write` access, scoped via agent-file body language**: `.claude/records/audits/*.md` and `.claude/docs/quality-warden-casebook.md` only. Production code, Pulse, Learnings, Decisions, agent files all explicitly off-limits. Closes the gap where Warden had to return Audit text for The Steward to file.
+- **WO closure sweep (mechanical, retroactive)**: 24 of 29 "Open" WOs already had matching Build Records — `Status:` field was never closed at delivery. Closed 23 (audit-remediation-5-paper-trail genuinely still Open). Real backlog ~5 WOs, not 29.
+- **Pulse update WO honored the new "close parent WO in same commit as Build Record" rule on first occurrence**: One more unprompted occurrence closes the Atrium "WO paper-trail drift" Pulse concern.
+- **`php8.5-pcov` Pulse concern closed**: CEO had already installed it; `php -m` on canonical 8.5 host confirms `pcov` loaded. Cascade-closed `covers()` mismatch + deferred mutation drill (both blocked on this).
+
+### Action Items
+
+- [ ] **CEO/Steward (next session)**: Dispatch Pattern Master to build Proposal C per Work Order `2026-05-20-pattern-master-proposal-c-build`.
+- [ ] **The Steward (next session)**: Foundry Quality Metrics refresh — Pulse still says "currently unable to re-measure on canonical 8.5 (sudo-gated `php8.5-pcov` install)" but pcov is installed. Trivial follow-up WO.
+- [ ] **The Steward (next session)**: Dispatch `/adr-interrogator` on the open ADR-0028 dual-mode amendment WO (deferred from this session).
+- [ ] **The Brickwright (when scheduled)**: Address the 4-WO integration-test sub-program from 2026-05-05 (assertion fixes, CI wiring, baseline triage, paper trail) — known outstanding, still Open.
+- [ ] **Pattern Master**: When delivering Proposal C, report whether final easing/distance values match the page-transition graduation candidates currently at 2 observations — if they align, those entries tick to 3+ and become eligible for test scenarios.
+
+### Notes
+
+- **Productive-tension question turned out to be already solved**: The CEO asked about documenting team-member tension that produces better outcomes. The firm already has 3 such protocols operational — Rebuttal (Warden ↔ Brickwright), Counter-Filing / Methodology Objection (Brickwright challenges Warden SOPs), Friction (Pattern Master ↔ Brickwright over shared `src/shared/components/`). All Steward-arbitrated. Tension Doctrine doc seeded to consolidate them into one philosophy reference, but the mechanisms exist.
+- **Claude Code Agent Teams (v2.1.32+, `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) is the missing peer-to-peer layer**: subagents only report back; Agent Teams have shared task list + mailbox + direct teammate-to-teammate messaging. Right tool for PR Review (3 lenses), bug investigation with competing hypotheses ("scientific debate"), and ADR stress-tests. Seeded for first trial on next non-trivial PR.
+- **First /standup proved its value on first run**: surfaced the Pattern Master's 33-day silence (no Build Record since 2026-04-17), the 24/29 WO paper-trail drift, and the Casebook's 8-consecutive-inspection Pulse staleness pattern — none of which were visible from any single record or audit. Roll-call structure forced honest synthesis.
+- **Warden tool-set gap discovered structurally**: First Warden dispatch from the new Steward-as-dispatcher path revealed the agent lacked `Write` access for its own primary deliverable (the Audit file at `.claude/records/audits/`). Workaround: Warden returned full audit as text in its return message, Steward filed on its behalf. Resolved by granting Write with explicit binding-boundary language in the body.
+- **Steward-as-builder for Atrium-doc scope is now an established pattern**: 6 Build Records filed this session by The Steward (Atrium scope: steward codification, WO sweep, Pulse update). Precedent: `2026-05-20-laravel-13-doc-sweep`. Steward dispatches Brickwright for code; builds Atrium docs directly.
+- **Pulse rule against count-hardcoding held under pressure**: When refreshing the Foundry Overall Health, resisted writing "29 consolidated ADRs" (would have created another count to drift). Used "governed by the consolidated `0001`–`0029` sequence" — references the sequence bounds (derivable from file system) without hardcoding the count.
+- **AskUserQuestion was not used this session despite 4 substantive CEO decision points**: The CEO's terse decisive style ("1. now. 2. yes, C first, A second, B last. 3. warden can write") made structured questions unnecessary. Pattern worth noting: terse decisive CEOs prefer recommendations + numbered execution, not multi-option pickers.
+- **Session produced one PR's worth of work across two sub-sessions**: First sub-session (Steward + Standup); second sub-session (standup action items remediation). Steward acted as builder throughout; subagents (Pattern Master + Warden) dispatched in parallel during the second sub-session.
+
+### Rejected Alternatives
+
+- **Pure documentation `.claude/docs/steward.md`** (vs. dispatchable `.claude/agents/steward.md`): Rejected — the asymmetry the CEO wanted closed was specifically about discoverability/visibility, not just documentation. A doc-only file would have left the role invisible in Claude Code's agent registry.
+- **Closing the WO sweep's own WO from within the sweep loop**: Rejected — would have been an ironic violation of the very "WO closes only when its Build Record is on disk" pattern the sweep was establishing. Closed it manually after the BR was filed.
+- **Updating Foundry Quality Metrics during the Gallery Pulse refresh**: Rejected as scope creep — even though pcov-related lines were visibly stale, the WO scope was Gallery-only. Routed to Proposed Knowledge Updates as a separate follow-up.
+- **Warden gets unrestricted `Write` access**: Rejected. Granted `Write` but defined a binding boundary in the agent body — audits/ + Casebook only; production code, Pulse, Learnings, Decisions, agent files, wing manuals all explicitly off-limits. Auditor independence preserved by the two-step Warden-proposes / Steward-commits pattern.
+- **Bulk-closing the 23 shipped WOs without a Work Order**: Rejected. Filed `2026-05-20-wo-closure-sweep` as the authorizing WO and its own Build Record — 23 mechanical edits still warrant paper trail because the closure block format on each edited WO is a forward-signal teaching the new convention.
+- **Pattern Master dispatch on a CEO-prescribed task**: Rejected — Pattern Master's silence was diagnostic, not a directive failure. Self-direction brief authorized the agent to survey and propose 2-4 options, then CEO picked. Avoids "tell creative person what to make" anti-pattern.
+- **Filing the Tension Doctrine doc this session**: Deferred. Seeded with trigger condition "after 3+ standups run, or first arbitration escalation to CEO" — the doc needs lived experience with the three existing protocols before consolidation is worthwhile.
+
+### Open Questions
+
+- **After Proposal C ships, do the four page-transition parameter entries in Pattern Master's graduation log (currently 2 observations each) tick to 3+ if easing/distance values align?** Depends on Pattern Master dialing into `cubic-bezier(0.2, 0, 0, 1)` and 6-10px translate ranges. If yes, the firm gets its first graduation candidates with test scenarios. If no (deliberate divergence), explain in Parameter Record.
+- **Does the new Warden Write access change audit quality, or just remove a Steward bottleneck?** Re-evaluate after the next Warden dispatch produces an audit without Steward intermediation. Watch whether independence holds (the "don't touch the Pulse during audits" guardrail is the test).
+- **When does the second unprompted occurrence of "close parent WO in same commit as Build Record" happen, closing the Atrium WO paper-trail drift concern?** Pulse-update BR was occurrence 1 (deliberate, honored the rule from the sweep WO). The next Brickwright/Pattern Master/Steward Build Record needs to do it without prompting.
+- **Is the integration-test sub-program (4 WOs from 2026-05-05) actually still relevant post-xNOYG-merge?** AddSetPage spec failure is now schema drift (5 → 6 statuses), not just copy drift. Permit A's scope may need rescoping before dispatch.
+
+---

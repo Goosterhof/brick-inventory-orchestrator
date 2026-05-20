@@ -87,5 +87,9 @@ The deeper lesson for the Creative Engine: when you need to expose internal stat
 
 ---
 
-**Status:** Open
+**Status:** Completed (closed retroactively 2026-05-20 in paper-trail sweep)
 **Journal:** _link to construction journal when filed_
+
+---
+
+_**Closed retroactively 2026-05-20** during paper-trail-drift sweep. Build Record (already filed): [`2026-04-10-remove-define-expose`](../build-records/2026-04-10-remove-define-expose.md). See sweep Build Record: [`2026-05-20-wo-closure-sweep`](../build-records/2026-05-20-wo-closure-sweep.md)._
