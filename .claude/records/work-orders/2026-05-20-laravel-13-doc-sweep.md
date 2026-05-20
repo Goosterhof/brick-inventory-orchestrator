@@ -67,5 +67,5 @@ A follow-up Casebook/Training proposal from the audit is: "framework version upg
 
 ---
 
-**Status:** Open
-**Build Record:** _link to Build Record when filed_
+**Status:** Closed
+**Build Record:** [`2026-05-20-laravel-13-doc-sweep`](../build-records/2026-05-20-laravel-13-doc-sweep.md)

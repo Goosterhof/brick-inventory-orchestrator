@@ -58,7 +58,7 @@ A RESTful service where families catalog their sets, track individual parts, org
 
 | Equipment | Make & Model |
 |---|---|
-| Framework | Laravel 12 |
+| Framework | Laravel 13 |
 | Language | PHP 8.5 (strict types) |
 | Reactor | Laravel Octane with FrankenPHP |
 | Auth | Laravel Sanctum (session-based) |

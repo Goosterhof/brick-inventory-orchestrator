@@ -20,7 +20,7 @@ A consolidated, current-state assessment of both wings. Updated by The Steward a
 
 **Gallery (frontend):** Strong architectural foundation with full accountability pipeline operational. 100% test coverage enforced. Multi-app structure with strict isolation. Showcase app fully tested. Adapter-store and resource-adapter patterns battle-tested. Page integration test layer established (ADR-0024). Pattern Master agent operational. Router migration to `@script-development/fs-router` complete. Gauntlet fully green. Documentation drift remains the primary recurring concern.
 
-**Foundry (backend):** PHPStan at max with zero errors (Laravel 13.7 deprecation cascade closed via ADR-0027's PHP 8.5 tightening), Deptrac with zero violations, full architecture tests passing, 13 coherent BIO sovereign ADRs (now consolidated into 0001–0029 by Phase 5). Recent deliveries since 2026-04-16: Laravel 13.7 deprecation cleanup + PHP 8.5 tightening, storage-map ResourceData, reverse-lookup-lens endpoint with `DB::listen` query-budget proof, PHPStan war-room rules adoption (four custom rules), ADR-0028 pre-push permit verification gate.
+**Foundry (backend):** PHPStan at max with zero errors (Laravel 13.7 deprecation cascade closed via ADR-0027's PHP 8.5 tightening), Deptrac with zero violations, full architecture tests passing, governed by the consolidated `0001`–`0029` Brickworks ADR sequence. Recent deliveries since 2026-04-16: Laravel 13.7 deprecation cleanup + PHP 8.5 tightening, storage-map ResourceData, reverse-lookup-lens endpoint with `DB::listen` query-budget proof, PHPStan war-room rules adoption (four custom rules), ADR-0028 pre-push permit verification gate.
 
 ## Active Concerns
 

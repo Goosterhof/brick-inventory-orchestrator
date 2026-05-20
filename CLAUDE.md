@@ -77,7 +77,7 @@ Use this terminology when communicating about the project:
 
 This is the **Baseplate** — the orchestrator for the LEGO inventory management ecosystem. It is a single monorepo containing two surfaces as tracked subdirectories:
 
-- `backend/` — **The Brick** (Laravel 12 API, formerly the standalone `brick-inventory-backend` repo)
+- `backend/` — **The Brick** (Laravel 13 API, formerly the standalone `brick-inventory-backend` repo)
 - `frontend/` — **The Plate** (Vue 3 SPA, formerly the standalone `brick-inventory-frontend` repo)
 
 Both surfaces were absorbed into this repo via `git subtree add` on 2026-05-17, with full pre-merge history preserved.

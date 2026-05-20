@@ -3,7 +3,7 @@
 **Filed:** 2026-05-19
 **Status:** Locked
 **Signed off by:** CEO (Gerard)
-**Authority:** Phase 0 Work Order `2026-05-18-form-the-brickworks` (`.claude/records/permits/2026-05-18-form-the-brickworks.md`)
+**Authority:** Phase 0 Work Order `2026-05-18-form-the-brickworks` (`.claude/records/work-orders/2026-05-18-form-the-brickworks.md`)
 **Plan reference:** `MERGER_PLAN.md` rev 4, Phase 0.5
 
 ---
