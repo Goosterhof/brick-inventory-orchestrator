@@ -88,5 +88,9 @@ This is hygiene, not a bug fix. The AddSet bug is already shipped on `claude/fix
 
 ---
 
-**Status:** Open
+**Status:** Completed (closed retroactively 2026-05-20 in paper-trail sweep)
 **Journal:** _to be filed when complete at `.claude/records/journals/2026-05-05-adr-016-conversion-cleanup.md`_
+
+---
+
+_**Closed retroactively 2026-05-20** during paper-trail-drift sweep. Build Record (already filed): [`2026-05-05-adr-016-conversion-cleanup`](../build-records/2026-05-05-adr-016-conversion-cleanup.md). See sweep Build Record: [`2026-05-20-wo-closure-sweep`](../build-records/2026-05-20-wo-closure-sweep.md)._

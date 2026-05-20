@@ -54,5 +54,9 @@ The architect's just-graduated middleware-awareness heuristic makes this a natur
 
 ---
 
-**Status:** Open
+**Status:** Completed (closed retroactively 2026-05-20 in paper-trail sweep)
 **Journal:** _to be linked when filed_
+
+---
+
+_**Closed retroactively 2026-05-20** during paper-trail-drift sweep. Build Record (already filed): [`2026-05-05-snake-case-payload-keys-cleanup`](../build-records/2026-05-05-snake-case-payload-keys-cleanup.md). See sweep Build Record: [`2026-05-20-wo-closure-sweep`](../build-records/2026-05-20-wo-closure-sweep.md)._

@@ -61,5 +61,9 @@ The ADR was stress-tested through the interrogator. The design is settled — no
 
 ---
 
-**Status:** Open
+**Status:** Completed (closed retroactively 2026-05-20 in paper-trail sweep)
 **Shift Log:** _link to shift log when filed_
+
+---
+
+_**Closed retroactively 2026-05-20** during paper-trail-drift sweep. Build Record (already filed): [`2026-03-28-computed-resource-data`](../build-records/2026-03-28-computed-resource-data.md). See sweep Build Record: [`2026-05-20-wo-closure-sweep`](../build-records/2026-05-20-wo-closure-sweep.md)._
