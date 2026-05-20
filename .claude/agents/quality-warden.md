@@ -55,25 +55,25 @@ ADRs at `.claude/docs/adr/` (consolidated `0001`–`0029` sequence).
 
 | ADR | Protects | What to verify, not flag |
 |-----|----------|--------------------------|
-| 0001 | Session-based SPA auth (no tokens) | `actingAs()` in tests, not `Sanctum::actingAs()` — by design |
-| 0002 | Single-tier authorization, three-layer defense (middleware → policies → FormRequest closures) | Routes missing `->can()`; `Gate` or `->authorize()` in controllers; `BelongsToFamilyInterface` on family-owned models |
-| 0003 | Actions = business logic, Services = HTTP only; both `final readonly` | Static-through-instance calls (`$this->model::where()`); facades; Request objects in Actions; Services touching Models/DB |
-| 0004 | Explicit cascade deletion via `cascadeRelations()` | `onDelete('cascade')` in migrations; HasMany/HasOne not declared in `cascadeRelations()`; delete Actions missing a declared relation |
-| 0005 | No mass assignment (`$fillable`/`$guarded`); casts-only transformations | `Model::create()` or `->fill()`; accessor/mutator methods on models; User is the one `$guarded` exemption |
-| 0006 | FormRequest → `toDto()` bridge; custom ResourceData with `from()` factory | Missing `EAGER_LOAD` on nested ResourceData; `$this->input()` instead of `$this->safe()` in toDto(); public constants on FormRequests |
-| 0007 | `#[Config]` attributes, no `config()`/facades/`env()` outside config files | Providers are the one exemption (boot-time wiring) |
-| 0008 | Explicit routes, no `apiResource()` | Phantom routes from `apiResource()`; routes without `->can()` |
-| 0009 | Thin controllers, method injection only, no constructors | Constructor injection; try-catch blocks; direct ResourceData returns; query builders in controllers |
+| 0013 | Session-based SPA auth (no tokens) | `actingAs()` in tests, not `Sanctum::actingAs()` — by design |
+| 0014 | Single-tier authorization, three-layer defense (middleware → policies → FormRequest closures) | Routes missing `->can()`; `Gate` or `->authorize()` in controllers; `BelongsToFamilyInterface` on family-owned models |
+| 0015 | Actions = business logic, Services = HTTP only; both `final readonly` | Static-through-instance calls (`$this->model::where()`); facades; Request objects in Actions; Services touching Models/DB |
+| 0016 | Explicit cascade deletion via `cascadeRelations()` | `onDelete('cascade')` in migrations; HasMany/HasOne not declared in `cascadeRelations()`; delete Actions missing a declared relation |
+| 0017 | No mass assignment (`$fillable`/`$guarded`); casts-only transformations | `Model::create()` or `->fill()`; accessor/mutator methods on models; User is the one `$guarded` exemption |
+| 0018 | FormRequest → `toDto()` bridge; custom ResourceData with `from()` factory | Missing `EAGER_LOAD` on nested ResourceData; `$this->input()` instead of `$this->safe()` in toDto(); public constants on FormRequests |
+| 0019 | `#[Config]` attributes, no `config()`/facades/`env()` outside config files | Providers are the one exemption (boot-time wiring) |
+| 0020 | Explicit routes, no `apiResource()` | Phantom routes from `apiResource()`; routes without `->can()` |
+| 0021 | Thin controllers, method injection only, no constructors | Constructor injection; try-catch blocks; direct ResourceData returns; query builders in controllers |
 
 ### Open Questions (Unresolved — Foundry)
 
 | ADR | Open Question | Risk if Unresolved |
 |-----|---------------|--------------------|
-| 0001 | If a mobile client is added, should session + token auth coexist, or migrate entirely to tokens? | Low — no mobile client exists yet |
-| 0002 | Should an architecture test enforce `BelongsToFamilyInterface` on every model with `family_id`? | Medium — a new family-owned model could skip the interface and bypass tenant isolation |
-| 0003 | Should retry count/delay be configurable via `#[Config]` instead of hardcoded? | Low — current values work for both APIs |
-| 0004 | Should `BelongsToMany` (pivot) relationships ever appear in `cascadeRelations()`? | Low — no current need |
-| 0005 | Should an architecture test scan for `get*Attribute`/`set*Attribute`/`Attribute::make()`? | Medium — convention-only enforcement |
+| 0013 | If a mobile client is added, should session + token auth coexist, or migrate entirely to tokens? | Low — no mobile client exists yet |
+| 0014 | Should an architecture test enforce `BelongsToFamilyInterface` on every model with `family_id`? | Medium — a new family-owned model could skip the interface and bypass tenant isolation |
+| 0015 | Should retry count/delay be configurable via `#[Config]` instead of hardcoded? | Low — current values work for both APIs |
+| 0016 | Should `BelongsToMany` (pivot) relationships ever appear in `cascadeRelations()`? | Low — no current need |
+| 0017 | Should an architecture test scan for `get*Attribute`/`set*Attribute`/`Attribute::make()`? | Medium — convention-only enforcement |
 
 ### Convention-Only Gaps — Foundry
 
@@ -81,8 +81,8 @@ Enforced by convention, not by tests. Verify manually during audits.
 
 | Pattern | ADR | Where to Check |
 |---------|-----|----------------|
-| Models with `family_id` implement `BelongsToFamilyInterface` | 0002 | `app/Models/` — User is the explicit exemption |
-| No accessor/mutator methods on models (casts only) | 0005 | `app/Models/` — look for `get*Attribute`, `set*Attribute`, `Attribute::make()` |
+| Models with `family_id` implement `BelongsToFamilyInterface` | 0014 | `app/Models/` — User is the explicit exemption |
+| No accessor/mutator methods on models (casts only) | 0017 | `app/Models/` — look for `get*Attribute`, `set*Attribute`, `Attribute::make()` |
 
 ---
 
@@ -93,22 +93,22 @@ ADRs at `.claude/docs/adr/` (consolidated `0001`–`0029` sequence).
 | ADR | Protects | What to verify, not flag |
 |-----|----------|--------------------------|
 | 000 | Meta-decision: why ADRs exist, evaluation criteria | Defines the five lenses for questioning whether an ADR still holds |
-| 001 | Custom RouterService over Vue Router plugin | No raw `useRouter`/`useRoute`/`RouterLink` outside the service wrapper — by design |
-| 002 | Factory pattern for services, no singletons | Shared services export `create*()` factories; apps instantiate in their own `services/` — intentional |
-| 003 | UnoCSS attributify over CSS files | No `<style>` blocks, styling lives in template attributes |
-| 004 | Snake/camel case conversion at HTTP boundary _(superseded by 016)_ | Historical — see ADR-016 for the active mechanism |
-| 005 | Istanbul coverage with zero ignore comments | No `istanbul ignore` or `v8 ignore` comments — flag any as a violation |
-| 006 | Resource adapter with frozen base and mutable ref | `Object.freeze()` on API data with a mutable `ref` wrapper — intentional immutability |
-| 007 | Adapter store module over Pinia/Vuex | No state library — stores are composable adapters |
-| 008 | Domain isolation via lint rules and architecture tests | Domains don't cross-import — enforced by lint, not convention |
-| 009 | Component health registry (five metrics for Showcase) | Registry metrics are deliberate; missing metrics are findings, invented metrics are not |
-| 010 | Test isolation via execution-time guard, collect-duration guard, factory mocking | Slow tests fail by design; mocks use factories |
-| 011 | Domain-based Vitest project split with factory config | Tests split per domain — not fragmentation, the decision |
-| 012 | Typed mock helpers with `MockedService<T>` mapped type | Tests use typed factory helpers, not inline `vi.fn()` casts |
-| 013 | Page integration tests with real component composition | Integration tests mount pages with real children, mocked services |
-| 014 | Domain-driven vertical slices over technical layers | Code organized by business domain, not technical layers |
-| 015 | Pattern Master agent — dedicated design & animation role | Animation work owned by a separate agent; `prefers-reduced-motion` is the only hard rule from day one |
-| 016 | Case conversion via HTTP middleware | Each app's `apps/*/services/http.ts` registers `deepSnakeKeys` request middleware and `deepCamelKeys` response middleware |
+| 0003 | Custom RouterService over Vue Router plugin | No raw `useRouter`/`useRoute`/`RouterLink` outside the service wrapper — by design |
+| 0004 | Factory pattern for services, no singletons | Shared services export `create*()` factories; apps instantiate in their own `services/` — intentional |
+| 0005 | UnoCSS attributify over CSS files | No `<style>` blocks, styling lives in template attributes |
+| 0006 | Snake/camel case conversion at HTTP boundary _(superseded by 0029)_ | Historical — see ADR-0029 for the active mechanism |
+| 0007 | Istanbul coverage with zero ignore comments | No `istanbul ignore` or `v8 ignore` comments — flag any as a violation |
+| 0008 | Resource adapter with frozen base and mutable ref | `Object.freeze()` on API data with a mutable `ref` wrapper — intentional immutability |
+| 0009 | Adapter store module over Pinia/Vuex | No state library — stores are composable adapters |
+| 0010 | Domain isolation via lint rules and architecture tests | Domains don't cross-import — enforced by lint, not convention |
+| 0011 | Component health registry (five metrics for Showcase) | Registry metrics are deliberate; missing metrics are findings, invented metrics are not |
+| 0012 | Test isolation via execution-time guard, collect-duration guard, factory mocking | Slow tests fail by design; mocks use factories |
+| 0022 | Domain-based Vitest project split with factory config | Tests split per domain — not fragmentation, the decision |
+| 0023 | Typed mock helpers with `MockedService<T>` mapped type | Tests use typed factory helpers, not inline `vi.fn()` casts |
+| 0024 | Page integration tests with real component composition | Integration tests mount pages with real children, mocked services |
+| 0002 | Domain-driven vertical slices over technical layers | Code organized by business domain, not technical layers |
+| 0026 | Pattern Master agent — dedicated design & animation role | Animation work owned by a separate agent; `prefers-reduced-motion` is the only hard rule from day one |
+| 0029 | Case conversion via HTTP middleware | Each app's `apps/*/services/http.ts` registers `deepSnakeKeys` request middleware and `deepCamelKeys` response middleware |
 
 **Maintenance:** When a new ADR is accepted, The Steward adds a row to the relevant Quick Reference. If this table drifts from the decision log index, that itself is a finding.
 
@@ -160,7 +160,7 @@ Record pass/fail, error messages, coverage percentages, mutation score. For each
 3. **Spot-check 3-5 Actions** — `final readonly`, single `execute()`, no facades, no Request dependencies.
 4. **Spot-check 2-3 Services** — `final readonly`, implements Contract, no Models, no Actions.
 5. **Spot-check 2-3 Controllers** — no constructors, method injection, no try-catch.
-6. **Scan Actions for try-catch** — `grep -rn "try {" app/Actions/` and cross-reference every hit against ADR-0003's documented exceptions. Any try-catch not covered is a finding. (Graduated 2026-03-26.) When a try-catch hits a documented exception type, verify the implementation matches the documented pattern, not just the exception class (Foundry candidate).
+6. **Scan Actions for try-catch** — `grep -rn "try {" app/Actions/` and cross-reference every hit against ADR-0015's documented exceptions. Any try-catch not covered is a finding. (Graduated 2026-03-26.) When a try-catch hits a documented exception type, verify the implementation matches the documented pattern, not just the exception class (Foundry candidate).
 
 ### SOP F-3: Audit Manifest Accuracy
 
@@ -222,9 +222,9 @@ If the audit scope includes page composition or cross-domain integration, run `n
 - **Service pattern** — shared services export factories, not singletons
 - **Domain structure** — each domain has `index.ts` exporting only routes
 - **RouterService usage** — no raw Vue Router (`useRouter`, `useRoute`, `RouterLink`) outside the service wrapper
-- **Coverage ignore comments** — none allowed (ADR-005); flag any
+- **Coverage ignore comments** — none allowed (ADR-0007); flag any
 - **Barrel exports** — domains import from `@app/services`, not deep paths
-- **ADR-016 case conversion** — `apps/*/services/http.ts` must register both request middleware (`deepSnakeKeys` outbound, FormData-skipped) and response middleware (`deepCamelKeys` inbound, non-object-skipped). Missing either side is a regression. Production-code calls to `deepSnakeKeys` / `deepCamelKeys` / `toCamelCaseTyped` outside the http service are redundant — track for cleanup, don't flag as hard violation. (Graduated 2026-03-29; updated 2026-05-05 for ADR-016.)
+- **ADR-0029 case conversion** — `apps/*/services/http.ts` must register both request middleware (`deepSnakeKeys` outbound, FormData-skipped) and response middleware (`deepCamelKeys` inbound, non-object-skipped). Missing either side is a regression. Production-code calls to `deepSnakeKeys` / `deepCamelKeys` / `toCamelCaseTyped` outside the http service are redundant — track for cleanup, don't flag as hard violation. (Graduated 2026-03-29; updated 2026-05-05 for ADR-0029.)
 - **Broader grep**: not just `deepCamelKeys` by name, but `from "string-ts"` for all direct imports (Gallery candidate).
 
 For each rule: does the architecture test exist? Does it pass? Are there gaps?

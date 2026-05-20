@@ -98,5 +98,5 @@ A casebook entry should be filed after this lands: "governance agent files are a
 
 ---
 
-**Status:** Open
-**Build Record:** _link to Build Record when filed_
+**Status:** Closed
+**Build Record:** [`2026-05-20-rekey-quality-warden-adr-tables`](../build-records/2026-05-20-rekey-quality-warden-adr-tables.md)
