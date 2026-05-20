@@ -32,6 +32,9 @@ _Things that bite you if you don't know them._
 
 - **[Gallery]** FormLabel's `for` prop is optional — it was documented with `—` (ambiguous) instead of `undefined`. Use explicit defaults in catalog tables to avoid confusion.
 - **[Gallery]** Button component tests (PrimaryButton, DangerButton, BackButton, ListItemButton) lack keyboard interaction tests (Enter/Space). Same for NavLink and NavMobileLink. Add these when touching these components next.
+- Pre-commit and pre-push hooks route by staged/pushed path (`backend/**` triggers the PHP gauntlet, `frontend/**` triggers the Vue gauntlet), not by file extension. Markdown edits under `backend/` still fire the full backend gauntlet (lint:test → phpstan → phpstan:types → deptrac → test:arch on pre-commit; PrePushPermitGate → composer test on pre-push). Don't claim "hook is a no-op for this commit" in a Build Record without checking the staged path against the routing rules in root `CLAUDE.md` ("Git Hooks (Root Dispatcher)").
+- `composer audit` exits non-zero on first findings, masking additional advisories from the same upstream batch. After patching the first batch, rerun the audit — a single "no findings" output does not prove a clean lock; an iterated "no findings" does. See Casebook Methodology Note (2026-05-20) and the symfony-805-cve-bump Build Record (Decision #1).
+- `gh pr merge --squash --delete-branch` tries to fast-forward local `main` to the squash-merge after deleting the branch. If local `main` has unpushed commits whose content is included in the squash (e.g. session-minute auto-commits cut into the feature branch), the fast-forward aborts with `fatal: Not possible to fast-forward`. The remote merge succeeds anyway. Sync local main with `git reset --hard origin/main` (destructive but safe — the content is preserved in the squash) once the CEO authorizes.
 
 ## User Preferences
 
@@ -45,6 +48,7 @@ _Approaches that proved effective in this codebase._
 
 - **[Gallery]** When adding a new domain: create routes first (`index.ts`), then pages, then tests — catches naming mismatches early before wiring.
 - **[Gallery]** For form pages: wire up the happy path end-to-end before handling error states. Get the `loadingService.start()` → API call → `loadingService.stop()` loop working, then layer in `catch` blocks.
+- When filing a scope-narrow Work Order whose Acceptance Criteria include a programmatic check (`rg` sweep, file-resolution check, count verification), run that check against the pre-edit baseline **before** writing the In-Scope / Not-in-Scope sections. The post-merger baseline audit (2026-05-20) enumerated 4 framework-drift hits but the AC's broader `rg` sweep would have surfaced a 5th in `brickwright.md` upfront. Gaps between WO Scope and AC reveal audit blind spots before execution rather than during it.
 
 ## Future Improvements
 
