@@ -114,3 +114,42 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - When/whether to codify the framework-upgrade doc-sweep step into `.claude/records/build-records/.build-record-template.md` (one of the close-out conditions on the Atrium Pulse entry). Today it's a suggestion; making it template-level acceptance criteria would harden it.
 
 ---
+
+## 2026-05-20 — Work Order Delivery, Unplanned Security Bump, Lessons Persistence
+
+### Decisions
+
+- **PR ordering when a blocking dependency surfaces**: Pause the blocked PR, deliver the unblocker as its own focused WO, then rebase + merge. Triggered when PR #77 (doc-only laravel-13 sweep) failed `composer audit` due to 8 Symfony CVEs published mid-session. CEO chose this over admin-merge-past-failure or mixing the security bump into the doc PR.
+- **Lessons triage to right vehicles**: Casebook (Warden-side audit methodology), learnings.md (cross-role operational rules), Pulse (active concerns with closure criteria), ADRs/WOs (architectural decisions). The Brickworks already has all four pipes — the work is routing each lesson to the right one, not building new infrastructure.
+- **Uniform-rule lean (not lock) on ADR-0028 dual-mode**: Steward stated preference for "close WO post-merge on main always" in the amendment WO, with explicit reasons documented for the `adr-interrogator` to pressure-test rather than accept.
+- **Scope expansion during execution is legitimate when discovered via re-running ACs**: Symfony bump WO filed at 3 packages, expanded to 5 after second `composer audit` run; laravel-13 WO listed 4 files, broadened to 5 after the AC `rg` sweep caught `brickwright.md`. Both cases documented as Decisions Made in their Build Records rather than swept under the rug.
+
+### Action Items
+
+- [ ] Future session: pick up `2026-05-20-adr-0028-dual-mode-amendment` (Open). Calls for `adr-interrogator` stress-test before drafting; three rival options enumerated (uniform-rule, explicit-dual-mode, gate-side mechanical fix) with Steward lean staked.
+- [ ] Next audit cycle: verify whether `brickwright.md` Foundry Wing introduction needs the same `Laravel 13` upkeep that this session caught — the Casebook Methodology Note now covers it.
+- [ ] When the next framework upgrade lands, watch whether the Build Record carries the `rg` doc-sweep AC unprompted — that closes the existing Atrium Pulse concern.
+
+### Notes
+
+- **ADR-0028 push-gate dual-mode behavior was the highest-signal finding of the day**: Both PR #77 and PR #78 reviewers flagged it independently within 12 seconds of each other (10:29:16Z and 10:29:27Z). That's the "two reviewer signal" — a real doctrine gap, not noise. The amendment WO documents this as the triggering evidence.
+- **`composer audit` aborts on first findings**: Patching the first batch (3 packages, 6 CVEs) revealed a masked second batch (2 packages, 2 CVEs) on re-audit. Casebook Methodology Note added so the Warden catches this next time.
+- **Build Record claims about hook routing turned out wrong**: Steward wrote "PHP-files-only gauntlet is a no-op" in the rekey BR and similarly in the laravel-13 BR. Reality: pre-commit and pre-push hooks route by *staged path* (`backend/**` / `frontend/**`), not by file extension. Markdown edits under `backend/` still fire the full backend gauntlet. learnings.md now carries this as a Codebase Gotcha.
+- **`gh pr merge --delete-branch` fast-forward failure pattern**: When local `main` has unpushed commits whose content is in the upcoming squash, the post-merge fast-forward aborts. Remote merge succeeds; local sync needs `git reset --hard origin/main` with explicit CEO authorization. Documented as a Gotcha.
+- **Lessons-file ownership protocol followed**: learnings.md's documented three-tier flow (Brickwright proposes in BR → Steward evaluates → CEO decides) was followed for all four learnings entries this session; the Steward presented the triage in a structured AskUserQuestion and the CEO confirmed.
+- **Today's PR tally**: 5 merged (`9745c0f` #78 rekey, `10e4c54` #79 symfony, `ade89dc` #77 laravel-13, `d773e9b` #80 close-WOs, `bea5311` #81 lessons). One Work Order filed (Open).
+
+### Rejected Alternatives
+
+- **Admin-merge PR #77 past the failing `composer audit` check**: Considered (recommended option in the AskUserQuestion). Rejected by CEO in favor of pausing #77 and delivering the security fix as its own focused PR. Cleaner separation, smaller blast radius if the bump itself caused regressions.
+- **Bumping Symfony inside the laravel-13 doc PR**: Considered. Rejected — mixes a doc-only sweep with a security bump that touches `composer.lock`, the kind of scope-blending that makes review harder.
+- **Persisting the "two-reviewer-signal = real doctrine gap" meta-lesson**: Considered, declined. One-off observation today; if it recurs, it earns a learnings entry. Recording one-offs is how lean files become bloated.
+- **Filing the ADR-0028 amendment as its own immediate session task** (one of the AskUserQuestion options): Considered. Declined in favor of filing it as a Work Order for a future session — the amendment deserves `adr-interrogator` discipline, not a quick patch.
+
+### Open Questions
+
+- **Uniform-rule vs. explicit-dual-mode for ADR-0028 push-gate behavior**: The amendment WO frames this as the central question for the `adr-interrogator` to settle. Steward leans uniform-rule (predictability + symmetric paper trail); interrogator should pressure-test the workflow-friction cost on tiny PRs.
+- **Gate-side mechanical option** ("accept `Closed` if the close happened in this very push" by reading commit history): Out of scope for the amendment WO (which is procedural, not mechanical). If the interrogator surfaces this as a viable third option, it spawns a follow-up Work Order rather than expanding the current one.
+- **What does the 500-line / 20-file threshold gate after the amendment, if uniform-rule wins**: Currently it gates permit lookup vs. skip. If WO Status no longer varies by threshold, the threshold's remaining semantic is "this PR needs a recorded Work Order at all" — still useful, but worth confirming the amendment doesn't render it meaningless.
+
+---
