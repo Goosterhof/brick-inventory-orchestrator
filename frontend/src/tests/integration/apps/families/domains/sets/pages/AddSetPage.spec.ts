@@ -53,7 +53,7 @@ describe('AddSetPage — integration', () => {
         const selectInput = wrapper.findComponent(SelectInput);
         expect(selectInput.props('label')).toBe('Status');
         const options = selectInput.findAll('option');
-        expect(options).toHaveLength(5);
+        expect(options).toHaveLength(6);
     });
 
     it('renders a real PrimaryButton for form submission', async () => {
