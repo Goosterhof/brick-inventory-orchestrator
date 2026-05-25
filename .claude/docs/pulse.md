@@ -80,7 +80,7 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 | Resource adapter (frozen + mutable) | Battle-tested | Sets domain: all 4 CRUD pages consume |
 | Adapter-store module | Battle-tested | Sets domain: getAll, getOrFailById, generateNew, retrieveAll in production use |
 | Brick Brutalism design system | Battle-tested | Showcase app fully tested, brand guide |
-| Page integration tests (ADR-0024) | Established | Layer exists with 19 test files covering all domain pages. 5 failing assertions on main (Permit A Open). No CI gate (Permit B Open, blocked by A). Cannot be rated Battle-tested until both permits ship and CI confirms green. Surfaced by [`2026-05-20-gallery-pulse-refresh`](../records/audits/2026-05-20-gallery-pulse-refresh.md). |
+| Page integration tests (ADR-0024) | Battle-tested | 19 test files covering all domain pages; 143/143 green on `main`. Permit A (assertion repairs) and Permit B (CI wiring) both shipped and merged 2026-05-25 in PR #100. Suite now runs as a required, gating step in `frontend-ci.yml` between `Test with coverage` and `Build` — first PR-run verification landed green (job `ci` succeeded in 1m 46s on commit `53194aa`). Promoted Established → Battle-tested 2026-05-25 per CEO authorization, closing the 2026-05-05 integration-test cluster. |
 | Mutation testing (Stryker) | Configured | Dry-run confirmed, 80% break threshold set; not yet run in anger |
 | Form submit loading guard | Battle-tested | `useFormSubmit` returns `submitting` ref, prevents double-submission |
 
