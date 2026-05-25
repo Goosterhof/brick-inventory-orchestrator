@@ -63,7 +63,9 @@ describe('BrickDnaPage — integration', () => {
 
         const emptyState = wrapper.findComponent(EmptyState);
         expect(emptyState.exists()).toBe(true);
-        expect(emptyState.text()).toContain('No collection data available yet');
+        expect(emptyState.text()).toContain(
+            "No DNA profile yet. Add some sets and we'll map your building fingerprint.",
+        );
     });
 
     it('renders real StatCards for top colors', async () => {

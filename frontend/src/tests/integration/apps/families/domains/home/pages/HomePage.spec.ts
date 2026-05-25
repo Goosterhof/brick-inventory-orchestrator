@@ -52,7 +52,7 @@ describe('HomePage — integration', () => {
 
         const pageHeader = wrapper.findComponent(PageHeader);
         expect(pageHeader.exists()).toBe(true);
-        expect(pageHeader.find('h1').text()).toBe('Dashboard');
+        expect(pageHeader.find('h1').text()).toBe('Build Control');
 
         const statCards = wrapper.findAllComponents(StatCard);
         expect(statCards).toHaveLength(3);
@@ -85,6 +85,6 @@ describe('HomePage — integration', () => {
         mockServer.onGet('family-sets', []);
         const wrapper = mount(HomePage);
 
-        expect(wrapper.text()).toContain('Loading your collection...');
+        expect(wrapper.text()).toContain('Unpacking your collection...');
     });
 });

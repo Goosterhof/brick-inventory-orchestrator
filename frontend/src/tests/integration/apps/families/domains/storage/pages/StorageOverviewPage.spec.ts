@@ -46,7 +46,7 @@ describe('StorageOverviewPage — integration', () => {
 
         const emptyState = wrapper.findComponent(EmptyState);
         expect(emptyState.exists()).toBe(true);
-        expect(emptyState.text()).toContain('No storage locations yet');
+        expect(emptyState.text()).toContain('No storage bins yet. Every brick needs a home.');
     });
 
     it('renders PageHeader with real PrimaryButton', async () => {

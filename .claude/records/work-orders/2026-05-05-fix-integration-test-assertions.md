@@ -70,5 +70,5 @@ A reasonable expectation: 30 minutes. Five `Edit` calls, one `npm run test:integ
 
 ---
 
-**Status:** Open
-**Journal:** _link to construction journal when filed_
+**Status:** Completed (closed 2026-05-25 on Build Record filing)
+**Build Record:** [`2026-05-25-fix-integration-test-assertions`](../build-records/2026-05-25-fix-integration-test-assertions.md)
