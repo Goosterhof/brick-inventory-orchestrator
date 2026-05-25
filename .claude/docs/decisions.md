@@ -8,7 +8,7 @@ Every significant decision goes through a **Steward-mediated review**: the Brick
 
 ## Decision Index
 
-29 ADRs, consolidated chronologically from the pre-merger BIO sovereign sequences (13 Foundry + 16 Gallery) into a single `0001`–`0029` numbering during Phase 5 of the Brickworks merger. Older `**Date**` values reflect the original adoption date in the source wing, preserved verbatim.
+30 ADRs. The first 29 were consolidated chronologically from the pre-merger BIO sovereign sequences (13 Foundry + 16 Gallery) into a single `0001`–`0029` numbering during Phase 5 of the Brickworks merger. ADR-0030 is the first post-merger addition. Older `**Date**` values reflect the original adoption date in the source wing, preserved verbatim.
 
 | # | Decision | Date | Wing | Status |
 |---|---|---|---|---|
@@ -41,6 +41,7 @@ Every significant decision goes through a **Steward-mediated review**: the Brick
 | [0027](./adr/0027-tighten-runtime-to-php-85.md) | Tighten supported PHP runtime to 8.5+ | 2026-04-30 | Foundry | Accepted |
 | [0028](./adr/0028-pre-push-permit-verification.md) | Pre-push permit verification gate (CaptainHook structural enforcement of Operations Protocol) | 2026-05-05 | Foundry | Accepted |
 | [0029](./adr/0029-case-conversion-via-http-middleware.md) | Case conversion via HTTP middleware (supersedes [0006](./adr/0006-case-conversion-boundary.md)) | 2026-05-05 | Gallery | Accepted |
+| [0030](./adr/0030-path-based-permission-allow-for-subagent-writes.md) | Path-based permission allow for paper-trail subagent writes | 2026-05-25 | Atrium | Accepted |
 
 ## Adding a New ADR
 
