@@ -16,15 +16,15 @@ A consolidated, current-state assessment of both wings. Updated by The Steward a
 
 **Gallery Wing Rating:** 8/10
 **Foundry Wing Rating:** 8.5/10
-**Assessed:** 2026-05-05 (Foundry), 2026-05-20 (Gallery)
+**Assessed:** 2026-05-05 (Foundry), 2026-05-25 (Gallery)
 
-**Gallery (frontend):** Strong architectural foundation with 100% unit test coverage maintained. Multi-app structure with strict isolation. Showcase app fully tested. Adapter-store and resource-adapter patterns battle-tested. Page integration test layer established (ADR-0024) but currently has 5 unrepaired assertion failures and no CI gate (Permits A and B open). Router migration to `@script-development/fs-router` complete. Pattern Master agent operational; first creative dispatch since 2026-04-17 landed 2026-05-20 with three proposals — CEO picked Proposal C (Brick-DNA Snap-and-Pull) for next build. Unit gauntlet fully green. New collect guard violation in `PartsPage.spec.ts` (1713ms delta) emerged this cycle. Documentation drift previously the primary recurring concern; addressed by Pulse-refresh audit 2026-05-20 ([`2026-05-20-gallery-pulse-refresh`](../records/audits/2026-05-20-gallery-pulse-refresh.md)).
+**Gallery (frontend):** Strong architectural foundation with 100% unit test coverage maintained. Multi-app structure with strict isolation. Showcase app fully tested. Adapter-store and resource-adapter patterns battle-tested. **Page integration test layer (ADR-0024) promoted Battle-tested 2026-05-25 — 19 specs / 143 tests green on `main`, suite wired as a required gating step in `frontend-ci.yml`; closes the 2026-05-05 integration-test cluster (Permits A + B both shipped in PR #100).** Router migration to `@script-development/fs-router` complete. Pattern Master agent operational; first creative dispatch since 2026-04-17 landed 2026-05-20 with three proposals — CEO picked Proposal C (Brick-DNA Snap-and-Pull) for next build. Unit gauntlet fully green. `PartsPage.spec.ts` collect guard violation (1713ms delta) emerged 2026-05-20 and remains the loudest active medium. Documentation drift previously the primary recurring concern; addressed by Pulse-refresh audit 2026-05-20 ([`2026-05-20-gallery-pulse-refresh`](../records/audits/2026-05-20-gallery-pulse-refresh.md)).
 
 **Foundry (backend):** PHPStan at max with zero errors (Laravel 13.7 deprecation cascade closed via ADR-0027's PHP 8.5 tightening), Deptrac with zero violations, full architecture tests passing, governed by the consolidated `0001`–`0029` Brickworks ADR sequence. Recent deliveries since 2026-04-16: Laravel 13.7 deprecation cleanup + PHP 8.5 tightening, storage-map ResourceData, reverse-lookup-lens endpoint with `DB::listen` query-budget proof, PHPStan war-room rules adoption (four custom rules), ADR-0028 pre-push permit verification gate.
 
 ## Active Concerns
 
-**Assessed:** 2026-05-05 (Foundry), 2026-05-20 (Gallery)
+**Assessed:** 2026-05-05 (Foundry), 2026-05-25 (Gallery)
 
 ### Gallery Wing
 
@@ -33,10 +33,13 @@ A consolidated, current-state assessment of both wings. Updated by The Steward a
 | `PartsPage.spec.ts` collect guard VIOLATION | Medium | New | 1713ms delta (threshold 1000ms in 2x coverage mode). Emerged since 2026-05-09 (was 679ms delta — warning zone). Root cause: heavy import chain (7 components at top-level). ADR-0012 breach. Surfaced by [`2026-05-20-gallery-pulse-refresh`](../records/audits/2026-05-20-gallery-pulse-refresh.md). |
 | `SetsOverviewPage.spec.ts` TEST GUARD alarming | Medium | Monitoring | 2397ms execution (30 tests). 2.1× jump from 1143ms on 2026-05-09. xNOYG `in_storage` merge added 6 tests. Trend: 855ms → 1056ms → 1143ms → 2397ms. Casebook recommends split into `SetsOverviewPage.spec.ts` + `SetsOverviewFiltering.spec.ts`. |
 | `ComponentGallery.spec.ts` TEST GUARD | Medium | Monitoring | 1050ms execution (worsened from 933ms on 2026-04-25). Collect delta 439ms (warning, not violation). Root cause: `mount` (not `shallowMount`) importing all shared components. Persists across 6+ inspections. |
-| Integration suite: 5 failing tests (Permits A + B open) | Medium | Active | 4 spec files, 5 failing tests on main. Permit A (assertion fixes) and Permit B (CI wiring) both Open as of 2026-05-20 — 15 days unresolved. Root causes: hardcoded-copy drift + `AddSetPage` structural drift (expects 5 statuses, code has 6 after xNOYG `in_storage` merge). |
 | `AboutPage.spec.ts` collect guard warning | Low | Monitoring | 520ms delta in 2x mode (threshold 1000ms). Improved from 1522ms on 2026-04-25 (Node 24 environment difference). Root cause unchanged: 16 named Lego shape component imports. |
 | `Item` type constraint mismatch | Low | Aware | `FamilySet` has `id` but no `createdAt`/`updatedAt` — may surface in future domains |
 | `format:check` failures on `.claude/` md | Low | Known | oxfmt reformats markdown — agent docs and journal files drift; not a code defect |
+
+_Closed 2026-05-25:_
+
+- ~~Integration suite: 5 failing tests (Permits A + B open)~~ — **Closed 2026-05-25.** Permit A (assertion repairs — 4 hardcoded-copy fixes + `AddSetPage` 5→6 statuses structural fix) and Permit B (CI wiring — `npm run test:integration:run` inserted as required gating step in `frontend-ci.yml` between `Test with coverage` and `Build`) both shipped and merged in PR #100. 143/143 green on `main`. First PR-run CI verification landed green. ADR-0024 promoted Established → Battle-tested in Pattern Maturity. 20 days from triage filing to cluster closure.
 
 ### Foundry Wing
 
@@ -66,7 +69,7 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 
 ## Pattern Maturity
 
-**Assessed:** 2026-05-05 (Foundry), 2026-05-20 (Gallery)
+**Assessed:** 2026-05-05 (Foundry), 2026-05-25 (Gallery)
 
 ### Gallery Wing
 
@@ -80,7 +83,7 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 | Resource adapter (frozen + mutable) | Battle-tested | Sets domain: all 4 CRUD pages consume |
 | Adapter-store module | Battle-tested | Sets domain: getAll, getOrFailById, generateNew, retrieveAll in production use |
 | Brick Brutalism design system | Battle-tested | Showcase app fully tested, brand guide |
-| Page integration tests (ADR-0024) | Established | Layer exists with 19 test files covering all domain pages. 5 failing assertions on main (Permit A Open). No CI gate (Permit B Open, blocked by A). Cannot be rated Battle-tested until both permits ship and CI confirms green. Surfaced by [`2026-05-20-gallery-pulse-refresh`](../records/audits/2026-05-20-gallery-pulse-refresh.md). |
+| Page integration tests (ADR-0024) | Battle-tested | 19 test files covering all domain pages; 143/143 green on `main`. Permit A (assertion repairs) and Permit B (CI wiring) both shipped and merged 2026-05-25 in PR #100. Suite now runs as a required, gating step in `frontend-ci.yml` between `Test with coverage` and `Build` — first PR-run verification landed green (job `ci` succeeded in 1m 46s on commit `53194aa`). Promoted Established → Battle-tested 2026-05-25 per CEO authorization, closing the 2026-05-05 integration-test cluster. |
 | Mutation testing (Stryker) | Configured | Dry-run confirmed, 80% break threshold set; not yet run in anger |
 | Form submit loading guard | Battle-tested | `useFormSubmit` returns `submitting` ref, prevents double-submission |
 
@@ -147,11 +150,11 @@ Ideas planted but deferred — revisit when the trigger condition is met. Seeds 
 
 ## Quality Metrics
 
-**Assessed:** 2026-05-05 (Foundry), 2026-05-20 (Gallery)
+**Assessed:** 2026-05-05 (Foundry), 2026-05-25 (Gallery)
 
 ### Gallery Wing
 
-_Coverage figures below reflect the unit test gauntlet only. Integration tests (`npm run test:integration:run`) are not included in these thresholds — see Active Concerns for integration suite status (Permits A and B Open as of 2026-05-20)._
+_Coverage figures below reflect the unit test gauntlet only. The integration suite (`npm run test:integration:run`) is a separate, independently-gated layer per ADR-0024 — 19 specs / 143 tests, green on `main`, executed as a required step in `frontend-ci.yml` between `Test with coverage` and `Build` (PR #100, merged 2026-05-25)._
 
 | Metric | Value | Source |
 |---|---|---|
