@@ -1,4 +1,13 @@
 {
+    "permissions": {
+        "allow": [
+            "Write(.claude/records/**)",
+            "Edit(.claude/records/**)",
+            "Write(.claude/docs/**)",
+            "Edit(.claude/docs/**)",
+            "Edit(.claude/agents/*-graduation.md)"
+        ]
+    },
     "hooks": {
         "PreToolUse": [
             {
