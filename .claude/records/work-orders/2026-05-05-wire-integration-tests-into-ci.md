@@ -79,5 +79,5 @@ After this permit lands, the inspector's two graduation candidates from the tria
 
 ---
 
-**Status:** Open (blocked by Permit A)
-**Journal:** _link to construction journal when filed_
+**Status:** Completed (closed 2026-05-25 on Build Record filing)
+**Build Record:** [`2026-05-25-wire-integration-tests-into-ci`](../build-records/2026-05-25-wire-integration-tests-into-ci.md)
