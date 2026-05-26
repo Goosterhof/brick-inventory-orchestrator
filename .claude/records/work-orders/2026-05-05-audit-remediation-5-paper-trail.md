@@ -79,5 +79,5 @@ This order is the larger of the two split remediation orders. Do not rush. The d
 
 ---
 
-**Status:** Open
-**Shift Log:** _to be filed_
+**Status:** Closed
+**Build Record:** [`2026-05-26-audit-remediation-5-paper-trail`](../build-records/2026-05-26-audit-remediation-5-paper-trail.md)
