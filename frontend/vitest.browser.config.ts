@@ -1,5 +1,4 @@
 import {playwright} from '@vitest/browser-playwright';
-import {fileURLToPath} from 'node:url';
 import {defineConfig, mergeConfig} from 'vitest/config';
 
 import viteConfig from './vite.config';
@@ -8,7 +7,7 @@ export default mergeConfig(
     viteConfig,
     defineConfig({
         test: {
-            root: fileURLToPath(new URL('./', import.meta.url)),
+            root: import.meta.dirname,
             include: ['src/tests/browser/**/*.spec.ts'],
             setupFiles: ['./src/tests/browser/setup.ts'],
             coverage: {
