@@ -57,10 +57,7 @@ if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
 // so the on-card pickup feels consistent; the sliders drive the headline
 // "Active Parameters" readout so the demo teaches the parameter range without
 // confusing the per-card experience with mid-gesture parameter swaps.
-const cards = shapes.map((shape) => ({
-    ...shape,
-    pickup: useBrickPickup(),
-}));
+const cards = shapes.map((shape) => ({...shape, pickup: useBrickPickup()}));
 
 const stateColors: Record<'idle' | 'hovered' | 'pressed', string> = {
     idle: 'bg-gray-100',

@@ -104,63 +104,25 @@ describe('BrickShapes', () => {
         expect(text).toContain('cubic-bezier(0.4, 0, 0.2, 1)');
     });
 
-    it('should reflect slider changes in the headline parameters', async () => {
-        // Arrange
+    it('should reflect each slider change in the headline parameter readout', async () => {
+        // Arrange — one wrapper, walk every slider so the suite covers each
+        // input independently without paying full-mount cost five times.
         const wrapper = shallowMount(BrickShapes, {global: {stubs}});
-        const hoverSlider = wrapper.find('input[data-slider-hover]');
 
-        // Act
-        await hoverSlider.setValue('14');
-
-        // Assert
+        // Act + Assert — each slider's data-attribute selector + a unique value
+        await wrapper.find('input[data-slider-hover]').setValue('14');
         expect(wrapper.text()).toContain('14px');
-    });
 
-    it('should reflect press-duration slider changes in the headline parameters', async () => {
-        // Arrange
-        const wrapper = shallowMount(BrickShapes, {global: {stubs}});
-        const pressDurSlider = wrapper.find('input[data-slider-press-dur]');
+        await wrapper.find('input[data-slider-press]').setValue('7');
+        expect(wrapper.text()).toContain('7px');
 
-        // Act
-        await pressDurSlider.setValue('80');
-
-        // Assert
-        expect(wrapper.text()).toContain('80ms');
-    });
-
-    it('should reflect hover-duration slider changes', async () => {
-        // Arrange
-        const wrapper = shallowMount(BrickShapes, {global: {stubs}});
-        const slider = wrapper.find('input[data-slider-hover-dur]');
-
-        // Act
-        await slider.setValue('220');
-
-        // Assert
+        await wrapper.find('input[data-slider-hover-dur]').setValue('220');
         expect(wrapper.text()).toContain('220ms');
-    });
 
-    it('should reflect press-lift slider changes', async () => {
-        // Arrange
-        const wrapper = shallowMount(BrickShapes, {global: {stubs}});
-        const slider = wrapper.find('input[data-slider-press]');
+        await wrapper.find('input[data-slider-press-dur]').setValue('80');
+        expect(wrapper.text()).toContain('80ms');
 
-        // Act
-        await slider.setValue('8');
-
-        // Assert
-        expect(wrapper.text()).toContain('8px');
-    });
-
-    it('should reflect release-duration slider changes', async () => {
-        // Arrange
-        const wrapper = shallowMount(BrickShapes, {global: {stubs}});
-        const slider = wrapper.find('input[data-slider-release]');
-
-        // Act
-        await slider.setValue('400');
-
-        // Assert
+        await wrapper.find('input[data-slider-release]').setValue('400');
         expect(wrapper.text()).toContain('400ms');
     });
 
@@ -175,37 +137,26 @@ describe('BrickShapes', () => {
         }
     });
 
-    it('should transition the first card through hover → press → release → leave', async () => {
+    it('should transition the first card through hover → press → release → leave and reflect in badge text', async () => {
         // Arrange
         const wrapper = shallowMount(BrickShapes, {global: {stubs}});
         const card = wrapper.findAll('[data-state]')[0];
         if (!card) throw new Error('no card');
 
-        // Act
+        // Act + Assert
         await card.trigger('mouseenter');
         expect(card.attributes('data-state')).toBe('hovered');
+        expect(wrapper.text()).toContain('HOVERED');
 
         await card.trigger('mousedown');
         expect(card.attributes('data-state')).toBe('pressed');
+        expect(wrapper.text()).toContain('PRESSED');
 
         await card.trigger('mouseup');
         expect(card.attributes('data-state')).toBe('hovered');
 
         await card.trigger('mouseleave');
         expect(card.attributes('data-state')).toBe('idle');
-    });
-
-    it('should render the state badge text mirroring the data-state', async () => {
-        // Arrange
-        const wrapper = shallowMount(BrickShapes, {global: {stubs}});
-        const card = wrapper.findAll('[data-state]')[0];
-        if (!card) throw new Error('no card');
-
-        // Act
-        await card.trigger('mouseenter');
-
-        // Assert — at least one badge in the page should now say HOVERED
-        expect(wrapper.text()).toContain('HOVERED');
     });
 
     it('should not show reduced-motion indicator when motion is not reduced', () => {
