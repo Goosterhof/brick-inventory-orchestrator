@@ -16,15 +16,15 @@ A consolidated, current-state assessment of both wings. Updated by The Steward a
 
 **Gallery Wing Rating:** 8/10
 **Foundry Wing Rating:** 8.5/10
-**Assessed:** 2026-05-05 (Foundry), 2026-05-25 (Gallery)
+**Assessed:** 2026-05-26 (Foundry), 2026-05-25 (Gallery)
 
 **Gallery (frontend):** Strong architectural foundation with 100% unit test coverage maintained. Multi-app structure with strict isolation. Showcase app fully tested. Adapter-store and resource-adapter patterns battle-tested. **Page integration test layer (ADR-0024) promoted Battle-tested 2026-05-25 — 19 specs / 143 tests green on `main`, suite wired as a required gating step in `frontend-ci.yml`; closes the 2026-05-05 integration-test cluster (Permits A + B both shipped in PR #100).** Router migration to `@script-development/fs-router` complete. Pattern Master agent operational; first creative dispatch since 2026-04-17 landed 2026-05-20 with three proposals — CEO picked Proposal C (Brick-DNA Snap-and-Pull) for next build. Unit gauntlet fully green. `PartsPage.spec.ts` collect guard violation (1713ms delta) emerged 2026-05-20 and remains the loudest active medium. Documentation drift previously the primary recurring concern; addressed by Pulse-refresh audit 2026-05-20 ([`2026-05-20-gallery-pulse-refresh`](../records/audits/2026-05-20-gallery-pulse-refresh.md)).
 
-**Foundry (backend):** PHPStan at max with zero errors (Laravel 13.7 deprecation cascade closed via ADR-0027's PHP 8.5 tightening), Deptrac with zero violations, full architecture tests passing, governed by the consolidated `0001`–`0029` Brickworks ADR sequence. Recent deliveries since 2026-04-16: Laravel 13.7 deprecation cleanup + PHP 8.5 tightening, storage-map ResourceData, reverse-lookup-lens endpoint with `DB::listen` query-budget proof, PHPStan war-room rules adoption (four custom rules), ADR-0028 pre-push permit verification gate.
+**Foundry (backend):** PHPStan at max with zero errors (339 files), Deptrac with zero violations (743 allowed), 107 architecture tests passing (up from 105). Full quality gauntlet operational on canonical PHP 8.5.5 host with `php8.5-pcov` — coverage and mutation drills unblocked as of 2026-05-20; first full re-measure landed 2026-05-26 with 100% unit / 98.1% feature coverage and 79.68% mutation score (above all thresholds). Governed by the consolidated `0001`–`0029` Brickworks ADR sequence. Recent deliveries since 2026-04-16: Laravel 13.7 deprecation cleanup + PHP 8.5 tightening, storage-map ResourceData, reverse-lookup-lens endpoint with `DB::listen` query-budget proof, PHPStan war-room rules adoption (four custom rules), ADR-0028 pre-push permit verification gate, `ImportJob` model + `ImportOwnedSetsJob` (Rebrickable import flow — Job layer now 2 classes, both convention-compliant).
 
 ## Active Concerns
 
-**Assessed:** 2026-05-05 (Foundry), 2026-05-25 (Gallery)
+**Assessed:** 2026-05-26 (Foundry), 2026-05-25 (Gallery)
 
 ### Gallery Wing
 
@@ -45,7 +45,7 @@ _Closed 2026-05-25:_
 
 | Concern | Severity | Status | Notes |
 |---|---|---|---|
-| Dockerfile build verification (`docker compose build backend`) | Low | Open — environmental | The 2026-04-29 PCOV install + PHP 8.5 alignment shifts both modified `docker/backend.Dockerfile`. Diff committed-ready; verification blocked in dev shell (no Docker daemon). |
+| Dockerfile build verification (`docker compose build backend`) | Low | Open — network-environmental | Docker daemon accessible as of 2026-05-26 (`docker info` returns client v29.4.3). Build attempt 2026-05-26 fails on `pecl install pcov` with PECL network error ("cannot download pecl/pcov"); not a code defect. The Dockerfile's pcov install is structurally correct. Re-verify during a session with reliable outbound network access. Surfaced/refreshed by [`2026-05-26-foundry-pulse-refresh`](../records/audits/2026-05-26-foundry-pulse-refresh.md). |
 
 _Closed 2026-05-20 during first-standup verification (CEO triggered `/standup`, Pulse refresh acted on findings):_
 
@@ -69,7 +69,7 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 
 ## Pattern Maturity
 
-**Assessed:** 2026-05-05 (Foundry), 2026-05-25 (Gallery)
+**Assessed:** 2026-05-26 (Foundry), 2026-05-25 (Gallery)
 
 ### Gallery Wing
 
@@ -96,7 +96,7 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 | ResourceData pattern | Battle-tested | All have `from()` factories, EAGER_LOAD where needed. ComputedResourceData (ADR-0025) handles DTO-sourced responses |
 | Explicit cascade deletion (ADR-0016) | Battle-tested | MigrationArchitectureTest + CascadeRelationArchitectureTest confirm compliance |
 | Thin controllers (ADR-0021) | Battle-tested | No constructors, no try-catch, method injection only |
-| Job layer (1 class) | Established | JobArchitectureTest guards conventions; thin wrapper pattern documented in `backend/CLAUDE.md` |
+| Job layer (2 classes) | Established | JobArchitectureTest guards conventions; `SyncSetPartsJob` (existing) + `ImportOwnedSetsJob` (new since 2026-05-05 assessment). Both thin-wrapper pattern, both `final`, both `ShouldQueue`, both primitive-only constructors, both tested. Pattern adoption without prompting confirmed on the new Job. |
 | Bulk aggregation endpoints (3 endpoints) | Battle-tested | `/family-sets/completion`, `/family-sets/missing-parts`, reverse-lookup-lens. Query budgets proven via `DB::listen` runtime tests |
 | Operations Protocol enforcement (ADR-0028) | Established | CaptainHook pre-push verification gate; threshold-gated permit lookup, fail not prompt |
 
@@ -108,7 +108,7 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 
 ## Tech Debt
 
-**Assessed:** 2026-03-31 (Foundry), 2026-05-20 (Gallery)
+**Assessed:** 2026-05-26 (Foundry), 2026-05-20 (Gallery)
 
 ### Gallery Wing
 
@@ -124,8 +124,14 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 
 | Item | Severity | Notes |
 |---|---|---|
-| `GetFamilyPartsAction` returns raw array (no ResourceData) | Low | Only endpoint bypassing the pattern without documentation |
-| `RegisterUserData::familyName` empty-string on invite-code path | Low | Now nullable — passes null when family_name absent |
+| `GetFamilyPartsAction` returns raw array (no ResourceData) | Low | Only endpoint bypassing the pattern. Re-confirmed 2026-05-26 by [`2026-05-26-foundry-pulse-refresh`](../records/audits/2026-05-26-foundry-pulse-refresh.md). |
+| `LogoutController` session-invalidation branch uncovered in feature tests | Low | `Auth/LogoutController` lines 19-20 (`$request->session()->invalidate()` + `regenerateToken()`) reach only 60% feature coverage; overall feature coverage 98.1% still clears the 90% gate. WO candidate: third test exercising the stateful session path. Surfaced 2026-05-26 (Finding 1, medium severity in the audit; carried here as Low Tech Debt because it doesn't break the gate). |
+| `FamilySetController::importStatus()` returns inline 404 JSON instead of typed exception | Low | Style inconsistency with the global-exception-handler pattern. Either document the empty-state divergence or introduce `ImportJobNotFoundException`. Surfaced 2026-05-26 (Finding 3 in audit). |
+| ADR-0015 "Current Actions" list drift | Low | `UpsertThemeAction` is fully compliant with the optimistic-locking upsert pattern but absent from ADR-0015's "Current Actions" list; ADR's list may also include stale `StoreSetPartsAction` entry. Documentation-only. Surfaced 2026-05-26 (Finding 2 in audit). |
+
+_Resolved 2026-05-26:_
+
+- ~~`RegisterUserData::familyName` empty-string on invite-code path~~ — **Closed 2026-05-26.** Confirmed `?string` (nullable) in `app/DataTransferObjects/Input/Auth/RegisterUserData.php`. Fix in production.
 
 ## Seeds
 
@@ -150,7 +156,7 @@ Ideas planted but deferred — revisit when the trigger condition is met. Seeds 
 
 ## Quality Metrics
 
-**Assessed:** 2026-05-05 (Foundry), 2026-05-25 (Gallery)
+**Assessed:** 2026-05-26 (Foundry), 2026-05-25 (Gallery)
 
 ### Gallery Wing
 
@@ -169,12 +175,13 @@ _Coverage figures below reflect the unit test gauntlet only. The integration sui
 
 | Metric | Value | Threshold |
 |---|---|---|
-| Unit coverage | 100.0% (last measured 2026-04-29) — currently unable to re-measure on canonical 8.5 (sudo-gated `php8.5-pcov` install) | 100% |
-| Feature coverage | Unable to measure (`covers()` mismatch + `php8.5-pcov` not installed) | 90% |
-| Mutation score | 76.97% (last measured 2026-04-29) — currently unable to re-measure on canonical 8.5 | 76% |
-| Architecture tests | 105 passing (last full run on Phase 5 verification) | All passing |
-| PHPStan | Level max, **0 errors** | Level max, zero errors |
-| Deptrac | 0 violations | Zero violations |
+| Unit coverage | **100.0%** (measured 2026-05-26) | 100% |
+| Feature coverage | **98.1%** (measured 2026-05-26) — `Auth/LogoutController` at 60% (lines 19-20 uncovered; see Tech Debt) | 90% |
+| Mutation score | **79.68%** (measured 2026-05-26, improved from 76.97%) | 76% |
+| Architecture tests | **107 passing** (measured 2026-05-26, up from 105) | All passing |
+| PHPStan | Level max, **0 errors** across 339 files (measured 2026-05-26) | Level max, zero errors |
+| Deptrac | **0 violations**, 743 allowed (measured 2026-05-26) | Zero violations |
+| Full test suite | 697 tests, 2846 assertions, 24.55s (measured 2026-05-26) | — |
 
 ### Atrium
 
