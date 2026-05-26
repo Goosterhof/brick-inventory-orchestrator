@@ -273,3 +273,36 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - **Should "@vue/tsconfig base-config drift" become a documented Gallery-side hazard?** This is the second time in two months that an upstream config package silently weakened strictness via base-config changes (first was oxlint correctness category, now `@vue/tsconfig` `noUncheckedIndexedAccess`). The pattern: declare-explicitly-rather-than-inherit for any flag the project actually depends on. Could be a one-line addition to the Gallery manual's TypeScript Strictness section.
 
 ---
+
+## 2026-05-26 — WO Pickup Session (Late Afternoon)
+
+### Decisions
+
+- **WO #1 (Pattern Master Graduation Log extraction) dispatched first**: Mechanical sub-threshold WO chosen as the session opener — closes a fresh permit cleanly and unblocks ADR-0030's allow rule from biting on the new sibling-file path. Brickwright executed in one commit; verbatim-move verified byte-identical.
+- **WO #4 (audit-remediation-5-paper-trail) over WO #3**: WO #3 requires `/adr-interrogator` with the CEO before drafting; deferred to allow autonomous subagent dispatch on #4. Reconstruction-only archaeology, no production code changes.
+- **WO #5 (integration-test-baseline-triage) closed via Steward-direct supersession**: Diagnosis and CI wiring already shipped 2026-05-25 via follow-up permits A and B; dispatching a retrospective Quality Warden to write "no inspection needed" would burn ~25 min for zero new information. Steward direct close with a supersession-marker Build Record was proportional.
+- **Proposal C dispatched to Pattern Master**: First Pattern Master delivery in 33 days, ordered C → A → B by prior CEO pick. Built end-to-end in one Agent invocation — composable + UnoCSS shortcut + 3 surface deploys + sound wiring + 100% test coverage.
+- **Graduation-log file update for Proposal C deferred pending PR #107 merge**: Race condition — sibling file doesn't exist on `main` yet. Parameter Record in the Build Record is the system of record; sibling-file fold happens on next ambient Pattern Master invocation.
+
+### Action Items
+
+- [ ] CEO: review four open PRs (#107, #108, #109, #110) and merge in order that makes sense. #107 is the dependency for the deferred graduation-log file update.
+- [ ] CEO: schedule the `/adr-interrogator` session for ADR-0028 dual-mode amendment (WO #3). New data from this session expands the question — see Notes.
+- [ ] Next Pattern Master invocation (after #107 merges): fold Proposal C parameter observations into the new `pattern-master-graduation.md` sibling file. Confirmed graduation-tick eligibility for `cubic-bezier(0.2, 0, 0, 1)` hover easing.
+
+### Notes
+
+- **Subtree absorption was content-only.** Pre-2026-05-17 SHAs from the standalone backend/frontend repos are unreachable from the orchestrator. All 11 SHAs cited by WO #4 returned `fatal: ambiguous argument`. Reconstruction had to rely on surviving on-disk artifacts plus the audit's verbatim characterization. Memorialized in `MEMORY.md` as `project_subtree_history_collapse`. Root CLAUDE.md's claim that "full pre-merge history preserved" is true of content but not of the commit graph — worth a future doc-hygiene correction.
+- **ADR-0010 was renumbered to ADR-0025** during the Phase 5 merger. WO #4's reference to `docs/adr/0010-` was stale; amendment landed at `.claude/docs/adr/0025-computed-resource-data.md`.
+- **PrePushPermitGate is wing-scoped, not just size-scoped.** Proposal C delivery (large, 100% coverage, many files) bypassed the gate entirely because the diff touched only `frontend/` and `.claude/`. `.githooks/pre-push` dispatches the permit-gate only on `backend/`-touching pushes. This is a third axis to the dual-mode question that WO #3 is meant to settle — the framing in #3's WO body only covers the size axis. Frontend-only deliveries can always close the WO in the same commit.
+- **WO supersession-without-close is a paper-trail discipline gap.** WO #5 sat Open for 21 days because nobody held the retirement responsibility when its follow-up permits shipped in parallel rather than after. Pattern logged in Build Record `2026-05-26-close-integration-test-baseline-triage`; future ADR or charter clarification recommended.
+- **Pattern Master training proposals from Proposal C delivery**: (1) pool contention is a thinking-budget input when adding tests near the test-guard threshold — first push attempt was rejected when 18 new BrickShapes tests pushed pre-existing flaky specs over the 4000ms coverage-mode guard; trimmed to 13; (2) run `npm ci` before treating knip warnings on out-of-diff files as in-scope.
+- **Close-in-work-commit training rule progressed.** WO #1's Build Record closed the WO in the same commit (occurrence 1 toward graduation). WO #4 same (occurrence 2). WO #5 was Steward-direct so it doesn't count for graduation. Proposal C honored AC #54 (close-in-work-commit) without prompting from the dispatch. The rule appears to be sticking across roles — Brickwright, Steward, Pattern Master all applied it cleanly this session.
+
+### Open Questions
+
+- **When does WO #3 (ADR-0028 dual-mode amendment) actually run its interrogator session?** Now has three input dimensions, not two: size threshold, wing scoping, and the close-in-work-commit training rule's interaction with both. The longer this sits, the more data accumulates — but also the more friction the unresolved doctrine creates.
+- **Does the WO-superseded-by-follow-ups pattern warrant an ADR?** Steward judgment was "log the precedent, don't file the ADR yet." If the pattern recurs once more, the precedent becomes a pattern and the ADR becomes load-bearing.
+- **Should the root CLAUDE.md's "full pre-merge history preserved" claim be corrected?** True of content, false of commit graph. Worth a doc-hygiene WO if any future archaeology trips over the same expectation.
+
+---

@@ -76,5 +76,5 @@ After this Work Order ships and earns the CEO's approval, Proposal A's follow-up
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filed by the Pattern Master at delivery_
+**Status:** Completed
+**Build Record:** [`2026-05-26-pattern-master-proposal-c-build`](../build-records/2026-05-26-pattern-master-proposal-c-build.md)

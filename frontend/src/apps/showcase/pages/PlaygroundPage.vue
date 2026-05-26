@@ -18,6 +18,7 @@ import LegoTile from '@shared/components/LegoTile.vue';
 import LegoTileSvg from '@shared/components/LegoTileSvg.vue';
 import LegoWedge from '@shared/components/LegoWedge.vue';
 import LegoWedgeSvg from '@shared/components/LegoWedgeSvg.vue';
+import {useBrickPickup} from '@shared/composables/useBrickPickup';
 
 interface BrickEntry {
     label: string;
@@ -140,6 +141,10 @@ const bricks: BrickEntry[] = [
 
 const bricklinkUrl = (id: string) => `https://www.bricklink.com/v2/catalog/catalogitem.page?P=${id}`;
 const bricklinkImageUrl = (id: string) => `https://img.bricklink.com/ItemImage/PT/5/${id}.png`;
+
+// One pickup composable per brick — the playground showcases the same vocabulary
+// the BrickShapes section dials in, applied to the HTML/CSS cell of each dimension card.
+const pickups = bricks.map(() => useBrickPickup({hoverLift: 8, pressLift: 4}));
 </script>
 
 <template>
@@ -158,7 +163,7 @@ const bricklinkImageUrl = (id: string) => `https://img.bricklink.com/ItemImage/P
     <div max-w="6xl" m="x-auto" p="x-4 md:x-8 y-8 sm:y-12">
         <div flex="~ col" gap="6 sm:8">
             <div
-                v-for="brick in bricks"
+                v-for="(brick, index) in bricks"
                 :key="`${brick.label}-${brick.dimensions}`"
                 p="4 sm:6"
                 bg="white"
@@ -224,10 +229,25 @@ const bricklinkImageUrl = (id: string) => `https://img.bricklink.com/ItemImage/P
                         </div>
                     </div>
 
-                    <!-- HTML/CSS -->
+                    <!-- HTML/CSS (with pickup interaction) -->
                     <div flex="~ col" items="center" gap="3">
                         <p text="xs" font="mono bold" text-color="gray-500" uppercase tracking="wide">HTML / CSS</p>
-                        <div flex items="center" justify="center" min-h="32" w="full" bg="gray-50" rounded="sm" p="4">
+                        <div
+                            class="brick-anim-pickup"
+                            flex
+                            items="center"
+                            justify="center"
+                            min-h="32"
+                            w="full"
+                            bg="gray-50"
+                            rounded="sm"
+                            p="4"
+                            :style="pickups[index]?.style.value"
+                            @mouseenter="pickups[index]?.onEnter()"
+                            @mouseleave="pickups[index]?.onLeave()"
+                            @mousedown="pickups[index]?.onPress()"
+                            @mouseup="pickups[index]?.onRelease()"
+                        >
                             <component :is="brick.html" :color="brick.color" v-bind="brick.htmlProps" />
                         </div>
                     </div>
