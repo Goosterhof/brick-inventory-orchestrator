@@ -15,7 +15,7 @@ export default mergeConfig(
             },
         },
         test: {
-            root: fileURLToPath(new URL('./', import.meta.url)),
+            root: import.meta.dirname,
             include: ['src/tests/integration/**/*.spec.ts'],
             setupFiles: ['./src/tests/integration/setup.ts'],
             environment: 'happy-dom',

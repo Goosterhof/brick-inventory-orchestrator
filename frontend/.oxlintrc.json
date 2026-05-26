@@ -24,6 +24,10 @@
         "no-unneeded-ternary": "warn",
         "prefer-template": "warn",
         "radix": "error",
+        "getter-return": "error", // 1.61 — graduated nursery → correctness
+        "no-implied-eval": "error", // 1.66 — security-relevant
+        "prefer-regex-literals": "error", // 1.64 — `new RegExp("foo")` → `/foo/`
+        "no-useless-assignment": "warn", // 1.59 — flags assignments whose value is never read
         "no-restricted-imports": [
             "error",
             {
@@ -102,6 +106,8 @@
         "typescript/no-unnecessary-template-expression": "warn",
         "typescript/no-unnecessary-type-constraint": "warn",
         "typescript/no-unnecessary-type-arguments": "warn",
+        "typescript/no-unnecessary-type-conversion": "error", // 1.59 (suspicious) — flags redundant String(x)/Number(x)/Boolean(x) on already-typed values
+        "typescript/no-unnecessary-type-parameters": "warn", // 1.62 (suspicious) — type parameter used only once
         "typescript/strict-boolean-expressions": "off", // too aggressive — idiomatic TS/Vue uses truthy/falsy checks extensively; explicit comparisons add verbosity without meaningful safety gains
 
         // Import rules
@@ -142,6 +148,9 @@
         "unicorn/no-useless-promise-resolve-reject": "warn",
         "unicorn/consistent-function-scoping": "warn",
         "unicorn/prefer-at": "error",
+        "unicorn/prefer-import-meta-properties": "warn", // 1.62 — Vite-relevant; pushes `process.env.X` → `import.meta.env.X` in browser bundles
+        "unicorn/no-useless-iterator-to-array": "warn", // 1.62 — flags `[...someArray]` when the result is iterated again
+        "unicorn/import-style": "warn", // 1.67 — enforces named imports for node builtins (matches prefer-node-protocol direction)
 
         // Promise rules
         "promise/no-return-wrap": "error",
@@ -165,6 +174,25 @@
         "vue/define-props-declaration": "error",
         "vue/define-props-destructuring": "error",
         "vue/no-import-compiler-macros": "error",
+        // Composition API safety — mirror no-lifecycle-after-await (1.67)
+        "vue/no-expose-after-await": "error",
+        "vue/no-watch-after-await": "error",
+        "vue/valid-next-tick": "error",
+        "vue/valid-define-options": "error",
+        "vue/require-slots-as-functions": "error",
+        // Vue 2 → Vue 3 deprecation guards (1.63–1.67) — only fire on legacy code, cheap to keep on
+        "vue/no-deprecated-events-api": "error",
+        "vue/no-deprecated-delete-set": "error",
+        "vue/no-deprecated-data-object-declaration": "error",
+        "vue/no-deprecated-vue-config-keycodes": "error",
+        "vue/no-deprecated-model-definition": "error",
+        "vue/no-deprecated-props-default-this": "error",
+        // Options API correctness (1.65–1.67) — no-op on `<script setup>` but free belt-and-braces
+        "vue/require-render-return": "error",
+        "vue/no-shared-component-data": "error",
+        "vue/no-computed-properties-in-data": "error",
+        "vue/return-in-computed-property": "error",
+        "vue/return-in-emits-validator": "error",
 
         // Accessibility (a11y) rules
         "jsx-a11y/alt-text": "error",
@@ -178,6 +206,10 @@
         "jsx-a11y/no-distracting-elements": "error",
         "jsx-a11y/scope": "error",
         "jsx-a11y/tabindex-no-positive": "warn",
+        "jsx-a11y/no-interactive-element-to-noninteractive-role": "error", // 1.65 — `<button role="paragraph">` etc.
+        "jsx-a11y/no-noninteractive-element-to-interactive-role": "error", // 1.64 — `<h1 role="button">` etc.
+        "jsx-a11y/interactive-supports-focus": "warn", // 1.63 — interactive role needs tabindex
+        "jsx-a11y/control-has-associated-label": "warn", // 1.65 — every control needs an accessible label
 
         // Vitest rules
         "vitest/no-conditional-tests": "error",
@@ -209,7 +241,9 @@
                 "vitest/prefer-to-contain": "error",
                 "vitest/no-conditional-expect": "error",
                 "vitest/valid-describe-callback": "error",
-                "vitest/no-commented-out-tests": "error"
+                "vitest/no-commented-out-tests": "error",
+                "vitest/valid-expect-in-promise": "error", // 1.61 — catches missing await on promise-returning expects
+                "vitest/prefer-strict-boolean-matchers": "warn" // 1.57 — `toBe(true)` → `toBeTruthy()` precision
             }
         },
         {

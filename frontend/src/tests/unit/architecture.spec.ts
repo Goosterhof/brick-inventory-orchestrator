@@ -1,9 +1,8 @@
 import {readdirSync, readFileSync} from 'node:fs';
 import {basename, dirname, join, relative, resolve, sep} from 'node:path';
-import {fileURLToPath} from 'node:url';
 import {describe, expect, it} from 'vitest';
 
-const CURRENT_DIR = dirname(fileURLToPath(import.meta.url));
+const CURRENT_DIR = import.meta.dirname;
 const SRC_DIR = join(CURRENT_DIR, '../..');
 const ROOT_DIR = join(SRC_DIR, '..');
 const SHARED_DIR = join(SRC_DIR, 'shared');
@@ -20,7 +19,7 @@ const getImportPaths = (filePath: string): string[] => {
     const paths: string[] = [];
 
     const fromRegex = /\bfrom\s+["']([^"']+)["']/g;
-    let match: RegExpExecArray | null = null;
+    let match: RegExpExecArray | null;
     while ((match = fromRegex.exec(content)) !== null) {
         const importPath = match[1];
         if (importPath !== undefined) {
@@ -464,7 +463,7 @@ describe('Architecture', () => {
                 // Extract opening tags (potentially multi-line) that contain outline="none"
                 // Match from < to > across lines, capturing tags with outline="none"
                 const tagRegex = /<[a-zA-Z][^>]*outline="none"[^>]*>/gs;
-                let match: RegExpExecArray | null = null;
+                let match: RegExpExecArray | null;
 
                 while ((match = tagRegex.exec(content)) !== null) {
                     const tag = match[0];
@@ -706,7 +705,7 @@ describe('Architecture', () => {
             const content = readFileSync(filePath, 'utf-8');
             const names: string[] = [];
             const regex = new RegExp(`import\\s*\\{([^}]+)\\}\\s*from\\s*["']${fromModule}["']`, 'g');
-            let match: RegExpExecArray | null = null;
+            let match: RegExpExecArray | null;
             while ((match = regex.exec(content)) !== null) {
                 const imports = match[1];
                 if (imports) {
