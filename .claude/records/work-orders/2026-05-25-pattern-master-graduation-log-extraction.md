@@ -58,5 +58,5 @@ The dispatch can be picked up on any branch when convenient. It is not blocking 
 
 ---
 
-**Status:** Open
-**Build Record:** _link to Build Record when filed_
+**Status:** Closed
+**Build Record:** [`2026-05-26-pattern-master-graduation-log-extraction`](../build-records/2026-05-26-pattern-master-graduation-log-extraction.md)
