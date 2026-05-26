@@ -244,3 +244,32 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - **Should the `LogoutController` test gap become a Work Order or stay as Tech Debt?** Currently filed as Low Tech Debt (the 90% gate clears at 98.1% overall). The medium-severity finding suggests a WO is justified; the no-gate-breach status suggests waiting. Trade-off worth the Steward calling at the next dispatch decision.
 
 ---
+
+## 2026-05-26 — Dependabot Round + Two Stale-Inheritance Prep PRs
+
+### Decisions
+
+- **Merge 12 CLEAN dependabot PRs in one cascade pass:** Direct `gh pr merge --squash` in sequence — first succeeds, rest fail on stale SHA, dependabot then rebases survivors. Faster than queuing 14 auto-merges and waiting for serial rebases.
+- **Two BLOCKED majors get unblocked via prep PRs, not by editing the dependabot branch:** Land the project-side fix on `main` first (so dependabot's rebase picks it up), instead of pushing to or recreating the dependabot branches. Keeps dependabot as the authoritative author of dep bumps.
+- **Pin `noUncheckedIndexedAccess: true` explicitly in `frontend/tsconfig.app.json` (PR #104):** Was silently inherited from `@vue/tsconfig` 0.8.x; v0.9.0 moved it out of the base config into the (unused) lib config. Pinning restores prior strictness and makes future `@vue/tsconfig` bumps safe.
+- **Tighten knip config + drop file-internal type exports (PR #105):** Knip 6's vitest plugin auto-discovers `vitest.*.config.ts` and setup files — explicit `ignore`/`entry` entries become redundant. Knip 6 also flags 5 type interfaces only used as sub-types within their own file (`Color`, `BrickDnaTopColor/TopPartType/RarePart`, `ImportJobFailedSet`); drop `export` rather than carve out a knip ignore.
+
+### Action Items
+
+- [ ] **Steward:** When GitHub Actions recovers and PRs #104, #105 merge → fire `@dependabot rebase` on #97 (@vue/tsconfig 0.9) and #96 (knip 6). Both should pass cleanly post-rebase.
+- [ ] **Steward:** Watch #95 (oxlint) and #87 (vue) for dependabot rebase landing — both have `--squash --auto` already set; they merge on rebase + CI green.
+
+### Notes
+
+- **Root cause of #97 (38 lint errors after `@vue/tsconfig` 0.8→0.9):** `noUncheckedIndexedAccess` removed from base config in v0.9.0 (changelog: "may have false positives, making it hard for existing codebases to upgrade"). With it gone, `const [x] = arr` types as `T` instead of `T | undefined`, so existing `x?.foo()` patterns trip `no-unnecessary-condition`. The Gallery manual claimed `@vue/tsconfig` "carries" this flag — stale; doc updated to list it under the war-room explicit-strictness layer.
+- **Root cause of #96 (knip 5→6 config errors):** Knip 6 promotes "configuration hints" to hard errors. The 5 hints break into two classes: (1) vitest configs in `ignore` — knip 6's vitest plugin already understands them; (2) the 5 unused type exports — knip 6 detects file-internal-only types more aggressively than knip 5 did.
+- **Dependabot rebase cascade observation:** Merging two frontend PRs in rapid succession leaves the remaining frontend PRs DIRTY on `package-lock.json` until dependabot rebases. `@dependabot rebase` comments queue but don't always fire immediately when CI is congested or under outage. Worth knowing — don't expect instant rebases when GitHub Actions is degraded.
+- **GitHub Actions outage during the round:** Status page reported "critical" incident on Actions + Pages. PRs #104, #105 sat with auto-merge enabled but no checks reporting; CEO flagged the outage so we stopped watching the monitor. Strategy held: auto-merge will activate when checks come back — no manual re-trigger needed.
+- **Scratch-branch hygiene:** Used `git fetch origin pull/N/head:pr-N-name` to inspect dependabot PRs locally, then deleted those branches after extracting the fix into a fresh `chore/` or `fix/` branch off `main`. Keeps `git branch` list clean and prevents accidental pushes to dependabot-owned refs.
+
+### Open Questions
+
+- **Will `@dependabot rebase` on #97 and #96 actually fire promptly when Actions recovers, or do they need manual close-reopen nudges?** Depends on dependabot worker backlog + how the outage-queued events get drained. Worth observing — if rebases take >2h post-recovery, a `gh pr close 97 && gh pr reopen 97` nudge may beat waiting.
+- **Should "@vue/tsconfig base-config drift" become a documented Gallery-side hazard?** This is the second time in two months that an upstream config package silently weakened strictness via base-config changes (first was oxlint correctness category, now `@vue/tsconfig` `noUncheckedIndexedAccess`). The pattern: declare-explicitly-rather-than-inherit for any flag the project actually depends on. Could be a one-line addition to the Gallery manual's TypeScript Strictness section.
+
+---
