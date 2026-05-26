@@ -15,6 +15,8 @@ export default defineConfig({
             'bg-[var(--brick-surface-subtle)] border-[var(--brick-border-color)] text-[var(--brick-muted-text)] cursor-not-allowed shadow-none',
         'brick-transition':
             'transition-property-[box-shadow,background-color] transition-duration-150 transition-ease-[cubic-bezier(0.2,0,0,1)]',
+        'brick-anim-pickup':
+            'cursor-grab active:cursor-grabbing select-none touch-none transform-gpu will-change-transform',
         'brick-stud-grid': 'bg-[radial-gradient(circle,rgba(0,0,0,0.06)_22%,transparent_22%)] bg-[size:24px_24px]',
         'brick-stud-grid-hover':
             'hover:bg-[radial-gradient(circle,rgba(0,0,0,0.08)_22%,transparent_22%)] hover:bg-[size:24px_24px]',

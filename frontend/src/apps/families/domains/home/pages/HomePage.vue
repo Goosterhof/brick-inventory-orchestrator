@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import type {FamilyStats} from '@app/types/familyStats';
 
-import {familyAuthService, familyHttpService, familyRouterService, familyTranslationService} from '@app/services';
+import {
+    familyAuthService,
+    familyHttpService,
+    familyRouterService,
+    familySoundService,
+    familyTranslationService,
+} from '@app/services';
 import {familySetStoreModule} from '@app/stores';
 import CardContainer from '@shared/components/CardContainer.vue';
 import LegoBrick from '@shared/components/LegoBrick.vue';
 import NavLink from '@shared/components/NavLink.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import StatCard from '@shared/components/StatCard.vue';
+import {useBrickPickup} from '@shared/composables/useBrickPickup';
 import {computed, onMounted, ref} from 'vue';
 
 import YearDistributionChart from '../components/YearDistributionChart.vue';
@@ -56,6 +63,35 @@ onMounted(async () => {
     setsLoading.value = false;
 });
 
+// Three pickup instances — one per stacked hero brick. The home page is the
+// first-impression surface and the only place where the LegoBrick decorations
+// are directly tactile. Subtle hover lift (6px) keeps the interaction quiet;
+// the snap on press makes the firm feel responsive.
+const heroPickupTop = useBrickPickup({
+    soundService: familySoundService,
+    hoverLift: 6,
+    pressLift: 4,
+    hoverDuration: 180,
+    pressDuration: 100,
+    releaseDuration: 320,
+});
+const heroPickupMid = useBrickPickup({
+    soundService: familySoundService,
+    hoverLift: 6,
+    pressLift: 4,
+    hoverDuration: 180,
+    pressDuration: 100,
+    releaseDuration: 320,
+});
+const heroPickupBot = useBrickPickup({
+    soundService: familySoundService,
+    hoverLift: 6,
+    pressLift: 4,
+    hoverDuration: 180,
+    pressDuration: 100,
+    releaseDuration: 320,
+});
+
 const goToSets = async () => await familyRouterService.goToRoute('sets');
 const goToStorage = async () => await familyRouterService.goToRoute('storage');
 const goToParts = async () => await familyRouterService.goToRoute('parts');
@@ -82,11 +118,40 @@ const goToSettings = async () => await familyRouterService.goToRoute('settings')
                     </NavLink>
                 </div>
 
-                <!-- Brick hero — three staggered LegoBricks -->
+                <!-- Brick hero — three staggered LegoBricks with snap-and-pull pickup -->
                 <div flex="~ col" items="end" gap="0" shrink="0" order="-1 sm:0">
-                    <LegoBrick :columns="4" :rows="2" color="#F5C518" />
-                    <LegoBrick :columns="2" :rows="2" color="#C41A16" m="t-[-4px] r-8" />
-                    <LegoBrick :columns="3" :rows="1" color="#0055BF" m="t-[-4px] l-4" />
+                    <div
+                        class="brick-anim-pickup"
+                        :style="heroPickupTop.style.value"
+                        @mouseenter="heroPickupTop.onEnter"
+                        @mouseleave="heroPickupTop.onLeave"
+                        @mousedown="heroPickupTop.onPress"
+                        @mouseup="heroPickupTop.onRelease"
+                    >
+                        <LegoBrick :columns="4" :rows="2" color="#F5C518" />
+                    </div>
+                    <div
+                        class="brick-anim-pickup"
+                        m="t-[-4px] r-8"
+                        :style="heroPickupMid.style.value"
+                        @mouseenter="heroPickupMid.onEnter"
+                        @mouseleave="heroPickupMid.onLeave"
+                        @mousedown="heroPickupMid.onPress"
+                        @mouseup="heroPickupMid.onRelease"
+                    >
+                        <LegoBrick :columns="2" :rows="2" color="#C41A16" />
+                    </div>
+                    <div
+                        class="brick-anim-pickup"
+                        m="t-[-4px] l-4"
+                        :style="heroPickupBot.style.value"
+                        @mouseenter="heroPickupBot.onEnter"
+                        @mouseleave="heroPickupBot.onLeave"
+                        @mousedown="heroPickupBot.onPress"
+                        @mouseup="heroPickupBot.onRelease"
+                    >
+                        <LegoBrick :columns="3" :rows="1" color="#0055BF" />
+                    </div>
                 </div>
             </div>
         </template>
