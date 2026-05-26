@@ -187,14 +187,19 @@ final readonly class RebrickableService implements LegoDataServiceInterface
      *
      * @return Generator<int, list<RebrickableUserSetData>>
      */
-    public function fetchUserSets(string $userToken): Generator
+    public function fetchUserSets(int $familyId, string $userToken): Generator
     {
         /** @var string|null $nextUrl @phpstan-ignore varTag.nativeType */
         $nextUrl = sprintf('/users/%s/sets/', $userToken);
         $page = 1;
 
         while ($nextUrl !== null) {
-            $cacheKey = sprintf('rebrickable:user:%s:sets:page:%d', $userToken, $page);
+            // SECURITY: cache key is rooted in the rotation-invariant family id, never the
+            // decrypted user token. Splicing $userToken into the cache key column would
+            // persist cleartext credentials in the database-backed cache store, bypassing
+            // the Family::rebrickable_user_token 'encrypted' cast contract (ISO 27001
+            // A.5.33). Closes Sapper M6-M1 + M6-M2.
+            $cacheKey = sprintf('rebrickable:user:%d:sets:page:%d', $familyId, $page);
 
             /** @var array{results: list<RebrickableUserSetData>, next: string|null}|null $cachedPage */
             $cachedPage = $this->cacheRepository->get($cacheKey);

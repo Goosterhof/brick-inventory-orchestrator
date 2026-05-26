@@ -50,7 +50,7 @@ final readonly class ImportOwnedSetsAction
         $pagesProcessed = 0;
 
         try {
-            foreach ($this->legoDataService->fetchUserSets($family->rebrickable_user_token) as $pageUserSets) {
+            foreach ($this->legoDataService->fetchUserSets($family->id, $family->rebrickable_user_token) as $pageUserSets) {
                 $this->connection->transaction(function() use (
                     $pageUserSets,
                     $family,
