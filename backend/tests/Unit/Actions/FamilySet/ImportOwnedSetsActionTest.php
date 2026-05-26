@@ -47,7 +47,7 @@ describe('ImportOwnedSetsAction', function(): void {
         // arrange
         $legoDataService = \Mockery::mock(LegoDataServiceInterface::class);
         $legoDataService->shouldReceive('fetchUserSets')
-            ->with('user-token-123')
+            ->with(1, 'user-token-123')
             ->once()
             ->andReturnUsing(function(): \Generator {
                 yield from [];

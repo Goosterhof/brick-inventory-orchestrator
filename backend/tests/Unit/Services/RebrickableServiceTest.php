@@ -605,7 +605,7 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // act
-            $pages = iterator_to_array($service->fetchUserSets('user-token-123'));
+            $pages = iterator_to_array($service->fetchUserSets(7, 'user-token-123'));
 
             // assert
             expect($pages)->toHaveCount(1);
@@ -660,7 +660,7 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // act
-            $pages = iterator_to_array($service->fetchUserSets('user-token-123'));
+            $pages = iterator_to_array($service->fetchUserSets(7, 'user-token-123'));
 
             // assert
             expect($pages)->toHaveCount(2);
@@ -681,7 +681,7 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // act
-            $pages = iterator_to_array($service->fetchUserSets('user-token-123'));
+            $pages = iterator_to_array($service->fetchUserSets(7, 'user-token-123'));
 
             // assert
             expect($pages)->toHaveCount(1);
@@ -697,7 +697,7 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // act & assert
-            expect(fn(): array => iterator_to_array($service->fetchUserSets('user-token-123')))->toThrow(RebrickableApiException::class);
+            expect(fn(): array => iterator_to_array($service->fetchUserSets(7, 'user-token-123')))->toThrow(RebrickableApiException::class);
         });
 
         it('should throw InvalidApiResponseException when response is not an array', function(): void {
@@ -709,7 +709,7 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // act & assert
-            expect(fn(): array => iterator_to_array($service->fetchUserSets('user-token-123')))->toThrow(InvalidApiResponseException::class);
+            expect(fn(): array => iterator_to_array($service->fetchUserSets(7, 'user-token-123')))->toThrow(InvalidApiResponseException::class);
         });
 
         it('should throw InvalidApiResponseException when results field is missing', function(): void {
@@ -724,7 +724,7 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // act & assert
-            expect(fn(): array => iterator_to_array($service->fetchUserSets('user-token-123')))->toThrow(InvalidApiResponseException::class);
+            expect(fn(): array => iterator_to_array($service->fetchUserSets(7, 'user-token-123')))->toThrow(InvalidApiResponseException::class);
         });
 
         it('should throw InvalidApiResponseException when set data is missing required fields', function(): void {
@@ -743,7 +743,7 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // act & assert
-            expect(fn(): array => iterator_to_array($service->fetchUserSets('user-token-123')))->toThrow(InvalidApiResponseException::class);
+            expect(fn(): array => iterator_to_array($service->fetchUserSets(7, 'user-token-123')))->toThrow(InvalidApiResponseException::class);
         });
 
         it('should throw InvalidApiResponseException when nested set is not an array', function(): void {
@@ -763,7 +763,7 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // act & assert
-            expect(fn(): array => iterator_to_array($service->fetchUserSets('user-token-123')))->toThrow(InvalidApiResponseException::class);
+            expect(fn(): array => iterator_to_array($service->fetchUserSets(7, 'user-token-123')))->toThrow(InvalidApiResponseException::class);
         });
 
         it('should throw InvalidApiResponseException when nested set is missing required fields', function(): void {
@@ -786,7 +786,7 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // act & assert
-            expect(fn(): array => iterator_to_array($service->fetchUserSets('user-token-123')))->toThrow(InvalidApiResponseException::class);
+            expect(fn(): array => iterator_to_array($service->fetchUserSets(7, 'user-token-123')))->toThrow(InvalidApiResponseException::class);
         });
 
         it('should throw InvalidApiResponseException when set at index is not an array', function(): void {
@@ -803,7 +803,7 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // act & assert
-            expect(fn(): array => iterator_to_array($service->fetchUserSets('user-token-123')))->toThrow(InvalidApiResponseException::class);
+            expect(fn(): array => iterator_to_array($service->fetchUserSets(7, 'user-token-123')))->toThrow(InvalidApiResponseException::class);
         });
 
         it('should strip host from pagination next URL to prevent SSRF', function(): void {
@@ -834,7 +834,7 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // act
-            $pages = iterator_to_array($service->fetchUserSets('user-token-123'));
+            $pages = iterator_to_array($service->fetchUserSets(7, 'user-token-123'));
 
             // assert — the second request should go to the base URL, not evil.com
             expect($pages)->toHaveCount(2);
@@ -1175,16 +1175,133 @@ describe('RebrickableService', function(): void {
             $service = createRebrickableService();
 
             // Prime cache
-            iterator_to_array($service->fetchUserSets('user-token-123'));
+            iterator_to_array($service->fetchUserSets(7, 'user-token-123'));
             Http::assertSentCount(1);
 
             // act
-            $pages = iterator_to_array($service->fetchUserSets('user-token-123'));
+            $pages = iterator_to_array($service->fetchUserSets(7, 'user-token-123'));
 
             // assert
             Http::assertSentCount(1);
             expect($pages)->toHaveCount(1);
             expect($pages[0][0]->set->setNum)->toBe('75192-1');
+        });
+
+        it('should key fetchUserSets cache by family id only — token must not appear in cache key (Sapper M6-M1 lockdown)', function(): void {
+            // arrange — capture every cache key the service touches via a Mockery'd CacheRepository.
+            // The decrypted user token must never be spliced into the cache.key column (ISO 27001 A.5.33).
+            Http::fake([
+                'https://rebrickable.com/api/v3/users/super-secret-token-abc123/sets/' => Http::response([
+                    'results' => [
+                        [
+                            'set' => [
+                                'set_num' => '75192-1',
+                                'name' => 'Millennium Falcon',
+                                'year' => 2_017,
+                                'theme_id' => 158,
+                                'num_parts' => 7_541,
+                                'set_img_url' => null,
+                            ],
+                            'quantity' => 1,
+                        ],
+                    ],
+                    'next' => 'https://rebrickable.com/api/v3/users/super-secret-token-abc123/sets/?page=2',
+                ]),
+                'https://rebrickable.com/api/v3/users/super-secret-token-abc123/sets/?page=2' => Http::response([
+                    'results' => [
+                        [
+                            'set' => [
+                                'set_num' => '10179-1',
+                                'name' => 'UCS Millennium Falcon',
+                                'year' => 2_007,
+                                'theme_id' => 158,
+                                'num_parts' => 5_195,
+                                'set_img_url' => null,
+                            ],
+                            'quantity' => 1,
+                        ],
+                    ],
+                    'next' => null,
+                ]),
+            ]);
+
+            /** @var list<string> $observedCacheKeys */
+            $observedCacheKeys = [];
+
+            $cacheRepository = \Mockery::mock(CacheRepository::class);
+            $cacheRepository->shouldReceive('get')
+                ->andReturnUsing(function(string $key) use (&$observedCacheKeys): null {
+                    $observedCacheKeys[] = $key;
+
+                    return null;
+                });
+            $cacheRepository->shouldReceive('put')
+                ->andReturnUsing(function(string $key) use (&$observedCacheKeys): bool {
+                    $observedCacheKeys[] = $key;
+
+                    return true;
+                });
+
+            $service = createRebrickableService($cacheRepository);
+
+            // act — fetch all pages
+            iterator_to_array($service->fetchUserSets(42, 'super-secret-token-abc123'));
+
+            // assert — every cache key matches the family-id-rooted shape and contains zero token leakage
+            expect($observedCacheKeys)->not->toBe([]);
+            foreach ($observedCacheKeys as $observedCacheKey) {
+                expect($observedCacheKey)->not->toContain('super-secret-token-abc123');
+                expect($observedCacheKey)->toMatch('/^rebrickable:user:42:sets:page:\d+$/');
+            }
+
+            // sanity — both pages exercised
+            expect($observedCacheKeys)->toContain('rebrickable:user:42:sets:page:1');
+            expect($observedCacheKeys)->toContain('rebrickable:user:42:sets:page:2');
+        });
+
+        it('should use separate cache keys for different family ids — token rotation is structurally irrelevant (Sapper M6-M2 lockdown)', function(): void {
+            // arrange — two families with two different (rotated) tokens; cache key must isolate by family id.
+            Http::fake([
+                'https://rebrickable.com/api/v3/users/token-old/sets/' => Http::response([
+                    'results' => [],
+                    'next' => null,
+                ]),
+                'https://rebrickable.com/api/v3/users/token-new/sets/' => Http::response([
+                    'results' => [],
+                    'next' => null,
+                ]),
+            ]);
+
+            /** @var list<string> $observedCacheKeys */
+            $observedCacheKeys = [];
+
+            $cacheRepository = \Mockery::mock(CacheRepository::class);
+            $cacheRepository->shouldReceive('get')
+                ->andReturnUsing(function(string $key) use (&$observedCacheKeys): null {
+                    $observedCacheKeys[] = $key;
+
+                    return null;
+                });
+            $cacheRepository->shouldReceive('put')
+                ->andReturnUsing(function(string $key) use (&$observedCacheKeys): bool {
+                    $observedCacheKeys[] = $key;
+
+                    return true;
+                });
+
+            $service = createRebrickableService($cacheRepository);
+
+            // act — family 7 rotates its token mid-window; cache key is invariant.
+            iterator_to_array($service->fetchUserSets(7, 'token-old'));
+            iterator_to_array($service->fetchUserSets(7, 'token-new'));
+
+            // assert — both calls hit the SAME family-rooted cache key; neither token appears.
+            foreach ($observedCacheKeys as $observedCacheKey) {
+                expect($observedCacheKey)->not->toContain('token-old');
+                expect($observedCacheKey)->not->toContain('token-new');
+            }
+
+            expect($observedCacheKeys)->toContain('rebrickable:user:7:sets:page:1');
         });
 
         it('should use separate cache keys for different set numbers', function(): void {

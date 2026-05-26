@@ -160,7 +160,7 @@ describe('Rebrickable API Contract', function(): void {
             ]);
 
             $service = createContractRebrickableService();
-            $pages = iterator_to_array($service->fetchUserSets('user-token-123'));
+            $pages = iterator_to_array($service->fetchUserSets(1, 'user-token-123'));
 
             expect($pages)->toHaveCount(1);
             expect($pages[0])->toHaveCount(2);

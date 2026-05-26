@@ -46,12 +46,16 @@ interface LegoDataServiceInterface
     /**
      * Fetch sets from a user's Rebrickable collection, yielding one page at a time.
      *
+     * The cache key is rooted in the family id (rotation-invariant integer), not the
+     * decrypted user token — keeping cleartext tokens out of the database-backed
+     * cache table (ISO 27001 A.5.33 pattern).
+     *
      * @throws RebrickableApiException
      * @throws InvalidApiResponseException
      *
      * @return Generator<int, list<RebrickableUserSetData>>
      */
-    public function fetchUserSets(string $userToken): Generator;
+    public function fetchUserSets(int $familyId, string $userToken): Generator;
 
     /**
      * Fetch the LEGO theme catalog, yielding one page at a time.
