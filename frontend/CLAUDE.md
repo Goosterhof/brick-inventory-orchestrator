@@ -205,7 +205,7 @@ Enforced by oxfmt. The config is `.oxfmtrc.json`, adopted byte-for-byte from `wa
 
 ## TypeScript Strictness
 
-Project-references structure — `tsconfig.json` orchestrates `tsconfig.app.json` (extends `@vue/tsconfig/tsconfig.dom.json`), `tsconfig.node.json`, and `tsconfig.vitest.json`. The `@vue/tsconfig` base is sovereign — it carries `strict`, `noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `useDefineForClassFields`, `jsxImportSource: vue`, and other Vue-aware defaults.
+Project-references structure — `tsconfig.json` orchestrates `tsconfig.app.json` (extends `@vue/tsconfig/tsconfig.dom.json`), `tsconfig.node.json`, and `tsconfig.vitest.json`. The `@vue/tsconfig` base carries `strict`, `verbatimModuleSyntax`, `useDefineForClassFields`, `jsxImportSource: vue`, and other Vue-aware defaults.
 
 War-room canonical strictness layered onto `tsconfig.app.json`:
 
@@ -213,6 +213,7 @@ War-room canonical strictness layered onto `tsconfig.app.json`:
 - `noUnusedLocals` / `noUnusedParameters`
 - `noFallthroughCasesInSwitch`
 - `noUncheckedSideEffectImports` (TS 5.6+ — catches typo'd side-effect imports)
+- `noUncheckedIndexedAccess` (re-declared explicitly — was inherited from `@vue/tsconfig` ≤ 0.8 and moved out of the base in 0.9.0)
 - `allowUnreachableCode: false` / `allowUnusedLabels: false`
 - `isolatedModules: true`
 
