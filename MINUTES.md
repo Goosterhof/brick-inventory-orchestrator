@@ -205,3 +205,71 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - **Is the integration-test sub-program (4 WOs from 2026-05-05) actually still relevant post-xNOYG-merge?** AddSetPage spec failure is now schema drift (5 → 6 statuses), not just copy drift. Permit A's scope may need rescoping before dispatch.
 
 ---
+
+## 2026-05-26 — Standup #4 + Foundry Warden Dispatch + ADR-0030 Empirical Confirmation
+
+### Decisions
+
+- **Foundry-wide Warden dispatch authorized.** Fourth consecutive standup flagged Foundry Pulse staleness (Tech Debt 56 days, four sections 21 days) without action. CEO authorized after the 2026-05-26 standup surfaced it as the highest-leverage idle lever (Warden + Brickwright both between work; one Warden dispatch surfaces findings the Brickwright can then pick up).
+- **Steward applies Pulse updates the Warden proposes.** Auto-mode classifier blocked the Steward's first Pulse edit, inheriting the dispatch boundary "don't touch the Pulse directly" that was scoped to the Warden. Clarified and overridden: Warden proposes in Audit "Proposed Pulse Updates"; Steward applies. This is the documented flow per the standup skill and the audit template. CEO approved continuation; all five Foundry Pulse sections refreshed to `Assessed: 2026-05-26`.
+- **Bundle 4 artifacts in a single commit + PR.** Standup note, Foundry audit, Pulse refresh, Casebook update — one coherent arc (sync → dispatch → refresh → file). Single PR #103 rather than splitting per artifact type.
+- **Wait out the GitHub Actions outage rather than push more diagnostic commits.** Discovered Actions in major outage since 10:57 UTC (PR #103 opened at 11:30 UTC, well into the outage). Close-reopen and empty-commit-push both registered events but failed to dispatch Gate. Conclusion: nothing to do until GitHub recovers; PR sits with Gate as the missing required check.
+
+### Action Items
+
+- [ ] **CEO:** Decide Pattern Master Proposal C disposition — re-ping with hard deadline (Steward recommends EOD 2026-05-27 for stub Build Record or "still tuning" signal), re-scope, or revoke. **Newly elevated 2026-05-26** — Day-5 signal window closed yesterday with no signal.
+- [ ] **CEO:** Decide `2026-05-06-canonical-oxlint-test-file-rules` disposition (20 days unchanged; carried from 2026-05-25 morning standup AI #2).
+- [ ] **Steward:** Close `2026-05-05-integration-test-baseline-triage` WO — fold Status flip into next commit. Carried unactioned from 2026-05-25 post-cluster-closure standup AI #4.
+- [ ] **Steward:** Dispatch `/adr-interrogator` on `2026-05-20-adr-0028-dual-mode-amendment` WO. Carried unactioned from 2026-05-25 post-cluster-closure standup AI #5.
+- [ ] **Steward:** File WOs for `PartsPage.spec.ts` (VIOLATION-grade), `SetsOverviewPage.spec.ts` split, `ComponentGallery.spec.ts` `mount → shallowMount`. Carried unactioned from 2026-05-25 post-cluster-closure standup AI #6.
+- [ ] **Brickwright (when dispatched):** Pick up `2026-05-25-pattern-master-graduation-log-extraction` — first dispatch under ADR-0030's path-based write-scope; empirical confirmation continues.
+- [ ] **Steward/CEO:** Monitor GitHub Actions outage. Once Gate fires on `fecb0c0` (PR #103 HEAD) and passes, merge PR #103. If Gate doesn't fire 30+ minutes after outage clears, push a trivial commit to nudge.
+- [ ] **Brickwright (future small WO candidate):** Add third `LogoutController` test exercising the stateful session-invalidation path (lines 19-20 currently uncovered; feature coverage 60% on auth-critical controller). Surfaced as Finding 1 (medium) in 2026-05-26 Foundry audit.
+- [ ] **Steward (small doc fix):** Add `UpsertThemeAction` to ADR-0015 "Current Actions using this pattern" list under optimistic-locking upsert. Verify whether `StoreSetPartsAction` entry in the same list is stale (grep didn't find the try-catch). Finding 2 (low) in 2026-05-26 Foundry audit.
+
+### Notes
+
+- **ADR-0030 worked end-to-end on its first real test.** Quality Warden's first dispatch under path-based subagent write-scope. Audit file Write at `.claude/records/audits/` and Casebook in-place Edit at `.claude/docs/quality-warden-casebook.md` both succeeded on first attempt with no permission denials. Steward-transcribes workaround is no longer the canonical path for Warden artifacts. The empirical confirmation is now in the paper trail (audit's "ADR-0030 Empirical Confirmation" section + Steward Evaluation).
+- **The Foundry kept improving while the Pulse went stale.** Mutation score gained 2.71pp (76.97% → 79.68%); arch test count grew 105 → 107; an entire new Job class (`ImportOwnedSetsJob`) and a new Model (`ImportJob`) shipped pattern-compliant without prompting (`BelongsToFamilyInterface` honored on `ImportJob`). The staleness flag was about documentation truthfulness, not code health — that's a real and useful distinction for future staleness-flag reasoning.
+- **Auto-mode classifier inherited the Warden's dispatch boundary onto the Steward.** When the Steward applied the Warden's proposed Pulse updates, the classifier read the dispatch's "Don't touch the Pulse directly — propose updates, don't apply" and applied that constraint to the Steward too. The constraint was scoped to the Warden; the classifier didn't distinguish. Worked around with explicit CEO approval. Worth watching whether this pattern repeats — if it does, the Steward's `/standup` skill or the audit template may need an explicit note disambiguating the scope.
+- **Warden's methodology improvements.** Split unit coverage from feature coverage in Pulse Quality Metrics (the merged row would have hidden the `LogoutController` gap behind the 100% unit headline). SOP F-2 Step 6 amendment proposal: try-catch matching ADR-0015 pattern but absent from the "Current Actions" list = Low doc drift, not compliance failure (the `UpsertThemeAction` finding took two reads to distinguish from a real violation). Both improvements proposed by the Warden in its self-debrief; both accepted in Steward Evaluation.
+- **GitHub Actions major outage diagnostic process.** Sequence: noticed `gh pr checks 103` reported no checks → confirmed via API that zero workflow runs registered for the head SHA or branch → confirmed all 4 workflows are `active` and repo Actions enabled → confirmed gate.yml on main has correct trigger (no path filter, just `pull_request: branches: [main]`) → cross-referenced against PR #102 (identical Atrium-only diff) which DID trigger Gate yesterday → tried close-reopen (no event fired) → tried empty-commit push (event fired on PR but no workflow dispatched) → WebFetched `githubstatus.com/api/v2/summary.json` and got the confirmation. Worth saving: when CI doesn't fire, the API direct-query path (`gh api .../actions/runs?head_sha=<sha>`) tells the truth faster than `gh pr checks`, and GitHub's status JSON endpoint is the authoritative answer for "is it me or them?".
+- **Cadence Seed test.** Yesterday's post-cluster-closure standup codified: *standup cadence — one anchored at delivery boundaries, one anchored at 21-day Pulse staleness ceiling. Don't impose a calendar.* Today's invocation is consecutive-day and at neither anchor. Standup honored the request and produced honest synthesis (most of the slate unchanged overnight; recommendation: Foundry Warden dispatch). CEO acted on it; the Warden dispatch is the substantive delivery of the day. Cadence Seed not yet contradicted — the standup proved valuable because the CEO knew what lever to pull. Re-evaluate if consecutive-day invocations continue past Wednesday.
+
+### Open Questions
+
+- **Does the auto-mode boundary-inheritance pattern repeat?** Today's classifier read a Warden-scoped boundary as a Steward-binding rule. If this recurs, the `/standup` skill and audit template should disambiguate scope explicitly. Watch the next dispatch that includes a "do not touch X" instruction to a subagent.
+- **When does PR #103 actually merge?** Depends on GitHub Actions recovery + whether Gate auto-fires on the queued events or needs a nudge commit. Time-bounded uncertainty (the outage will resolve), but the answer affects whether the Foundry audit + standup land on `main` today or carry into 2026-05-27.
+- **Is the "Foundry quality improved during staleness" pattern repeatable, or specific to this gap?** Five-week gap produced measurable improvement (mutation, arch count, new pattern-compliant Job class). Suggests the Foundry has independent forward momentum that doesn't require audit-driven feedback. Worth testing: does the Gallery show the same pattern over its own staleness windows, or does it regress without audit pressure? Could shape future staleness-flag thresholds.
+- **Should the `LogoutController` test gap become a Work Order or stay as Tech Debt?** Currently filed as Low Tech Debt (the 90% gate clears at 98.1% overall). The medium-severity finding suggests a WO is justified; the no-gate-breach status suggests waiting. Trade-off worth the Steward calling at the next dispatch decision.
+
+---
+
+## 2026-05-26 — Dependabot Round + Two Stale-Inheritance Prep PRs
+
+### Decisions
+
+- **Merge 12 CLEAN dependabot PRs in one cascade pass:** Direct `gh pr merge --squash` in sequence — first succeeds, rest fail on stale SHA, dependabot then rebases survivors. Faster than queuing 14 auto-merges and waiting for serial rebases.
+- **Two BLOCKED majors get unblocked via prep PRs, not by editing the dependabot branch:** Land the project-side fix on `main` first (so dependabot's rebase picks it up), instead of pushing to or recreating the dependabot branches. Keeps dependabot as the authoritative author of dep bumps.
+- **Pin `noUncheckedIndexedAccess: true` explicitly in `frontend/tsconfig.app.json` (PR #104):** Was silently inherited from `@vue/tsconfig` 0.8.x; v0.9.0 moved it out of the base config into the (unused) lib config. Pinning restores prior strictness and makes future `@vue/tsconfig` bumps safe.
+- **Tighten knip config + drop file-internal type exports (PR #105):** Knip 6's vitest plugin auto-discovers `vitest.*.config.ts` and setup files — explicit `ignore`/`entry` entries become redundant. Knip 6 also flags 5 type interfaces only used as sub-types within their own file (`Color`, `BrickDnaTopColor/TopPartType/RarePart`, `ImportJobFailedSet`); drop `export` rather than carve out a knip ignore.
+
+### Action Items
+
+- [ ] **Steward:** When GitHub Actions recovers and PRs #104, #105 merge → fire `@dependabot rebase` on #97 (@vue/tsconfig 0.9) and #96 (knip 6). Both should pass cleanly post-rebase.
+- [ ] **Steward:** Watch #95 (oxlint) and #87 (vue) for dependabot rebase landing — both have `--squash --auto` already set; they merge on rebase + CI green.
+
+### Notes
+
+- **Root cause of #97 (38 lint errors after `@vue/tsconfig` 0.8→0.9):** `noUncheckedIndexedAccess` removed from base config in v0.9.0 (changelog: "may have false positives, making it hard for existing codebases to upgrade"). With it gone, `const [x] = arr` types as `T` instead of `T | undefined`, so existing `x?.foo()` patterns trip `no-unnecessary-condition`. The Gallery manual claimed `@vue/tsconfig` "carries" this flag — stale; doc updated to list it under the war-room explicit-strictness layer.
+- **Root cause of #96 (knip 5→6 config errors):** Knip 6 promotes "configuration hints" to hard errors. The 5 hints break into two classes: (1) vitest configs in `ignore` — knip 6's vitest plugin already understands them; (2) the 5 unused type exports — knip 6 detects file-internal-only types more aggressively than knip 5 did.
+- **Dependabot rebase cascade observation:** Merging two frontend PRs in rapid succession leaves the remaining frontend PRs DIRTY on `package-lock.json` until dependabot rebases. `@dependabot rebase` comments queue but don't always fire immediately when CI is congested or under outage. Worth knowing — don't expect instant rebases when GitHub Actions is degraded.
+- **GitHub Actions outage during the round:** Status page reported "critical" incident on Actions + Pages. PRs #104, #105 sat with auto-merge enabled but no checks reporting; CEO flagged the outage so we stopped watching the monitor. Strategy held: auto-merge will activate when checks come back — no manual re-trigger needed.
+- **Scratch-branch hygiene:** Used `git fetch origin pull/N/head:pr-N-name` to inspect dependabot PRs locally, then deleted those branches after extracting the fix into a fresh `chore/` or `fix/` branch off `main`. Keeps `git branch` list clean and prevents accidental pushes to dependabot-owned refs.
+
+### Open Questions
+
+- **Will `@dependabot rebase` on #97 and #96 actually fire promptly when Actions recovers, or do they need manual close-reopen nudges?** Depends on dependabot worker backlog + how the outage-queued events get drained. Worth observing — if rebases take >2h post-recovery, a `gh pr close 97 && gh pr reopen 97` nudge may beat waiting.
+- **Should "@vue/tsconfig base-config drift" become a documented Gallery-side hazard?** This is the second time in two months that an upstream config package silently weakened strictness via base-config changes (first was oxlint correctness category, now `@vue/tsconfig` `noUncheckedIndexedAccess`). The pattern: declare-explicitly-rather-than-inherit for any flag the project actually depends on. Could be a one-line addition to the Gallery manual's TypeScript Strictness section.
+
+---
