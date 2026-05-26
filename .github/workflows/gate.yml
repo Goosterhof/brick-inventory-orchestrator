@@ -74,7 +74,7 @@ jobs:
             matrix:
                 check: [audit, lint, test, coverage, feature-coverage, mutation, sast, seed]
         steps:
-            - uses: lewagon/wait-on-check-action@v1.3.4
+            - uses: lewagon/wait-on-check-action@v1.7.0
               with:
                   ref: ${{ github.event.pull_request.head.sha }}
                   check-name: ${{ matrix.check }}
@@ -88,7 +88,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 30
         steps:
-            - uses: lewagon/wait-on-check-action@v1.3.4
+            - uses: lewagon/wait-on-check-action@v1.7.0
               with:
                   ref: ${{ github.event.pull_request.head.sha }}
                   check-name: ci
@@ -102,7 +102,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 45
         steps:
-            - uses: lewagon/wait-on-check-action@v1.3.4
+            - uses: lewagon/wait-on-check-action@v1.7.0
               with:
                   ref: ${{ github.event.pull_request.head.sha }}
                   check-name: e2e
