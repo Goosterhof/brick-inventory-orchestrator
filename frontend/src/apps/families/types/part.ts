@@ -8,7 +8,7 @@ export interface Part {
     imageUrl: string | null;
 }
 
-export interface Color {
+interface Color {
     id: number;
     name: string;
     rgb: string;

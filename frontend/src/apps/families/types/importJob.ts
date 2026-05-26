@@ -1,4 +1,4 @@
-export interface ImportJobFailedSet {
+interface ImportJobFailedSet {
     setNum: string;
     error: string;
 }

@@ -1,4 +1,4 @@
-export interface BrickDnaTopColor {
+interface BrickDnaTopColor {
     colorId: number;
     name: string;
     rgb: string;
@@ -6,7 +6,7 @@ export interface BrickDnaTopColor {
     totalQuantity: number;
 }
 
-export interface BrickDnaTopPartType {
+interface BrickDnaTopPartType {
     partId: number;
     partNum: string;
     name: string;
@@ -14,7 +14,7 @@ export interface BrickDnaTopPartType {
     totalQuantity: number;
 }
 
-export interface BrickDnaRarePart {
+interface BrickDnaRarePart {
     partId: number;
     partNum: string;
     partName: string;
