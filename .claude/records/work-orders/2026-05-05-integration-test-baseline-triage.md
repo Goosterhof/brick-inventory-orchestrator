@@ -121,5 +121,21 @@ Time budget: this is one Inspector shift. If the diagnosis blows past 90 minutes
 
 ---
 
-**Status:** Open
-**Inspection Report:** _link when filed_
+## Steward Note — Closed Without Report (2026-05-26)
+
+This Work Order is being closed by the Steward without the inspection report it scopes. The work the report was meant to drive **has already shipped** via two follow-up permits filed and executed in parallel between 2026-05-05 and 2026-05-25:
+
+- **Permit A — per-failure fixes:** [`2026-05-05-fix-integration-test-assertions`](2026-05-05-fix-integration-test-assertions.md) → [Build Record `2026-05-25-fix-integration-test-assertions`](../build-records/2026-05-25-fix-integration-test-assertions.md). All 5 stale assertions repaired. Suite green at 143/143.
+- **Permit B — CI wiring (Q3):** [`2026-05-05-wire-integration-tests-into-ci`](2026-05-05-wire-integration-tests-into-ci.md) → [Build Record `2026-05-25-wire-integration-tests-into-ci`](../build-records/2026-05-25-wire-integration-tests-into-ci.md). Integration step added to `frontend-ci.yml` between Test-with-coverage and Build, no `continue-on-error`.
+
+The diagnosis the Inspector was scoped to produce happened informally — the per-failure root causes are recorded inside Permit A's Build Record table (4 stale-copy assertions from the 2026-03-30 brand-voice deployment, 1 structural from the xNOYG `in_storage` status merge), and the Q3 CI-wiring specification is honored byte-for-byte by Permit B. No formal Inspector report was ever filed.
+
+This is a paper-trail-debt closure, not a Warden inspection. The Steward's judgment is that dispatching a retrospective Warden audit to write "the failures no longer exist" would burn ~25 minutes of context for zero output — the evidence is the two existing Build Records and the current state of the test files. See the closure Build Record [`2026-05-26-close-integration-test-baseline-triage`](../build-records/2026-05-26-close-integration-test-baseline-triage.md) for the full reasoning.
+
+Recurrence prevention is the active question, not the closure itself. The pattern — Work Order superseded by its own follow-ups without a formal close — is a paper-trail discipline gap worth a future ADR or charter clarification.
+
+---
+
+**Status:** Closed (superseded — see Steward Note 2026-05-26)
+**Inspection Report:** Not filed (see Steward Note above)
+**Build Record (closure):** [`2026-05-26-close-integration-test-baseline-triage`](../build-records/2026-05-26-close-integration-test-baseline-triage.md)
