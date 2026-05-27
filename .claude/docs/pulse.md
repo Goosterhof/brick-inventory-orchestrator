@@ -24,18 +24,21 @@ A consolidated, current-state assessment of both wings. Updated by The Steward a
 
 ## Active Concerns
 
-**Assessed:** 2026-05-26 (Foundry), 2026-05-25 (Gallery)
+**Assessed:** 2026-05-27 (Gallery), 2026-05-26 (Foundry)
 
 ### Gallery Wing
 
 | Concern | Severity | Status | Notes |
 |---|---|---|---|
-| `PartsPage.spec.ts` collect guard VIOLATION | Medium | New | 1713ms delta (threshold 1000ms in 2x coverage mode). Emerged since 2026-05-09 (was 679ms delta — warning zone). Root cause: heavy import chain (7 components at top-level). ADR-0012 breach. Surfaced by [`2026-05-20-gallery-pulse-refresh`](../records/audits/2026-05-20-gallery-pulse-refresh.md). |
-| `SetsOverviewPage.spec.ts` TEST GUARD alarming | Medium | Monitoring | 2397ms execution (30 tests). 2.1× jump from 1143ms on 2026-05-09. xNOYG `in_storage` merge added 6 tests. Trend: 855ms → 1056ms → 1143ms → 2397ms. Casebook recommends split into `SetsOverviewPage.spec.ts` + `SetsOverviewFiltering.spec.ts`. |
-| `ComponentGallery.spec.ts` TEST GUARD | Medium | Monitoring | 1050ms execution (worsened from 933ms on 2026-04-25). Collect delta 439ms (warning, not violation). Root cause: `mount` (not `shallowMount`) importing all shared components. Persists across 6+ inspections. |
 | `AboutPage.spec.ts` collect guard warning | Low | Monitoring | 520ms delta in 2x mode (threshold 1000ms). Improved from 1522ms on 2026-04-25 (Node 24 environment difference). Root cause unchanged: 16 named Lego shape component imports. |
 | `Item` type constraint mismatch | Low | Aware | `FamilySet` has `id` but no `createdAt`/`updatedAt` — may surface in future domains |
 | `format:check` failures on `.claude/` md | Low | Known | oxfmt reformats markdown — agent docs and journal files drift; not a code defect |
+
+_Closed 2026-05-27 (parallel-dispatch batch — five-WO burndown):_
+
+- ~~`PartsPage.spec.ts` collect guard VIOLATION~~ — **Closed 2026-05-27.** Baseline had degraded from 1713ms (2026-05-20 measurement) to 3316ms by the time of dispatch. Fix shipped in PR #119 (`71166b3`): stub-by-name (drop 7 top-level component imports; use `findComponent({name})`) + targeted `vi.mock` on `PartUsageModal` to short-circuit the `ModalDialog → @phosphor-icons/vue` traversal. Post-fix collect-delta <400ms, three runs. CEO directed the structural enforcement of this finding via the SUT-only top-level Vue-imports arch test ([`2026-05-27-enforce-sut-only-vue-imports-in-unit-specs`](../records/work-orders/2026-05-27-enforce-sut-only-vue-imports-in-unit-specs.md), in-flight at filing time).
+- ~~`SetsOverviewPage.spec.ts` TEST GUARD alarming~~ — **Closed 2026-05-27.** The spec degraded past 4000ms during the parallel-dispatch session (was 2397ms at last audit), triggering the test-guard reporter's throw and blocking the entire suite on `main`. Fix shipped in PR #120 (`9f6b8b4`): split into `SetsOverviewPage.spec.ts` (1260ms / 16 tests) + `SetsOverviewFiltering.spec.ts` (2228ms / 14 tests). Both children clear the 4000ms FAIL threshold; test count preserved (30 → 16+14, 42 expects → 19+23). Honest AC misses recorded in BR: Filtering exceeds the 1500ms target by 728ms (warning-tier, not failure-tier); combined runtime +45% over the monolith vs the ≤10% AC. Primary win — suite unblocking — achieved.
+- ~~`ComponentGallery.spec.ts` TEST GUARD~~ — **Closed 2026-05-27.** Fix shipped in PR #121 (`b689da2`): switched `mount` to `shallowMount` with 9 components unstubbed by name via `vi.mock` (ModalDialog, ConfirmDialog, ToastMessage, PrimaryButton, DangerButton, BackButton, FilterChip, SectionHeading, NavHeader — NavHeader added after gauntlet caught a 5% coverage regression). 2960ms → 486–682ms steady state, three consecutive runs under the 800ms WO target. Variance under thread contention can spike ~2400ms — recorded as Partial on the warn-zone-exit AC.
 
 _Closed 2026-05-25:_
 
@@ -111,7 +114,7 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 
 ## Tech Debt
 
-**Assessed:** 2026-05-26 (Foundry), 2026-05-20 (Gallery)
+**Assessed:** 2026-05-27 (Foundry — ADR-0015 list drift resolved), 2026-05-20 (Gallery)
 
 ### Gallery Wing
 
@@ -130,7 +133,10 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 | `GetFamilyPartsAction` returns raw array (no ResourceData) | Low | Only endpoint bypassing the pattern. Re-confirmed 2026-05-26 by [`2026-05-26-foundry-pulse-refresh`](../records/audits/2026-05-26-foundry-pulse-refresh.md). |
 | `LogoutController` session-invalidation branch uncovered in feature tests | Low | `Auth/LogoutController` lines 19-20 (`$request->session()->invalidate()` + `regenerateToken()`) reach only 60% feature coverage; overall feature coverage 98.1% still clears the 90% gate. WO candidate: third test exercising the stateful session path. Surfaced 2026-05-26 (Finding 1, medium severity in the audit; carried here as Low Tech Debt because it doesn't break the gate). |
 | `FamilySetController::importStatus()` returns inline 404 JSON instead of typed exception | Low | Style inconsistency with the global-exception-handler pattern. Either document the empty-state divergence or introduce `ImportJobNotFoundException`. Surfaced 2026-05-26 (Finding 3 in audit). |
-| ADR-0015 "Current Actions" list drift | Low | `UpsertThemeAction` is fully compliant with the optimistic-locking upsert pattern but absent from ADR-0015's "Current Actions" list; ADR's list may also include stale `StoreSetPartsAction` entry. Documentation-only. Surfaced 2026-05-26 (Finding 2 in audit). |
+
+_Resolved 2026-05-27:_
+
+- ~~ADR-0015 "Current Actions" list drift~~ — **Closed 2026-05-27.** Shipped in PR #123 (`2836eca`). Full reconcile against `grep -rln "try {" backend/app/Actions/` (7 files): `UpsertThemeAction` added to optimistic-locking upsert list; stranded `StoreSetPartsAction` entry removed (refactored to bulk `Eloquent::upsert()` in an earlier campaign, no try-catch in current code); `ImportOwnedSetsAction` classified as partial-failure resilience (already covered by ADR-0015's prose narrative). Zero unclassifiable try-catch patterns — all 7 fit cleanly into the three approved-exception categories. See Build Record [`2026-05-27-adr-0015-current-actions-list-reconcile`](../records/build-records/2026-05-27-adr-0015-current-actions-list-reconcile.md).
 
 _Resolved 2026-05-26:_
 
@@ -156,6 +162,7 @@ Ideas planted but deferred — revisit when the trigger condition is met. Seeds 
 | **Audit peer-review pass** | Any Audit that surfaces fewer findings than scope expected, OR after any post-merger-style event | Introduce a step where the Brickwright reviews the Warden's draft Audit before it's filed. Catches sampling gaps like the missed `brickwright.md` doc-drift in [`2026-05-20-post-merger-baseline`](../records/audits/2026-05-20-post-merger-baseline.md) (found later by the AC `rg` sweep in [`2026-05-20-laravel-13-doc-sweep`](../records/build-records/2026-05-20-laravel-13-doc-sweep.md) — Decisions #2). Trade-off: adds latency and dilutes the Warden's independence. Defer until a second confirming gap surfaces. |
 | **ADR: soft enforcement vs. path-sandboxed agent scope** | Within 60 days OR when the second agent gets its tool scope expanded beyond Read-only | The PR #83 lab review surfaced the deeper question: the firm currently uses **written-prose binding boundaries** to constrain agent write authority (Warden's "Write Scope" table, Steward's "Write Scope — Firm-Wide, Brake by Doctrine Only" section). This is honor-system enforcement, not sandboxed. A future `PreToolUse` hook could reject writes from `quality-warden` (and any future agent) to non-allowlisted paths at the runtime layer. The question for an ADR: is doctrine-only enforcement the canonical Brickworks pattern (and the firm accepts the honor-system risk because every write lands in `git log`), or is it a transitional state pending path-level infrastructure? Route via `/adr-interrogator`; the answer shapes how every future agent gets scoped. Filed from PR #83 war-room + lab reviews. |
 | **Agent Teams trial — expiration check** | 2026-07-20 (60 days from seed filing 2026-05-20) | The Agent Teams trial Seed has an open trigger ("next non-trivial PR review, or first cross-cutting refactor"). Lab review on PR #83 flagged that indefinite seeds become the next staleness vector. If no trial has been initiated by 2026-07-20, the next standup must decide explicitly: re-defer with refreshed trigger, or drop with reason. This expiration check graduates the Seed pattern from "trigger-only" to "trigger + expiration." |
+| **Promote collect-guard from informational to failing** | After the SUT-only top-level `.vue` import arch test ([`2026-05-27-enforce-sut-only-vue-imports-in-unit-specs`](../records/work-orders/2026-05-27-enforce-sut-only-vue-imports-in-unit-specs.md)) has been in production for 60 days AND either a test-perf regression slips past it OR the firm grows confident the arch test alone is sufficient | Reverse ADR-0012 line 173's demotion of `collect-guard-reporter.ts` to informational; make it a build failure at the 1000ms threshold (2x coverage mode). Requires ADR-0012 amendment. Strengths: catches the broader class of test-perf regressions beyond the import-pattern (e.g., transitive Vite re-resolution, lazy-module reordering). Costs: timing-based fails can flake across environments (Node 24 vs CI vs dev variance). CEO 2026-05-27: "heavier beast, would be nice to eventually get to" — paired with the SUT-only arch test, which addresses the most common case first. |
 
 ## Quality Metrics
 
