@@ -86,47 +86,28 @@ vi.mock('@/apps/showcase/components/SectionHeading.vue', () => ({
 }));
 
 describe('ComponentGallery', () => {
-    // Prevent shallowMount from auto-stubbing vi.mock'd components — they are already lightweight stubs.
-    const mockedComponentNames = [
-        'BarcodeScanner',
-        'CameraCapture',
+    // shallowMount auto-stubs all child components into minimal `<component-stub />` placeholders,
+    // which do NOT render slot content. The assertions below walk DOM into slots (e.g. Remove/Cancel
+    // buttons inside ModalDialog, Dismiss button inside ToastMessage, button text inside PrimaryButton
+    // etc.). For those components only, we opt out of shallowMount's auto-stub so the lightweight
+    // vi.mock'd stubs (declared above) render their templates and slot content. Components whose only
+    // role in assertions is `findComponent({name: ...}).exists()` or whose text labels live in the
+    // parent template stay auto-stubbed (cheaper).
+    const unstubForSlotRendering = [
         'ModalDialog',
         'ConfirmDialog',
-        'NavHeader',
-        'NavLink',
-        'NavMobileLink',
-        'LegoBrick',
-        'LegoBrickCuboidCss',
-        'LegoBrickIsometricSvg',
-        'LegoBrickSideSvg',
-        'LegoBrickSvg',
-        'TextInput',
-        'NumberInput',
-        'SelectInput',
-        'DateInput',
-        'TextareaInput',
-        'FormError',
-        'FormField',
-        'FormLabel',
-        'LoadingState',
-        'PartListItem',
+        'ToastMessage',
         'PrimaryButton',
         'DangerButton',
         'BackButton',
         'FilterChip',
-        'ToastMessage',
-        'EmptyState',
-        'PageHeader',
-        'StatCard',
-        'DetailRow',
-        'CardContainer',
-        'BadgeLabel',
-        'SectionDivider',
-        'ListItemButton',
+        // SectionHeading renders its `number`/`title` props as text — needed for the "04 / Component Gallery" assertion.
         'SectionHeading',
+        // NavHeader renders #links / #mobile-links / #actions slots whose @click="noop" handlers are
+        // covered by the "should exercise nav link click handlers via noop" test. Auto-stub drops slots.
+        'NavHeader',
     ] as const;
-    const noAutoStub = Object.fromEntries(mockedComponentNames.map((name) => [name, false as const]));
-    const stubs = {...noAutoStub};
+    const stubs = Object.fromEntries(unstubForSlotRendering.map((name) => [name, false as const]));
 
     // Read-only rendering assertions share a single mount to reduce overhead.
     describe('rendering', () => {
