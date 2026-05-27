@@ -408,3 +408,59 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - **Should auto-merge-on-green be made explicit policy or stay tribal knowledge?** It worked silently here (and saved a round-trip), but it's not documented in CLAUDE.md or any ADR. Worth a future thread on whether dependabot bumps deserve a codified auto-merge convention vs. ad-hoc per-PR.
 
 ---
+
+## 2026-05-27 — Firm-Level Review/Evaluation Setup: Minutes Evolution + /retro Skill
+
+### Decisions
+
+- **Evolve `/minutes` rather than parallel skill**: Four new texture sections (False Starts, Friction Signals, Dynamics, Process Meta) added directly to the existing minutes capture flow, so retros have signal to mine without a second session-closer.
+- **`/retro` is on-demand only**: CEO-triggered via `/retro`. Calendar / volume / signal triggers were on the table and explicitly declined.
+- **Fresh-context Steward dispatch for retros**: The retro should not be written by the conversation that produced the work being judged. The skill body wraps an `Agent` dispatch (`subagent_type: steward`) with the read-and-verdict procedure as the prompt.
+- **Retros as per-event records, not single-file accumulator**: Filed at `.claude/records/retrospectives/YYYY-MM-DD-retro.md` — matches the standup/audit/build-record pattern, not the `MINUTES.md` single-file pattern. Rationale: a retro is a verdict at a moment, not a running log.
+- **Three required buckets, empty must be stated explicitly**: "What reversed / What repeated / What surprised". An empty bucket is data ("Nothing reversed in this window") — a missing section is ambiguous.
+- **Minutes secretary persona tightened**: Added explicit "observed facts only, never feelings or motives" rule. The retro needs facts it can cite, not feelings it must guess at.
+
+### Friction Signals
+
+- Two conversational rounds before build: CEO's framing → Steward's 2-3 sentence exploratory recommendation → CEO confirmation → one `AskUserQuestion` round (two shaping questions, multi-select) → build.
+- One Edit-tool detour: first attempt to edit root `CLAUDE.md` failed (file not yet read in session); resolved by reading first, then editing. Cost: one extra Read call.
+
+### Dynamics
+
+- CEO opened with the strategic gap framing ("I don't have the feeling we are truly learning yet"); Steward proposed the retro shape; CEO accepted direction in one line and added the minutes-evolution scope.
+- Steward recommended fresh-context dispatch and confrontational-verdict framing; CEO did not push back or modify either framing.
+- On the multi-select texture question, CEO chose all four offered categories rather than narrowing — signal that all four axes felt genuinely missing.
+
+### Process Meta
+
+- `/minutes` skill triggered the meta-conversation about its own evolution; ended the session by triggering itself with the new format.
+- Skills edited: `.claude/skills/minutes/SKILL.md` (three `Edit` calls — capture table, format template, persona). Skill created: `.claude/skills/retro/SKILL.md` (new). Records folder created: `.claude/records/retrospectives/` with `.gitkeep`. Root `CLAUDE.md` paper-trail table extended with Standup + Retrospective rows.
+- `AskUserQuestion` fired once for two shaping questions ("minutes gap" multi-select, "retro cadence" single-select).
+- No subagent dispatch this session. No `--no-verify`. Pre-commit / pre-push hooks did not fire because staged paths touched only `.claude/**` and root `CLAUDE.md` — neither wing.
+- Branch `claude/company-review-evaluation-Gzy9Z` created and pushed; one commit (`0d4a72a`), 4 files, +250/-5. No PR opened.
+- Tool detour: `PushNotification` MCP server disconnected mid-session (system reminder); no impact on the work.
+
+### Notes
+
+- **Section ordering rationale**: New texture sections sit between Decisions and Notes (texture explains how the decision came about). Action Items + Open Questions stay at the bottom where the CEO scans for them.
+- **Retro folder pattern follows standup, not minutes**: Per-event dated files because a retro is a verdict at a moment in time, not a running log appended across sessions.
+
+### Rejected Alternatives
+
+- **Calendar-triggered retro (weekly)**: Risked producing thin retros on quiet weeks. Declined.
+- **Volume-triggered retro (every N entries)**: Tied to activity but mechanical. Declined.
+- **Signal-triggered retro (on reversal/repetition detection)**: Most precise but hardest to implement and easiest to get wrong. Declined.
+- **Folding new texture into existing "Notes" catchall**: Considered but rejected — retro needs dedicated headers to grep against. One big Notes blob is hard to mine across sessions.
+
+### Action Items
+
+- [ ] CEO: close the next real-work session with `/minutes` to validate that the four new texture sections surface honest content (not manufactured filler).
+- [ ] CEO: run `/retro` against the post-merger window (2026-05-19 onward) as the first real test of the verdict format.
+
+### Open Questions
+
+- Will the four new minutes sections surface texture organically in normal sessions, or will the secretary need to prompt the Steward to recall friction/dynamics that weren't observed in real-time? First non-meta session with the new format will tell.
+- Should `/retro` eventually update `.claude/docs/pulse.md` or `learnings.md` directly when patterns graduate to firm-level rules? Currently the retro only recommends; the CEO acts in a separate dispatch.
+
+---
+
