@@ -81,5 +81,5 @@ If the interrogator surfaces a third option — e.g. "gate accepts Closed if the
 
 ---
 
-**Status:** Open
-**Build Record:** _link to Build Record when filed_
+**Status:** Open _(closes post-merge per the very amendment this WO produced — see uniform-rule discipline in the linked Build Record)_
+**Build Record:** [`2026-05-27-adr-0028-uniform-rule-amendment`](../build-records/2026-05-27-adr-0028-uniform-rule-amendment.md)

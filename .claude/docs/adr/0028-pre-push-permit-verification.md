@@ -1,8 +1,9 @@
 # Decision: Pre-Push Permit Verification Gate
 
 **Date**: 2026-05-05
+**Last Amended**: 2026-05-27 (uniform-rule convention; see § Amendment below)
 **Feature**: CaptainHook pre-push gate; Operations Protocol enforcement
-**Status**: accepted
+**Status**: accepted (under trial doctrine per 2026-05-27 amendment — Devil's Court triggers scheduled)
 **Transferability**: project-specific
 
 ## Context
@@ -119,3 +120,84 @@ Pushes from `main` (direct CEO commits, release tagging) skip the gate entirely.
 This ADR closes Finding 7's recurrence vector. The retroactive paper trail remediation (`2026-05-05-audit-remediation-5-paper-trail.md`) handles the immediate evidence; this ADR's implementation handles the next instance.
 
 The Sorter's original proposal (prompt-only) is preserved in the audit report's Rebuttal Protocol section as the rebuttal artifact. The verification-mechanism upgrade is the Director's ruling on that proposal — adopted in spirit, mechanism rejected, replaced.
+
+---
+
+## Amendment 2026-05-27 — Uniform-Rule Convention
+
+**Triggering signal:** On 2026-05-20, two PR reviewers independently flagged (within 12 seconds of each other on PR #77 and PR #78) that the gate's behavior implies an undocumented rule for when a Work Order may be closed. The doctrine "WO stays In Progress through push" lived only in PR-body workflow notes — not in any ADR, CLAUDE.md, or template.
+
+**The Resolved Question:** When may a Work Order's `Status:` field be flipped from Open/In-Progress to Closed — in the same commit as the Build Record (work commit), or only in a follow-up commit on `main` after the Build Record's PR merges?
+
+### Investigation outcome (`/adr-interrogator` session, 2026-05-27)
+
+The "dual-mode" framing the original 2026-05-20-adr-0028-dual-mode-amendment Work Order proposed was imprecise. The gate has a **single active mode** (rejects pushes that close a WO in the work commit) with a **narrow firing condition** (backend paths in push range AND over-threshold). The frequently-cited "frontend can always close in work commit" is not a separate mode — it is the gate not running at all because `.githooks/pre-push` only dispatches the gate on backend-touching pushes. Similarly, "sub-threshold backend can close in work commit" is the gate skipping its permit-lookup phase, not a different rule.
+
+Empirical incidence: the gate has rejected exactly one push in its operational life (PR #77, commit `b5a8597`, 2026-05-20). Backend discipline pre-merger had the underlying convention baked in culturally.
+
+### The Convention
+
+Work Orders close **post-merge on `main`, always** — regardless of wing, regardless of diff size. The work commit (or work PR) leaves the WO in `Status: Open` or `In Progress`; a follow-up commit on `main` after merge flips the WO Status to `Closed` (or `Completed`) and back-links the Build Record.
+
+### Basis
+
+The convention is chosen on **CEO preference** for a single mental model and symmetric paper trail. It is recorded here as taste-based, not as architectural necessity. Three Steward-leans (predictability for the Brickwright; symmetric paper trail; reviewer signal) collapsed under interrogation:
+
+- **Predictability** buys little against a once-a-month failure mode.
+- **Symmetric paper trail** is a values claim, not a structural argument.
+- **Reviewer signal** argues for *documentation* of the chosen rule, not behavior change per se.
+
+The interrogator confirmed that "documented-dual-mode" (just write down what the gate already does) would have satisfied the reviewers' triggering complaint at lower operational cost. The CEO chose uniform-rule anyway, on taste, and that choice is honest input — recorded here as such.
+
+### Training-Rule Consequence
+
+A "close parent WO in same commit as Build Record" training rule functionally graduated on 2026-05-26 across three roles (Brickwright graduation-log extraction BR, Steward audit-5 paper-trail BR, Pattern Master Proposal C BR). The graduation is **retracted** by this amendment.
+
+Reason: all three graduation instances ran in gate-inactive contexts (touched only `.claude/` paths, or frontend-only). The rule was never tested against the case the gate would have caught. The graduation observed convergent application in an unenforced space; uniform-rule reverses that convention in favor of the inverse. The retraction is recorded in the Quality Warden Casebook as a Methodology Note: **trial-doctrine conventions require validation in the contested case, not merely convergent application in gate-inactive contexts.**
+
+### Enforcement (honest description)
+
+The universal rule is enforced **asymmetrically**:
+
+- The PrePushPermitGate mechanically enforces "WO Open at push" only when the push touches `backend/` AND exceeds 20 files OR 500 lines.
+- All other cases — sub-threshold backend, frontend-only deliveries, Atrium-only docs — rely on **developer discipline** to honor the post-merge close convention.
+
+The amendment is **procedural, not mechanical**. The gate code, the failure-message text, and the gate's test fixtures are untouched. The enforcement asymmetry is named here in plain language because it is the honest description of what the gate does today; the amendment does not pretend the gate enforces the universal rule everywhere.
+
+### Operational Pattern
+
+- A Build Record PR ships with the parent WO file still showing `Status: Open` or `In Progress`.
+- After the Build Record PR merges to `main`, a follow-up commit on `main` (direct or via a small chore PR — either is fine) flips the WO Status to `Closed`/`Completed` and updates the "Build Record:" line with the link to the merged BR.
+- Close-out commits MAY be batched (one chore PR closing multiple WOs at once) when the Steward is doing post-merge cleanup. Batching is a cost mitigation, not a rule change.
+
+### Consequences
+
+**Positive:**
+
+- Symmetric paper trail: every WO ends with a `chore: close ...` style commit on `main` after the work merges. Audit traceability improves — the close commit is always findable in `main`'s linear history.
+- Single mental model for the Brickwright and any future role: never close in the work commit, regardless of wing or size. No threshold math required at commit-message drafting time.
+- The gate's current behavior becomes a **slice** of the universal rule (rather than appearing to be a different sub-rule), which the ADR now describes as such.
+
+**Negative:**
+
+- One extra `main`-side commit per WO. At ~5–10 WOs per active week, ~30+ extra main-line commits per month. Batching mitigates but does not eliminate.
+- Enforcement is convention-only for ~95% of cases. A new Brickwright unfamiliar with the convention can close a sub-threshold or frontend WO in the work commit and nothing fails. Discovery happens at audit time, not at push time.
+- The just-graduated "close in work commit" training rule is retracted with one day of lived experience, carrying a small paper-trail cost (Build Records that referenced the rule yesterday — `2026-05-26-pattern-master-proposal-c-build`, `2026-05-26-audit-remediation-5-paper-trail`, `2026-05-26-pattern-master-graduation-log-extraction` — stand as written per the "no retroactive edits" scope clause).
+
+### Trial Doctrine — Devil's Court Re-Interrogation Triggers
+
+This amendment is recorded as **trial doctrine**, not settled doctrine. The first of three independent triggers fires a full nine-step `/adr-interrogator` re-run:
+
+1. **Volume:** twenty (20) Work Orders have been closed under uniform-rule.
+2. **Audit reference:** the next Quality Warden audit that cites ADR-0028 by name.
+3. **Calendar:** 2026-08-27 (three months from this amendment).
+
+Re-interrogation outcomes follow the standard Devil's Court taxonomy:
+
+- **Confirmed** — reasoning holds under accumulated experience; add `Stress-Tested: <date>` to the ADR and promote from trial doctrine to settled doctrine.
+- **Cracked** — reasoning no longer holds; revise this Amendment or supersede with a new ADR (e.g. ADR-0031).
+- **Strained** — reasoning holds but is approaching its limits; record pressure points and schedule another re-interrogation.
+
+### Reversal Cost
+
+Low. The amendment is doc-only. Reversing it requires editing this section plus updating any docs/templates that cite it. Gate code, tests, and failure-message text are untouched, so they require no reversal work.
