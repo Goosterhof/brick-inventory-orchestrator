@@ -35,6 +35,10 @@ The Brickworks is a single firm with two named production wings and a central at
 | **Work Order** | Before work starts | CEO, Steward, or General | `.claude/records/work-orders/` |
 | **Build Record** | After work completes | Brickwright | `.claude/records/build-records/` |
 | **Audit** | After an inspection | Quality Warden | `.claude/records/audits/` |
+| **Standup Note** | At cross-wing sync points | The Steward (via `/standup`) | `.claude/records/standups/` |
+| **Retrospective** | When the CEO calls `/retro` to learn across sessions | The Steward (fresh context) | `.claude/records/retrospectives/` |
+
+Session-level texture is also captured in the firm's running ledger `MINUTES.md` (root) via the `/minutes` skill. Minutes feed the Retrospective — the `/retro` skill mines minutes (plus Build Records, Audits, Standups) for what reversed, what repeated, what surprised.
 
 ### Vocabulary Source of Truth
 
