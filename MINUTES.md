@@ -339,3 +339,42 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - **Is the "same-day CVE blocks all PRs" pattern frequent enough to warrant an alarm?** Today's `composer audit` failed mid-sweep because of a CVE reported 6 hours earlier. If this happens monthly, a daily dependabot security pass on main would catch it before it lands on every open PR. If it's a one-off, no action needed.
 
 ---
+
+## 2026-05-27 — ADR-0028 Dual-Mode Amendment Interrogation + Slate-Clearing Closes
+
+### Decisions
+
+- **Canonical-oxlint-test-file-rules WO closed as superseded** (PR #115): All six ACs already met on `main` via PR #113's broader 31-rule canonical adoption plus pre-merger frontend work. Doc-only Steward-direct close. Second occurrence of the pre-merger-orphaned-WO pattern in two days.
+- **ADR-0028 amended in place — uniform-rule chosen, recorded as trial doctrine**: Work Orders close post-merge on `main` always, regardless of wing or diff size. Basis: CEO preference for symmetric paper trail and single mental model. Recorded as taste-based (not architectural necessity) in the ADR itself, per CEO confirmation.
+- **Training rule retracted before codification**: The "close parent WO in same commit as Build Record" rule that functionally graduated 2026-05-26 across three roles is reversed. Reason: all three graduation instances ran in PrePushPermitGate-inactive contexts; the rule was never validated in the contested case. Casebook Methodology Note added: *trial-doctrine conventions require validation in the contested case, not merely convergent application in gate-inactive contexts.*
+- **Convention-only amendment (cheap honest) over gate extension (expensive consistent)**: Gate code, fixtures, and failure-message text untouched. Amendment is procedural. Enforcement asymmetry (gate ~5%, convention ~95%) is named in plain language in the ADR.
+- **Devil's Court re-interrogation triggers locked**: First-to-fire of {20 closed WOs under uniform-rule / next Quality Warden audit referencing ADR-0028 / 2026-08-27 calendar} invokes a full nine-step `/adr-interrogator` re-run.
+- **Eat own dog food on the introducing dispatch**: This PR ships with the parent WO still `Status: Open`. The close happens in a follow-up commit on `main` after PR merge — the first WO closure under the new uniform-rule.
+
+### Action Items
+
+- [ ] **Steward (post-merge):** File the close commit on `main` flipping `2026-05-20-adr-0028-dual-mode-amendment` to `Status: Closed`, AND remove the "ADR-0028 push-gate dual-mode behavior pending amendment" row from the Atrium Active Concerns table in `pulse.md`.
+- [ ] **Steward (when convenient):** Check whether `.claude/docs/decisions.md` carries an ADR-0028 index row that needs an "amended 2026-05-27" annotation. Out of WO scope; mechanical follow-up if needed.
+- [ ] **Future session at first Devil's Court trigger:** Re-interrogate ADR-0028's uniform-rule convention with operational data from N closed WOs. Outcomes: Confirmed (settle), Cracked (revise/supersede), or Strained (record + reschedule).
+
+### Notes
+
+- **The interrogator session demonstrably improved the outcome.** Original WO framing was imprecise ("dual-mode" conflated gate-skip with gate-fire-and-pass). Original Steward lean had three reasons; two collapsed under pressure, one was named honestly as taste. Naming the taste basis in the ADR is a higher-quality outcome than manufactured architectural justification would have been.
+- **Pre-merger vocabulary leak in WO bodies — second occurrence in two days.** The ADR-0028 amendment WO referenced `.claude/records/minutes/` (a directory that doesn't exist; minutes live in `MINUTES.md` at repo root). Yesterday's `2026-05-26-close-canonical-oxlint-test-file-rules` BR noted Stud & Sort vocabulary ("Building Permit / Lead Brick Architect / General") in another WO. Third occurrence in 30 days promotes this to a Recurring Pattern.
+- **The standup AI "refresh WO body before dispatching interrogator" was unactioned across two standups.** Cost was absorbed in-conversation (interrogator unwound the framing in flight), but the WO body remains imprecise as historical record. Filed as a Training Proposal Candidate in today's Build Record.
+- **The "same Build Record on the introducing dispatch" pattern.** This Build Record is the first artifact to ship under uniform-rule and amends the rule into being in the same commit. Recursive but coherent: the rule's first compliance instance is the rule's introduction itself. Worth keeping as precedent for future trial-doctrine amendments where the rule should be exercised on its own introduction.
+
+### Open Questions
+
+- **Did uniform-rule's ongoing close-commit cost feel proportional to its symmetric-paper-trail benefit?** This is the central re-interrogation question at the first Devil's Court trigger. Lived experience with the convention will be the input.
+- **Does the pre-merger vocabulary leak in WO bodies warrant a sweep across all pre-2026-05-17 WOs?** Two-in-two-days suggests it might. Held back: a third occurrence in 30 days promotes to Recurring Pattern, at which point the sweep becomes proportional.
+- **Should the firm codify "naming taste basis honestly in ADRs" as a doctrine?** Today's amendment showed it produces a stronger artifact than manufactured architectural justification. But codifying it risks devolving into excuse for under-thinking decisions. Held back; observe whether other ADRs in the next 6 months also benefit from the pattern.
+
+### Rejected Alternatives (during interrogation)
+
+- **Documented-dual-mode amendment** (doc the existing behavior unchanged): Would have satisfied the original reviewer signal at lower cost. Rejected by CEO on taste preference for symmetric paper trail.
+- **Gate extension to enforce universally** (drop wing-scope filter + threshold so the gate runs on every push): True mechanical enforcement of the universal rule. Rejected as over-scope for a once-in-22-days problem.
+- **Carve the training rule to "close in work commit for sub-threshold/frontend, close post-merge otherwise"**: Would coexist with uniform-rule by scope. Rejected — that's just documented-dual-mode renamed.
+- **Successor ADR (ADR-0031) instead of in-place amendment**: Rejected because the gate mechanism is unchanged; only the convention layered above it is changing. In-place amendment preserves the 2026-05-05 record as the historical introduction.
+
+---
