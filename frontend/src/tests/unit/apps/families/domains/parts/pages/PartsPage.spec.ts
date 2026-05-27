@@ -1,13 +1,19 @@
-import PartUsageModal from '@app/domains/parts/modals/PartUsageModal.vue';
+import type {VueWrapper} from '@vue/test-utils';
+import type {ComponentPublicInstance} from 'vue';
+
 import PartsPage from '@app/domains/parts/pages/PartsPage.vue';
-import EmptyState from '@shared/components/EmptyState.vue';
-import FilterChip from '@shared/components/FilterChip.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
-import PageHeader from '@shared/components/PageHeader.vue';
-import PartListItem from '@shared/components/PartListItem.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+
+// Child components are referenced via `findComponent({name: 'X'})` rather than
+// imported at the module top — every `vi.mock` factory below registers a `name`
+// for the stub. Dropping the static imports keeps the collect-phase dependency
+// graph shallow (ADR-0012). See Build Record 2026-05-27-partspage-spec-collect-guard-fix.
+
+/** Emit an event from a stub component looked up by name. */
+const emit = (wrapper: VueWrapper | undefined, event: string): void => {
+    (wrapper?.vm as ComponentPublicInstance | undefined)?.$emit(event);
+};
 
 const {
     createMockAxios,
@@ -66,6 +72,13 @@ vi.mock('@shared/components/PrimaryButton.vue', () => ({
         template: '<button @click=\'$emit("click")\'><slot /></button>',
         props: ['variant'],
     },
+}));
+
+// PartUsageModal is the spec's heaviest transitive dependency — it pulls in
+// ModalDialog, which pulls in @phosphor-icons/vue. Stubbing the modal at the
+// spec boundary keeps the entire icon-package transform off the collect path.
+vi.mock('@app/domains/parts/modals/PartUsageModal.vue', () => ({
+    default: {name: 'PartUsageModal', template: '<div />', props: ['open', 'partNum', 'colorId'], emits: ['close']},
 }));
 
 vi.mock('@shared/helpers/csv', () => ({downloadCsv: vi.fn<() => void>(), toCsv: vi.fn<() => string>()}));
@@ -143,7 +156,7 @@ describe('PartsPage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(PageHeader).props('title')).toBe('parts.title');
+        expect(wrapper.findComponent({name: 'PageHeader'}).props('title')).toBe('parts.title');
     });
 
     it('should fetch parts on mount with per_page=100', async () => {
@@ -178,7 +191,7 @@ describe('PartsPage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(EmptyState).props('message')).toBe('parts.noParts');
+        expect(wrapper.findComponent({name: 'EmptyState'}).props('message')).toBe('parts.noParts');
     });
 
     it('should group parts by part+color and show total quantity', async () => {
@@ -190,7 +203,7 @@ describe('PartsPage', () => {
         await flushPromises();
 
         // Assert
-        const items = wrapper.findAllComponents(PartListItem);
+        const items = wrapper.findAllComponents({name: 'PartListItem'});
         expect(items).toHaveLength(2);
 
         const brick2x4 = items.find((item) => item.props('name') === 'Brick 2 x 4');
@@ -224,7 +237,7 @@ describe('PartsPage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(EmptyState).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'EmptyState'}).exists()).toBe(true);
     });
 
     describe('search', () => {
@@ -235,11 +248,11 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act
-            await wrapper.findComponent(TextInput).setValue('Brick 2 x 3');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('Brick 2 x 3');
             await flushPromises();
 
             // Assert
-            const items = wrapper.findAllComponents(PartListItem);
+            const items = wrapper.findAllComponents({name: 'PartListItem'});
             expect(items).toHaveLength(1);
             expect(items.find((i) => i.props('name') === 'Brick 2 x 3')?.exists()).toBe(true);
         });
@@ -251,11 +264,11 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act
-            await wrapper.findComponent(TextInput).setValue('3001');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('3001');
             await flushPromises();
 
             // Assert
-            const items = wrapper.findAllComponents(PartListItem);
+            const items = wrapper.findAllComponents({name: 'PartListItem'});
             expect(items).toHaveLength(1);
             expect(items.find((i) => i.props('name') === 'Brick 2 x 4')?.exists()).toBe(true);
         });
@@ -267,11 +280,11 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act
-            await wrapper.findComponent(TextInput).setValue('brick 2 x 3');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('brick 2 x 3');
             await flushPromises();
 
             // Assert
-            expect(wrapper.findAllComponents(PartListItem)).toHaveLength(1);
+            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(1);
         });
 
         it('should show no results when search matches nothing', async () => {
@@ -281,11 +294,11 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act
-            await wrapper.findComponent(TextInput).setValue('nonexistent');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('nonexistent');
             await flushPromises();
 
             // Assert
-            const emptyStates = wrapper.findAllComponents(EmptyState);
+            const emptyStates = wrapper.findAllComponents({name: 'EmptyState'});
             const noResults = emptyStates.find((e) => e.props('message') === 'parts.noResults');
             expect(noResults?.exists()).toBe(true);
         });
@@ -301,7 +314,7 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Assert
-            const chips = wrapper.findAllComponents(FilterChip);
+            const chips = wrapper.findAllComponents({name: 'FilterChip'});
             const chipTexts = chips.map((c) => c.text());
             expect(chipTexts).toContain('Blue');
             expect(chipTexts).toContain('Red');
@@ -316,7 +329,7 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Assert
-            const chips = wrapper.findAllComponents(FilterChip);
+            const chips = wrapper.findAllComponents({name: 'FilterChip'});
             const allColorsChip = chips.find((c) => c.text() === 'parts.allColors');
             expect(allColorsChip?.exists()).toBe(true);
             expect(allColorsChip?.props('active')).toBe(true);
@@ -329,12 +342,12 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act
-            const blueChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'Blue');
-            blueChip?.vm.$emit('click');
+            const blueChip = wrapper.findAllComponents({name: 'FilterChip'}).find((c) => c.text() === 'Blue');
+            emit(blueChip, 'click');
             await flushPromises();
 
             // Assert
-            const items = wrapper.findAllComponents(PartListItem);
+            const items = wrapper.findAllComponents({name: 'PartListItem'});
             expect(items).toHaveLength(1);
             expect(items.find((i) => i.props('colorName') === 'Blue')?.exists()).toBe(true);
         });
@@ -346,13 +359,13 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act
-            const blueChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'Blue');
-            blueChip?.vm.$emit('click');
-            blueChip?.vm.$emit('click');
+            const blueChip = wrapper.findAllComponents({name: 'FilterChip'}).find((c) => c.text() === 'Blue');
+            emit(blueChip, 'click');
+            emit(blueChip, 'click');
             await flushPromises();
 
             // Assert
-            expect(wrapper.findAllComponents(PartListItem)).toHaveLength(2);
+            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(2);
         });
 
         it('should clear color filter when all-colors chip is clicked', async () => {
@@ -362,18 +375,18 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Apply a color filter first
-            const blueChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'Blue');
-            blueChip?.vm.$emit('click');
+            const blueChip = wrapper.findAllComponents({name: 'FilterChip'}).find((c) => c.text() === 'Blue');
+            emit(blueChip, 'click');
             await flushPromises();
-            expect(wrapper.findAllComponents(PartListItem)).toHaveLength(1);
+            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(1);
 
             // Act
-            const allChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'parts.allColors');
-            allChip?.vm.$emit('click');
+            const allChip = wrapper.findAllComponents({name: 'FilterChip'}).find((c) => c.text() === 'parts.allColors');
+            emit(allChip, 'click');
             await flushPromises();
 
             // Assert
-            expect(wrapper.findAllComponents(PartListItem)).toHaveLength(2);
+            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(2);
         });
     });
 
@@ -387,7 +400,7 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Assert
-            const chips = wrapper.findAllComponents(FilterChip);
+            const chips = wrapper.findAllComponents({name: 'FilterChip'});
             const chipTexts = chips.map((c) => c.text());
             expect(chipTexts).toContain('parts.sortName');
             expect(chipTexts).toContain('parts.sortQuantity');
@@ -403,7 +416,7 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Assert
-            const names = wrapper.findAllComponents(PartListItem).map((i) => i.props('name'));
+            const names = wrapper.findAllComponents({name: 'PartListItem'}).map((i) => i.props('name') as string);
             expect(names).toStrictEqual(['Brick 2 x 3', 'Brick 2 x 4']);
         });
 
@@ -414,12 +427,16 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act
-            const quantityChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'parts.sortQuantity');
-            quantityChip?.vm.$emit('click');
+            const quantityChip = wrapper
+                .findAllComponents({name: 'FilterChip'})
+                .find((c) => c.text() === 'parts.sortQuantity');
+            emit(quantityChip, 'click');
             await flushPromises();
 
             // Assert
-            const quantities = wrapper.findAllComponents(PartListItem).map((i) => i.props('quantity'));
+            const quantities = wrapper
+                .findAllComponents({name: 'PartListItem'})
+                .map((i) => i.props('quantity') as number);
             expect(quantities).toStrictEqual([12, 3]);
         });
 
@@ -430,12 +447,14 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act
-            const colorSortChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'parts.sortColor');
-            colorSortChip?.vm.$emit('click');
+            const colorSortChip = wrapper
+                .findAllComponents({name: 'FilterChip'})
+                .find((c) => c.text() === 'parts.sortColor');
+            emit(colorSortChip, 'click');
             await flushPromises();
 
             // Assert
-            const colors = wrapper.findAllComponents(PartListItem).map((i) => i.props('colorName'));
+            const colors = wrapper.findAllComponents({name: 'PartListItem'}).map((i) => i.props('colorName') as string);
             expect(colors).toStrictEqual(['Blue', 'Red']);
         });
 
@@ -448,7 +467,7 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Assert — name is active by default
-            const nameChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'parts.sortName');
+            const nameChip = wrapper.findAllComponents({name: 'FilterChip'}).find((c) => c.text() === 'parts.sortName');
             expect(nameChip?.props('active')).toBe(true);
         });
     });
@@ -473,12 +492,14 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act
-            const orphanChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'parts.orphanParts');
-            orphanChip?.vm.$emit('click');
+            const orphanChip = wrapper
+                .findAllComponents({name: 'FilterChip'})
+                .find((c) => c.text() === 'parts.orphanParts');
+            emit(orphanChip, 'click');
             await flushPromises();
 
             // Assert
-            const items = wrapper.findAllComponents(PartListItem);
+            const items = wrapper.findAllComponents({name: 'PartListItem'});
             expect(items).toHaveLength(1);
             expect(items.find((i) => i.props('name') === 'Brick 2 x 3')?.exists()).toBe(true);
         });
@@ -490,13 +511,15 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act
-            const orphanChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'parts.orphanParts');
-            orphanChip?.vm.$emit('click');
-            orphanChip?.vm.$emit('click');
+            const orphanChip = wrapper
+                .findAllComponents({name: 'FilterChip'})
+                .find((c) => c.text() === 'parts.orphanParts');
+            emit(orphanChip, 'click');
+            emit(orphanChip, 'click');
             await flushPromises();
 
             // Assert
-            expect(wrapper.findAllComponents(PartListItem)).toHaveLength(2);
+            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(2);
         });
 
         it('should show orphan badge on orphan part items', async () => {
@@ -521,13 +544,13 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act — search for "Brick" and filter by Red
-            await wrapper.findComponent(TextInput).setValue('Brick');
-            const redChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'Red');
-            redChip?.vm.$emit('click');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('Brick');
+            const redChip = wrapper.findAllComponents({name: 'FilterChip'}).find((c) => c.text() === 'Red');
+            emit(redChip, 'click');
             await flushPromises();
 
             // Assert
-            const items = wrapper.findAllComponents(PartListItem);
+            const items = wrapper.findAllComponents({name: 'PartListItem'});
             expect(items).toHaveLength(1);
             expect(items.find((i) => i.props('colorName') === 'Red')?.exists()).toBe(true);
         });
@@ -539,13 +562,15 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Act — search for "Brick" and filter orphans only
-            await wrapper.findComponent(TextInput).setValue('Brick');
-            const orphanChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'parts.orphanParts');
-            orphanChip?.vm.$emit('click');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('Brick');
+            const orphanChip = wrapper
+                .findAllComponents({name: 'FilterChip'})
+                .find((c) => c.text() === 'parts.orphanParts');
+            emit(orphanChip, 'click');
             await flushPromises();
 
             // Assert
-            const items = wrapper.findAllComponents(PartListItem);
+            const items = wrapper.findAllComponents({name: 'PartListItem'});
             expect(items).toHaveLength(1);
             expect(items.find((i) => i.props('name') === 'Brick 2 x 3')?.exists()).toBe(true);
         });
@@ -585,7 +610,7 @@ describe('PartsPage', () => {
             const wrapper = shallowMount(PartsPage);
             await flushPromises();
 
-            expect(wrapper.findAllComponents(PartListItem)).toHaveLength(2);
+            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(2);
 
             // Arrange — second page with no cursor
             mockGetRequest.mockResolvedValueOnce({
@@ -614,7 +639,7 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Assert — 2 original grouped + 1 new = 3
-            expect(wrapper.findAllComponents(PartListItem)).toHaveLength(3);
+            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(3);
             expect(mockGetRequest).toHaveBeenCalledWith('/family/parts?per_page=100&cursor=cursor-page-2');
         });
 
@@ -680,7 +705,9 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Assert
-            const exportButton = wrapper.findAllComponents(PrimaryButton).find((btn) => btn.text() === 'common.export');
+            const exportButton = wrapper
+                .findAllComponents({name: 'PrimaryButton'})
+                .find((btn) => btn.text() === 'common.export');
             expect(exportButton?.exists()).toBe(true);
         });
 
@@ -693,7 +720,9 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // Assert
-            const exportButton = wrapper.findAllComponents(PrimaryButton).find((btn) => btn.text() === 'common.export');
+            const exportButton = wrapper
+                .findAllComponents({name: 'PrimaryButton'})
+                .find((btn) => btn.text() === 'common.export');
             expect(exportButton).toBeUndefined();
         });
     });
@@ -776,13 +805,13 @@ describe('PartsPage', () => {
             await flushPromises();
 
             // No modal until a row is clicked (gated by usageColorId !== null)
-            expect(wrapper.findComponent(PartUsageModal).exists()).toBe(false);
+            expect(wrapper.findComponent({name: 'PartUsageModal'}).exists()).toBe(false);
 
             // Act — click the Brick 2 x 4 / Red row (partId 10, colorId 1)
             await wrapper.find("[data-testid='part-row-10_1']").trigger('click');
 
             // Assert
-            const modal = wrapper.findComponent(PartUsageModal);
+            const modal = wrapper.findComponent({name: 'PartUsageModal'});
             expect(modal.exists()).toBe(true);
             expect(modal.props('open')).toBe(true);
             expect(modal.props('partNum')).toBe('3001');
@@ -797,11 +826,11 @@ describe('PartsPage', () => {
             await wrapper.find("[data-testid='part-row-10_1']").trigger('click');
 
             // Act
-            wrapper.findComponent(PartUsageModal).vm.$emit('close');
+            emit(wrapper.findComponent({name: 'PartUsageModal'}), 'close');
             await flushPromises();
 
             // Assert — modal stays mounted (we keep the last partNum/colorId) but is closed
-            expect(wrapper.findComponent(PartUsageModal).props('open')).toBe(false);
+            expect(wrapper.findComponent({name: 'PartUsageModal'}).props('open')).toBe(false);
         });
 
         it('includes the part name in the aria-label for each row button', async () => {
@@ -843,7 +872,7 @@ describe('PartsPage', () => {
             await orphanRow.trigger('click');
 
             // Assert — modal stays unmounted because usageColorId never left its null initial value
-            expect(wrapper.findComponent(PartUsageModal).exists()).toBe(false);
+            expect(wrapper.findComponent({name: 'PartUsageModal'}).exists()).toBe(false);
         });
     });
 });
