@@ -164,7 +164,7 @@ This pattern handles the race condition where two concurrent requests attempt to
 - `UpsertColorAction` — upsert color by unique rebrickable_color_id
 - `UpsertPartAction` — upsert part by unique part_num
 - `UpsertSetAction` — upsert set by unique set_num
-- `StoreSetPartsAction` — upsert set-part relationship by unique (set_num, part_id, color_id) constraint
+- `UpsertThemeAction` — upsert theme by unique rebrickable_id
 
 **Approved exception — race-condition guard (amended 2026-04-11).** Actions that guard against concurrent duplicate creation may use try-catch on `UniqueConstraintViolationException` to detect that a concurrent insert won the race, re-throwing as a typed domain exception. This pattern does NOT retry — it signals the conflict to the caller via a domain exception.
 
