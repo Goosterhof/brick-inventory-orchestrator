@@ -52,5 +52,22 @@ The 8 non-`prefer-strict-equal` rules in the expansion came in clean — BIO alr
 
 ---
 
-**Status:** In Progress
-**Journal:** _to be filed after PR merge_
+## Steward Note — 2026-05-27 Supersession Close
+
+Closed without an original-author Build Record because all six Acceptance Criteria are already met on `main`:
+
+- The 9 canonical vitest rules are present at `error` level in `frontend/.oxlintrc.json` lines 236–244 (plus two bonus 1.57/1.61 rules: `valid-expect-in-promise` error, `prefer-strict-boolean-matchers` warn).
+- The `.toEqual` → `.toStrictEqual` sweep is complete: 0 `toEqual` callsites in `src/tests/**`, 110 `toStrictEqual` callsites; sweep state enforced going forward by the `prefer-strict-equal` rule.
+- `frontend/CLAUDE.md` § Linting Standards carries no deferred-decision callout.
+- `npm run lint` / `type-check` / `test:unit` / `knip` clean per PR #113's mission report.
+
+The 9-rule expansion landed as a strict subset of the broader 31-rule canonical adoption in [PR #113](https://github.com/script-development/brick-inventory-orchestrator/pull/113) (`chore(lint): adopt oxlint 1.67 canonical rule additions`, merged 2026-05-26). The rules themselves arrived in the pre-merger `brick-inventory-frontend` repo before the 2026-05-17 subtree absorption — `git log -S "prefer-strict-equal" -- frontend/.oxlintrc.json` returns only the absorption commit (`83c2f28`, PR #28). Pre-merger SHAs are unreachable per the documented subtree history collapse.
+
+This WO was filed pre-merger in BIO orchestrator vocabulary ("Building Permit / Lead Brick Architect / General"). The body is preserved verbatim above as the filing-time record. The close uses current Brickworks vocabulary.
+
+Full close rationale and recurring-pattern memo in the Build Record below.
+
+---
+
+**Status:** Closed (superseded — see Steward Note 2026-05-27)
+**Build Record:** [`2026-05-27-close-canonical-oxlint-test-file-rules`](../build-records/2026-05-27-close-canonical-oxlint-test-file-rules.md)
