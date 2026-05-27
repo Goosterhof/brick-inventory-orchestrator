@@ -378,3 +378,33 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - **Successor ADR (ADR-0031) instead of in-place amendment**: Rejected because the gate mechanism is unchanged; only the convention layered above it is changing. In-place amendment preserves the 2026-05-05 record as the historical introduction.
 
 ---
+
+## 2026-05-27 — Dependabot PR sweep (frontend triad: vue, @vue/tsconfig, knip)
+
+### Decisions
+
+- **Path C — inline bumps over fix-then-rebase**: CEO chose to close the two failing Dependabot PRs (#96 knip, #97 @vue/tsconfig) and replace them with a single hand-built prep branch (#118) rather than landing prep fixes first and then re-rebasing dependabot. Reason: faster round-trip, single PR to review, no second dependabot dance after fixes land. The simple-rebase PR (#87, vue 3.5.34 patch) was handled separately via `@dependabot rebase`.
+- **Combined the two unrelated bumps into one PR**: @vue/tsconfig 0.9.1 and knip 6.14.2 shipped in #118 as a single commit even though they're independent. Acceptable because both are frontend dev-deps and both required ~zero behavioral code change in current main.
+
+### Action Items
+
+- (none — all three PRs merged the same day)
+
+### Notes
+
+- **Both "failures" were stale**: #97's 38 oxlint errors (Unnecessary optional chain on non-nullish, Condition with no overlap) did not reproduce against current main with @vue/tsconfig@0.9.1 — the offending optional-chain sites had been cleaned up by intervening commits since 2026-05-25 CI ran. #96's 5 "unused exported interfaces" similarly went away — those interfaces (`BrickDnaTopColor`, `BrickDnaTopPartType`, `BrickDnaRarePart`, `ImportJobFailedSet`, `Color`) are non-exported in current main, and knip 6 correctly stopped false-flagging them where knip 5 had. The only actual code change required was `frontend/knip.json` tweaks (drop 3 vitest configs from `ignore`, drop 2 redundant entry patterns) — knip 6 auto-discovers vitest configs and chases `setupFiles` from them.
+- **@vue/tsconfig 0.9 risk that didn't bite**: 0.9.0 moved `noUncheckedIndexedAccess` from base config out to the lib config. Gallery Wing already re-declares it explicitly in `tsconfig.app.json` per CLAUDE.md note, so the relocation was a no-op. Worth recording because the *next* repo that bumps this without the pre-declaration will silently lose the strictness flag.
+- **#118 was auto-merged**: by the time the Steward returned from the loop wakeup, #118 was already on `main` — repo has auto-merge on green CI for this style of branch. Did not need explicit `gh pr merge`.
+- **Dependabot rebase took the patch one bump higher**: while #87 was waiting to be rebased, the upstream patch advanced from 3.5.34 → 3.5.35. The rebased PR shipped the newer patch unchanged.
+- **CEO style match**: Initial readout used the "terse + numbered execution paths" format (paths A/B/C). CEO answered with a single character ("c"). Memory-validated pattern; keep using it for routine maintenance work where the choice space is small and obvious.
+
+### Rejected Alternatives
+
+- **Path A** (rebase #87, single combined prep PR for #96+#97): Same end-state as the chosen path mechanically, but kept the failing dependabot PRs open through the prep cycle. CEO chose to close them entirely (Path C) — cleaner queue.
+- **Path B** (two separate prep PRs): Rejected for review-cost reasons. Two bumps in one PR was acceptable because both are dev-deps and neither needed real code changes.
+
+### Open Questions
+
+- **Should auto-merge-on-green be made explicit policy or stay tribal knowledge?** It worked silently here (and saved a round-trip), but it's not documented in CLAUDE.md or any ADR. Worth a future thread on whether dependabot bumps deserve a codified auto-merge convention vs. ad-hoc per-PR.
+
+---
