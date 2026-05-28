@@ -67,24 +67,6 @@
                 ]
             }
         ],
-        "Stop": [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash .claude/hooks/minutes-nudge.sh",
-                        "timeout": 5,
-                        "statusMessage": "Checking minutes..."
-                    },
-                    {
-                        "type": "command",
-                        "command": "bash .claude/hooks/journal-nudge.sh",
-                        "timeout": 5,
-                        "statusMessage": "Checking for unfiled Build Records..."
-                    }
-                ]
-            }
-        ],
         "SessionEnd": [
             {
                 "hooks": [
