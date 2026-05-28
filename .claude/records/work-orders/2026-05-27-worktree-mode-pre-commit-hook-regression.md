@@ -63,5 +63,10 @@ Sub-threshold push (one hook script). ADR-0028 uniform-rule applies; close in po
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filled when filed_
+**Status:** Completed — frontend leg (2026-05-28, retroactive close per ADR-0028 § Amendment 2026-05-27 uniform-rule). Backend leg respawned as a sibling WO; see Resolution Note below.
+**Build Record:** [`2026-05-27-worktree-mode-pre-commit-hook-regression`](../build-records/2026-05-27-worktree-mode-pre-commit-hook-regression.md)
+**Merged via:** PR [#126](https://github.com/Goosterhof/brick-inventory-orchestrator/pull/126) (commit `7016417`) — frontend pre-commit registry stage anchored against `$repo_root` for worktree safety.
+
+## Resolution Note (added 2026-05-28)
+
+PR #126 anchored the **frontend** leg only — the orchestrator-root `.githooks/pre-commit` dispatcher's frontend `git add src/shared/generated/component-registry.json` line is now `$repo_root`-anchored. The **backend** leg of the same worktree-safety pattern (the Foundry pre-commit dispatch block needing the same anchoring discipline) was filed as a sibling WO: [`2026-05-28-backend-pre-commit-worktree-safety`](./2026-05-28-backend-pre-commit-worktree-safety.md). The orphan `src/shared/generated/component-registry.json` artifact left behind by the three pre-fix reproductions is filed under [`2026-05-28-cleanup-misplaced-component-registry-json`](./2026-05-28-cleanup-misplaced-component-registry-json.md). Closing this parent WO as frontend-portion-shipped to keep the open-WO inventory honest; the live successor work is tracked on the two sibling WOs.

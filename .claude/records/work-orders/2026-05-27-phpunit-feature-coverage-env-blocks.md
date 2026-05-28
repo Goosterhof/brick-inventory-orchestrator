@@ -52,5 +52,6 @@ Sub-threshold push. ADR-0028 uniform-rule applies; close in post-merge follow-up
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filled when filed_
+**Status:** Completed (2026-05-28, retroactive close per ADR-0028 § Amendment 2026-05-27 uniform-rule)
+**Build Record:** [`2026-05-27-phpunit-feature-coverage-env-blocks`](../build-records/2026-05-27-phpunit-feature-coverage-env-blocks.md)
+**Merged via:** PR [#125](https://github.com/Goosterhof/brick-inventory-orchestrator/pull/125) (commit `d9d8939`)
