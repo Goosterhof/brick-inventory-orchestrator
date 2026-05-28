@@ -753,4 +753,292 @@ describe('Architecture', () => {
             ).toStrictEqual([]);
         });
     });
+
+    describe('SUT-only top-level .vue imports — unit specs may only import their system-under-test', () => {
+        const TESTS_DIR = join(SRC_DIR, 'tests');
+        const UNIT_DIR = join(TESTS_DIR, 'unit');
+
+        /**
+         * Captures `import X from "...Foo.vue"` and `import { X } from "...Foo.vue"`
+         * but excludes type-only imports (`import type X from "...Foo.vue"`) — those
+         * are erased at compile time and do not contribute to the Vite collect-phase
+         * dependency graph that this rule guards.
+         */
+        const VUE_IMPORT_REGEX = /^\s*import\s+(?!type\b)[^;]+?\s+from\s+["']([^"']+\.vue)["']/gm;
+
+        /**
+         * Legacy allowlist — specs that import cross-component `.vue` files at top
+         * level today. Each entry is a one-line legacy-debt declaration; the goal
+         * is for this map to shrink over time. New specs MUST use
+         * `findComponent({ name: 'X' })` + `vi.mock(...)` instead of top-level
+         * imports (see PR #119 / Build Record 2026-05-27-partspage-spec-collect-guard-fix
+         * for the source pattern).
+         *
+         * Two categories live here today:
+         *  - "Legacy" — predates the SUT-only rule; cross-component imports were
+         *    stubbed via `vi.mock` but the static `import` was never removed.
+         *    Each one is collect-phase debt and will be paid down in follow-up WOs.
+         *  - "Split-spec" — specs split off the same SUT (e.g. `SetsOverviewTheme.spec.ts`
+         *    against `SetsOverviewPage.vue`, `SettingsPageConfig.spec.ts` against
+         *    `SettingsPage.vue`). Filename does not match the SUT by design; these
+         *    entries document the SUT mismatch rather than the cross-component drag.
+         *    Spec splits driven by TEST GUARD escapes (e.g. PR #120) generate these.
+         *
+         * Key = spec path relative to src/tests/unit. Value = list of `.vue`
+         * basenames the spec is permitted to import.
+         */
+        const LEGACY_CROSS_COMPONENT_IMPORTS: Record<string, readonly string[]> = {
+            'apps/admin/App.spec.ts': ['NavLink.vue'],
+            'apps/families/App.spec.ts': ['NavHeader.vue', 'NavMobileLink.vue'],
+            'apps/families/domains/about/pages/AboutPage.spec.ts': [
+                'LegoArch.vue',
+                'LegoArchSvg.vue',
+                'LegoBrick.vue',
+                'LegoBrickSvg.vue',
+                'LegoPlate.vue',
+                'LegoPlateSvg.vue',
+                'LegoRound.vue',
+                'LegoRoundSvg.vue',
+                'LegoSlope.vue',
+                'LegoSlopeSvg.vue',
+                'LegoTechnicBeam.vue',
+                'LegoTechnicBeamSvg.vue',
+                'LegoTile.vue',
+                'LegoTileSvg.vue',
+                'LegoWedge.vue',
+                'LegoWedgeSvg.vue',
+            ],
+            'apps/families/domains/auth/pages/LoginPage.spec.ts': ['PrimaryButton.vue', 'TextInput.vue'],
+            'apps/families/domains/auth/pages/RegisterPage.spec.ts': ['PrimaryButton.vue', 'TextInput.vue'],
+            'apps/families/domains/brick-dna/pages/BrickDnaPage.spec.ts': [
+                'CardContainer.vue',
+                'EmptyState.vue',
+                'PageHeader.vue',
+                'SectionDivider.vue',
+                'StatCard.vue',
+            ],
+            'apps/families/domains/home/pages/HomePage.spec.ts': [
+                'CardContainer.vue',
+                'LegoBrick.vue',
+                'NavLink.vue',
+                'PageHeader.vue',
+                'StatCard.vue',
+                'YearDistributionChart.vue',
+            ],
+            'apps/families/domains/parts/modals/PartUsageModal.spec.ts': [
+                'EmptyState.vue',
+                'ListItemButton.vue',
+                'ModalDialog.vue',
+            ],
+            'apps/families/domains/parts/pages/PartsMissingPage.spec.ts': [
+                'BackButton.vue',
+                'EmptyState.vue',
+                'FilterChip.vue',
+                'PageHeader.vue',
+                'PartListItem.vue',
+                'PrimaryButton.vue',
+                'TextInput.vue',
+            ],
+            'apps/families/domains/parts/pages/PartsUnsortedPage.spec.ts': [
+                'BackButton.vue',
+                'EmptyState.vue',
+                'FilterChip.vue',
+                'ListItemButton.vue',
+                'PageHeader.vue',
+                'PartListItem.vue',
+                'PlacePartModal.vue',
+                'PrimaryButton.vue',
+                'TextInput.vue',
+            ],
+            'apps/families/domains/sets/pages/AddSetPage.spec.ts': [
+                'DateInput.vue',
+                'NumberInput.vue',
+                'PrimaryButton.vue',
+                'SelectInput.vue',
+                'TextInput.vue',
+                'TextareaInput.vue',
+            ],
+            'apps/families/domains/sets/pages/EditSetPage.spec.ts': [
+                'ConfirmDialog.vue',
+                'DangerButton.vue',
+                'LoadingState.vue',
+                'NumberInput.vue',
+                'PrimaryButton.vue',
+                'SelectInput.vue',
+            ],
+            'apps/families/domains/sets/pages/IdentifyBrickPage.spec.ts': [
+                'BackButton.vue',
+                'CameraCapture.vue',
+                'PageHeader.vue',
+                'PrimaryButton.vue',
+            ],
+            'apps/families/domains/sets/pages/ScanSetPage.spec.ts': [
+                'BackButton.vue',
+                'BarcodeScanner.vue',
+                'PageHeader.vue',
+                'PrimaryButton.vue',
+            ],
+            'apps/families/domains/sets/pages/SetDetailPage.spec.ts': [
+                'BackButton.vue',
+                'LoadingState.vue',
+                'PartListItem.vue',
+                'PlacePartModal.vue',
+                'PrimaryButton.vue',
+            ],
+            // Split-spec: SUT is SetsOverviewPage.vue (filename mismatch is intentional, PR #120).
+            'apps/families/domains/sets/pages/SetsOverviewFiltering.spec.ts': ['SetsOverviewPage.vue'],
+            // Split-spec: SUT is SetsOverviewPage.vue (filename mismatch is intentional, PR #120).
+            'apps/families/domains/sets/pages/SetsOverviewTheme.spec.ts': [
+                'CollapsibleSection.vue',
+                'EmptyState.vue',
+                'FilterChip.vue',
+                'SetsOverviewPage.vue',
+                'TextInput.vue',
+            ],
+            // Split-spec: SUT is SettingsPage.vue (filename mismatch is intentional).
+            'apps/families/domains/settings/pages/SettingsPageConfig.spec.ts': [
+                'PageHeader.vue',
+                'PrimaryButton.vue',
+                'SettingsPage.vue',
+                'TextInput.vue',
+            ],
+            // Split-spec: SUT is SettingsPage.vue (filename mismatch is intentional).
+            'apps/families/domains/settings/pages/SettingsPageInviteEmail.spec.ts': [
+                'PrimaryButton.vue',
+                'SettingsPage.vue',
+                'TextInput.vue',
+            ],
+            // Split-spec: SUT is SettingsPage.vue (filename mismatch is intentional).
+            'apps/families/domains/settings/pages/SettingsPageMembers.spec.ts': [
+                'BadgeLabel.vue',
+                'ConfirmDialog.vue',
+                'DangerButton.vue',
+                'PrimaryButton.vue',
+                'SettingsPage.vue',
+            ],
+            // Split-spec: SUT is SettingsPage.vue (filename mismatch is intentional).
+            'apps/families/domains/settings/pages/SettingsPageTheme.spec.ts': ['SettingsPage.vue'],
+            'apps/families/domains/storage/pages/AddStoragePage.spec.ts': [
+                'NumberInput.vue',
+                'PrimaryButton.vue',
+                'TextInput.vue',
+                'TextareaInput.vue',
+            ],
+            'apps/families/domains/storage/pages/EditStoragePage.spec.ts': [
+                'ConfirmDialog.vue',
+                'DangerButton.vue',
+                'LoadingState.vue',
+                'NumberInput.vue',
+                'PrimaryButton.vue',
+                'TextInput.vue',
+                'TextareaInput.vue',
+            ],
+            'apps/families/domains/storage/pages/StorageDetailPage.spec.ts': [
+                'BackButton.vue',
+                'DetailRow.vue',
+                'EmptyState.vue',
+                'LoadingState.vue',
+                'PartListItem.vue',
+                'PrimaryButton.vue',
+            ],
+            'apps/families/domains/storage/pages/StorageOverviewPage.spec.ts': [
+                'EmptyState.vue',
+                'ListItemButton.vue',
+                'PageHeader.vue',
+                'PrimaryButton.vue',
+                'TextInput.vue',
+            ],
+            'apps/families/modals/PlacePartModal.spec.ts': [
+                'ModalDialog.vue',
+                'NumberInput.vue',
+                'PrimaryButton.vue',
+                'SelectInput.vue',
+            ],
+            'apps/showcase/components/AntiPatterns.spec.ts': ['SectionHeading.vue'],
+            'apps/showcase/components/BrandVoice.spec.ts': ['SectionHeading.vue'],
+            'apps/showcase/components/BrickDimensions.spec.ts': ['SectionHeading.vue'],
+            'apps/showcase/components/BrickShapes.spec.ts': ['SectionHeading.vue'],
+            'apps/showcase/components/ColorPalette.spec.ts': ['SectionHeading.vue'],
+            'apps/showcase/components/ComponentHealthMocked.spec.ts': ['ComponentHealth.vue', 'SectionHeading.vue'],
+            'apps/showcase/components/DialogServiceDemo.spec.ts': ['PrimaryButton.vue', 'SectionHeading.vue'],
+            'apps/showcase/components/FormValidationWorkbench.spec.ts': [
+                'DateInput.vue',
+                'NumberInput.vue',
+                'PrimaryButton.vue',
+                'SectionHeading.vue',
+                'SelectInput.vue',
+                'TextInput.vue',
+                'TextareaInput.vue',
+            ],
+            'apps/showcase/components/ResourceAdapterPlayground.spec.ts': [
+                'DangerButton.vue',
+                'NumberInput.vue',
+                'PrimaryButton.vue',
+                'TextInput.vue',
+            ],
+            'apps/showcase/components/SnapDemo.spec.ts': ['SectionHeading.vue'],
+            'apps/showcase/components/TypographySpecimen.spec.ts': ['SectionHeading.vue'],
+            'shared/components/ConfirmDialog.spec.ts': ['ModalDialog.vue'],
+            'shared/components/EmptyState.spec.ts': ['LegoBrick.vue'],
+        };
+
+        const getTopLevelVueImports = (filePath: string): string[] => {
+            const content = readFileSync(filePath, 'utf-8');
+            const imports: string[] = [];
+            let match: RegExpExecArray | null;
+            VUE_IMPORT_REGEX.lastIndex = 0;
+            while ((match = VUE_IMPORT_REGEX.exec(content)) !== null) {
+                const importPath = match[1];
+                if (importPath !== undefined) {
+                    imports.push(basename(importPath));
+                }
+            }
+            return imports;
+        };
+
+        it('unit specs should only import their system-under-test .vue file at top level', () => {
+            const specFiles = readdirSync(UNIT_DIR, {recursive: true, encoding: 'utf-8'})
+                .filter((file) => file.endsWith('.spec.ts'))
+                .map((file) => join(UNIT_DIR, file))
+                .filter((file) => file !== join(UNIT_DIR, 'architecture.spec.ts'));
+
+            const violations: string[] = [];
+            const unusedAllowlistEntries = new Set(Object.keys(LEGACY_CROSS_COMPONENT_IMPORTS));
+
+            for (const file of specFiles) {
+                const rel = relative(UNIT_DIR, file);
+                const sutVueName = `${basename(file, '.spec.ts')}.vue`;
+                const allowlist = LEGACY_CROSS_COMPONENT_IMPORTS[rel] ?? [];
+                if (rel in LEGACY_CROSS_COMPONENT_IMPORTS) {
+                    unusedAllowlistEntries.delete(rel);
+                }
+
+                const importedVueBasenames = getTopLevelVueImports(file);
+                for (const vueName of importedVueBasenames) {
+                    if (vueName === sutVueName) continue;
+                    if (allowlist.includes(vueName)) continue;
+                    violations.push(
+                        `${rel} imports ${vueName} at top level (SUT is ${sutVueName}). ` +
+                            `Use findComponent({ name: '${basename(vueName, '.vue')}' }) and stub via vi.mock(...) instead — ` +
+                            `top-level .vue imports drag the transitive dependency graph into the Vite collect phase (ADR-0012).`,
+                    );
+                }
+            }
+
+            if (unusedAllowlistEntries.size > 0) {
+                for (const stale of unusedAllowlistEntries) {
+                    violations.push(
+                        `${stale} is in LEGACY_CROSS_COMPONENT_IMPORTS but no longer imports any disallowed .vue file — remove the entry from the allowlist.`,
+                    );
+                }
+            }
+
+            expect(
+                violations,
+                'Unit specs may only import their system-under-test (matching the spec filename) as a top-level .vue import. ' +
+                    'All other component references must go through findComponent({ name: "X" }) with vi.mock(...) stubs. ' +
+                    'Legacy violations are tracked in LEGACY_CROSS_COMPONENT_IMPORTS and should shrink over time, not grow.',
+            ).toStrictEqual([]);
+        });
+    });
 });

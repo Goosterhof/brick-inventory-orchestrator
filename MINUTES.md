@@ -464,3 +464,57 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 
 ---
 
+## 2026-05-27 — Parallel-dispatch burndown + arch-test enforcement institutionalization
+
+### Decisions
+
+- **Work the residue, don't keep slate empty**: Morning empty-slate standup forced the question — file 5 small WOs from carried action items, or close the day with WO count at zero. CEO chose to file the 5 (PartsPage / SetsOverview / ComponentGallery / LogoutController / ADR-0015 reconcile). Cleared 7-standup carryover on the test-guard trio.
+- **All 5 parallel, commit + push, no PR open** (Q1): Dispatch shape for the 5 Brickwrights. Each via `isolation: worktree`, in background. Steward opens PRs as each lands. Trades token cost for wall-clock speed and review-clustering.
+- **All 5 PRs at once, accept red CI on #1/#3** (Q2): PR sequencing. Opened all 5 PRs simultaneously knowing PRs #119 (PartsPage) and #121 (ComponentGallery) would show red CI until #120 (SetsOverview) merged to unblock the test-guard FAIL throw on `main`. Chose review-clustering over CI-cleanliness.
+- **Arch test only for now; collect-guard promotion deferred to Seed** (Q3): CEO declined the "promote collect-guard from informational to failing" option (heavier beast — ADR-0012 amendment + timing-flake risk). Accepted the lighter SUT-only top-level Vue-imports arch test as the primary enforcement layer. Collect-guard promotion captured as Pulse Seed with 60-day-or-trigger condition.
+- **Send the three parallel Brickwrights in** for the follow-up WOs (worktree-hook fix, phpunit env-block fix, arch-test enforcement). Second batch of parallel dispatches in one session — validated the pattern at 5 + 3 = 8 successful parallel Brickwrights total.
+- **Commit + push the 6 cleanup WOs as their own PR** (Option B): Made the 33-spec legacy-debt paydown visible on `main` via PR #128 rather than letting it land via sweep-style or dispatch-style. Two follow-up findings (residual component-registry.json + backend dispatch block) left unscoped pending CEO direction.
+
+### Action Items
+
+- [ ] CEO: review and merge the 6 open PRs (#122 LogoutController, #124 post-merge sweep, #125 phpunit env, #126 hook fix, #127 arch test, #128 6 cleanup WOs filed)
+- [ ] Steward: post-merge close commits for the 5 WOs from the original dispatch batch (4 closures absorbed into PR #124; the 5th — LogoutController — closes when PR #122 merges)
+- [ ] Steward: file two outstanding cleanup WOs surfaced by the worktree-hook fix Brickwright — (a) residual `src/shared/generated/component-registry.json` at orchestrator root (wrong path, committed via PR #119's `--no-verify`); (b) backend dispatch block's `--git-directory=../.git` worktree-unsafe assumption
+- [ ] Steward: back-fill `--no-verify` bypass-log Build Records — 5 pending (3 from today's batch + 2 from 2026-05-26 sweep). ADR-0028 § Amendment 2026-05-27 reaffirmed the clause, so the gap is doctrinally awkward
+- [ ] CEO: decide dispatch shape for the 6 cleanup WOs once PR #128 merges — serial, parallel (6×), or staggered
+
+### Architecture Notes
+
+- **Parallel-dispatch worked at 8x scale in one session**: 5 + 3 Brickwrights via `Agent(isolation: worktree, run_in_background: true)`. All 8 returned green gauntlets (with caveats). The pattern is now proven for next-batch dispatches.
+- **Worktree-mode pre-commit hook regression — Casebook Recurring Pattern level**: `.githooks/pre-commit`'s `(cd frontend && ... git add src/shared/generated/component-registry.json && ...)` pattern combined cwd-relative `cd` with cwd-relative `git add` — not worktree-safe. 3 independent reproductions in one session (PRs #119/#120/#121 all needed `--no-verify`). PR #126's fix anchors against `$repo_root` for both operations. The sibling lesson from MINUTES.md 2026-05-19 Phase 3 ("Hooks that `cd` must anchor via `git rev-parse --show-toplevel`") is the inverse case; the lesson generalizes.
+- **Arch test as architectural memory**: CEO's "can we enforce this through an architecture test" turned a one-off PartsPage fix into a permanent guardrail. The arch test immediately revealed 38 invisible legacy violations the Warden had not flagged. The lesson: arch tests are how lessons-learned become institutionalized.
+- **Self-cleaning allowlist pattern**: `LEGACY_CROSS_COMPONENT_IMPORTS` records every existing violation and the arch test fails if a stale entry remains. Legacy debt is declared, can't grow, can't rot. Pattern worth recognizing for future similar enforcement layers.
+- **Honest AC misses recorded faithfully**: SetsOverview split missed two soft AC bars (Filtering >1500ms target; combined runtime +45% vs ≤10% AC) but achieved the primary win (suite unblocking). BR named both misses explicitly. The "naming taste basis honestly" doctrine from the ADR-0028 amendment carrying forward into AC fulfillment language.
+- **The Pulse "PartsPage 1713ms" number was 7 days stale**: Actual measurement at dispatch was 3316ms. Pulse staleness vector — the spec degraded by ~2× between audit and dispatch with no Pulse update. Reinforces the "Foundry Pulse staleness" Casebook Recurring Pattern but applied to Gallery this time.
+- **`backend/phpunit.feature-coverage.xml` had missing `<env>` blocks** (`APP_KEY`, `REBRICKABLE_API_KEY`) that `phpunit.xml` carried. First-time worktree runs hit `MissingAppKeyException`. PR #125 brings parity. Latent config-drift class worth a general check across all `phpunit*.xml` variants.
+
+### Rejected Alternatives
+
+- **Belt-and-suspenders enforcement** (arch test + promoted collect-guard together): Rejected for over-scope; CEO preferred lighter-first/heavier-later staging via the Seed.
+- **Custom lint rule via lint-vue-conventions.mjs**: Rejected — pre-oxlint-custom-plugin tooling; would have been replaced by oxlint upstream when its milestone 3 lands.
+- **Hold all PRs until findings WO filed**: Rejected for tight-paper-trail-but-most-delay reasons; CEO chose all-at-once instead.
+- **Sequenced PR opening** (small-3 first, then larger-2 after #2 merges): Rejected for wall-clock speed; CEO accepted temporary red CI on #1 and #3.
+- **Serial Brickwright dispatch**: Rejected at both batch boundaries; parallel-dispatch proven viable.
+- **Bundling all sweep + cleanup work into multiple smaller PRs**: Rejected for review-pass coherence; chose single comprehensive PR #124 covering closures + new WOs + Pulse + Casebook + standup + gitignore.
+
+### Open Questions
+
+- Will the worktree-mode hook fix actually resolve the bug across all developer environments? The Brickwright fixing it could not reproduce the bug locally; the fix is defensive (`git -C "$repo_root" add ...` cannot misfire regardless of cwd) rather than tested-against-reproduction. Validation requires another parallel-dispatch session.
+- The 38 → ~5 legacy-debt paydown cadence: should the 6 cleanup WOs run as one parallel batch (6× Brickwrights), serial (one at a time, ~6 sessions), or staggered (2-3 at a time)? Trade-off: token cost vs review burden vs `architecture.spec.ts` merge-friction.
+- Should the residual `src/shared/generated/component-registry.json` at orchestrator root be its own small cleanup WO, OR bundled with the backend `--git-directory=../.git` finding into a single "post-hook-fix cleanup" WO? Both surfaced by the same Brickwright; both small.
+- ADR-0012 threshold drift: docs say 1000ms = fail; reality appears to throw at ~4000ms. Casebook gains a fresh data point on "ADR docs not updated after implementation changes." Should a small audit dispatch reconcile ADR-0012 against `test-guard-reporter.ts` implementation?
+- The dispatched Brickwrights reported some friction with WO file presence in worktrees (some thought the WO was "embedded in the brief" when it was actually carried over via working-tree mirroring). Worth understanding the harness's untracked-file behavior more precisely before the next batch.
+
+### Context
+
+- **Open-WO count went from 0 → 8 today**: Empty slate at morning standup, 5 dispatched, 4 closed (PRs landed), 5 still open from batch 1 (4 awaiting #124 merge + 1 awaiting #122 merge), 3 new from batch 2 (still awaiting respective merges), 6 cleanup WOs filed in #128.
+- **8 successful parallel Brickwright dispatches in one day** is the firm's all-time parallel-dispatch record. The previous record was 1 dispatch at a time.
+- **5 `--no-verify` Build Record back-fills now pending**: 3 from today's batch 1 (PartsPage, SetsOverview, ComponentGallery) + 2 from 2026-05-26 open-PR sweep. The clause was reaffirmed in ADR-0028 § Amendment 2026-05-27, so the gap is doctrinally salient.
+- **Today's session validates `/standup` as a load-bearing ritual**: 4 of the 5 morning-standup action items were actioned by EOD (filing the 5 WOs, dispatching them, opening the PRs, filing the 3 follow-up WOs, filing the 6 cleanup WOs, the post-merge sweep PR). The standup's "force the question" framing on the empty-slate decision is the highest-leverage moment of the day.
+
+---

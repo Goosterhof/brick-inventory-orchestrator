@@ -56,5 +56,5 @@ Sub-threshold (single spec file, well under 20-file / 500-line gate threshold). 
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filled when filed_
+**Status:** Completed (closed 2026-05-27 post-merge per ADR-0028 uniform-rule)
+**Build Record:** [`2026-05-27-partspage-spec-collect-guard-fix`](../build-records/2026-05-27-partspage-spec-collect-guard-fix.md) — shipped in PR #119 (commit `71166b3`)

@@ -27,10 +27,18 @@ fi
 
 if [ -n "$staged_frontend" ]; then
     echo "→ frontend changes staged; running frontend pre-commit pipeline"
-    (cd frontend && \
+    # Anchor cwd and git-add against $repo_root (set above via `git rev-parse
+    # --show-toplevel`). In worktree-mode dispatches a bare `git add
+    # src/shared/generated/component-registry.json` from a `cd frontend` cwd
+    # has been observed to stage a spurious orchestrator-root file
+    # (`src/shared/...` instead of `frontend/src/shared/...`); see the
+    # 2026-05-27 BR `worktree-mode-pre-commit-hook-regression`. The
+    # `git -C "$repo_root" add frontend/src/...` form makes the staged path
+    # explicit and worktree-safe.
+    (cd "$repo_root/frontend" && \
         node scripts/generate-component-registry.mjs && \
         npx oxfmt --write src/shared/generated/component-registry.json && \
-        git add src/shared/generated/component-registry.json && \
+        git -C "$repo_root" add frontend/src/shared/generated/component-registry.json && \
         npx lint-staged --relative)
 fi
 

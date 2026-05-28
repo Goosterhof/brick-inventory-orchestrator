@@ -66,5 +66,5 @@ Doc-only diff under `.claude/`. PrePushPermitGate inactive (no `backend/` or `fr
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filled when filed_
+**Status:** Completed (closed 2026-05-27 post-merge per ADR-0028 uniform-rule)
+**Build Record:** [`2026-05-27-adr-0015-current-actions-list-reconcile`](../build-records/2026-05-27-adr-0015-current-actions-list-reconcile.md) — shipped in PR #123 (commit `2836eca`)
