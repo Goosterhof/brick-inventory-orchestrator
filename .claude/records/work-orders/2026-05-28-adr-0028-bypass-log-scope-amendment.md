@@ -61,4 +61,5 @@ The amendment ships in the same PR as the consolidated bypass-log back-fill. The
 
 ---
 
-**Status:** Open
+**Status:** Completed (merged 2026-05-28 in PR #134, merge commit `d9d9575`)
+**Build Record:** [2026-05-28-adr-0028-bypass-log-scope-amendment](../build-records/2026-05-28-adr-0028-bypass-log-scope-amendment.md)
