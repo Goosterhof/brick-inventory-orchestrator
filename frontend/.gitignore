@@ -33,7 +33,3 @@ coverage
 # Vitest
 __screenshots__/
 .vitest-attachments/
-
-# Stryker
-.stryker-tmp/
-reports/mutation/

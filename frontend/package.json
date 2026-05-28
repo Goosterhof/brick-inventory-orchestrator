@@ -44,7 +44,6 @@
         "test:coverage": "vitest run --coverage",
         "test:integration": "vitest --config vitest.integration.config.ts",
         "test:integration:run": "vitest run --config vitest.integration.config.ts",
-        "test:mutation": "stryker run",
         "test:unit": "vitest",
         "type-check": "vue-tsc --build"
     },
@@ -69,8 +68,6 @@
         "@commitlint/cli": "^21.0.1",
         "@commitlint/config-conventional": "^21.0.1",
         "@size-limit/file": "^12.0.0",
-        "@stryker-mutator/core": "^9.6.0",
-        "@stryker-mutator/vitest-runner": "^9.6.0",
         "@tsconfig/node24": "^24.0.4",
         "@types/node": "^24.11.0",
         "@typescript/native-preview": "^7.0.0-dev.20260305.1",
