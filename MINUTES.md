@@ -3,6 +3,14 @@
 _Board meeting notes between the CEO and The Steward._
 _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with clipboard)._
 
+> **FROZEN ARCHIVE (through 2026-05-28).** This single-file ledger is the
+> historical minutes record up to and including 2026-05-28. As of 2026-05-28,
+> new minutes are filed as per-session files in
+> [`.claude/records/minutes/`](.claude/records/minutes/) (`YYYY-MM-DD-<slug>.md`)
+> so that parallel-dispatch sessions never collide on a single shared file.
+> Do not append here; the `/minutes` skill writes to the new directory. `/retro`
+> reads both this archive and the per-session directory.
+
 ---
 
 ## 2026-05-19 — Brickworks Merger Execution (Phases 1–8 + Closeout)
