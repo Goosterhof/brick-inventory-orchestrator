@@ -583,3 +583,57 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - The General's review-to-WO pipeline worked cleanly here. Should the firm document the **expected General-review shape** (verdict + caveats + scoped follow-ups) as a Reference doc so future Generals don't reinvent the format?
 
 ---
+
+## 2026-05-28 — First Firm-Wide Retrospective + ADR-0028 Bypass-Log Scope Amendment
+
+### Decisions
+
+- **First firm-wide Retrospective filed.** Window 2026-05-19 → 2026-05-28 (post-merger, first retro). Verdict: *doctrine exists, discipline lags; cost concentrated at the Steward seat.* Three buckets: 4 reversals, 6 repeating patterns, 8 surprises. 5 Action Items. Filed at `.claude/records/retrospectives/2026-05-28-retro.md`.
+- **`--no-verify` back-fill loop resolved via option (b): amendment, not bulk back-fill.** CEO chose to amend ADR-0028 over (a) filing 6 retroactive Build Records or (c) dropping the clause entirely. Basis: empirical — 6 of 6 pending back-fills were operational categories (zero code-bearing); the clause as written produced paper-trail debt without firm signal.
+- **Two-category convention with exhaustive operational sub-types.** Category 1 (code-bearing) keeps full Build Record discipline unchanged. Category 2 (operational: hook-bug, merge-commit, post-rebase force-push, baseline-breach) logs to `/minutes` § Process Meta as a one-liner. Recorded as **trial doctrine** with two Devil's Court triggers: first code-bearing bypass under the new clause, or 2026-06-28 calendar (30 days).
+- **Bulk back-fill consolidated into the amendment's Build Record, not separately.** Pre-amendment debt closed cleanly with citation discipline; future operational bypasses route to `/minutes` per the new clause.
+- **Disaggregated to 8 rows in the back-fill table, not 6.** The Retro and WO both said "six pending"; honest reconciliation in the BR disaggregates the three force-pushes (PR #106 / #110 / #112) into separate rows for citation discipline.
+- **Retrospective shipped in the same PR as the amendment it triggered.** Tighter coupling than typical (retro action items usually run in a separate dispatch), but the retro is the substantive paper trail for the amendment's basis.
+
+### Friction Signals
+
+- One conversational round from option presentation to authorization. Steward presented (a)/(b)/(c) with recommendation; CEO responded "no i agree with you" — terse decisive, memory-validated.
+- Zero `AskUserQuestion` calls this session. Single-question structured option-tables in chat sufficed; CEO's response shape made the formal tool unnecessary (memory `feedback_ceo_decisive_style.md` calibrated).
+
+### Dynamics
+
+- CEO opened with `/clear` then `/retro`. Steward filed retrospective in fresh-context (the skill's "main agent IS the fresh-context Steward on a clean session" exception was honored inline rather than dispatching a subagent).
+- CEO asked "what is your suggestion?" after retro filed; Steward returned a three-option table with explicit recommendation (b) and trade-off framing for (a) and (c).
+- CEO accepted in one line; Steward executed amendment + WO + BR + branch + push + PR autonomously without further check-in.
+
+### Process Meta
+
+- Skills fired: `/retro` (session opener, produced retrospective artifact), `/minutes` (session closer, this entry).
+- No subagent dispatches this session. Entire work Steward-led.
+- Zero `--no-verify` pushes. Pre-push gauntlet did not fire — only `.claude/**` paths touched, neither wing's dispatcher fires for Atrium-only changes.
+- One PR opened (#134); one commit (`aa84e40`); 4 files (+312 / -2): ADR amendment, WO, BR, Retrospective.
+- Branch `feat/adr-0028-bypass-log-scope-amendment` created and pushed. Slug matches WO file slug; PrePushPermitGate would skip on wing-scope anyway.
+
+### Notes
+
+- **The amendment is procedural, not mechanical.** Like § Amendment 2026-05-27 before it, this amendment touches no gate code, no fixtures, no failure-message text. The pattern of "procedural amendments accumulating on a mechanical ADR" is now 2 in 8 days; if a third lands inside 30 days, worth asking whether the procedural layer should be extracted into a separate convention document leaving the ADR to its mechanical scope. Captured in the BR's Self-Debrief.
+- **Row 1 (knip.json revert push) is a near-miss fit for the four operational sub-types.** Closest to "post-rebase force-push" in spirit (rewriting recently-pushed history) but the proximate action was a revert. Filed as operational because no new code, but the residual edge is genuine — preserved as the first 30-day Devil's Court data point.
+- **Retro's secondary verdict — Steward-seat bandwidth concentration — was not addressed today.** Five of six retro Action Items sit on the Steward seat. The amendment cleared the most visible failure mode (the bypass-log gap) but did not redistribute the underlying load. Longer-cycle architectural concern; flagged in retro Notes for the CEO, no immediate action proposed.
+
+### Action Items
+
+- [ ] **CEO:** Review and merge PR #134.
+- [ ] **Steward (post-merge):** Flip WO Status to Completed and back-link the BR (per § Amendment 2026-05-27 uniform-rule).
+- [ ] **Future sessions (any role):** Operational `--no-verify` pushes log to `/minutes` § Process Meta with PR + sub-type + one-line cause. No standalone Build Record required.
+- [ ] **Steward (2026-06-28):** Trigger Devil's Court re-interrogation of § Amendment 2026-05-28 — survey 30-day Category 2 incidence and validate operational sub-types remain exhaustive.
+- [ ] **Steward (when feasible):** Promote the "pre-merger vocabulary leak in WO bodies" pattern to a Casebook Recurring Pattern row (retro Action Item #2; not actioned this session).
+- [ ] **Steward (when feasible):** Reconcile the seven standup carry-overs flagged in the 2026-05-27 afternoon standup (retro Action Item #3; not actioned this session).
+- [ ] **CEO (when feasible):** Correct root `CLAUDE.md` "full pre-merge history preserved" claim (retro Action Item #5; not actioned this session).
+
+### Open Questions
+
+- Will the four named operational sub-types prove exhaustive over the next 30 days? Row 1's near-miss is the first stress-test data point; calendar trigger 2026-06-28 will survey.
+- The pattern of "two amendments to a single ADR in 8 days, both procedural" — does it indicate ADR-0028 is the wrong shape for the convention layer it now carries, or is the firm just learning how to scope `--no-verify` discipline iteratively? Third amendment inside 30 days would force the question.
+- Should retro Action Items have a default owner that defaults to **someone other than the Steward** when the Steward seat already carries multiple items? Today's retro produced 5/6 Steward items; today's amendment addressed only 1.
+
+---
