@@ -27,7 +27,7 @@ Analyze the recent conversation (focused on "$ARGUMENTS" if provided, otherwise 
 | **False Starts** | Hypotheses tried mid-session that didn't hold, paths abandoned | "Started with `clone $builder` — abandoned after second test failure (breaks Mockery)" |
 | **Friction Signals** | Rounds taken, reversals, CEO interventions, heavy moments | "Three rounds before the Steward caught that the migration order was wrong"; "CEO intervened on subagent dispatch — Steward had picked Brickwright for an audit-shaped task" |
 | **Dynamics** | Who proposed what, where pushback happened, where positions softened | "Steward pushed for Pinia; CEO held firm on direct refs — Steward conceded" |
-| **Process Meta** | Which subagents/skills fired, ceremony bypasses, significant tool failures | "Brickwright dispatched twice (Foundry, then Gallery); pre-push bypassed via `--no-verify` on commit a3f8 — recorded in Build Record per ADR-0028" |
+| **Process Meta** | Which subagents/skills fired, ceremony bypasses, significant tool failures | "Brickwright dispatched twice (Foundry, then Gallery); pre-push bypassed via `--no-verify` on commit a3f8 — Category 2 (hook-bug), this minutes line IS the authoritative log per ADR-0028 § Amendment 2026-05-28" |
 | **Action Items** | Next steps, with owner if known | "CEO: approve storage domain API contract" |
 | **Architecture Notes** | Structural patterns, boundaries, conventions | "Scanner module lives in shared, not families" |
 | **Rejected Alternatives** | Options considered and why they were dropped | "Considered Pinia, rejected — too heavy for our needs" |
@@ -45,7 +45,7 @@ Analyze the recent conversation (focused on "$ARGUMENTS" if provided, otherwise 
 
 - Which subagents were dispatched (Brickwright, Quality Warden, Pattern Master) and the scope of each dispatch
 - Which skills fired (`/standup`, `/code-review`, `/adr-interrogator`, etc.) and what they produced
-- Ceremony bypasses (`--no-verify`, `--skip-hooks`) — including why and which Build Record records the Steward sign-off
+- Ceremony bypasses (`--no-verify`, `--skip-hooks`) — including why and the bypass category per ADR-0028 § Amendment 2026-05-28: **Category 1 (code-bearing)** → name the Build Record that records the Steward sign-off; **Category 2 (operational: hook-bug, merge-commit, post-rebase force-push, pre-existing-baseline)** → this minutes line IS the authoritative log, no Build Record needed
 - Significant tool failures, retries, or detours that shaped the session's path
 
 ---

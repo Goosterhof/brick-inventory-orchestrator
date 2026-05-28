@@ -39,7 +39,7 @@ Amend ADR-0028 to scope the bypass-log clause to **code-bearing** bypasses only,
 ## Acceptance Criteria
 
 - [ ] ADR-0028 § Amendment 2026-05-28 reads as a self-contained convention statement with categories, basis, enforcement description, and trial-doctrine triggers.
-- [ ] Build Record contains a six-row § Bypass-Log Back-Fill table covering all six pending entries with PR, category, cause, and Steward sign-off columns.
+- [ ] Build Record contains a § Bypass-Log Back-Fill table covering all pending entries with PR, category, cause, and Steward sign-off columns. (Filed AC said "six-row" at issuance; BR landed with **eight rows** — the three post-rebase force-pushes (#106, #110, #112) were disaggregated into one row each for citation discipline, and the merge-commit bypass on PR #129 was added late in the same session. Both deltas are documented in the BR's § Permit Fulfillment.)
 - [ ] Both amendments are referenced from each other as independent axes (the 2026-05-27 amendment governs WO closure timing; the 2026-05-28 amendment governs bypass-log detail).
 - [ ] No edits to historical Build Records, Work Orders, or the Pulse.
 - [ ] Per § Amendment 2026-05-27 (uniform rule): this WO closes post-merge on `main` in a follow-up commit, not in the work commit.

@@ -221,6 +221,8 @@ Low. The amendment is doc-only. Reversing it requires editing this section plus 
 
 Six of six are operational. The clause as written treats them identically with the case the clause was designed to catch — that produced paper-trail debt without firm signal.
 
+**Categorization stress on day zero.** Row 1 (knip.json revert push) does not fit any of the four operational sub-types cleanly. It is closest to post-rebase force-push in spirit (the proximate need was to drop a still-current-knip-breaking config change without touching application code), but the action was a revert push, not a rebase. Filed as Operational because no new application code shipped, but the fit is loose enough to record explicitly: this amendment ships with the categorization already under one near-miss, not after a clean 30-day window. The 2026-06-28 calendar trigger will survey whether the sub-types remain exhaustive once more cases accrue; if they do not, the categorization is wrong and the amendment is cracked.
+
 **The Resolved Question:** What scope of `--no-verify` bypass requires a full Build Record, and what scope is appropriately logged in a lighter-weight artifact?
 
 ### The Convention
@@ -263,7 +265,7 @@ The two amendments are independent axes of paper-trail discipline:
 - § Amendment 2026-05-27 governs **when** a Work Order's Status flips (uniform-rule: post-merge on `main`, always).
 - § Amendment 2026-05-28 governs **how detailed** the bypass log must be (code-bearing → Build Record; operational → `/minutes` one-liner).
 
-Neither amendment modifies the gate's mechanical behavior; both are procedural. They can be evaluated, confirmed, cracked, or strained independently.
+Neither amendment modifies the gate's mechanical behavior; both are procedural. They can be evaluated, confirmed, cracked, or strained independently — but with one inheritance to name explicitly: this amendment's **operational pattern of "the WO closes post-merge on `main`"** (used by this amendment's own Work Order, and by every future amendment-style WO) inherits the 2026-05-27 uniform-rule. If § Amendment 2026-05-27 is later cracked and reverted at its Devil's Court re-interrogation, the WO-close mechanics this amendment uses need re-evaluation. The convention layers remain independent; the operational pattern does not.
 
 ### Trial Doctrine — Devil's Court Re-Interrogation Triggers
 
