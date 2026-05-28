@@ -1,9 +1,9 @@
 # Decision: Pre-Push Permit Verification Gate
 
 **Date**: 2026-05-05
-**Last Amended**: 2026-05-27 (uniform-rule convention; see § Amendment below)
+**Last Amended**: 2026-05-28 (bypass-log scope; see § Amendment 2026-05-28 below). Prior amendment 2026-05-27 (uniform-rule convention; see § Amendment 2026-05-27 below).
 **Feature**: CaptainHook pre-push gate; Operations Protocol enforcement
-**Status**: accepted (under trial doctrine per 2026-05-27 amendment — Devil's Court triggers scheduled)
+**Status**: accepted (two trial-doctrine amendments active — Devil's Court triggers scheduled for each)
 **Transferability**: project-specific
 
 ## Context
@@ -201,3 +201,79 @@ Re-interrogation outcomes follow the standard Devil's Court taxonomy:
 ### Reversal Cost
 
 Low. The amendment is doc-only. Reversing it requires editing this section plus updating any docs/templates that cite it. Gate code, tests, and failure-message text are untouched, so they require no reversal work.
+
+---
+
+## Amendment 2026-05-28 — Bypass-Log Scope
+
+**Triggering signal:** The firm's first Retrospective (2026-05-28) named the bypass-log clause as the highest-cost paper-trail debt of the post-merger window — six `--no-verify` Build Record back-fills owed and uncollected since 2026-05-26. The clause was reaffirmed by § Amendment 2026-05-27 (seven days prior to this amendment); the back-fill discipline did not catch up. The doctrinal-vs-actual gap was widening.
+
+**Empirical evidence:** All six pending back-fills fall in well-understood **operational** categories. None is the case the clause was designed to catch (a Brickwright skipping the gauntlet to ship untested production code):
+
+| # | Source | Category | Cause |
+|---|---|---|---|
+| 1 | 2026-05-26 sweep, PR #105 | Operational (knip.json revert push) | Revert needed to drop a still-current-knip-5-breaking config change; no application code. |
+| 2 | 2026-05-26 sweep, post-rebase force-pushes to #106/#110/#112 | Operational (post-rebase force-push) | Lock-file rebases after CVE-2026-46644 fix (PR #111) landed; pre-rebase content had already passed the gauntlet on each branch. |
+| 3 | 2026-05-27 PR #119 (PartsPage) | Hook-bug (worktree pre-commit regression) | `.githooks/pre-commit`'s `git add` of `component-registry.json` with cwd-relative path under worktree-mode dispatch; fixed in PR #126. |
+| 4 | 2026-05-27 PR #120 (SetsOverview) | Hook-bug | Same root cause as row 3. |
+| 5 | 2026-05-27 PR #121 (ComponentGallery) | Hook-bug | Same root cause as row 3. |
+| 6 | 2026-05-28 PR #129 (/retro skill) | Operational (merge-commit) | Merge commit bringing main's existing changes; no new code to test. |
+
+Six of six are operational. The clause as written treats them identically with the case the clause was designed to catch — that produced paper-trail debt without firm signal.
+
+**The Resolved Question:** What scope of `--no-verify` bypass requires a full Build Record, and what scope is appropriately logged in a lighter-weight artifact?
+
+### The Convention
+
+`--no-verify` push handling distinguishes two categories:
+
+**Category 1 — Code-bearing bypass.** The push ships new application code (`backend/app/**`, `frontend/src/**`, or any code path the bypassed hooks would have validated). **Requires a full Build Record entry** with explicit Steward sign-off, per § Documented Escape Hatch (unchanged). This is the scary case the original clause was designed for and remains so.
+
+**Category 2 — Operational bypass.** The push falls in one of these exhaustive sub-types:
+
+- **Hook-bug bypass** — a known tooling defect in the hook itself forces the bypass (e.g., the worktree-mode pre-commit regression PR #126 fixed).
+- **Merge-commit bypass** — a merge commit bringing already-merged content from `main` into a branch with no new code to test.
+- **Post-rebase force-push** — force-push of rebased history where the pre-rebase content already passed the gauntlet.
+- **Pre-existing-baseline bypass** — push hits a baseline breach unrelated to the work being shipped (e.g., the 2026-04-29 warroom-rules shift with a 4-error PHPStan baseline from the L13 upgrade).
+
+Category 2 **requires only a one-line entry in the session's `/minutes` § Process Meta** naming the PR, the operational sub-type, and the cause. The `/minutes` entry is the authoritative log; no standalone Build Record is required.
+
+### Basis
+
+The convention is chosen on **empirical operational fit**, not taste. Six pending back-fills produced over two weeks were all Category 2 (operational). Producing six Build Records whose content is "the hook had a bug" or "this was a merge commit" generates paper trail that does not teach. The clause's purpose — to catch code-bearing bypasses that ship untested code — is preserved by Category 1; Category 2 is moved to the lightest-weight log that maintains traceability.
+
+This is recorded as empirical-fit, not taste, because the evidence is concrete: six observed cases over fourteen days, zero of them Category 1, all of them cleanly fitting Category 2's exhaustive sub-types. If the next observed case spills outside the sub-types, the categorization is wrong and the amendment is cracked.
+
+### Back-fill Disposition
+
+The six pending bypass logs are filed as a consolidated paragraph in the Build Record introducing this amendment ([`2026-05-28-adr-0028-bypass-log-scope-amendment`](../../records/build-records/2026-05-28-adr-0028-bypass-log-scope-amendment.md) § Bypass-Log Back-Fill), satisfying the prior clause retroactively. Future operational bypasses log to `/minutes` § Process Meta.
+
+### Enforcement (honest description)
+
+Category 1 (code-bearing) is enforced by **Steward judgment** — the Steward is responsible for noting when a `--no-verify` push touches application code and triggering the Build Record entry. There is no mechanical gate that distinguishes code-bearing from operational bypasses.
+
+Category 2 (operational) is enforced by **the existing `/minutes` skill** — § Process Meta is a standard minutes section; logging a `--no-verify` push there is mechanically the same as logging any other process observation.
+
+The convention is **procedural, not mechanical**. Gate code, failure-message text, and tests are untouched. The enforcement asymmetry (Steward judgment for Category 1, minutes-discipline for Category 2) is named here in plain language as the honest description.
+
+### Relationship to § Amendment 2026-05-27
+
+The two amendments are independent axes of paper-trail discipline:
+
+- § Amendment 2026-05-27 governs **when** a Work Order's Status flips (uniform-rule: post-merge on `main`, always).
+- § Amendment 2026-05-28 governs **how detailed** the bypass log must be (code-bearing → Build Record; operational → `/minutes` one-liner).
+
+Neither amendment modifies the gate's mechanical behavior; both are procedural. They can be evaluated, confirmed, cracked, or strained independently.
+
+### Trial Doctrine — Devil's Court Re-Interrogation Triggers
+
+This amendment is recorded as **trial doctrine**, not settled doctrine. The first of two independent triggers fires a full nine-step `/adr-interrogator` re-run:
+
+1. **Code-bearing case:** the first `--no-verify` push under this amendment that ships new application code. Re-interrogation tests whether Category 1's Build Record discipline holds in practice when finally invoked.
+2. **Calendar:** 2026-06-28 (30 days from this amendment). Re-interrogation surveys actual Category 2 incidence to validate that operational bypasses are being logged at the minutes layer as expected, and that the operational sub-types remain exhaustive.
+
+Re-interrogation outcomes follow the standard Devil's Court taxonomy (Confirmed / Cracked / Strained).
+
+### Reversal Cost
+
+Low. Doc-only amendment. Reversing it requires editing this section. No code, no tests, no fixtures. The 2026-05-27 amendment remains independently in force regardless of this amendment's disposition.
