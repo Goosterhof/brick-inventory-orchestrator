@@ -43,7 +43,7 @@ final readonly class IdentifyBrickAction
         $bestPrediction = array_reduce(
             $partPredictions,
             static function(?BrickognizePredictionData $carry, BrickognizePredictionData $item): BrickognizePredictionData {
-                if ($carry === null || $item->score > $carry->score) {
+                if (!$carry instanceof BrickognizePredictionData || $item->score > $carry->score) {
                     return $item;
                 }
 
