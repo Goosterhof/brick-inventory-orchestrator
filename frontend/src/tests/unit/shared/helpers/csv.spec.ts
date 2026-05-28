@@ -55,7 +55,7 @@ describe('toCsv', () => {
 });
 
 describe('downloadCsv', () => {
-    it('should create a download link and click it', () => {
+    it('should create a download link and click it', async () => {
         // Arrange
         const mockClick = vi.fn<() => void>();
         const mockCreateElement = vi
@@ -65,7 +65,11 @@ describe('downloadCsv', () => {
                 set download(_: string) {},
                 click: mockClick,
             } as unknown as HTMLAnchorElement);
-        const mockCreateObjectURL = vi.fn<(obj: Blob) => string>().mockReturnValue('blob:test');
+        let capturedBlob: Blob | null = null;
+        const mockCreateObjectURL = vi.fn<(obj: Blob) => string>().mockImplementation((blob) => {
+            capturedBlob = blob;
+            return 'blob:test';
+        });
         const mockRevokeObjectURL = vi.fn<(url: string) => void>();
         globalThis.URL.createObjectURL = mockCreateObjectURL;
         globalThis.URL.revokeObjectURL = mockRevokeObjectURL;
@@ -77,6 +81,10 @@ describe('downloadCsv', () => {
         expect(mockCreateElement).toHaveBeenCalledWith('a');
         expect(mockClick).toHaveBeenCalled();
         expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test');
+        expect(capturedBlob).not.toBeNull();
+        const blob = capturedBlob as unknown as Blob;
+        expect(blob.type).toBe('text/csv;charset=utf-8;');
+        expect(await blob.text()).toBe('Name,Qty\nBrick,10');
 
         mockCreateElement.mockRestore();
     });
