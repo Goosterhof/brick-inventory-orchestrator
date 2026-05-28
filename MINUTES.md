@@ -704,3 +704,61 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - Today produced **two PRs of substantial scope (#134 + #135) and one tiny close-out (#136) in a single session**, both review-looped with the General. Is this a sustainable cadence, or is it the same Steward-seat bandwidth concern from this morning's retro re-surfacing under a different label?
 
 ---
+
+## 2026-05-28 — Two-Bundle WO Session: Worktree Residue Sweep (PR #138) + Arch Cleanup Sweep (Scope Discovery)
+
+### Decisions
+
+- **Bundle A (worktree residue sweep) picked first** — two sibling WOs (`cleanup-misplaced-component-registry-json` + `backend-pre-commit-worktree-safety`) bundled in one branch since both were PR #126 follow-up residue with zero path overlap. One BR, two work commits.
+- **Closure commit on the same branch is wrong shape** — CEO chose to revert `f65b30c` (the same-branch WO closure commit) before push, restoring the ADR-0028 uniform-rule pattern: close in post-merge follow-up commit on `main`, not on the WO's own branch. Restored alignment with the `0c91b13` close-out pattern from PR #134/#135.
+- **Umbrella WO filed for 34-file bundle** — Bundle B (arch cleanup 1-6) aggregates 34 files modified, above the 20-file PrePushPermitGate threshold. Filed `2026-05-28-arch-cleanup-sweep.md` as an umbrella WO referencing all 6 sibling WOs so the branch slug matches a real WO. Lightest paper-trail path that satisfies the gate.
+- **Brickwright honored the WO escape valve.** The umbrella WO's brief said: "If a spec turns out to be non-cleanable, leave it intact and document in the BR. Do not invent `vi.mock` stubs." Brickwright applied this to 26 of 33 specs. 7 cleaned, 26 deferred.
+
+### False Starts
+
+- **First brickwright dispatch (Bundle A) closed WOs on the same branch** — Steward dispatch brief explicitly told Brickwright to close both WOs in `f65b30c`. Caught at review time; reverted before push. The lesson got encoded in the Bundle B dispatch brief ("We just learned this lesson on PR #138").
+- **Assumed all 33 specs would be cleanable** — the 6 sibling WO tables read as a clean mechanical list; the umbrella WO inherited that framing. Reality: only 7/33 had the `vi.mock` infrastructure the cleanup pattern requires. The other 26 use `stubs: {SectionHeading}` real-component override OR `findComponent(X)` class selector without mocks. Major scope discovery surfaced mid-execution.
+
+### Friction Signals
+
+- Two brickwright dispatches in one session: Bundle A (~13 min duration, clean) and Bundle B (~44 min duration, scope discovery). Bundle B's runtime suggests the brickwright spent meaningful time per-spec discovering the false-premise scope rather than executing it.
+- **27/33 allowlist entries remain after the sweep that was supposed to reduce them to 6.** The umbrella WO's "end-state target" acceptance criterion was not reachable in the sweep — documented as partial fulfillment with a recommended precursor WO.
+
+### Dynamics
+
+- CEO ran decisive throughout: "pick up a WO" → "multiple at once" → "Bundle A" → "yes push and open PR" → "next bundle while we wait" → "Bundle B" → "after Brickwright is done, /minutes, commit push PR." No reversals.
+- Steward proposed multiple bundle shapes each turn; CEO selected the recommended option each time. Standard pattern.
+- Brickwright self-reported the scope mismatch transparently — full per-WO breakdown, named the 26 non-cleanable specs, recommended a precursor WO. Did not silently force the cleanups through.
+
+### Process Meta
+
+- **`/minutes` skill fired** (this entry).
+- **Brickwright dispatched twice:**
+  - Bundle A — `worktree-residue-sweep`: 4 commits filed, 1 reverted at CEO direction (closure commit), 3 pushed in PR #138.
+  - Bundle B — `arch-cleanup-sweep`: 4 commits filed (3 substantive + 1 BR), 26/33 specs deferred per WO escape valve.
+- **`AskUserQuestion` used 3× this session** — bundle selection (initial), closure-deviation handling (Bundle A), bundle selection (next). All recommended-option-first per CEO style memory.
+- **Umbrella WO pattern instantiated for the first time** — previous bundles were sub-threshold and avoided the slug-match problem. Bundle B was the first session where the gate threshold was crossed structurally rather than by accident.
+- **No `--no-verify` bypasses this session.** Both pre-commit and pre-push gauntlets ran green on the Bundle B branch.
+- **make lint / make test substitution acknowledged.** Brickwright on Bundle A used host PHP + frontend npm checks instead of `make` (Docker not up). Documented in BR Decisions Made #6. Steward accepted as proportional.
+
+### Notes
+
+- **Headline payoff (Bundle B):** AboutPage.spec.ts collect time **3.60s → 1.18s** (-2.4s, -67%). Closes the 47-day-old Casebook Standing Suspicion `AboutPage.spec.ts collect guard` first noticed 2026-04-11. The 16-import Lego shape gallery was the named root cause; this sweep removed all 16.
+- **Other significant collect-deltas:** SetDetailPage 5.56s → 2.16s, BrickDnaPage 3.66s → 0.99s, PartsUnsortedPage 3.78s → 1.14s, PartsMissingPage 3.18s → 1.18s, StorageOverviewPage 4.01s → 0.93s. Five 2-3× speedups in one branch.
+- **Brickwright's training proposal in BR:** "Audit-first habit for any sweep WO that names >5 files in tabular form — discover false-premise scope issues *before* editing, not *during*." One confirming observation logged; needs a second for graduation.
+- **Branch-slug-match-via-umbrella is now a documented pattern** for sweeps that need to combine multiple sibling WOs into one above-threshold push. Likely future use cases: any "sweep" or "batch" WO bundle that crosses 20 files.
+- **Two PRs open going into evening:** #138 (worktree residue, awaiting CI/review) + Bundle B branch (about to push + PR).
+
+### Action Items
+
+- [ ] **CEO (next session):** Merge PR #138 (worktree residue) when CI green + reviewed. Then file post-merge close-out commit on `main` flipping Status + adding BR back-link on both sibling WOs.
+- [ ] **CEO (next session):** Review PR for the arch-cleanup-sweep Bundle B. Same post-merge close-out pattern across 7 WOs (umbrella + 6 siblings) once merged.
+- [ ] **Steward / Brickwright (future WO):** File precursor WO "add `vi.mock` infrastructure with `name:` fields + convert class selectors to name selectors for 26 specs" to unlock the remaining cleanup payoff. The umbrella WO's end-state target (6-entry split-spec floor) is reachable behind this precursor.
+- [ ] **Steward (during next sweep WO with >5 files in tabular form):** Test the audit-first training proposal — sample 2-3 specs against the WO tables before dispatching brickwright, looking for false-premise scope issues.
+
+### Open Questions
+
+- The 26 non-cleanable specs use `stubs: {SectionHeading}` real-component override and `findComponent(X)` class selector patterns. These predate the `vi.mock` + `findComponent({name: 'X'})` pattern that the cleanup assumes. **Question:** is the `findComponent(X)` pattern itself worth deprecating across the codebase, or is the `vi.mock`-with-`name:` pattern the surface that needs to expand? The precursor WO will need to settle this.
+- The arch-cleanup-sweep umbrella WO partially-fulfills its acceptance criteria. **Question:** is this a precedent the firm wants to set (umbrella WOs can partially close with documented deferrals), or should the umbrella stay open with a follow-up sweep to finish the remaining 26? Procedural call worth surfacing at the next /retro.
+
+---
