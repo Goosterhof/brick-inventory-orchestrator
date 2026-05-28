@@ -102,7 +102,11 @@
         "vue-tsc": "^3.3.1"
     },
     "overrides": {
-        "qs": "^6.15.2"
+        "@stryker-mutator/core": {
+            "typed-rest-client": {
+                "qs": "^6.15.2"
+            }
+        }
     },
     "lint-staged": {
         "*.{ts,vue}": [

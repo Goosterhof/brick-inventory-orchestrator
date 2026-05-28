@@ -242,4 +242,65 @@ describe('useValidationErrors', () => {
 
         wrapper.unmount();
     });
+
+    it('should not populate or crash when the axios error has no response', () => {
+        // Arrange — network-level errors arrive with no `response` field at all
+        const {httpService} = createMockHttpService();
+        let capturedMiddleware: ResponseErrorMiddlewareFunc | undefined;
+        (httpService.registerResponseErrorMiddleware as Mock).mockImplementation((fn: ResponseErrorMiddlewareFunc) => {
+            capturedMiddleware = fn;
+            return vi.fn<() => void>();
+        });
+
+        const wrapper = shallowMount(
+            defineComponent({setup: () => useValidationErrors(httpService), template: '<div />'}),
+        );
+
+        const networkError = {
+            isAxiosError: true,
+            response: undefined,
+            config: {} as never,
+            toJSON: () => ({}),
+            name: 'AxiosError',
+            message: 'Network Error',
+        } as unknown as AxiosError<AxiosResponseError>;
+
+        // Act + Assert — must not throw on missing response
+        expect(() => capturedMiddleware?.(networkError)).not.toThrow();
+
+        const vm = wrapper.vm as unknown as ReturnType<typeof useValidationErrors>;
+        expect(vm.errors).toStrictEqual({});
+
+        wrapper.unmount();
+    });
+
+    it('should not overwrite existing errors when a non-422 response arrives afterwards', () => {
+        // Arrange — populate with a real 422, then deliver a non-422 to the same instance
+        const {httpService} = createMockHttpService();
+        let capturedMiddleware: ResponseErrorMiddlewareFunc | undefined;
+        (httpService.registerResponseErrorMiddleware as Mock).mockImplementation((fn: ResponseErrorMiddlewareFunc) => {
+            capturedMiddleware = fn;
+            return vi.fn<() => void>();
+        });
+
+        const wrapper = shallowMount(
+            defineComponent({setup: () => useValidationErrors(httpService), template: '<div />'}),
+        );
+
+        const validationError = createAxiosError(422, {errors: {name: ['Name is required']}});
+        capturedMiddleware?.(validationError);
+
+        const vm = wrapper.vm as unknown as ReturnType<typeof useValidationErrors>;
+        expect(vm.errors).toStrictEqual({name: 'Name is required'});
+
+        // Act — deliver a non-422 with a body present (so any & vs | mutation that
+        // short-circuits on response.data would re-enter the parse branch)
+        const serverError = createAxiosError(500, {message: 'Server error'});
+        capturedMiddleware?.(serverError);
+
+        // Assert — the previously-populated 422 errors must remain untouched
+        expect(vm.errors).toStrictEqual({name: 'Name is required'});
+
+        wrapper.unmount();
+    });
 });
