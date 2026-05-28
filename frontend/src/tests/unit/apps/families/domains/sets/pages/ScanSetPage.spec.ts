@@ -1,8 +1,6 @@
+import type {ComponentPublicInstance} from 'vue';
+
 import ScanSetPage from '@app/domains/sets/pages/ScanSetPage.vue';
-import BackButton from '@shared/components/BackButton.vue';
-import PageHeader from '@shared/components/PageHeader.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import BarcodeScanner from '@shared/components/scanner/BarcodeScanner.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -80,7 +78,7 @@ describe('ScanSetPage', () => {
         const wrapper = shallowMount(ScanSetPage);
 
         // Assert
-        const header = wrapper.findComponent(PageHeader);
+        const header = wrapper.findComponent({name: 'PageHeader'});
         expect(header.exists()).toBe(true);
         expect(header.props('title')).toBe('sets.scanSet');
     });
@@ -90,7 +88,7 @@ describe('ScanSetPage', () => {
         const wrapper = shallowMount(ScanSetPage);
 
         // Assert
-        expect(wrapper.findComponent(BarcodeScanner).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'BarcodeScanner'}).exists()).toBe(true);
     });
 
     it('should render back button', () => {
@@ -98,7 +96,7 @@ describe('ScanSetPage', () => {
         const wrapper = shallowMount(ScanSetPage);
 
         // Assert
-        expect(wrapper.findComponent(BackButton).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'BackButton'}).exists()).toBe(true);
     });
 
     it('should navigate back to sets overview when back button is clicked', async () => {
@@ -106,7 +104,7 @@ describe('ScanSetPage', () => {
         const wrapper = shallowMount(ScanSetPage);
 
         // Act
-        wrapper.findComponent(BackButton).vm.$emit('click');
+        (wrapper.findComponent({name: 'BackButton'}).vm as ComponentPublicInstance).$emit('click');
         await flushPromises();
 
         // Assert
@@ -128,7 +126,10 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
@@ -141,7 +142,10 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
@@ -159,7 +163,10 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
@@ -173,7 +180,10 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
@@ -188,7 +198,10 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
@@ -201,12 +214,15 @@ describe('ScanSetPage', () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: mockSetResponse});
             const wrapper = shallowMount(ScanSetPage);
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
             const addButton = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((btn) => btn.text() === 'sets.addToCollection');
             expect(addButton?.exists()).toBe(true);
         });
@@ -217,7 +233,10 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
@@ -230,7 +249,10 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
@@ -244,12 +266,15 @@ describe('ScanSetPage', () => {
             mockGetRequest.mockResolvedValue({data: mockSetResponse});
             mockPostRequest.mockResolvedValue({data: {id: 42}});
             const wrapper = shallowMount(ScanSetPage);
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Act
             const addButton = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((btn) => btn.text() === 'sets.addToCollection');
             await addButton?.trigger('click');
             await flushPromises();
@@ -263,7 +288,7 @@ describe('ScanSetPage', () => {
             // Assert — does NOT navigate away (conveyor stays open)
             expect(mockGoToRoute).not.toHaveBeenCalled();
             // Assert — scanner resets for next scan
-            expect(wrapper.findComponent(BarcodeScanner).props('resetKey')).toBe(1);
+            expect(wrapper.findComponent({name: 'BarcodeScanner'}).props('resetKey')).toBe(1);
             // Assert — scanned code is cleared
             expect(wrapper.text()).not.toContain('5702015357197');
         });
@@ -275,10 +300,13 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act — add first set
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
             const addButton = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((btn) => btn.text() === 'sets.addToCollection');
             await addButton?.trigger('click');
             await flushPromises();
@@ -294,16 +322,21 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
             const addButton = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((btn) => btn.text() === 'sets.addToCollection');
             await addButton?.trigger('click');
             await flushPromises();
 
             // Assert
-            const doneButton = wrapper.findAllComponents(PrimaryButton).find((btn) => btn.text() === 'sets.scanDone');
+            const doneButton = wrapper
+                .findAllComponents({name: 'PrimaryButton'})
+                .find((btn) => btn.text() === 'sets.scanDone');
             expect(doneButton?.exists()).toBe(true);
         });
 
@@ -312,16 +345,21 @@ describe('ScanSetPage', () => {
             mockGetRequest.mockResolvedValue({data: mockSetResponse});
             mockPostRequest.mockResolvedValue({data: {id: 42}});
             const wrapper = shallowMount(ScanSetPage);
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
             const addButton = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((btn) => btn.text() === 'sets.addToCollection');
             await addButton?.trigger('click');
             await flushPromises();
 
             // Act
-            const doneButton = wrapper.findAllComponents(PrimaryButton).find((btn) => btn.text() === 'sets.scanDone');
+            const doneButton = wrapper
+                .findAllComponents({name: 'PrimaryButton'})
+                .find((btn) => btn.text() === 'sets.scanDone');
             await doneButton?.trigger('click');
             await flushPromises();
 
@@ -342,7 +380,9 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Assert
-            const doneButton = wrapper.findAllComponents(PrimaryButton).find((btn) => btn.text() === 'sets.scanDone');
+            const doneButton = wrapper
+                .findAllComponents({name: 'PrimaryButton'})
+                .find((btn) => btn.text() === 'sets.scanDone');
             expect(doneButton).toBeUndefined();
         });
 
@@ -353,10 +393,13 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act — first scan + add
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
             const addButton = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((btn) => btn.text() === 'sets.addToCollection');
             await addButton?.trigger('click');
             await flushPromises();
@@ -364,7 +407,10 @@ describe('ScanSetPage', () => {
             // Act — second scan
             const secondSetResponse = {...mockSetResponse, setNum: '10179-1', name: 'UCS Falcon'};
             mockGetRequest.mockResolvedValue({data: secondSetResponse});
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '1234567890123');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '1234567890123',
+            );
             await flushPromises();
 
             // Assert — second set is displayed
@@ -377,19 +423,22 @@ describe('ScanSetPage', () => {
             mockGetRequest.mockResolvedValue({data: mockSetResponse});
             mockPostRequest.mockRejectedValue(new Error('Server error'));
             const wrapper = shallowMount(ScanSetPage);
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Act
             const addButton = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((btn) => btn.text() === 'sets.addToCollection');
             await addButton?.trigger('click');
             await flushPromises();
 
             // Assert — error shown but scanner still available
             expect(wrapper.text()).toContain('sets.scanAddError');
-            expect(wrapper.findComponent(BarcodeScanner).exists()).toBe(true);
+            expect(wrapper.findComponent({name: 'BarcodeScanner'}).exists()).toBe(true);
         });
 
         it('should not add when no set is found', () => {
@@ -408,12 +457,15 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
             const scanAgainButton = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((btn) => btn.text() === 'sets.scanAgain');
             expect(scanAgainButton?.exists()).toBe(true);
         });
@@ -422,19 +474,22 @@ describe('ScanSetPage', () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: mockSetResponse});
             const wrapper = shallowMount(ScanSetPage);
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Act
             const scanAgainButton = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((btn) => btn.text() === 'sets.scanAgain');
             await scanAgainButton?.trigger('click');
             await flushPromises();
 
             // Assert
             expect(wrapper.text()).not.toContain('5702015357197');
-            expect(wrapper.findComponent(BarcodeScanner).props('resetKey')).toBe(1);
+            expect(wrapper.findComponent({name: 'BarcodeScanner'}).props('resetKey')).toBe(1);
         });
     });
 
@@ -446,7 +501,10 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
@@ -462,7 +520,10 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
@@ -474,7 +535,10 @@ describe('ScanSetPage', () => {
             mockStoreGetAll.value = [{setNum: '75192-1', quantity: 2, status: 'built'}];
             mockGetRequest.mockResolvedValue({data: mockSetResponse});
             const wrapper = shallowMount(ScanSetPage);
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Act
@@ -490,7 +554,10 @@ describe('ScanSetPage', () => {
             mockStoreGetAll.value = [{setNum: '75192-1', quantity: 2, status: 'built'}];
             mockGetRequest.mockResolvedValue({data: mockSetResponse});
             const wrapper = shallowMount(ScanSetPage);
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Dismiss the warning
@@ -499,7 +566,10 @@ describe('ScanSetPage', () => {
             expect(wrapper.find("[data-testid='duplicate-warning']").exists()).toBe(false);
 
             // Act — scan again with same barcode
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert — warning reappears
@@ -513,7 +583,10 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert
@@ -527,7 +600,10 @@ describe('ScanSetPage', () => {
             const wrapper = shallowMount(ScanSetPage);
 
             // Act
-            wrapper.findComponent(BarcodeScanner).vm.$emit('detect', '5702015357197');
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
             await flushPromises();
 
             // Assert

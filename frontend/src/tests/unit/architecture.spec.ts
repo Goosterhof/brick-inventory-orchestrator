@@ -872,17 +872,10 @@ describe('Architecture', () => {
                 'PageHeader.vue',
                 'PrimaryButton.vue',
             ],
-            'apps/families/domains/sets/pages/ScanSetPage.spec.ts': [
-                'BackButton.vue',
-                'BarcodeScanner.vue',
-                'PageHeader.vue',
-                'PrimaryButton.vue',
-            ],
             'apps/families/domains/sets/pages/SetDetailPage.spec.ts': [
                 'BackButton.vue',
                 'LoadingState.vue',
                 'PartListItem.vue',
-                'PlacePartModal.vue',
                 'PrimaryButton.vue',
             ],
             // Split-spec: SUT is SetsOverviewPage.vue (filename mismatch is intentional, PR #120).
