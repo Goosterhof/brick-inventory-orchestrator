@@ -66,6 +66,9 @@ jobs:
             - name: Test with coverage
               run: npm run test:coverage
 
+            - name: Mutation testing (Stryker)
+              run: npm run test:mutation
+
             - name: Integration tests
               run: npm run test:integration:run
 

@@ -107,7 +107,7 @@ describe('bricklinkWantedList', () => {
     });
 
     describe('downloadBrickLinkWantedList', () => {
-        it('creates a blob URL, triggers a click, and revokes the URL', () => {
+        it('creates a blob URL with the correct MIME type and content, triggers a click, and revokes the URL', async () => {
             // Arrange
             const mockClick = vi.fn<() => void>();
             const mockCreateElement = vi
@@ -117,7 +117,11 @@ describe('bricklinkWantedList', () => {
                     set download(_: string) {},
                     click: mockClick,
                 } as unknown as HTMLAnchorElement);
-            const mockCreateObjectURL = vi.fn<(obj: Blob) => string>().mockReturnValue('blob:bricklink-test');
+            let capturedBlob: Blob | null = null;
+            const mockCreateObjectURL = vi.fn<(obj: Blob) => string>().mockImplementation((blob) => {
+                capturedBlob = blob;
+                return 'blob:bricklink-test';
+            });
             const mockRevokeObjectURL = vi.fn<(url: string) => void>();
             globalThis.URL.createObjectURL = mockCreateObjectURL;
             globalThis.URL.revokeObjectURL = mockRevokeObjectURL;
@@ -129,6 +133,10 @@ describe('bricklinkWantedList', () => {
             expect(mockCreateElement).toHaveBeenCalledWith('a');
             expect(mockClick).toHaveBeenCalled();
             expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:bricklink-test');
+            expect(capturedBlob).not.toBeNull();
+            const blob = capturedBlob as unknown as Blob;
+            expect(blob.type).toBe('application/xml;charset=utf-8;');
+            expect(await blob.text()).toBe('<INVENTORY></INVENTORY>');
 
             mockCreateElement.mockRestore();
         });
