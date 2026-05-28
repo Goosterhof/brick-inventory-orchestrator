@@ -42,7 +42,7 @@ Use the `Agent` tool with `subagent_type: steward` and pass the procedure below 
 
 Read the latest file in `.claude/records/retrospectives/` (by mtime). The window for this retro runs from that file's date forward.
 
-- If no prior retros exist, use the date of the earliest entry in `MINUTES.md`.
+- If no prior retros exist, use the date of the earliest minutes entry (the frozen `MINUTES.md` archive, or the earliest file in `.claude/records/minutes/`).
 - If `$ARGUMENTS` overrides the window (e.g., `"post-merger"` or `"since 2026-05-01"`), use that instead.
 
 State the window explicitly in the output — the reader needs to know what was on the table.
@@ -52,7 +52,7 @@ State the window explicitly in the output — the reader needs to know what was 
 Inside the window, read in this order:
 
 ```
-1. MINUTES.md                                   — session-level texture (decisions, false starts, friction, dynamics, process meta)
+1. .claude/records/minutes/*.md + MINUTES.md    — session-level texture (decisions, false starts, friction, dynamics, process meta). Per-session files are the live source since 2026-05-28; MINUTES.md is the frozen archive through that date.
 2. .claude/records/build-records/*.md           — what was shipped
 3. .claude/records/audits/*.md                  — what was found wrong
 4. .claude/records/standups/*.md                — what was flagged as stale or blocking

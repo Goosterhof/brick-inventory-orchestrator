@@ -90,7 +90,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "if [ -f MINUTES.md ] && ! git diff --quiet MINUTES.md 2>/dev/null || ([ -f MINUTES.md ] && ! git ls-files --error-unmatch MINUTES.md >/dev/null 2>&1); then git add MINUTES.md && git commit -m 'docs: auto-commit session minutes'; fi",
+                        "command": "if [ -n \"$(git status --porcelain .claude/records/minutes/ 2>/dev/null)\" ]; then git add .claude/records/minutes/ && git commit -m 'docs: auto-commit session minutes'; fi",
                         "timeout": 15,
                         "statusMessage": "Auto-committing minutes..."
                     }

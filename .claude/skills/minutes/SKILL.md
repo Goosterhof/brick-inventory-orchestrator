@@ -15,7 +15,9 @@ You sit in on every executive meeting between the CEO (the human) and The Stewar
 
 ## Your Task
 
-Analyze the recent conversation (focused on "$ARGUMENTS" if provided, otherwise the full session) and append structured minutes to `MINUTES.md` in the working directory.
+Analyze the recent conversation (focused on "$ARGUMENTS" if provided, otherwise the full session) and write structured minutes to a **per-session file** at `.claude/records/minutes/YYYY-MM-DD-<topic-slug>.md`.
+
+One file per session. Per-session files never collide under parallel dispatch — the single shared `MINUTES.md` (now a frozen archive at the repo root) was a merge-conflict magnet when multiple branches added same-date entries. If a file for today's date and slug already exists (you are adding to a session already logged), append to it; otherwise create a new one.
 
 ---
 
@@ -27,7 +29,7 @@ Analyze the recent conversation (focused on "$ARGUMENTS" if provided, otherwise 
 | **False Starts** | Hypotheses tried mid-session that didn't hold, paths abandoned | "Started with `clone $builder` — abandoned after second test failure (breaks Mockery)" |
 | **Friction Signals** | Rounds taken, reversals, CEO interventions, heavy moments | "Three rounds before the Steward caught that the migration order was wrong"; "CEO intervened on subagent dispatch — Steward had picked Brickwright for an audit-shaped task" |
 | **Dynamics** | Who proposed what, where pushback happened, where positions softened | "Steward pushed for Pinia; CEO held firm on direct refs — Steward conceded" |
-| **Process Meta** | Which subagents/skills fired, ceremony bypasses, significant tool failures | "Brickwright dispatched twice (Foundry, then Gallery); pre-push bypassed via `--no-verify` on commit a3f8 — Category 2 (hook-bug), this minutes line IS the authoritative log per ADR-0028 § Amendment 2026-05-28" |
+| **Process Meta** | Which subagents/skills fired, ceremony bypasses, significant tool failures | "Brickwright dispatched twice (Foundry, then Gallery); pre-push bypassed via `--no-verify` on commit a3f8 — hook-bug under worktree dispatch" |
 | **Action Items** | Next steps, with owner if known | "CEO: approve storage domain API contract" |
 | **Architecture Notes** | Structural patterns, boundaries, conventions | "Scanner module lives in shared, not families" |
 | **Rejected Alternatives** | Options considered and why they were dropped | "Considered Pinia, rejected — too heavy for our needs" |
@@ -45,27 +47,23 @@ Analyze the recent conversation (focused on "$ARGUMENTS" if provided, otherwise 
 
 - Which subagents were dispatched (Brickwright, Quality Warden, Pattern Master) and the scope of each dispatch
 - Which skills fired (`/standup`, `/code-review`, `/adr-interrogator`, etc.) and what they produced
-- Ceremony bypasses (`--no-verify`, `--skip-hooks`) — including why and the bypass category per ADR-0028 § Amendment 2026-05-28: **Category 1 (code-bearing)** → name the Build Record that records the Steward sign-off; **Category 2 (operational: hook-bug, merge-commit, post-rebase force-push, pre-existing-baseline)** → this minutes line IS the authoritative log, no Build Record needed
+- Ceremony bypasses (`--no-verify`, `--skip-hooks`) — note that they happened and why, as plain session texture. (There is no longer a mandatory bypass-log artifact; the ADR-0028 bypass-log clause was retired 2026-05-28.)
 - Significant tool failures, retries, or detours that shaped the session's path
 
 ---
 
 ## Format
 
-If `MINUTES.md` does not exist, create it with this header:
+Create the per-session file `.claude/records/minutes/YYYY-MM-DD-<topic-slug>.md` with this header, then the entry body:
 
 ```markdown
-# The Brickworks — Meeting Minutes
+# Minutes — [DATE] — [TOPIC]
 
-_Board meeting notes between the CEO and The Steward._
+_Board meeting note between the CEO and The Steward._
 _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with clipboard)._
 
 ---
-```
 
-Then append entries in this format:
-
-```markdown
 ## [DATE] — [TOPIC]
 
 ### Decisions
@@ -105,13 +103,14 @@ Then append entries in this format:
 
 **Rules:**
 
-- Use ISO 8601 date format (YYYY-MM-DD)
-- If no topic is provided via arguments, infer the main topic from the conversation
+- Use ISO 8601 date format (YYYY-MM-DD) in both the filename and the entry heading
+- Build the `<topic-slug>` from the inferred topic (lowercase, hyphenated). If no topic is provided via arguments, infer the main topic from the conversation
+- One file per session. If today already has a file for this exact slug (you are extending a session already logged), append the new entry to it; otherwise create a new file. Never reuse another session's file for unrelated work.
 - Omit empty sections (if no false starts surfaced, don't include the False Starts heading) — but don't pad sections to feel complete; an honest empty is better than a manufactured entry
 - The texture sections (False Starts, Friction, Dynamics, Process Meta) feed the `/retro` skill — they only generate learning if filed honestly
 - Keep entries concise — one line per item, two max
-- Append to existing file, never overwrite
-- After writing, confirm what was added in a brief summary (do not show the full file)
+- After writing, confirm what was added (and the filename) in a brief summary (do not show the full file)
+- The repo-root `MINUTES.md` is a frozen archive (through 2026-05-28). Never write to it.
 
 ---
 
