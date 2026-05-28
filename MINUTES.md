@@ -637,3 +637,62 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - Should retro Action Items have a default owner that defaults to **someone other than the Steward** when the Steward seat already carries multiple items? Today's retro produced 5/6 Steward items; today's amendment addressed only 1.
 
 ---
+
+## 2026-05-28 — Stryker mutation testing v2 (PR #135) + ADR-0028 amendment review-loop (PR #134)
+
+### Decisions
+
+- **Reintroduce Stryker mutation testing for the Gallery Wing (v2).** Path A — fs-packages parity at `break: 90 / low: 90 / high: 95`; no slack-cutting. CEO chose Path A explicitly when Steward proposed both A (parity, tighten if needed) and B (start at 75/80/85 with ratchet). Shipped in PR #135.
+- **CI gate wired in the same PR as the Stryker config.** Direct response to the v1 failure mode — v1 was installed 2026-03-28 and died vestigial in 62 days because no CI step read its output. v2 makes the consumer non-optional.
+- **Path-scoped `package.json overrides` over unconstrained form.** First v2 commit used `{qs: "^6.15.2"}`; switched to `{"@stryker-mutator/core": {"typed-rest-client": {"qs": "^6.15.2"}}}` in response to General review feedback. `npm ls qs` confirmed only one chain consumes qs today, so the change is future-proofing rather than a current-tree fix.
+- **`/minutes/SKILL.md` aligned to ADR-0028 § Amendment 2026-05-28.** Two example lines (line 30 Process Meta example, line 48 DO log under Process Meta) updated to name Category 1 vs Category 2 explicitly. Filed in PR #134 review response after the General caught the doc-drift.
+- **Follow-up WO `2026-05-28-mutation-per-file-floor` filed** for the aggregate-vs-per-file enforcement gap. Recommended enforcement mechanism: option 2 (a `posttest:mutation` parser script). Deferred to Soon until v2 settles in CI for a sprint.
+- **Close-out commits go through PRs, not direct-to-main.** Branch protection on `main` requires the `gate` status check; direct push rejected on attempt. PR #136 opened for the WO close-out per uniform-rule (§ Amendment 2026-05-27).
+
+### False Starts
+
+- **First Stryker mutation run came in at 89.21%** — failed the 90% break threshold by 0.79 points. Two rounds of test tightening followed: csv.ts + bricklinkWantedList.ts Blob inspection (→ 91.70%), then useValidationErrors.ts response.status/data decision tree (→ 93.36% after General review feedback).
+- **Direct push to main for WO close-out** rejected by branch protection. Re-routed via PR #136 — the uniform-rule pattern still holds; routing is just constrained.
+
+### Friction Signals
+
+- Both today's PRs (#135, #134) received four substantive review flags from the General within ~25 minutes of each other. All eight flags addressed in-PR per the General's explicit "option (a)" recommendation on each.
+- General's follow-up review on PR #135 claimed Concern 3 (CI step placement deviation) was still open despite the body being updated alongside commit 0574da3 with an explicit "Intentional deviations from fs-packages parity" section. Flagged as likely stale read in Steward Reply 2; no further response from General before merge.
+- Two parallel review-response cycles ran concurrently for PR #134 + PR #135 — MINUTES.md collision risk surfaced in real time. No actual collision (only one writer this session), but the retro's flagged pattern was visible in this window.
+
+### Dynamics
+
+- CEO ran throughout in decisive style: explicit Path A choice on threshold; "let's also include a /minutes" as terminal direction once both PRs landed.
+- General review pattern consistent across both PRs: substantive doc-drift catches (SKILL.md text, PR body parity claim, WO AC count) that the work commits missed. Paper-trail rigor is the General's strongest signal, more than mechanical correctness — both PRs were structurally sound when reviewed.
+- Steward proposed two paths on threshold (A and B), recommended A in conversation, ran with A on CEO confirmation. No pushback rounds.
+
+### Process Meta
+
+- `/minutes` skill fired (this entry). No other skills fired this session.
+- No subagent dispatches — Steward ran the full Stryker reintroduction directly. The 9-file scope was small enough not to need Brickwright; the review-loop work was scoped to text edits not needing Quality Warden.
+- Pre-commit gauntlet ran twice on PR #135 (commits 1721eb0, 0574da3) — both green. Pre-push gauntlet (PrePushPermitGate + frontend pipeline) ran on push — green. CI ran 3x (initial #135 commit 3m10s; second #135 commit 5m38s; #134 second commit doc-only paths skipped most) — all green.
+- **No `--no-verify` bypasses this session.** Branch protection rejection on close-out push was not a hook bypass — it was a remote-side check that correctly forced the close-out through the standard PR flow. Noted as a doctrinal-pattern boundary worth remembering: `--no-verify` bypasses local hooks; branch protection runs server-side and is non-bypassable from the client.
+- Stryker added a new `.stryker-incremental.json` artifact during local runs on PR #135 branch; correctly gitignored. The file leaked into the PR #134 worktree as untracked (the gitignore add lives on PR #135's branch only) — observed, not committed.
+
+### Notes
+
+- **New pattern: "tool reintroduction requires consumer-first commitment."** When a tool was previously retired as vestigial, the redo must wire its CI/output-reader in the same PR as the install — not as a follow-up. Captured in PR #135 Build Record's Training Proposals.
+- **New pattern: `package.json overrides` (path-scoped form) for transitive advisory mitigation** — preferred over tool removal when the tool itself is valuable. Closes the qs/typed-rest-client chain that motivated PR #133's drop while keeping Stryker. Captured in PR #135 Build Record's Training Proposals.
+- **fs-packages CI workflow** (`/home/goosterhof/Code/war-room/territories/fs-packages/.github/workflows/ci.yml`) is the canonical reference for the Stryker-as-gating-step pattern. Mirrored except for two intentional deviations (mutate scope, step placement — both named in PR #135 body).
+- **Useful empirical datum for the per-file enforcement question:** today's v2 install shows that 7 of 9 in-scope files clear 90% per-file, 2 are within 1.5 points. The aggregate (93.36%) hides the spread but the spread itself is narrow — the structural concern about per-file rot is real but not currently acute.
+
+### Action Items
+
+- [ ] **CEO:** Merge PR #136 (WO close-out).
+- [ ] **Future Steward (Soon):** Triage `bricklinkWantedList.ts` (88.64%) and `guards.ts` (89.47%) to ≥ 90% per-file score per WO `2026-05-28-mutation-per-file-floor`.
+- [ ] **Future Steward (Soon):** Pick + implement per-file enforcement mechanism per WO `2026-05-28-mutation-per-file-floor` — recommended option 2 (posttest:mutation parser script).
+- [ ] **Future Steward (after one sprint of green CI):** Promote Pulse "Mutation testing (Stryker) v2" maturity from Established → Battle-tested if no flake observed.
+- [ ] **Future Steward (2026-06-28):** Trigger Devil's Court re-interrogation of § Amendment 2026-05-28 (per retro Action Item; reaffirmed today).
+
+### Open Questions
+
+- Did the General actually re-read PR #135's updated body, or did the second review use a stale snapshot? Bookkeeping question — affects how to interpret followup reviews when the author has updated the body in flight.
+- The `# errors: 1` column on `useFormSubmit.ts` is a known timing-sensitivity surfacing under Stryker's instrumentation overhead. Will it appear on other timing-sensitive composables (`useBrickPickup`?) when scope expands? Worth watching when WO `2026-05-28-mutation-per-file-floor` triages further.
+- Today produced **two PRs of substantial scope (#134 + #135) and one tiny close-out (#136) in a single session**, both review-looped with the General. Is this a sustainable cadence, or is it the same Steward-seat bandwidth concern from this morning's retro re-surfacing under a different label?
+
+---

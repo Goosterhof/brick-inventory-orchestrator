@@ -76,5 +76,5 @@ The branch slug `frontend-mutation-testing-v2` is the PrePushPermitGate match. L
 
 ---
 
-**Status:** Closed (pending CI verification on PR)
+**Status:** Completed (merged 2026-05-28 in PR #135, merge commit `f8887e3`)
 **Build Record:** [2026-05-28-frontend-mutation-testing-v2](../build-records/2026-05-28-frontend-mutation-testing-v2.md)
