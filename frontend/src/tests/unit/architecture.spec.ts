@@ -934,13 +934,6 @@ describe('Architecture', () => {
                 'PartListItem.vue',
                 'PrimaryButton.vue',
             ],
-            'apps/families/domains/storage/pages/StorageOverviewPage.spec.ts': [
-                'EmptyState.vue',
-                'ListItemButton.vue',
-                'PageHeader.vue',
-                'PrimaryButton.vue',
-                'TextInput.vue',
-            ],
             'apps/families/modals/PlacePartModal.spec.ts': [
                 'ModalDialog.vue',
                 'NumberInput.vue',

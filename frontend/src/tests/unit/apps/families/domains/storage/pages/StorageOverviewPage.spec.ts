@@ -1,9 +1,6 @@
+import type {ComponentPublicInstance} from 'vue';
+
 import StorageOverviewPage from '@app/domains/storage/pages/StorageOverviewPage.vue';
-import EmptyState from '@shared/components/EmptyState.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
-import ListItemButton from '@shared/components/ListItemButton.vue';
-import PageHeader from '@shared/components/PageHeader.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -122,7 +119,7 @@ describe('StorageOverviewPage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(PageHeader).props('title')).toBe('storage.title');
+        expect(wrapper.findComponent({name: 'PageHeader'}).props('title')).toBe('storage.title');
     });
 
     it('should call retrieveAll on mount', async () => {
@@ -158,7 +155,7 @@ describe('StorageOverviewPage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(EmptyState).props('message')).toBe('storage.noStorage');
+        expect(wrapper.findComponent({name: 'EmptyState'}).props('message')).toBe('storage.noStorage');
     });
 
     it('should show loading state initially', () => {
@@ -179,7 +176,7 @@ describe('StorageOverviewPage', () => {
         await flushPromises();
 
         // Act
-        await wrapper.findComponent(PrimaryButton).trigger('click');
+        await wrapper.findComponent({name: 'PrimaryButton'}).trigger('click');
         await flushPromises();
 
         // Assert
@@ -193,7 +190,7 @@ describe('StorageOverviewPage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent(ListItemButton).vm.$emit('click');
+        (wrapper.findComponent({name: 'ListItemButton'}).vm as ComponentPublicInstance).$emit('click');
         await flushPromises();
 
         // Assert
@@ -251,7 +248,7 @@ describe('StorageOverviewPage', () => {
             // Assert
             expect(wrapper.text()).toContain('Lade A');
             expect(wrapper.text()).toContain('Lade A - Vak 1');
-            const listItems = wrapper.findAllComponents(ListItemButton);
+            const listItems = wrapper.findAllComponents({name: 'ListItemButton'});
             expect(listItems).toHaveLength(2);
         });
 
@@ -287,7 +284,7 @@ describe('StorageOverviewPage', () => {
             await flushPromises();
 
             // Act
-            await wrapper.findComponent(TextInput).setValue('Lade B');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('Lade B');
             await flushPromises();
 
             // Assert
@@ -302,7 +299,7 @@ describe('StorageOverviewPage', () => {
             await flushPromises();
 
             // Act
-            await wrapper.findComponent(TextInput).setValue('Rechterla');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('Rechterla');
             await flushPromises();
 
             // Assert
@@ -317,11 +314,11 @@ describe('StorageOverviewPage', () => {
             await flushPromises();
 
             // Act
-            await wrapper.findComponent(TextInput).setValue('nonexistent');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('nonexistent');
             await flushPromises();
 
             // Assert
-            const emptyStates = wrapper.findAllComponents(EmptyState);
+            const emptyStates = wrapper.findAllComponents({name: 'EmptyState'});
             const noResults = emptyStates.find((e) => e.props('message') === 'common.noResults');
             expect(noResults?.exists()).toBe(true);
         });
