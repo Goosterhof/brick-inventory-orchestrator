@@ -66,5 +66,6 @@ Sub-threshold push (one arch-test file change). ADR-0028 uniform-rule applies; c
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filled when filed_
+**Status:** Completed (2026-05-28, retroactive close per ADR-0028 § Amendment 2026-05-27 uniform-rule)
+**Build Record:** [`2026-05-27-enforce-sut-only-vue-imports-in-unit-specs`](../build-records/2026-05-27-enforce-sut-only-vue-imports-in-unit-specs.md)
+**Merged via:** PR [#127](https://github.com/Goosterhof/brick-inventory-orchestrator/pull/127) (commit `50a237a`)

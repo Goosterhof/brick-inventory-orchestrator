@@ -56,5 +56,6 @@ Sub-threshold push (single backend test file, well under 500 lines). PrePushPerm
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filled when filed_
+**Status:** Completed (2026-05-28, retroactive close per ADR-0028 § Amendment 2026-05-27 uniform-rule)
+**Build Record:** [`2026-05-27-logoutcontroller-stateful-session-test`](../build-records/2026-05-27-logoutcontroller-stateful-session-test.md)
+**Merged via:** PR [#122](https://github.com/Goosterhof/brick-inventory-orchestrator/pull/122) (commit `67186d6`)
