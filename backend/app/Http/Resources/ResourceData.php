@@ -110,8 +110,22 @@ abstract readonly class ResourceData implements ResourceResponseInterface
      */
     protected static function validateRelationsLoaded(Model $model): void
     {
+        // Only the root segment of each (possibly dotted) relation is loaded directly on this
+        // model — nested segments ("set.theme") live on the related model and are validated by
+        // the nested resource's own from(). relationLoaded() does not understand dot-notation.
+        $rootRelations = array_unique(
+            array_map(
+                static function(string $relation): string {
+                    $root = mb_strstr($relation, '.', true);
+
+                    return $root === false ? $relation : $root;
+                },
+                static::requiredRelations(),
+            ),
+        );
+
         $missingRelations = array_filter(
-            static::requiredRelations(),
+            $rootRelations,
             static fn(string $relation): bool => !$model->relationLoaded($relation),
         );
 

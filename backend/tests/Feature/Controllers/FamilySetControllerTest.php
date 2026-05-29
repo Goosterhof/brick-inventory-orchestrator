@@ -76,6 +76,37 @@ describe('FamilySetController', function(): void {
 
             $response->assertStatus(401);
         });
+
+        it('should issue a single themes query regardless of how many family sets are listed', function(): void {
+            $user = User::factory()->create();
+
+            // Five owned sets, each with a distinct theme — proves the nested SetSummaryResourceData
+            // theme is eager-loaded up front (set.theme) and does NOT fire one themes query per row.
+            for ($i = 0; $i < 5; $i++) {
+                $set = Set::factory()->withTheme()->create();
+                FamilySet::factory()->create([
+                    'family_id' => $user->family_id,
+                    'set_id' => $set->id,
+                ]);
+            }
+
+            $queries = [];
+            DB::listen(function($query) use (&$queries): void {
+                $queries[] = $query->sql;
+            });
+
+            $response = $this->actingAs($user)->getJson('/api/family-sets');
+
+            $response->assertStatus(200)->assertJsonCount(5);
+
+            // Exactly one query touches the themes table — the eager load — not one per row.
+            $themeQueries = array_filter(
+                $queries,
+                static fn(string $sql): bool => str_contains($sql, 'from "themes"'),
+            );
+
+            expect($themeQueries)->toHaveCount(1);
+        });
     });
 
     describe('store', function(): void {
