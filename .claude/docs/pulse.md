@@ -16,21 +16,21 @@ A consolidated, current-state assessment of both wings. Updated by The Steward a
 
 **Gallery Wing Rating:** 8/10
 **Foundry Wing Rating:** 8.5/10
-**Assessed:** 2026-05-26 (Foundry), 2026-05-25 (Gallery)
+**Assessed:** 2026-05-26 (Foundry), 2026-05-29 (Gallery)
 
-**Gallery (frontend):** Strong architectural foundation with 100% unit test coverage maintained. Multi-app structure with strict isolation. Showcase app fully tested. Adapter-store and resource-adapter patterns battle-tested. **Page integration test layer (ADR-0024) promoted Battle-tested 2026-05-25 — 19 specs / 143 tests green on `main`, suite wired as a required gating step in `frontend-ci.yml`; closes the 2026-05-05 integration-test cluster (Permits A + B both shipped in PR #100).** Router migration to `@script-development/fs-router` complete. Pattern Master agent operational; first creative dispatch since 2026-04-17 landed 2026-05-20 with three proposals — CEO picked Proposal C (Brick-DNA Snap-and-Pull) for next build. Unit gauntlet fully green. `PartsPage.spec.ts` collect guard violation (1713ms delta) emerged 2026-05-20 and remains the loudest active medium. Documentation drift previously the primary recurring concern; addressed by Pulse-refresh audit 2026-05-20 ([`2026-05-20-gallery-pulse-refresh`](../records/audits/2026-05-20-gallery-pulse-refresh.md)).
+**Gallery (frontend):** Strong architectural foundation with 100% unit test coverage maintained (lines / branches / functions / statements). Multi-app structure with strict isolation. Showcase app fully tested. Adapter-store and resource-adapter patterns battle-tested. Page integration test layer (ADR-0024) Battle-tested — 19 specs / 143 tests green on `main`, wired as a required gating step in `frontend-ci.yml`. Router migration to `@script-development/fs-router` complete. **Frontend Mutation Testing v2 shipped 2026-05-28 (Stryker 9 + Vitest runner, PR #135): 9 files / 242 mutants, 91.70% score against `break: 90`, CI-gated between "Test with coverage" and "Integration tests" — `npm audit` clean via the `qs` override.** Worktree-mode git-hook regression resolved on both legs (PR #138 pre-commit, PR #140 backend pre-push dispatch). Pattern Master agent operational. Unit gauntlet fully green. The 2026-05-20 `PartsPage`/`SetsOverviewPage`/`ComponentGallery` collect-guard cluster was closed 2026-05-27 (PRs #119/#120/#121); the remaining test-perf signal is `AboutPage.spec.ts` (warning-zone, baseline-order-sensitive, structurally tracked on the SUT-only arch-test legacy allowlist — PR #127). Documentation drift addressed by recurring Pulse-refresh audits.
 
 **Foundry (backend):** PHPStan at max with zero errors (339 files), Deptrac with zero violations (743 allowed), 107 architecture tests passing (up from 105). Full quality gauntlet operational on canonical PHP 8.5.5 host with `php8.5-pcov` — coverage and mutation drills unblocked as of 2026-05-20; first full re-measure landed 2026-05-26 with 100% unit / 98.1% feature coverage and 79.68% mutation score (above all thresholds). Governed by the consolidated `0001`–`0029` Brickworks ADR sequence. Recent deliveries since 2026-04-16: Laravel 13.7 deprecation cleanup + PHP 8.5 tightening, storage-map ResourceData, reverse-lookup-lens endpoint with `DB::listen` query-budget proof, PHPStan war-room rules adoption (four custom rules), ADR-0028 pre-push permit verification gate, `ImportJob` model + `ImportOwnedSetsJob` (Rebrickable import flow — Job layer now 2 classes, both convention-compliant).
 
 ## Active Concerns
 
-**Assessed:** 2026-05-27 (Gallery), 2026-05-26 (Foundry)
+**Assessed:** 2026-05-29 (Gallery), 2026-05-26 (Foundry)
 
 ### Gallery Wing
 
 | Concern | Severity | Status | Notes |
 |---|---|---|---|
-| `AboutPage.spec.ts` collect guard warning | Low | Monitoring | 520ms delta in 2x mode (threshold 1000ms). Improved from 1522ms on 2026-04-25 (Node 24 environment difference). Root cause unchanged: 16 named Lego shape component imports. |
+| `AboutPage.spec.ts` collect guard warning | Low | Monitoring | Baseline-order-sensitive in 2x coverage mode: re-measured 2026-05-29 between below-the-400ms-warning-floor and 932ms delta (932ms raw, 0ms cold baseline); execution 811–1165ms / 35 tests. Under the 1000ms FAIL cap. Root cause unchanged: 16 named Lego shape imports (lines 2–17), now enumerated on the SUT-only arch-test legacy allowlist (`architecture.spec.ts`, PR #127). Paydown = `findComponent({name})` + `vi.mock`. |
 | `Item` type constraint mismatch | Low | Aware | `FamilySet` has `id` but no `createdAt`/`updatedAt` — may surface in future domains |
 | `format:check` failures on `.claude/` md | Low | Known | oxfmt reformats markdown — agent docs and journal files drift; not a code defect |
 
@@ -75,7 +75,7 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 
 ## Pattern Maturity
 
-**Assessed:** 2026-05-26 (Foundry), 2026-05-25 (Gallery)
+**Assessed:** 2026-05-26 (Foundry), 2026-05-29 (Gallery)
 
 ### Gallery Wing
 
@@ -91,7 +91,7 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 | Brick Brutalism design system | Battle-tested | Showcase app fully tested, brand guide |
 | Page integration tests (ADR-0024) | Battle-tested | 19 test files covering all domain pages; 143/143 green on `main`. Permit A (assertion repairs) and Permit B (CI wiring) both shipped and merged 2026-05-25 in PR #100. Suite now runs as a required, gating step in `frontend-ci.yml` between `Test with coverage` and `Build` — first PR-run verification landed green (job `ci` succeeded in 1m 46s on commit `53194aa`). Promoted Established → Battle-tested 2026-05-25 per CEO authorization, closing the 2026-05-05 integration-test cluster. |
 | Form submit loading guard | Battle-tested | `useFormSubmit` returns `submitting` ref, prevents double-submission |
-| Mutation testing (Stryker) v2 | Established | Reintroduced 2026-05-28 (PR forthcoming) after v1 was retired as VESTIGIAL in PR #133. Stryker 9 + Vitest runner, config mirrored from `script-development/fs-packages` template. Scope: `src/shared/{helpers,composables,middleware,services/auth}/**/*.ts` (9 files, 242 mutants). Achieved 91.70% mutation score against a `break: 90` threshold (fs-packages parity). **CI-gated from day one** in `frontend-ci.yml` between `Test with coverage` and `Integration tests` — this addresses the v1 failure mode (no consumer = vestigial). Transitive `qs` advisory chain (the one that motivated PR #133) closed via `overrides: {qs: "^6.15.2"}` in `package.json` — `npm audit` reports 0 vulnerabilities. Will promote Established → Battle-tested after one sprint of green CI runs. |
+| Mutation testing (Stryker) v2 | Established | Shipped 2026-05-28 in PR #135 (commit `f8887e3`) after v1 was retired as VESTIGIAL in PR #133. Stryker 9 + Vitest runner, config mirrored from `script-development/fs-packages` template. Scope: `src/shared/{helpers,composables,middleware,services/auth}/**/*.ts` (9 files, 242 mutants). 91.70% mutation score against a `break: 90` threshold (fs-packages parity). **CI-gated from day one** in `frontend-ci.yml` between `Test with coverage` and `Integration tests` — this addresses the v1 failure mode (no consumer = vestigial). Transitive `qs` advisory chain (the one that motivated PR #133) closed via `overrides: {qs: "^6.15.2"}` in `package.json` — `npm audit` reports 0 vulnerabilities. **Promotion Established → Battle-tested remains pending: condition is one sprint of green CI runs; only ~1 day elapsed since merge. Gate green on `main` since landing (the one failing CI run since was a commit-lint failure, not the mutation step).** |
 
 ### Foundry Wing
 
@@ -114,12 +114,13 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 
 ## Tech Debt
 
-**Assessed:** 2026-05-27 (Foundry — ADR-0015 list drift resolved), 2026-05-20 (Gallery)
+**Assessed:** 2026-05-27 (Foundry — ADR-0015 list drift resolved), 2026-05-29 (Gallery)
 
 ### Gallery Wing
 
 | Item | Severity | Notes |
 |---|---|---|
+| SUT-only top-level `.vue` import legacy allowlist | Low | The SUT-only arch test (PR #127) carries a `LEGACY_CROSS_COMPONENT_IMPORTS` allowlist of ~7 specs that import cross-component `.vue` files at top level (incl. `AboutPage.spec.ts`'s 16 Lego shapes, `App.spec.ts`, `HomePage`, `BrickDnaPage`, the auth pages). Each entry is declared one-line legacy debt; paydown converts to `findComponent({name})` + `vi.mock` and shrinks the Vite collect phase. Root of the residual collect-guard warnings; paydown target for the "promote collect-guard to failing" Seed. |
 | SetDetailPage ancillary HTTP calls outside adapter | Low | `loadParts` + `loadStorageMap` (storage map ref) are read-only projections, not CRUD — correctly direct. Both named explicitly. |
 | Button/nav components lack keyboard tests | Low | Noted in learnings — add when touching next |
 | Oxlint JS plugins not yet available for custom Vue checks | Low | Monitoring oxc milestone 3 — will replace `lint-vue-conventions.mjs` |
@@ -131,8 +132,11 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 | Item | Severity | Notes |
 |---|---|---|
 | `GetFamilyPartsAction` returns raw array (no ResourceData) | Low | Only endpoint bypassing the pattern. Re-confirmed 2026-05-26 by [`2026-05-26-foundry-pulse-refresh`](../records/audits/2026-05-26-foundry-pulse-refresh.md). |
-| `LogoutController` session-invalidation branch uncovered in feature tests | Low | `Auth/LogoutController` lines 19-20 (`$request->session()->invalidate()` + `regenerateToken()`) reach only 60% feature coverage; overall feature coverage 98.1% still clears the 90% gate. WO candidate: third test exercising the stateful session path. Surfaced 2026-05-26 (Finding 1, medium severity in the audit; carried here as Low Tech Debt because it doesn't break the gate). |
 | `FamilySetController::importStatus()` returns inline 404 JSON instead of typed exception | Low | Style inconsistency with the global-exception-handler pattern. Either document the empty-state divergence or introduce `ImportJobNotFoundException`. Surfaced 2026-05-26 (Finding 3 in audit). |
+
+_Resolved 2026-05-29:_
+
+- ~~`LogoutController` session-invalidation branch uncovered in feature tests~~ — **Closed 2026-05-29.** The stateful-session test shipped via PR #122 (`67186d6`); re-verified this date by re-running `composer test:feature-coverage` on the canonical PHP 8.5 host — `Auth/LogoutController` now reports **100.0%** and total feature coverage is **100.0%** (was 98.1% / LogoutController 60% on 2026-05-26). Confirmed during the [`2026-05-29-gallery-pulse-refresh`](../records/audits/2026-05-29-gallery-pulse-refresh.md) Casebook closure + Steward Foundry-carry-forward verify.
 
 _Resolved 2026-05-27:_
 
@@ -166,7 +170,7 @@ Ideas planted but deferred — revisit when the trigger condition is met. Seeds 
 
 ## Quality Metrics
 
-**Assessed:** 2026-05-26 (Foundry), 2026-05-25 (Gallery)
+**Assessed:** 2026-05-26 (Foundry), 2026-05-29 (Gallery)
 
 ### Gallery Wing
 
@@ -180,13 +184,14 @@ _Coverage figures below reflect the unit test gauntlet only. The integration sui
 | Shared components | _see `meta.componentCount`_ | `src/shared/generated/component-registry.json` |
 | Domains (Families) | _list `src/apps/families/domains/`_ | file system |
 | knip violations | 0 | `npm run knip` |
+| Mutation score (Stryker v2) | _run `npm run test:mutation` for current_ — last CI run 91.70% against `break: 90` (9 files / 242 mutants, `stryker.config.mjs`) | `frontend-ci.yml` Stryker step |
 
 ### Foundry Wing
 
 | Metric | Value | Threshold |
 |---|---|---|
 | Unit coverage | **100.0%** (measured 2026-05-26) | 100% |
-| Feature coverage | **98.1%** (measured 2026-05-26) — `Auth/LogoutController` at 60% (lines 19-20 uncovered; see Tech Debt) | 90% |
+| Feature coverage | **100.0%** (re-measured 2026-05-29 — `Auth/LogoutController` now 100% after PR #122; was 98.1% on 2026-05-26) | 90% |
 | Mutation score | **79.68%** (measured 2026-05-26, improved from 76.97%) | 76% |
 | Architecture tests | **107 passing** (measured 2026-05-26, up from 105) | All passing |
 | PHPStan | Level max, **0 errors** across 339 files (measured 2026-05-26) | Level max, zero errors |
