@@ -101,6 +101,56 @@ for (const file of vueFiles) {
             }
         }
     }
+
+    // Check 6b: No raw <RouterView>/<RouterLink> (or kebab) in app templates (ADR-0003)
+    // Apps must route through createRouterService()'s typed components (e.g. <FamilyRouterView>,
+    // <ShowcaseRouterLink>), never the globally-registered vue-router primitives. The word boundary
+    // in the regex ensures sanctioned wrappers like <ShowcaseRouterView> do not match.
+    if (file.includes('src/apps/')) {
+        const templateMatch = content.match(/<template[\s\S]*$/);
+        if (templateMatch) {
+            const template = templateMatch[0];
+            const rawRouterTag = /(?<![A-Za-z])<(?:RouterView|RouterLink|router-view|router-link)[\s/>]/;
+            if (rawRouterTag.test(template)) {
+                errors.push(
+                    `${file}: Raw <RouterView>/<RouterLink> (or kebab-case) is forbidden in apps (ADR-0003). Use the components returned by createRouterService() (e.g. <FamilyRouterView>, <ShowcaseRouterLink>) instead.`,
+                );
+            }
+        }
+    }
+}
+
+// Check 6c: No raw vue-router primitive imports in apps (ADR-0003)
+// createRouter / createWebHistory / createWebHashHistory / RouterView / RouterLink must come from
+// createRouterService(), not directly from 'vue-router'. Value imports only — `import type` is allowed
+// (e.g. `import type {RouteRecordRaw} from 'vue-router'`), as type-only names never produce runtime routing.
+const RAW_ROUTER_PRIMITIVES = ['createRouter', 'createWebHistory', 'createWebHashHistory', 'RouterView', 'RouterLink'];
+
+for (const file of allSourceFiles) {
+    if (!file.includes('src/apps/')) {
+        continue;
+    }
+
+    const content = readFileSync(file, 'utf-8');
+    // Match value imports from 'vue-router': `import {...} from 'vue-router'`, excluding `import type {...}`.
+    const importRegex = /import\s+(?!type\s)({[^}]*})\s+from\s+['"]vue-router['"]/g;
+    let match;
+    while ((match = importRegex.exec(content)) !== null) {
+        // Strip inline `type` specifiers (e.g. `{type RouteRecordRaw, createRouter}`) before checking names.
+        const named = match[1]
+            .replace(/[{}]/g, '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0 && !s.startsWith('type '))
+            .map((s) => s.split(/\s+as\s+/)[0].trim());
+
+        const offending = named.filter((name) => RAW_ROUTER_PRIMITIVES.includes(name));
+        for (const name of offending) {
+            errors.push(
+                `${file}: "${name}" must not be imported directly from 'vue-router' in apps (ADR-0003). Use createRouterService() from '@script-development/fs-router' instead.`,
+            );
+        }
+    }
 }
 
 // ── Cross-file checks (all .vue and .ts files) ─────────────────────────────────
