@@ -30,11 +30,11 @@ Fix both the symptom and the root cause — the symptom alone leaves the next ne
 
 ## Acceptance Criteria
 
-- [ ] `FamilySetResourceData::EAGER_LOAD` includes `set.theme`.
-- [ ] `ResourceDataArchitectureTest` asserts nested-resource EAGER_LOAD coverage and fails on the old constant.
-- [ ] A query-count assertion proves the family-sets index has no per-row theme query.
-- [ ] Backend gauntlet green (lint:test, phpstan, deptrac, test:arch, test).
-- [ ] Build Record filed; any further EAGER_LOAD offenders the new arch test surfaces are listed for follow-up.
+- [x] `FamilySetResourceData::EAGER_LOAD` includes `set.theme`.
+- [x] `ResourceDataArchitectureTest` asserts nested-resource EAGER_LOAD coverage and fails on the old constant.
+- [x] A query-count assertion proves the family-sets index has no per-row theme query.
+- [x] Backend gauntlet green (lint:test, phpstan, deptrac, test:arch, test).
+- [x] Build Record filed; any further EAGER_LOAD offenders the new arch test surfaces are listed for follow-up.
 
 ## References
 
@@ -43,4 +43,6 @@ Fix both the symptom and the root cause — the symptom alone leaves the next ne
 
 ---
 
-**Status:** Open
+**Status:** Completed (2026-05-29) — [Build Record](../build-records/2026-05-29-foundry-eager-load-n1-archtest.md)
+
+_Steward note: scope expanded by one file beyond the WO — `ResourceData.php::validateRelationsLoaded()` was modified to validate only the root segment of dotted EAGER_LOAD entries (Eloquent's `relationLoaded()` can't parse dotted keys, so `set.theme` always reported missing → 500). Verified safe: non-dotted resources (20 of 21) are unaffected, and the ADR-0019 loud-failure guarantee holds end-to-end because the nested resource's own `from()` validates the nested segment. Steward independently re-ran the full suite (702 green) and proved the new arch test red/green (revert constant → RED with the N+1 message → restore → GREEN). No other EAGER_LOAD offenders surfaced across all 21 resources._
