@@ -13,6 +13,19 @@ set -euo pipefail
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 
+# Resolve the git directory absolutely so the backend dispatch's
+# `cd backend && vendor/bin/captainhook --git-directory=...` invocation
+# works regardless of whether `.git` at the repo root is a directory
+# (main checkout) or a file containing a `gitdir:` pointer (worktree).
+# `git rev-parse --git-common-dir` returns the path to the common git dir
+# (the main repo's .git/) — in a worktree this is already absolute; in a
+# main checkout it is the relative string `.git`. Normalize to absolute
+# via the `cd … && pwd` idiom so the value survives the inner `cd backend`
+# subshell. Byte-identical to the pre-commit resolution landed by PR #138
+# (WO 2026-05-28-backend-pre-commit-worktree-safety); the two sibling hooks
+# resolve the shared git dir the same way.
+git_common_dir=$(cd "$(git rev-parse --git-common-dir)" && pwd)
+
 # git invokes pre-push with one line per pushed ref on stdin:
 #   <local-ref> <local-sha> <remote-ref> <remote-sha>
 # Buffer it so we can both inspect the range AND replay it into the
@@ -52,10 +65,12 @@ fi
 
 if [ "$needs_backend" -eq 1 ]; then
     echo "→ backend changes in push range; running backend pre-push gauntlet"
-    # --git-directory points at the parent's .git/ — captainhook would
-    # otherwise look for backend/.git/ which doesn't exist in the monorepo
-    # (the only git directory is at the orchestrator root).
-    (cd backend && printf '%s\n' "$stdin_buffer" | vendor/bin/captainhook hook:pre-push --git-directory=../.git)
+    # --git-directory passes the absolute git dir resolved above.
+    # The pre-fix form (`--git-directory=../.git`) assumed `.git` is a
+    # directory two levels up from `backend/`, which is true in a main
+    # checkout but false in a worktree (where `.git` at the worktree
+    # root is a `gitdir:`-pointer file, not a directory).
+    (cd backend && printf '%s\n' "$stdin_buffer" | vendor/bin/captainhook hook:pre-push --git-directory="$git_common_dir")
 fi
 
 if [ "$needs_frontend" -eq 1 ]; then

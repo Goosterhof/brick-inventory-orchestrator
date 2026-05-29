@@ -1,9 +1,9 @@
 # Decision: Pre-Push Permit Verification Gate
 
 **Date**: 2026-05-05
-**Last Amended**: 2026-05-28 (bypass-log scope; see § Amendment 2026-05-28 below). Prior amendment 2026-05-27 (uniform-rule convention; see § Amendment 2026-05-27 below).
+**Last Amended**: 2026-05-28 (II — bypass-log retirement; see § Amendment 2026-05-28 (II) below, which supersedes the bypass-log clause). Prior amendments: 2026-05-28 (I — bypass-log scope, now superseded), 2026-05-27 (uniform-rule convention).
 **Feature**: CaptainHook pre-push gate; Operations Protocol enforcement
-**Status**: accepted (two trial-doctrine amendments active — Devil's Court triggers scheduled for each)
+**Status**: accepted (bypass-log clause retired; uniform-rule amendment remains trial doctrine with a Devil's Court trigger scheduled)
 **Transferability**: project-specific
 
 ## Context
@@ -204,7 +204,9 @@ Low. The amendment is doc-only. Reversing it requires editing this section plus 
 
 ---
 
-## Amendment 2026-05-28 — Bypass-Log Scope
+## Amendment 2026-05-28 (I) — Bypass-Log Scope
+
+> **SUPERSEDED** by § Amendment 2026-05-28 (II) — Bypass-Log Retirement (below), filed the same day. The Category 1/Category 2 distinction described here never went into operation; the CEO retired the bypass-log requirement entirely rather than rescope it. Retained for the paper trail.
 
 **Triggering signal:** The firm's first Retrospective (2026-05-28) named the bypass-log clause as the highest-cost paper-trail debt of the post-merger window — six `--no-verify` Build Record back-fills owed and uncollected since 2026-05-26. The clause was reaffirmed by § Amendment 2026-05-27 (seven days prior to this amendment); the back-fill discipline did not catch up. The doctrinal-vs-actual gap was widening.
 
@@ -279,3 +281,53 @@ Re-interrogation outcomes follow the standard Devil's Court taxonomy (Confirmed 
 ### Reversal Cost
 
 Low. Doc-only amendment. Reversing it requires editing this section. No code, no tests, no fixtures. The 2026-05-27 amendment remains independently in force regardless of this amendment's disposition.
+
+---
+
+## Amendment 2026-05-28 (II) — Bypass-Log Retirement
+
+**Triggering signal:** A harness-review session (Opus-4.8 onboarding, 2026-05-28) re-examined the firm's scaffolding against a more capable model. The bypass-log clause was the clearest case of doctrine the firm did not keep: the first Retrospective (same day) recorded **six owed bypass logs, honored zero times in two weeks** — and the rescoping in § Amendment 2026-05-28 (I), filed hours earlier, was itself a response to that debt. The CEO ruled that a clause honored zero times is not enforcement; it is a pretense of enforcement that manufactures debt and erodes the credibility of the rest of the paper trail.
+
+**The Resolved Question:** Should `--no-verify` use carry any mandatory logging obligation at all?
+
+### The Decision
+
+**No.** The bypass-log requirement is **retired**. Using `--no-verify` is no longer a paper-trail obligation in any category.
+
+- The § Documented Escape Hatch logging requirement (a bypass "must be documented ... with explicit Director/Steward sign-off") is **withdrawn**.
+- The § Amendment 2026-05-28 (I) Category 1 / Category 2 distinction is **moot and superseded** — there is no longer a Build-Record tier or a minutes tier; there is no required artifact.
+- A bypass **may** be noted in the session's `/minutes` § Process Meta as ordinary session texture, the same as any other process observation. This is optional colour, not a discharge obligation. Nothing is "owed."
+
+### What Does NOT Change
+
+The gate's **mechanical** behavior is untouched, and it remains the real enforcement:
+
+- `PrePushPermitGate` still refuses over-threshold (`>20` files OR `>500` lines) backend-touching pushes that lack a matching open Work Order. That is a structural check that fails closed — it does not depend on anyone remembering to write a log afterward.
+- `--no-verify` remains the documented escape hatch for the genuine cases (emergency hotfix, pre-authorized exploratory work, pre-existing-baseline breach, hook bugs, merge commits, post-rebase force-pushes). The escape was always available; this amendment only removes the after-the-fact logging tax on using it.
+
+### Basis
+
+Chosen on **enforcement honesty**, confirmed by evidence. A gate enforces; a logging clause that is honored zero times out of six does not. The clause's stated purpose — to catch a Brickwright skipping the gauntlet to ship untested production code — is already served by the mechanical gate (which refuses the push) plus code review and CI on the eventual PR. The clause added a manual obligation on top of mechanical enforcement, and the firm did not pay it. Removing it closes the doctrinal-vs-actual gap by lowering doctrine to what the firm actually does, rather than pretending at a discipline it does not keep.
+
+The six previously-owed back-fills are **discharged by retirement** — there is no longer an artifact owed. They are accounted for in the consolidated paragraph filed under § Amendment 2026-05-28 (I)'s Build Record; no further action is required.
+
+### Consequences
+
+**Positive:**
+
+- The firm's most visible paper-trail debt is closed — not by catching up, but by removing a clause that produced debt without signal.
+- The remaining paper trail (Work Orders, Build Records, Audits, the mechanical gate) is more credible once the firm stops listing an unenforced obligation alongside the enforced ones.
+- One less manual discipline concentrated on the Steward seat — aligns with the retro's "Steward bandwidth" concern.
+
+**Negative:**
+
+- A code-bearing `--no-verify` bypass now leaves no *mandatory* dedicated record. Mitigation: the mechanical gate already refuses the high-risk case (over-threshold backend without a WO); anything that slips past is visible in the PR diff and CI. The residual risk is a small, deliberate trade for honesty.
+- The Category 1/Category 2 vocabulary introduced hours earlier is retired almost immediately. The paper trail shows two amendments on the same day moving in the same direction (rescope, then retire); recorded plainly rather than smoothed over.
+
+### Settled, Not Trial Doctrine
+
+Unlike the two prior amendments, this one is recorded as **settled doctrine**, not trial doctrine. It removes a clause rather than adding a convention to be validated, so there is no behavior to put on a Devil's Court trigger. If a future code-bearing bypass causes a concrete incident that a mandatory log would have prevented, that incident is the trigger to reconsider — file a new amendment then.
+
+### Reversal Cost
+
+Low. Doc-only. Reversing it means reinstating the § Documented Escape Hatch logging requirement (and optionally the Category distinction). No code, no tests, no fixtures. The 2026-05-27 uniform-rule amendment remains independently in force.

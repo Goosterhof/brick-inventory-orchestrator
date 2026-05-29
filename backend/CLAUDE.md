@@ -225,7 +225,7 @@ CaptainHook enforces on every commit (PHP files only): **lint:test → phpstan �
 
 **PrePushPermitGate → composer test**, dispatched from `.githooks/pre-push` only when the pushed range touches `backend/**`.
 
-- **PrePushPermitGate** (ADR-0028) — verifies that any non-trivial branch has a corresponding open Work Order on file. Threshold: more than 20 files OR more than 500 lines changed against `origin/main`. Slug match: strict equality between the branch slug (portion after the last `/`, lowercased) and the Work Order slug (filename minus the `YYYY-MM-DD-` prefix and `.md` suffix, lowercased). Branches under the threshold and pushes from `main` skip the check entirely. Documented `--no-verify` escape: every bypass must be recorded in the corresponding Build Record's Decisions Made section with explicit Steward sign-off.
+- **PrePushPermitGate** (ADR-0028) — verifies that any non-trivial branch has a corresponding open Work Order on file. Threshold: more than 20 files OR more than 500 lines changed against `origin/main`. Slug match: strict equality between the branch slug (portion after the last `/`, lowercased) and the Work Order slug (filename minus the `YYYY-MM-DD-` prefix and `.md` suffix, lowercased). Branches under the threshold and pushes from `main` skip the check entirely. The `--no-verify` escape hatch remains available with no logging obligation — the bypass-log clause was retired in ADR-0028 § Amendment 2026-05-28 (II); the gate's mechanical refusal is the enforcement, not an after-the-fact record.
 - **composer test** — full quality inspection rig.
 
 ### Coverage Policy

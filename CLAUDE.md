@@ -37,8 +37,9 @@ The Brickworks is a single firm with two named production wings and a central at
 | **Audit** | After an inspection | Quality Warden | `.claude/records/audits/` |
 | **Standup Note** | At cross-wing sync points | The Steward (via `/standup`) | `.claude/records/standups/` |
 | **Retrospective** | When the CEO calls `/retro` to learn across sessions | The Steward (fresh context) | `.claude/records/retrospectives/` |
+| **Minutes** | During/after a session (via `/minutes`) | Meeting Minutes Secretary | `.claude/records/minutes/` |
 
-Session-level texture is also captured in the firm's running ledger `MINUTES.md` (root) via the `/minutes` skill. Minutes feed the Retrospective — the `/retro` skill mines minutes (plus Build Records, Audits, Standups) for what reversed, what repeated, what surprised.
+Session-level texture is captured as per-session minutes files in `.claude/records/minutes/` (`YYYY-MM-DD-<slug>.md`) via the `/minutes` skill — one file per session so parallel-dispatch branches never collide on a shared ledger. The repo-root `MINUTES.md` is the frozen archive of minutes through 2026-05-28. Minutes feed the Retrospective — the `/retro` skill mines minutes (plus Build Records, Audits, Standups) for what reversed, what repeated, what surprised.
 
 ### Vocabulary Source of Truth
 
