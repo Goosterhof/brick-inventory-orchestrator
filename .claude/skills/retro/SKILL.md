@@ -34,7 +34,7 @@ A retro is not a summary. It is a **verdict** on what the firm has actually lear
 
 **The retro should not be written by the conversation that produced the work being judged.** Pollution from the same context makes the retro defensive rather than honest.
 
-Use the `Agent` tool with `subagent_type: steward` and pass the procedure below (steps 2–6) as the prompt body. The fresh-context Steward reads the paper trail and writes the retro file. The main conversation gets the summary back.
+Use the `Agent` tool with `subagent_type: steward` and pass the procedure below (steps 2–7) as the prompt body. The fresh-context Steward reads the paper trail and writes the retro file. The main conversation gets the summary back.
 
 **Exception:** if `/retro` was invoked on a clean session that has done nothing else, the main agent IS the fresh-context Steward. In that case, execute the procedure inline.
 
@@ -47,7 +47,18 @@ Read the latest file in `.claude/records/retrospectives/` (by mtime). The window
 
 State the window explicitly in the output — the reader needs to know what was on the table.
 
-### 3. Read the Paper Trail
+### 3. Audit the Prior Retro's Action Items
+
+Read the most recent prior retro's "Action Items" section (the same prior-retro file already located by mtime in step 2). For each prior action item, classify it against the current window's evidence into one of four states — each requiring a citation:
+
+- `implemented` — completed; cite the Build Record, commit, ADR, or artifact that closed it.
+- `pending` — still open and still relevant; carry it forward and explain why no progress was made.
+- `dropped` — superseded or decided against; cite the decision.
+- `rotted` — still open but no longer relevant; declare it dead so it stops recurring as "pending" forever.
+
+**First-retro fallback:** if no prior retro exists, this step is a no-op and the output section reads "First retro — no prior action items to track."
+
+### 4. Read the Paper Trail
 
 Inside the window, read in this order:
 
@@ -63,7 +74,7 @@ Inside the window, read in this order:
 
 Use `Bash` + `Glob` to enumerate. Read titles, dates, and Status lines first — deep-read only when something looks like a candidate for one of the three buckets below. The retro is fast; don't drown in detail.
 
-### 4. Mine for the Three Buckets
+### 5. Mine for the Three Buckets
 
 For each artifact, ask three questions:
 
@@ -92,7 +103,7 @@ For each artifact, ask three questions:
 
 **Be specific.** Cite dates, file paths, ADR numbers, Work Order slugs. Vague retros produce no learning. "We had some friction with subagents" is useless; "Brickwright was dispatched for an audit-shaped task on 2026-05-22 and 2026-05-24 — CEO intervened both times" is actionable.
 
-### 5. Render the Verdict
+### 6. Render the Verdict
 
 In one or two sentences, name the firm's health since the last retro. Examples of well-formed verdicts:
 
@@ -102,7 +113,7 @@ In one or two sentences, name the firm's health since the last retro. Examples o
 
 Soft verdicts produce no learning. Be specific. If the firm is healthy, say so plainly in one sentence — don't pad it into three.
 
-### 6. File the Retrospective
+### 7. File the Retrospective
 
 Create `.claude/records/retrospectives/YYYY-MM-DD-retro.md`. If multiple retros happen on the same day (rare), suffix with `-<topic-slug>`.
 
@@ -155,6 +166,14 @@ If nothing surprised in this window, write: "No surprises in this window — out
 
 ---
 
+## Prior Retro Action Items
+
+- **[Prior action item]** — `implemented` / `pending` / `dropped` / `rotted`: [citation — Build Record, commit, ADR, or decision] — [one-line reason].
+
+If no prior retro exists, write: "First retro — no prior action items to track."
+
+---
+
 ## Verdict
 
 [One or two sentences. The Steward's judgment on firm health since the last retro. Specific, not soft.]
@@ -184,6 +203,7 @@ If none, omit this section. But ask first: did this retro really produce no foll
 - **No summarizing.** A retro that recaps what happened is a failed retro. The three buckets force the lens: reversal / repetition / surprise. If a fact doesn't fit one of the three, it doesn't belong in the retro.
 - **Cite sources.** Every claim points at a file, a date, an ADR number, a Work Order slug. The retro is auditable.
 - **Confrontational without being personal.** Findings name patterns, not crew members. *"The firm paid twice for X"* — not *"Brickwright kept making mistake X."*
+- **No verbatim restatement of open action items.** A new action item may not restate a still-open prior action item word-for-word — either reconfirm the prior one (it stays tracked in the Prior Retro Action Items section) or rephrase it materially, so recommendations never look fresh when they aren't.
 
 ---
 

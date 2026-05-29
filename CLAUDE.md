@@ -85,7 +85,7 @@ This is the **Baseplate** — the orchestrator for the LEGO inventory management
 - `backend/` — **The Brick** (Laravel 13 API, formerly the standalone `brick-inventory-backend` repo)
 - `frontend/` — **The Plate** (Vue 3 SPA, formerly the standalone `brick-inventory-frontend` repo)
 
-Both surfaces were absorbed into this repo via `git subtree add` on 2026-05-17, with full pre-merge history preserved.
+Both surfaces were absorbed into this repo via `git subtree add` on 2026-05-17. The absorption preserved the full pre-merge **content** (every file landed at its 2026-05-17 state) but **not the commit graph** — the constituent standalone-repo SHAs are unreachable from the orchestrator (`git rev-parse` / `git cat-file` fail on every pre-merger SHA). A Work Order or Audit citing a pre-2026-05-17 SHA cannot be resolved via `git show` inside this repo; reconstruct from on-disk artifacts or the still-archived standalone repos.
 
 **Production deployment is a single Railway service.** The root `Dockerfile` multi-stages Node and PHP, builds two Vue apps (`families` and `admin`), and overlays their dists onto `backend/public/` — families at the root, admin under `public/admin/` (with Vite `--base=/admin/` so asset URLs and `import.meta.env.BASE_URL` are correctly scoped). FrankenPHP serves both surfaces from the same origin: `/api/*` flows through Laravel, `/admin` and `/admin/*` fall through to `public/admin/index.html`, every other route falls through to `public/index.html`. Routing happens in `Route::fallback()` in `backend/routes/web.php`. Same-origin removes the cross-port session/Sanctum complexity in production while leaving local dev unchanged (Vite on `:5173`, backend on `:8000`). The `showcase` app is dev-only and never ships.
 
