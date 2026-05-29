@@ -311,4 +311,20 @@ describe('PrePushPermitGate::failureMessage', function(): void {
 
         expect($message)->toContain('--no-verify');
     });
+
+    it('should carry no logging obligation and no Director reference (ADR-0028 Amendment 2026-05-28 II)', function(): void {
+        $message = PrePushPermitGate::failureMessage(
+            branch: 'feat/foo-bar',
+            branchSlug: 'foo-bar',
+            stats: ['files' => 25, 'lines' => 400],
+            permits: [],
+        );
+
+        expect($message)
+            ->toContain('no logging obligation')
+            ->and($message)->not->toContain('Director')
+            ->and($message)->not->toContain('shift log')
+            ->and($message)->not->toContain('Decisions Made')
+            ->and($message)->not->toContain('sign-off');
+    });
 });
