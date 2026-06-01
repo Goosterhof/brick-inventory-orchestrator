@@ -29,11 +29,12 @@ It is the same crew and the same paper trail as a manual Warden audit — just o
 
 ## Governance Boundary (load-bearing)
 
-The workflow encodes the Warden's write scope mechanically:
+The workflow constrains the Warden's write scope **by instruction**, not by the harness tool surface. The orchestrator's `agent()` primitive exposes no per-agent `allowedTools` knob, so the boundary lives in the prompts — every finder/verify agent is told NOWRITE (`CONVENTIONS`, `warden-cross-wing-sweep.js`), and only the synthesis agent is granted a narrow write scope. This is a model-followed constraint, not a mechanical one; it is acceptable here only because the blast radius is bounded — the sweep is CEO-triggered, read-only against code by design, and fires against the firm's own paper trail:
 
-- **Finder agents may NOT write.** They return structured findings only.
+- **Finder + verify agents are instructed read-only.** They return structured findings only — no `allowedTools` enforces this, the prompt does.
 - **Only the synthesis agent writes**, and only to `.claude/records/audits/*.md` and `.claude/docs/quality-warden-casebook.md` — the Warden's locked territory (ADR-0030).
 - It does **not** touch `pulse.md`, `decisions.md`, agent files, wing manuals, or any code. Pulse updates and manual corrections remain the Steward's follow-up, exactly as with a hand-run audit.
+- **The Steward's fresh review (below) is the real backstop** — if a finder ever ignored its NOWRITE instruction, the diff would surface there, not at a tool gate.
 
 After the sweep lands, **The Steward reviews the filed Audit fresh** — confirm findings against source, correct any self-counting slips, append the `## Steward Evaluation`, and dispatch the actionable findings as Work Orders. The machine produces the evidence; the Steward rules on it.
 

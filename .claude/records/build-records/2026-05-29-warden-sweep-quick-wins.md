@@ -83,6 +83,15 @@ The ADR edit is documentation; no gauntlet applies.
 
 None. Both changes are corrections that bring docs/strings into line with already-settled decisions (ADR-0028 Amendment, the test-guard reporter's actual thresholds). No new learning, decision, or pulse entry warranted. The line-159 divergence noted in the Self-Debrief is a candidate follow-up doc task, not a knowledge-base entry.
 
+## Review Follow-Through (PR #145, General's COMMENT review)
+
+The General filed one concern and three nits, no blockers. Dispositions:
+
+- **Concern — "write-scope boundary encoded mechanically" overstates enforcement.** Conceded and corrected. `SKILL.md`'s Governance Boundary section now states plainly that the boundary is **instruction-level, not harness-level**: the orchestrator's `agent()` primitive exposes no per-agent `allowedTools` knob, so the NOWRITE constraint lives in the `CONVENTIONS` prompt string, and the Steward's fresh post-sweep review is named as the real backstop. Claim and mechanism now match.
+- **Nit — `PrePushPermitGateTest` `not->toContain('Director')` is brittle.** Fixed. Tightened to the specific retired phrase `'Director sign-off'` so a future message surfacing "Directory"/`PERMIT_DIRECTORY` text can't trip a false failure. All 42 gate tests green.
+- **Nit — empty `parallel([])` on clean/low-only dimensions.** Confirmed safe, no code change: `parallel()` is a `Promise.all`-style barrier, so an empty thunk list resolves to `[]` immediately (no hang, no error); the downstream `.then((verified) => verified.filter(Boolean))` yields `[]`. The `cross-adr` and clean-pass paths hit this routinely and have run green.
+- **Nit — `ROOT` hardcoded to one checkout path.** Acknowledged, left as-is. The General called this cosmetic for a single-operator personal domain; the workflow sandbox has no `process.cwd()`, so the only fix is an `args.root` override, and the harness guards edits to the workflow `.js` as agent-controlling config. Deferred as a genuine cosmetic.
+
 ## References
 
 - Triggering audit: [`2026-05-29-warden-cross-wing-sweep`](../audits/2026-05-29-warden-cross-wing-sweep.md) — findings F-doc-1, G-adr-0012-1

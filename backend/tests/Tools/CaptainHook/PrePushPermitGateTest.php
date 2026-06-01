@@ -322,7 +322,7 @@ describe('PrePushPermitGate::failureMessage', function(): void {
 
         expect($message)
             ->toContain('no logging obligation')
-            ->and($message)->not->toContain('Director')
+            ->and($message)->not->toContain('Director sign-off')
             ->and($message)->not->toContain('shift log')
             ->and($message)->not->toContain('Decisions Made')
             ->and($message)->not->toContain('sign-off');
