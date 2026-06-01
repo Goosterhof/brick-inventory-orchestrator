@@ -5,6 +5,7 @@ declare(strict_types = 1);
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
 use Rector\Naming\Rector\Assign\RenameVariableToMatchMethodCallReturnTypeRector;
+use Rector\Naming\Rector\Class_\RenamePropertyToMatchTypeRector;
 use Rector\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector;
 use Rector\Naming\Rector\ClassMethod\RenameVariableToMatchNewTypeRector;
 use Rector\Php74\Rector\Closure\ClosureToArrowFunctionRector;
@@ -37,9 +38,8 @@ return RectorConfig::configure()
         __DIR__ . '/public/frankenphp-worker.php',
         CarbonToDateFacadeRector::class,
         AddOverrideAttributeToOverriddenMethodsRector::class,
-        RenameParamToMatchTypeRector::class => [
-            __DIR__ . '/database/migrations',
-        ],
+        RenameParamToMatchTypeRector::class,
+        RenamePropertyToMatchTypeRector::class,
         RenameVariableToMatchMethodCallReturnTypeRector::class => [
             __DIR__ . '/tests',
         ],
