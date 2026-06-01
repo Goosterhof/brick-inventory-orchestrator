@@ -1,5 +1,6 @@
+import type {ComponentPublicInstance} from 'vue';
+
 import SetDetailPage from '@app/domains/sets/pages/SetDetailPage.vue';
-import PlacePartModal from '@app/modals/PlacePartModal.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import BackButton from '@shared/components/BackButton.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
@@ -617,7 +618,7 @@ describe('SetDetailPage', () => {
         await flushPromises();
 
         // Assert
-        const modal = wrapper.findComponent(PlacePartModal);
+        const modal = wrapper.findComponent({name: 'PlacePartModal'});
         expect(modal.exists()).toBe(true);
         expect(modal.props('open')).toBe(true);
         expect(modal.props('partIdentity')).toStrictEqual({
@@ -650,11 +651,11 @@ describe('SetDetailPage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent(PlacePartModal).vm.$emit('close');
+        (wrapper.findComponent({name: 'PlacePartModal'}).vm as ComponentPublicInstance).$emit('close');
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(PlacePartModal).exists()).toBe(false);
+        expect(wrapper.findComponent({name: 'PlacePartModal'}).exists()).toBe(false);
     });
 
     it('should refetch parts after a successful placement', async () => {
@@ -677,11 +678,11 @@ describe('SetDetailPage', () => {
         const callsBeforeAssign = mockGetRequest.mock.calls.length;
 
         // Act
-        wrapper.findComponent(PlacePartModal).vm.$emit('assigned');
+        (wrapper.findComponent({name: 'PlacePartModal'}).vm as ComponentPublicInstance).$emit('assigned');
         await flushPromises();
 
         // Assert — modal closes and a fresh /parts fetch fires.
-        expect(wrapper.findComponent(PlacePartModal).exists()).toBe(false);
+        expect(wrapper.findComponent({name: 'PlacePartModal'}).exists()).toBe(false);
         expect(mockGetRequest.mock.calls.length).toBeGreaterThan(callsBeforeAssign);
     });
 
