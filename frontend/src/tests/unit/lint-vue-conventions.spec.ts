@@ -69,6 +69,66 @@ describe('lint-vue-conventions raw Vue Router bans (ADR-0003)', () => {
         expect(output).toContain('"createWebHistory" must not be imported directly');
     });
 
+    it('should flag a namespace import of vue-router in an app file', () => {
+        // Arrange — `import * as VueRouter` exposes every primitive at runtime; the brace-anchored
+        // named-import regex used to miss this entirely.
+        const fixture = writeFixture(
+            'showcase/router/namespace.ts',
+            [
+                "import * as VueRouter from 'vue-router';",
+                '',
+                'export const router = VueRouter.createRouter({history: VueRouter.createWebHistory(), routes: []});',
+                '',
+            ].join('\n'),
+        );
+
+        // Act
+        const {code, output} = runLinter(fixture);
+
+        // Assert
+        expect(code).toBe(1);
+        expect(output).toContain("namespace import of 'vue-router' is forbidden");
+    });
+
+    it('should flag the named portion of a mixed default+named vue-router import', () => {
+        // Arrange — a default before the brace (`import Default, {createRouter}`) used to slip past the
+        // regex that anchored `{` immediately after `import`.
+        const fixture = writeFixture(
+            'showcase/router/mixed.ts',
+            [
+                "import Default, {createRouter} from 'vue-router';",
+                '',
+                'export const router = createRouter({routes: []});',
+                'export const fallback = Default;',
+                '',
+            ].join('\n'),
+        );
+
+        // Act
+        const {code, output} = runLinter(fixture);
+
+        // Assert
+        expect(code).toBe(1);
+        expect(output).toContain('"createRouter" must not be imported directly');
+    });
+
+    it('should pass a type-only namespace import of vue-router', () => {
+        // Arrange — `import type * as` is type-only and produces no runtime routing, so it is allowed.
+        const fixture = writeFixture(
+            'showcase/router/type-namespace.ts',
+            ["import type * as VueRouter from 'vue-router';", '', 'export type Router = VueRouter.Router;', ''].join(
+                '\n',
+            ),
+        );
+
+        // Act
+        const {code, output} = runLinter(fixture);
+
+        // Assert
+        expect(code).toBe(0);
+        expect(output).toContain('All conventions passed.');
+    });
+
     it('should flag raw <RouterView>/<RouterLink> in an app template', () => {
         // Arrange
         const fixture = writeFixture(
