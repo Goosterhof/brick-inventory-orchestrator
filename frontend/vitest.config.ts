@@ -78,6 +78,7 @@ export default mergeConfig(
                 // App roots — files directly in the app directory, not in domains
                 rootProject('families/root', 'apps/families'),
                 rootProject('admin/root', 'apps/admin'),
+                rootProject('showcase/root', 'apps/showcase'),
 
                 // Shared directories
                 project('shared/components', 'shared/components'),
@@ -92,6 +93,7 @@ export default mergeConfig(
 
                 // Infrastructure
                 fileProject('architecture', 'architecture.spec.ts'),
+                fileProject('lint-vue-conventions', 'lint-vue-conventions.spec.ts'),
 
                 // Browser integration tests — loaded from vitest.browser.config.ts via npm scripts
                 // Excluded from main config to avoid Playwright provider initialization during unit tests

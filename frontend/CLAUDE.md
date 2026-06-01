@@ -19,7 +19,7 @@ Domain layouts live at [`/.claude/docs/domain-map.md`](../.claude/docs/domain-ma
 | Material     | Supplier                                                              |
 | ------------ | --------------------------------------------------------------------- |
 | Framework    | Vue 3 (Composition API, `<script setup>`)                             |
-| Language     | TypeScript 5.9 (strict mode, no exceptions)                           |
+| Language     | TypeScript 6.0 (strict mode, no exceptions)                           |
 | Build System | Vite 8                                                                |
 | Styling      | UnoCSS 66 (atomic, attributify) with neo-brutalist LEGO design system |
 | Icons        | Phosphor Icons (`@phosphor-icons/vue`)                                |

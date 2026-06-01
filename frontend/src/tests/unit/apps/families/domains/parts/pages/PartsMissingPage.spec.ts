@@ -1,11 +1,7 @@
+import type {VueWrapper} from '@vue/test-utils';
+import type {ComponentPublicInstance} from 'vue';
+
 import PartsMissingPage from '@app/domains/parts/pages/PartsMissingPage.vue';
-import BackButton from '@shared/components/BackButton.vue';
-import EmptyState from '@shared/components/EmptyState.vue';
-import FilterChip from '@shared/components/FilterChip.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
-import PageHeader from '@shared/components/PageHeader.vue';
-import PartListItem from '@shared/components/PartListItem.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -116,6 +112,11 @@ const makePayload = (shortfalls: Record<string, unknown>[] = [makeEntry()], unkn
     data: {shortfalls, unknownFamilySetIds},
 });
 
+/** Emit an event from a stub component looked up by name. */
+const emit = (wrapper: VueWrapper | undefined, event: string): void => {
+    (wrapper?.vm as ComponentPublicInstance | undefined)?.$emit(event);
+};
+
 describe('PartsMissingPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -130,7 +131,7 @@ describe('PartsMissingPage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(PageHeader).props('title')).toBe('parts.missingTitle');
+        expect(wrapper.findComponent({name: 'PageHeader'}).props('title')).toBe('parts.missingTitle');
     });
 
     it('fetches the master shopping list on mount', async () => {
@@ -165,7 +166,7 @@ describe('PartsMissingPage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(EmptyState).props('message')).toBe('parts.missingEmpty');
+        expect(wrapper.findComponent({name: 'EmptyState'}).props('message')).toBe('parts.missingEmpty');
     });
 
     it('shows a non-intrusive error message when the fetch fails', async () => {
@@ -194,10 +195,10 @@ describe('PartsMissingPage', () => {
         await flushPromises();
 
         // Assert
-        const items = wrapper.findAllComponents(PartListItem);
+        const items = wrapper.findAllComponents({name: 'PartListItem'});
         expect(items).toHaveLength(2);
-        const brickB = items.find((i) => i.props('name') === 'Brick B');
-        expect(brickB?.props('quantity')).toBe(5);
+        const brickB = items.find((i) => (i.props('name') as string) === 'Brick B');
+        expect(brickB?.props('quantity') as number).toBe(5);
     });
 
     it('shows the summary totals (shortfall count and distinct sets)', async () => {
@@ -255,7 +256,7 @@ describe('PartsMissingPage', () => {
 
         // Assert
         expect(wrapper.find("[data-testid='missing-unknown-sets']").exists()).toBe(true);
-        expect(wrapper.findComponent(EmptyState).exists()).toBe(false);
+        expect(wrapper.findComponent({name: 'EmptyState'}).exists()).toBe(false);
     });
 
     it('navigates back to the parts inventory when the back button is clicked', async () => {
@@ -265,7 +266,7 @@ describe('PartsMissingPage', () => {
         await flushPromises();
 
         // Act
-        await wrapper.findComponent(BackButton).trigger('click');
+        await wrapper.findComponent({name: 'BackButton'}).trigger('click');
 
         // Assert
         expect(mockGoToRoute).toHaveBeenCalledWith('parts');
@@ -294,13 +295,13 @@ describe('PartsMissingPage', () => {
             await flushPromises();
 
             // Act
-            await wrapper.findComponent(TextInput).setValue('brick');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('brick');
             await flushPromises();
 
             // Assert
-            const items = wrapper.findAllComponents(PartListItem);
+            const items = wrapper.findAllComponents({name: 'PartListItem'});
             expect(items).toHaveLength(1);
-            expect(items.find((i) => i.props('name') === 'Brick')?.exists()).toBe(true);
+            expect(items.find((i) => (i.props('name') as string) === 'Brick')?.exists()).toBe(true);
         });
 
         it('filters by part number', async () => {
@@ -312,11 +313,11 @@ describe('PartsMissingPage', () => {
             await flushPromises();
 
             // Act
-            await wrapper.findComponent(TextInput).setValue('3001');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('3001');
             await flushPromises();
 
             // Assert
-            expect(wrapper.findAllComponents(PartListItem)).toHaveLength(1);
+            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(1);
         });
 
         it("shows a 'no results' empty state when the search matches nothing", async () => {
@@ -326,11 +327,11 @@ describe('PartsMissingPage', () => {
             await flushPromises();
 
             // Act
-            await wrapper.findComponent(TextInput).setValue('zzzzzz');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('zzzzzz');
             await flushPromises();
 
             // Assert
-            const emptyStates = wrapper.findAllComponents(EmptyState);
+            const emptyStates = wrapper.findAllComponents({name: 'EmptyState'});
             expect(emptyStates.find((e) => e.props('message') === 'parts.missingNoResults')?.exists()).toBe(true);
         });
     });
@@ -351,7 +352,9 @@ describe('PartsMissingPage', () => {
             await flushPromises();
 
             // Assert
-            const quantities = wrapper.findAllComponents(PartListItem).map((i) => i.props('quantity'));
+            const quantities = wrapper
+                .findAllComponents({name: 'PartListItem'})
+                .map((i) => i.props('quantity') as number);
             expect(quantities).toStrictEqual([10, 5, 2]);
         });
 
@@ -368,12 +371,14 @@ describe('PartsMissingPage', () => {
             await flushPromises();
 
             // Act
-            const nameChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'parts.missingSortName');
-            nameChip?.vm.$emit('click');
+            const nameChip = wrapper
+                .findAllComponents({name: 'FilterChip'})
+                .find((c) => c.text() === 'parts.missingSortName');
+            emit(nameChip, 'click');
             await flushPromises();
 
             // Assert
-            const names = wrapper.findAllComponents(PartListItem).map((i) => i.props('name'));
+            const names = wrapper.findAllComponents({name: 'PartListItem'}).map((i) => i.props('name') as string);
             expect(names).toStrictEqual(['Alpha', 'Bravo', 'Charlie']);
         });
 
@@ -391,12 +396,14 @@ describe('PartsMissingPage', () => {
             await flushPromises();
 
             // Act
-            const colorChip = wrapper.findAllComponents(FilterChip).find((c) => c.text() === 'parts.missingSortColor');
-            colorChip?.vm.$emit('click');
+            const colorChip = wrapper
+                .findAllComponents({name: 'FilterChip'})
+                .find((c) => c.text() === 'parts.missingSortColor');
+            emit(colorChip, 'click');
             await flushPromises();
 
             // Assert
-            const colors = wrapper.findAllComponents(PartListItem).map((i) => i.props('colorName'));
+            const colors = wrapper.findAllComponents({name: 'PartListItem'}).map((i) => i.props('colorName') as string);
             expect(colors).toStrictEqual(['', 'Blue', 'Red']);
         });
 
@@ -410,7 +417,7 @@ describe('PartsMissingPage', () => {
 
             // Assert — shortfall is active by default
             const shortfallChip = wrapper
-                .findAllComponents(FilterChip)
+                .findAllComponents({name: 'FilterChip'})
                 .find((c) => c.text() === 'parts.missingSortShortfall');
             expect(shortfallChip?.props('active')).toBe(true);
         });
@@ -426,7 +433,7 @@ describe('PartsMissingPage', () => {
             await flushPromises();
 
             // Assert
-            const labels = wrapper.findAllComponents(PrimaryButton).map((b) => b.text());
+            const labels = wrapper.findAllComponents({name: 'PrimaryButton'}).map((b) => b.text());
             expect(labels).toContain('parts.missingExportBrickLink');
             expect(labels).toContain('parts.missingExportCsv');
         });
@@ -440,7 +447,7 @@ describe('PartsMissingPage', () => {
             await flushPromises();
 
             // Assert
-            const labels = wrapper.findAllComponents(PrimaryButton).map((b) => b.text());
+            const labels = wrapper.findAllComponents({name: 'PrimaryButton'}).map((b) => b.text());
             expect(labels).not.toContain('parts.missingExportBrickLink');
             expect(labels).not.toContain('parts.missingExportCsv');
         });
@@ -456,12 +463,12 @@ describe('PartsMissingPage', () => {
             await flushPromises();
 
             // Act
-            await wrapper.findComponent(TextInput).setValue('3002');
+            await wrapper.findComponent({name: 'TextInput'}).setValue('3002');
             await flushPromises();
             const exportBtn = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((b) => b.text() === 'parts.missingExportBrickLink');
-            exportBtn?.vm.$emit('click');
+            emit(exportBtn, 'click');
             await flushPromises();
 
             // Assert
@@ -489,9 +496,9 @@ describe('PartsMissingPage', () => {
 
             // Act
             const exportBtn = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((b) => b.text() === 'parts.missingExportCsv');
-            exportBtn?.vm.$emit('click');
+            emit(exportBtn, 'click');
             await flushPromises();
 
             // Assert
@@ -530,9 +537,9 @@ describe('PartsMissingPage', () => {
 
             // Act
             const exportBtn = wrapper
-                .findAllComponents(PrimaryButton)
+                .findAllComponents({name: 'PrimaryButton'})
                 .find((b) => b.text() === 'parts.missingExportCsv');
-            exportBtn?.vm.$emit('click');
+            emit(exportBtn, 'click');
             await flushPromises();
 
             // Assert

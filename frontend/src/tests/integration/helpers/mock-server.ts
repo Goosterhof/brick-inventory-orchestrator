@@ -99,7 +99,6 @@ export const mockHttpService = {
     deleteRequest: <T = unknown>(endpoint: string) => resolveRoute<T>('DELETE', endpoint),
     downloadRequest: () => Promise.reject(new Error('[mock-server] downloadRequest not implemented')),
     previewRequest: () => Promise.reject(new Error('[mock-server] previewRequest not implemented')),
-    streamRequest: () => Promise.reject(new Error('[mock-server] streamRequest not implemented')),
     registerRequestMiddleware: (fn: RequestMiddleware) => {
         requestMiddleware.push(fn);
         return unregister(requestMiddleware, fn);
