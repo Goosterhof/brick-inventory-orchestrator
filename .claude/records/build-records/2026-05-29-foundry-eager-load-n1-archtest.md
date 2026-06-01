@@ -39,6 +39,16 @@ For every discovered nesting `Parent → Nested via $model->relation`, the test 
 1. **The relation is eager-loaded** — `relation` appears in the parent's `EAGER_LOAD`, *or* a dotted entry `relation.*` does (Eloquent loads the intermediate relation when a dotted child is requested — so `setParts.part` covers `setParts`). This branch was added after the rule false-positived on `SetWithPartsResourceData`, which declares only `setParts.part`/`setParts.color`, never the bare `setParts` (literal-compliance / ADR-000 lens).
 2. **Each of the nested resource's own required relations is declared relation-prefixed** — for every entry `x` in the nested resource's `EAGER_LOAD`, `relation.x` must appear in the parent's `EAGER_LOAD`. This is the clause that catches the F-debt-1 N+1: nested `SetSummaryResourceData` requires `theme`, so the parent must declare `set.theme`.
 
+#### Recognized-forms contract (and the guard's ceiling)
+
+`discoverNestedResourceRelations` is a **regex over `from()` source text**, not type-aware analysis. It recognises exactly the two construction forms above and **nothing else**. A nested resource constructed any other way silently escapes the coverage check with no failing test — e.g. binding the relation to a local first (`$set = $model->set; … SetSummaryResourceData::from($set)`), or mapping a loaded collection through a named helper instead of an inline `array_map`. The test still passes and an N+1 can reappear exactly as F-debt-1 did. This is the known ceiling of a regex-over-source arch guard, not a defect in this diff (every nesting in the wing today uses one of the two recognised forms).
+
+To keep the guard load-bearing, the recognised forms are **doctrine, not tacit knowledge living in two regexes**:
+
+> **Nested-resource construction contract.** Inside a `ResourceData::from()`, a nested resource MUST be constructed inline as either `NestedResourceData::from($model->relation)` (direct) or `array_map(NestedResourceData::from(...), $model->relation…)` (collection). Constructing it any other way — via a local variable, a helper method, a match arm — is invisible to the EAGER_LOAD coverage guard and reintroduces the N+1 risk the guard exists to catch.
+
+A type-aware successor (resolving the nested-resource graph from `from()`'s actual expression types rather than source regex) would lift this ceiling; logged as a candidate below, not in scope here.
+
 #### Red/green proof (both directions)
 
 | `FamilySetResourceData::EAGER_LOAD` | `composer test:arch` |
@@ -54,7 +64,9 @@ Adding the dotted `set.theme` entry exposed a bug in the abstract base's `valida
 
 `SetSummaryResourceData` / `SetWithPartsResourceData` never hit this because they only call `loadMissing()` (no `validateRelationsLoaded`). `FamilySetResourceData` and `StorageOptionResourceData` are the two resources that call `validateRelationsLoaded`.
 
-Fix: `validateRelationsLoaded` now validates only the **root segment** of each (possibly dotted) relation — nested segments live on the related model and are validated by the nested resource's own `from()`. `mb_strstr($relation, '.', true)` strips the suffix; `false` (no dot) falls back to the whole relation.
+Fix: `validateRelationsLoaded` now validates only the **root segment** of each (possibly dotted) relation — `explode('.', $relation)[0]` reduces `set.theme` → `set` and `theme` → `theme` (always a string, so no no-dot special case).
+
+**Framing correction (the nested segment is self-healed, not loudly validated).** An earlier draft of this record — and the WO Steward note — claimed that after this loosening "the ADR-0019 loud-failure guarantee holds end-to-end because the nested resource's own `from()` validates the nested segment." That overstates it. `SetSummaryResourceData::from()` calls only `loadMissing(self::requiredRelations())`; it does **not** call `validateRelationsLoaded` (only `FamilySetResourceData` and `StorageOptionResourceData` do). So if `set.theme` were dropped from the parent's `EAGER_LOAD` again, the nested `theme` segment would be **self-healed by `loadMissing`** — correct output, but the per-row N+1 returns — *not* a loud `MissingRelationException`. The runtime behaviour is right either way (no 500, no broken output), but the **loud-failure guarantee for the nested segment now lives at CI time in the new arch test, not at runtime.** That is a deliberate, acceptable tradeoff — the root-segment loosening was required to stop `relationLoaded()` misfiring on dot-notation — but it *shifts* that segment's enforcement from runtime to CI rather than preserving end-to-end runtime loud-failure. The root segment (`set`) is still loudly validated at runtime as before.
 
 ### 4. Query-count proof — `backend/tests/Feature/Controllers/FamilySetControllerTest.php`
 
@@ -127,6 +139,8 @@ The chain `static arch rule → runtime query-count test → coverage gate` each
 
 - **Foundry learning candidate:** "Pest's `expect(...)->toContain($a, $b)` treats every argument as a needle to match, not a failure message. For a custom message on a containment check, use `expect(in_array($needle, $haystack, true))->toBeTrue($message)`." First observation — logging as a candidate, not graduating.
 - **Foundry learning candidate:** "Eloquent `Model::relationLoaded()` does not understand dot-notation — `relationLoaded('set.theme')` checks for a literal `set.theme` relation and always returns false. Any code validating dotted eager-load entries must validate root segments only." Surfaced here; relevant to any future dotted `EAGER_LOAD` addition on a resource that calls `validateRelationsLoaded`.
+
+- **Foundry doctrine candidate (added on PR #147 review):** the EAGER_LOAD coverage guard is a regex over `from()` source and only sees the two inline construction forms (`::from($model->relation)` and `array_map(::from(...), $model->relation…)`). A nested resource built any other way escapes it silently. The "Nested-resource construction contract" stated in §2 above should graduate to a convention note (or `ResourceData` PHPDoc) so the constraint is enforced doctrine rather than tacit regex knowledge; a type-aware successor that resolves the nesting graph from expression types would lift the ceiling entirely.
 
 These are proposals for The Steward to review — not written to the knowledge base by me.
 
