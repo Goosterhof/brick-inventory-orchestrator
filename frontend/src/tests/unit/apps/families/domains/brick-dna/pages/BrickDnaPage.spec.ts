@@ -1,9 +1,4 @@
 import BrickDnaPage from '@app/domains/brick-dna/pages/BrickDnaPage.vue';
-import CardContainer from '@shared/components/CardContainer.vue';
-import EmptyState from '@shared/components/EmptyState.vue';
-import PageHeader from '@shared/components/PageHeader.vue';
-import SectionDivider from '@shared/components/SectionDivider.vue';
-import StatCard from '@shared/components/StatCard.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -100,7 +95,7 @@ describe('BrickDnaPage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(PageHeader).props('title')).toBe('brickDna.title');
+        expect(wrapper.findComponent({name: 'PageHeader'}).props('title')).toBe('brickDna.title');
     });
 
     it('should fetch brick dna data on mount', async () => {
@@ -135,7 +130,7 @@ describe('BrickDnaPage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(EmptyState).props('message')).toBe('brickDna.empty');
+        expect(wrapper.findComponent({name: 'EmptyState'}).props('message')).toBe('brickDna.empty');
     });
 
     describe('diversity score', () => {
@@ -225,7 +220,7 @@ describe('BrickDnaPage', () => {
             await flushPromises();
 
             // Assert
-            const statCards = wrapper.findAllComponents(StatCard);
+            const statCards = wrapper.findAllComponents({name: 'StatCard'});
             const redCard = statCards.find((c) => c.props('label') === 'Red');
             expect(redCard?.props('value')).toBe('150');
 
@@ -276,7 +271,7 @@ describe('BrickDnaPage', () => {
             await flushPromises();
 
             // Assert
-            const statCards = wrapper.findAllComponents(StatCard);
+            const statCards = wrapper.findAllComponents({name: 'StatCard'});
             const brickCard = statCards.find((c) => c.props('label') === 'Brick 2x4');
             expect(brickCard?.props('value')).toBe('200');
 
@@ -359,7 +354,7 @@ describe('BrickDnaPage', () => {
             await flushPromises();
 
             // Assert
-            const cards = wrapper.findAllComponents(CardContainer);
+            const cards = wrapper.findAllComponents({name: 'CardContainer'});
             // 1 for diversity + 2 for rarest parts = 3
             expect(cards).toHaveLength(3);
         });
@@ -387,7 +382,7 @@ describe('BrickDnaPage', () => {
             await flushPromises();
 
             // Assert
-            expect(wrapper.findAllComponents(SectionDivider)).toHaveLength(3);
+            expect(wrapper.findAllComponents({name: 'SectionDivider'})).toHaveLength(3);
         });
     });
 });

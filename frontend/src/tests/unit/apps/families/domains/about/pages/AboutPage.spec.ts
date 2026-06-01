@@ -1,26 +1,11 @@
 import AboutPage from '@app/domains/about/pages/AboutPage.vue';
-import LegoArch from '@shared/components/LegoArch.vue';
-import LegoArchSvg from '@shared/components/LegoArchSvg.vue';
-import LegoBrick from '@shared/components/LegoBrick.vue';
-import LegoBrickSvg from '@shared/components/LegoBrickSvg.vue';
-import LegoPlate from '@shared/components/LegoPlate.vue';
-import LegoPlateSvg from '@shared/components/LegoPlateSvg.vue';
-import LegoRound from '@shared/components/LegoRound.vue';
-import LegoRoundSvg from '@shared/components/LegoRoundSvg.vue';
-import LegoSlope from '@shared/components/LegoSlope.vue';
-import LegoSlopeSvg from '@shared/components/LegoSlopeSvg.vue';
-import LegoTechnicBeam from '@shared/components/LegoTechnicBeam.vue';
-import LegoTechnicBeamSvg from '@shared/components/LegoTechnicBeamSvg.vue';
-import LegoTile from '@shared/components/LegoTile.vue';
-import LegoTileSvg from '@shared/components/LegoTileSvg.vue';
-import LegoWedge from '@shared/components/LegoWedge.vue';
-import LegoWedgeSvg from '@shared/components/LegoWedgeSvg.vue';
 import {shallowMount} from '@vue/test-utils';
 import {describe, expect, it, vi} from 'vitest';
 
 // Mock all shape components to eliminate the 16-module import resolution chain at collect time.
-// vi.mock hoists above imports, so the imports above resolve to these lightweight stubs.
-// shallowMount stubs them anyway — the mocks only prevent heavy transitive module resolution.
+// vi.mock hoists; child components are referenced via `findAllComponents({name: 'X'})`,
+// so dropping the static top-level imports keeps the collect-phase dependency graph shallow
+// (ADR-0012). Closes the 47-day-old Casebook Standing Suspicion on the AboutPage collect guard.
 const {brickProps, shapeProps} = vi.hoisted(() => ({
     brickProps: ['color', 'shadow', 'columns', 'rows'],
     shapeProps: ['color', 'shadow'],
@@ -60,25 +45,25 @@ describe('AboutPage', () => {
         const wrapper = shallowMount(AboutPage);
 
         // 4 demo bricks + 3 HTML diorama bricks (2 wall + 1 tree trunk) = 7
-        const bricks = wrapper.findAllComponents(LegoBrick);
+        const bricks = wrapper.findAllComponents({name: 'LegoBrick'});
         expect(bricks).toHaveLength(7);
     });
 
     it('should render bricks with correct colors in the demo section', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const bricks = wrapper.findAllComponents(LegoBrick);
-        const demoColors = bricks.slice(0, 4).map((brick) => brick.props('color'));
+        const bricks = wrapper.findAllComponents({name: 'LegoBrick'});
+        const demoColors = bricks.slice(0, 4).map((brick) => brick.props('color') as string);
         expect(demoColors).toStrictEqual(['#DC2626', '#1D4ED8', '#EAB308', '#16A34A']);
     });
 
     it('should render bricks with correct dimensions in the demo section', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const bricks = wrapper.findAllComponents(LegoBrick);
+        const bricks = wrapper.findAllComponents({name: 'LegoBrick'});
         const demoDimensions = bricks
             .slice(0, 4)
-            .map((brick) => ({columns: brick.props('columns'), rows: brick.props('rows')}));
+            .map((brick) => ({columns: brick.props('columns') as number, rows: brick.props('rows') as number}));
         expect(demoDimensions).toStrictEqual([
             {columns: 2, rows: 2},
             {columns: 1, rows: 1},
@@ -90,9 +75,9 @@ describe('AboutPage', () => {
     it('should disable shadow on all bricks', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const bricks = wrapper.findAllComponents(LegoBrick);
+        const bricks = wrapper.findAllComponents({name: 'LegoBrick'});
         for (const brick of bricks) {
-            expect(brick.props('shadow')).toBe(false);
+            expect(brick.props('shadow') as boolean).toBe(false);
         }
     });
 
@@ -116,25 +101,25 @@ describe('AboutPage', () => {
         const wrapper = shallowMount(AboutPage);
 
         // 4 demo + 3 SVG diorama (2 wall + 1 trunk) = 7
-        const svgBricks = wrapper.findAllComponents(LegoBrickSvg);
+        const svgBricks = wrapper.findAllComponents({name: 'LegoBrickSvg'});
         expect(svgBricks).toHaveLength(7);
     });
 
     it('should render SVG bricks with correct colors in the demo section', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const svgBricks = wrapper.findAllComponents(LegoBrickSvg);
-        const demoColors = svgBricks.slice(0, 4).map((brick) => brick.props('color'));
+        const svgBricks = wrapper.findAllComponents({name: 'LegoBrickSvg'});
+        const demoColors = svgBricks.slice(0, 4).map((brick) => brick.props('color') as string);
         expect(demoColors).toStrictEqual(['#DC2626', '#1D4ED8', '#EAB308', '#16A34A']);
     });
 
     it('should render SVG bricks with correct dimensions in the demo section', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const svgBricks = wrapper.findAllComponents(LegoBrickSvg);
+        const svgBricks = wrapper.findAllComponents({name: 'LegoBrickSvg'});
         const dimensions = svgBricks
             .slice(0, 4)
-            .map((brick) => ({columns: brick.props('columns'), rows: brick.props('rows')}));
+            .map((brick) => ({columns: brick.props('columns') as number, rows: brick.props('rows') as number}));
         expect(dimensions).toStrictEqual([
             {columns: 2, rows: 2},
             {columns: 1, rows: 1},
@@ -146,9 +131,9 @@ describe('AboutPage', () => {
     it('should disable shadow on all SVG bricks', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const svgBricks = wrapper.findAllComponents(LegoBrickSvg);
+        const svgBricks = wrapper.findAllComponents({name: 'LegoBrickSvg'});
         for (const brick of svgBricks) {
-            expect(brick.props('shadow')).toBe(false);
+            expect(brick.props('shadow') as boolean).toBe(false);
         }
     });
 
@@ -187,16 +172,16 @@ describe('AboutPage', () => {
     it('should render two LegoSlope components for the HTML roof', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const slopes = wrapper.findAllComponents(LegoSlope);
+        const slopes = wrapper.findAllComponents({name: 'LegoSlope'});
         expect(slopes).toHaveLength(2);
-        const colors = slopes.map((s) => s.props('color'));
+        const colors = slopes.map((s) => s.props('color') as string);
         expect(colors).toStrictEqual(['#EAB308', '#EAB308']);
     });
 
     it('should mirror the second slope to form a roof peak', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const slopes = wrapper.findAllComponents(LegoSlope);
+        const slopes = wrapper.findAllComponents({name: 'LegoSlope'});
         const styles = slopes.map((s) => s.attributes('style') ?? '');
         expect(styles).toStrictEqual([expect.not.stringContaining('scaleX'), expect.stringContaining('scaleX(-1)')]);
     });
@@ -204,76 +189,80 @@ describe('AboutPage', () => {
     it('should render a LegoTile as a window', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const tiles = wrapper.findAllComponents(LegoTile);
+        const tiles = wrapper.findAllComponents({name: 'LegoTile'});
         expect(tiles).toHaveLength(1);
-        expect(tiles.map((t) => t.props('color'))).toStrictEqual(['#1D4ED8']);
+        expect(tiles.map((t) => t.props('color') as string)).toStrictEqual(['#1D4ED8']);
     });
 
     it('should render a LegoArch as a door', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const arches = wrapper.findAllComponents(LegoArch);
+        const arches = wrapper.findAllComponents({name: 'LegoArch'});
         expect(arches).toHaveLength(1);
-        expect(arches.map((a) => a.props('color'))).toStrictEqual(['#DC2626']);
+        expect(arches.map((a) => a.props('color') as string)).toStrictEqual(['#DC2626']);
     });
 
     it('should render a LegoRound as a tree top', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const rounds = wrapper.findAllComponents(LegoRound);
+        const rounds = wrapper.findAllComponents({name: 'LegoRound'});
         expect(rounds).toHaveLength(1);
-        expect(rounds.map((r) => r.props('color'))).toStrictEqual(['#16A34A']);
+        expect(rounds.map((r) => r.props('color') as string)).toStrictEqual(['#16A34A']);
     });
 
     it('should render a LegoPlate as ground', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const plates = wrapper.findAllComponents(LegoPlate);
+        const plates = wrapper.findAllComponents({name: 'LegoPlate'});
         expect(plates).toHaveLength(1);
-        expect(plates.map((p) => p.props('color'))).toStrictEqual(['#16A34A']);
+        expect(plates.map((p) => p.props('color') as string)).toStrictEqual(['#16A34A']);
     });
 
     it('should render a LegoTechnicBeam in the ground row', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const beams = wrapper.findAllComponents(LegoTechnicBeam);
+        const beams = wrapper.findAllComponents({name: 'LegoTechnicBeam'});
         expect(beams).toHaveLength(1);
-        expect(beams.map((b) => b.props('color'))).toStrictEqual(['#6B7280']);
+        expect(beams.map((b) => b.props('color') as string)).toStrictEqual(['#6B7280']);
     });
 
     it('should render a LegoWedge in the ground row', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const wedges = wrapper.findAllComponents(LegoWedge);
+        const wedges = wrapper.findAllComponents({name: 'LegoWedge'});
         expect(wedges).toHaveLength(1);
-        expect(wedges.map((w) => w.props('color'))).toStrictEqual(['#6B7280']);
+        expect(wedges.map((w) => w.props('color') as string)).toStrictEqual(['#6B7280']);
     });
 
     it('should disable shadow on all HTML diorama pieces', () => {
         const wrapper = shallowMount(AboutPage);
 
         const dioramaPieces = [
-            ...wrapper.findAllComponents(LegoSlope),
-            ...wrapper.findAllComponents(LegoTile),
-            ...wrapper.findAllComponents(LegoArch),
-            ...wrapper.findAllComponents(LegoRound),
-            ...wrapper.findAllComponents(LegoPlate),
-            ...wrapper.findAllComponents(LegoTechnicBeam),
-            ...wrapper.findAllComponents(LegoWedge),
+            ...wrapper.findAllComponents({name: 'LegoSlope'}),
+            ...wrapper.findAllComponents({name: 'LegoTile'}),
+            ...wrapper.findAllComponents({name: 'LegoArch'}),
+            ...wrapper.findAllComponents({name: 'LegoRound'}),
+            ...wrapper.findAllComponents({name: 'LegoPlate'}),
+            ...wrapper.findAllComponents({name: 'LegoTechnicBeam'}),
+            ...wrapper.findAllComponents({name: 'LegoWedge'}),
         ];
         for (const piece of dioramaPieces) {
-            expect(piece.props('shadow')).toBe(false);
+            expect(piece.props('shadow') as boolean).toBe(false);
         }
     });
 
     it('should render HTML diorama bricks with correct colors and dimensions', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const bricks = wrapper.findAllComponents(LegoBrick);
+        const bricks = wrapper.findAllComponents({name: 'LegoBrick'});
         // Diorama bricks are indices 4-6: two red 1×1 walls + one brown 1×2 trunk
         const dioramaBricks = bricks
             .slice(4)
-            .map((b) => ({color: b.props('color'), columns: b.props('columns'), rows: b.props('rows')}));
+            .map((b) => ({
+                color: b.props('color') as string,
+                columns: b.props('columns') as number,
+                rows: b.props('rows') as number,
+            }));
         expect(dioramaBricks).toStrictEqual([
             {color: '#DC2626', columns: 1, rows: 1},
             {color: '#DC2626', columns: 1, rows: 1},
@@ -284,9 +273,9 @@ describe('AboutPage', () => {
     it('should render two LegoSlopeSvg components for the SVG roof', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const slopes = wrapper.findAllComponents(LegoSlopeSvg);
+        const slopes = wrapper.findAllComponents({name: 'LegoSlopeSvg'});
         expect(slopes).toHaveLength(2);
-        const colors = slopes.map((s) => s.props('color'));
+        const colors = slopes.map((s) => s.props('color') as string);
         expect(colors).toStrictEqual(['#EAB308', '#EAB308']);
     });
 
@@ -302,59 +291,63 @@ describe('AboutPage', () => {
     it('should render a LegoTileSvg as a window', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const tiles = wrapper.findAllComponents(LegoTileSvg);
+        const tiles = wrapper.findAllComponents({name: 'LegoTileSvg'});
         expect(tiles).toHaveLength(1);
-        expect(tiles.map((t) => t.props('color'))).toStrictEqual(['#1D4ED8']);
+        expect(tiles.map((t) => t.props('color') as string)).toStrictEqual(['#1D4ED8']);
     });
 
     it('should render a LegoArchSvg as a door', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const arches = wrapper.findAllComponents(LegoArchSvg);
+        const arches = wrapper.findAllComponents({name: 'LegoArchSvg'});
         expect(arches).toHaveLength(1);
-        expect(arches.map((a) => a.props('color'))).toStrictEqual(['#DC2626']);
+        expect(arches.map((a) => a.props('color') as string)).toStrictEqual(['#DC2626']);
     });
 
     it('should render a LegoRoundSvg as a tree top', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const rounds = wrapper.findAllComponents(LegoRoundSvg);
+        const rounds = wrapper.findAllComponents({name: 'LegoRoundSvg'});
         expect(rounds).toHaveLength(1);
-        expect(rounds.map((r) => r.props('color'))).toStrictEqual(['#16A34A']);
+        expect(rounds.map((r) => r.props('color') as string)).toStrictEqual(['#16A34A']);
     });
 
     it('should render a LegoPlateSvg as ground', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const plates = wrapper.findAllComponents(LegoPlateSvg);
+        const plates = wrapper.findAllComponents({name: 'LegoPlateSvg'});
         expect(plates).toHaveLength(1);
-        expect(plates.map((p) => p.props('color'))).toStrictEqual(['#16A34A']);
+        expect(plates.map((p) => p.props('color') as string)).toStrictEqual(['#16A34A']);
     });
 
     it('should render a LegoTechnicBeamSvg in the ground row', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const beams = wrapper.findAllComponents(LegoTechnicBeamSvg);
+        const beams = wrapper.findAllComponents({name: 'LegoTechnicBeamSvg'});
         expect(beams).toHaveLength(1);
-        expect(beams.map((b) => b.props('color'))).toStrictEqual(['#6B7280']);
+        expect(beams.map((b) => b.props('color') as string)).toStrictEqual(['#6B7280']);
     });
 
     it('should render a LegoWedgeSvg in the ground row', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const wedges = wrapper.findAllComponents(LegoWedgeSvg);
+        const wedges = wrapper.findAllComponents({name: 'LegoWedgeSvg'});
         expect(wedges).toHaveLength(1);
-        expect(wedges.map((w) => w.props('color'))).toStrictEqual(['#6B7280']);
+        expect(wedges.map((w) => w.props('color') as string)).toStrictEqual(['#6B7280']);
     });
 
     it('should render SVG diorama BrickSvg pieces with correct colors and dimensions', () => {
         const wrapper = shallowMount(AboutPage);
 
-        const svgBricks = wrapper.findAllComponents(LegoBrickSvg);
+        const svgBricks = wrapper.findAllComponents({name: 'LegoBrickSvg'});
         // SVG diorama bricks are indices 4-6: two red 1×1 walls + one brown 1×2 trunk
         const dioramaBricks = svgBricks
             .slice(4)
-            .map((b) => ({color: b.props('color'), columns: b.props('columns'), rows: b.props('rows')}));
+            .map((b) => ({
+                color: b.props('color') as string,
+                columns: b.props('columns') as number,
+                rows: b.props('rows') as number,
+            }));
         expect(dioramaBricks).toStrictEqual([
             {color: '#DC2626', columns: 1, rows: 1},
             {color: '#DC2626', columns: 1, rows: 1},
@@ -366,16 +359,16 @@ describe('AboutPage', () => {
         const wrapper = shallowMount(AboutPage);
 
         const svgDioramaPieces = [
-            ...wrapper.findAllComponents(LegoSlopeSvg),
-            ...wrapper.findAllComponents(LegoTileSvg),
-            ...wrapper.findAllComponents(LegoArchSvg),
-            ...wrapper.findAllComponents(LegoRoundSvg),
-            ...wrapper.findAllComponents(LegoPlateSvg),
-            ...wrapper.findAllComponents(LegoTechnicBeamSvg),
-            ...wrapper.findAllComponents(LegoWedgeSvg),
+            ...wrapper.findAllComponents({name: 'LegoSlopeSvg'}),
+            ...wrapper.findAllComponents({name: 'LegoTileSvg'}),
+            ...wrapper.findAllComponents({name: 'LegoArchSvg'}),
+            ...wrapper.findAllComponents({name: 'LegoRoundSvg'}),
+            ...wrapper.findAllComponents({name: 'LegoPlateSvg'}),
+            ...wrapper.findAllComponents({name: 'LegoTechnicBeamSvg'}),
+            ...wrapper.findAllComponents({name: 'LegoWedgeSvg'}),
         ];
         for (const piece of svgDioramaPieces) {
-            expect(piece.props('shadow')).toBe(false);
+            expect(piece.props('shadow') as boolean).toBe(false);
         }
     });
 });

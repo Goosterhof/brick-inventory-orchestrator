@@ -190,8 +190,8 @@ final class PrePushPermitGate implements Action
             $lines[] = '';
         }
 
-        $lines[] = 'To bypass for a documented exception, push with --no-verify and record the bypass';
-        $lines[] = 'in the corresponding shift log\'s Decisions Made section with explicit Director sign-off.';
+        $lines[] = 'To bypass for a documented exception, push with --no-verify. This is the documented';
+        $lines[] = 'escape hatch and carries no logging obligation (ADR-0028 Amendment 2026-05-28 II).';
 
         return implode("\n", $lines);
     }

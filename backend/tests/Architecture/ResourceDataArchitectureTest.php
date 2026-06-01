@@ -154,3 +154,113 @@ it('should define EAGER_LOAD constant when using nested ResourceData', function(
         );
     }
 });
+
+/**
+ * Discover every nested-resource construction in a ResourceData's from() method body and
+ * map it to the model relation it is sourced from.
+ *
+ * Recognises both nesting forms used in this wing:
+ *   1. Direct:        SetSummaryResourceData::from($model->set)
+ *   2. Array-mapped:  array_map(SetPartResourceData::from(...), $model->setParts->all())
+ *
+ * @return array<int, array{resource: class-string, relation: string}>
+ */
+function discoverNestedResourceRelations(\ReflectionClass $reflectionClass): array
+{
+    $method = $reflectionClass->getMethod('from');
+    $file = $method->getFileName();
+    if ($file === false) {
+        return [];
+    }
+
+    $lines = file($file, \FILE_IGNORE_NEW_LINES);
+    $startLine = $method->getStartLine();
+    $endLine = $method->getEndLine();
+    if ($lines === false || $startLine === false || $endLine === false) {
+        return [];
+    }
+
+    $body = implode("\n", \array_slice($lines, $startLine - 1, $endLine - $startLine + 1));
+
+    $namespace = $reflectionClass->getNamespaceName();
+    $nested = [];
+
+    // Form 1: <Resource>::from($model-><relation>)
+    if (preg_match_all('/(\w+ResourceData)::from\(\$model->(\w+)\)/', $body, $matches, \PREG_SET_ORDER)) {
+        foreach ($matches as $match) {
+            $nested[] = ['resource' => $namespace . '\\' . $match[1], 'relation' => $match[2]];
+        }
+    }
+
+    // Form 2: array_map(<Resource>::from(...), $model-><relation>...)
+    if (preg_match_all('/(\w+ResourceData)::from\(\.\.\.\)\s*,\s*\$model->(\w+)/', $body, $matches, \PREG_SET_ORDER)) {
+        foreach ($matches as $match) {
+            $nested[] = ['resource' => $namespace . '\\' . $match[1], 'relation' => $match[2]];
+        }
+    }
+
+    return $nested;
+}
+
+it("should declare EAGER_LOAD entries that cover every nested resource's required relations", function(): void {
+    foreach (getClassesInDirectory(\dirname(__DIR__, 2) . '/app/Http/Resources', 'App\Http\Resources\\') as $className) {
+        $reflection = new \ReflectionClass($className);
+        if ($reflection->isAbstract()) {
+            continue;
+        }
+
+        if (!$reflection->hasMethod('from')) {
+            continue;
+        }
+
+        $nestedRelations = discoverNestedResourceRelations($reflection);
+        if ($nestedRelations === []) {
+            continue;
+        }
+
+        /** @var array<int, string> $eagerLoad */
+        $eagerLoad = $reflection->getConstant('EAGER_LOAD');
+
+        foreach ($nestedRelations as $nested) {
+            $relation = $nested['relation'];
+            $nestedResource = $nested['resource'];
+
+            // The relation that supplies the nested resource must itself be eager-loaded —
+            // either as the bare relation ("setParts") or via a nested entry ("setParts.part"),
+            // since Eloquent loads the intermediate relation when a dotted child is requested.
+            $relationCovered = \in_array($relation, $eagerLoad, true)
+                || array_any($eagerLoad, static fn(string $entry): bool => str_starts_with($entry, $relation . '.'));
+
+            expect($relationCovered)->toBeTrue(
+                \sprintf(
+                    'ResourceData class %s nests %s from $model->%s but EAGER_LOAD does not declare "%s"',
+                    $className,
+                    $nestedResource,
+                    $relation,
+                    $relation,
+                ),
+            );
+
+            // Every relation the nested resource itself requires must be declared relation-prefixed
+            // on the parent, so the base loadMissing() covers the whole tree in one pass (no N+1).
+            /** @var array<int, string> $nestedEagerLoad */
+            $nestedEagerLoad = \constant($nestedResource . '::EAGER_LOAD');
+
+            foreach ($nestedEagerLoad as $nestedRelation) {
+                $expected = $relation . '.' . $nestedRelation;
+
+                expect(\in_array($expected, $eagerLoad, true))->toBeTrue(
+                    \sprintf(
+                        'ResourceData class %s nests %s (which requires "%s") from $model->%s, '
+                        . 'but EAGER_LOAD omits "%s" — this fires an N+1 (one query per row) on collection endpoints',
+                        $className,
+                        $nestedResource,
+                        $nestedRelation,
+                        $relation,
+                        $expected,
+                    ),
+                );
+            }
+        }
+    }
+});

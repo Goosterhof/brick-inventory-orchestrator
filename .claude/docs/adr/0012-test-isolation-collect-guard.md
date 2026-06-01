@@ -46,10 +46,10 @@ A custom Vitest reporter (`test-guard-reporter.ts`) measures the execution durat
 
 **Two tiers:**
 
-- **300–1000ms: warning** — test file getting slow, printed to console but does not fail the suite.
-- **1000ms+: failure** — fails the suite with exit code 1. The file needs mocking, splitting, or setup optimization.
+- **300–2000ms: warning** — test file getting slow, printed to console but does not fail the suite. (600–4000ms under coverage — thresholds double to absorb instrumentation overhead.)
+- **2000ms+: failure** — fails the suite with exit code 1 (4000ms+ under coverage). The file needs mocking, splitting, or setup optimization.
 
-**Threshold calibration:** Pure helper/service tests execute in 2–10ms. Simple component tests in 10–50ms. Page component tests with proper mocking in 100–200ms. The heaviest well-structured file (SetsOverviewPage, 17 tests with search/filter interactions) runs in ~550ms. The 1000ms failure threshold provides headroom while catching genuinely problematic files. The 300ms warning threshold flags files trending toward trouble.
+**Threshold calibration:** Pure helper/service tests execute in 2–10ms. Simple component tests in 10–50ms. Page component tests with proper mocking in 100–200ms. The heaviest well-structured file (SetsOverviewPage, 17 tests with search/filter interactions) runs in ~550ms. The 2000ms failure threshold (4000ms under coverage) provides headroom while catching genuinely problematic files. The 300ms warning threshold flags files trending toward trouble.
 
 **Output format:** Each line shows `[project] durationMs | testCount tests | file`.
 
@@ -153,10 +153,10 @@ Every `vi.mock()` call lives in the test file that needs it. No global mocks in 
 
 | What                             | Mechanism                                                              | Scope                                                                                                                       |
 | -------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Test execution time limit        | `test-guard-reporter.ts` custom Vitest reporter                        | Every `.spec.ts` file — warn at 300ms, **fail at 1000ms** (blocks pipeline)                                                 |
+| Test execution time limit        | `test-guard-reporter.ts` custom Vitest reporter                        | Every `.spec.ts` file — warn at 300ms, **fail at 2000ms** (blocks pipeline); thresholds double to 600/4000ms under coverage |
 | Import chain duration (delta)    | `collect-guard-reporter.ts` custom Vitest reporter                     | Every `.spec.ts` file — warn at 200ms delta, violation at 500ms delta (informational, does not block)                       |
 | Import chain duration (hard cap) | `collect-guard-reporter.ts` custom Vitest reporter                     | Every `.spec.ts` file — violation at 5000ms raw regardless of delta (informational, does not block)                         |
-| Coverage mode threshold scaling  | `collect-guard-reporter.ts` detects `coverage.enabled` via `onInit`    | Collect guard thresholds doubled when running with `--coverage` (test guard unaffected — execution time is coverage-stable) |
+| Coverage mode threshold scaling  | both reporters detect `coverage.enabled` via `onInit`                  | Thresholds doubled under `--coverage` for **both** guards — collect guard (400/1000/10000ms) and test guard (600/4000ms). See the 2026-05-29 Amendment: the earlier claim that the test guard was "coverage-stable" was wrong; the reporter applies a 2× `coverageMultiplier` to its warn/fail lines. |
 | Factory required on `vi.mock()`  | Custom lint rule in `scripts/lint-vue-conventions.mjs`                 | Every `.spec.ts` file                                                                                                       |
 | Reporters registered in config   | `vitest.config.ts` reporters array                                     | Suite-wide (both reporters)                                                                                                 |
 | Lint runs on commit              | lint-staged in Husky pre-commit hook                                   | All staged `.spec.ts` files                                                                                                 |
@@ -199,4 +199,12 @@ The collect guard remains as informational diagnostics for developers who want t
 ## Open Questions
 
 - **Collect guard baseline drift** — if false signals appear in CI but not locally (or vice versa), we may need to revisit whether a single set of collect-duration thresholds works across all environments. No evidence of this yet. Less critical now that the collect guard is informational only.
-- **Test guard threshold calibration at scale** — the 300ms/1000ms thresholds are calibrated against 76 test files. At 700+ files, the distribution may shift. Monitor and adjust if needed.
+- **Test guard threshold calibration at scale** — the 300ms/2000ms thresholds are calibrated against 76 test files. At 700+ files, the distribution may shift. Monitor and adjust if needed.
+
+## Amendment — 2026-05-29: Reconcile documented test-guard fail threshold (1000 → 2000ms)
+
+The original ADR documented the execution-time (test) guard's blocking fail threshold as **1000ms** (warn 300ms). The live implementation in `frontend/src/tests/unit/test-guard-reporter.ts` carries `WARN_THRESHOLD_MS = 300` / `FAIL_THRESHOLD_MS = 2000` — doubled to 600 / 4000ms under coverage. The doc had drifted from the implementation: the fail threshold was raised from 1000 to 2000ms (and coverage-mode doubling was added to the test guard) without the ADR being updated alongside.
+
+This amendment reconciles the four documented fail-threshold references — the two-tier list, the calibration note, the enforcement-mechanisms table, and the open-questions calibration line — from **1000ms to 2000ms** (600 / 4000ms under coverage). The collect-guard reporter's separate thresholds (warn 200 / violation 500 / hard-cap 5000ms delta, doubled to 400 / 1000 / 10000ms under coverage) are unchanged and remain correct.
+
+This was a documentation-only reconciliation surfaced by the 2026-05-29 cross-wing Warden sweep (finding G-adr-0012-1); no implementation behaviour changed.
