@@ -69,5 +69,5 @@ Backend-only by design. No Gallery work until the captured data earns the widget
 
 ---
 
-**Status:** Open
-**Build Record:** _link to Build Record when filed_
+**Status:** Completed (2026-06-01 — build commit `e7c2eaa`; coverage/mutation gates deferred to CI's PHP-8.5+pcov jobs, binding before merge)
+**Build Record:** [`2026-06-01-build-log-capture-slice`](../build-records/2026-06-01-build-log-capture-slice.md)

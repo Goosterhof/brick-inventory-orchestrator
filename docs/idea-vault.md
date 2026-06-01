@@ -44,10 +44,13 @@ The Brick Apprentice's archive of all expansion ideas — proposed, evaluated, a
 ### The Build Log
 - **Date:** 2026-04-16
 - **Focus Area:** fullstack
-- **Status:** Prototype First
+- **Status:** In Progress *(capture slice shipped; widget/page gated behind evidence)*
 - **Piece Count:** Medium
 - **Summary:** Capture `acquired_at`, `build_started_at`, `built_at` timestamps on FamilySet status transitions. Surface "built in X days" on set detail, "total hours built this year" on dashboard, and a chronological Build Log page. Migration + DTO + status-transition Action updates.
 - **Key Concern:** Users rarely hit "start building" in real life — they typically mark sets "built" months after the fact, so the timestamps degrade to "when you marked it," which is noisy. Retroactive date entry would be needed. The data capture is cheap; the dashboard widget needs validation. Ship the capture without the widget first, then decide if the log page earns its place.
+- **Progress:**
+  - Capture slice — **Shipped** 2026-06-01 (commit `e7c2eaa`, WO [`2026-06-01-build-log-capture-slice`](../.claude/records/work-orders/2026-06-01-build-log-capture-slice.md), BR [`2026-06-01-build-log-capture-slice`](../.claude/records/build-records/2026-06-01-build-log-capture-slice.md)). `build_started_at` + `built_at` stamped idempotently in `UpdateFamilySetAction`. `acquired_at` **dropped** — `purchase_date` already carries acquisition. No widget, no page, no ResourceData surfacing.
+  - Widget + Build Log page — **gated.** Do not build until real captured data shows `built_at` − `build_started_at` deltas are meaningful (users actually dwell in `in_progress` rather than one-click `sealed → built`). If the data is noise, the columns stay as cheap latent data and the UI goes Back to the Shelf. Decision on evidence, not calendar.
 
 ### The Set Completion Gauge
 - **Date:** 2026-03-26
