@@ -1,15 +1,16 @@
 name: Agent Review Label
 
-# Applies the "Agent Review Requested" label to every human/agent-authored PR when it opens
-# (or leaves draft). That label is the signal the General's review agent keys off — making it
-# automatic means a hand-created PR can never silently skip review.
+# Applies the "Agent Review Requested" label to every human/agent-authored PR when it opens,
+# reopens, or leaves draft. That label is the signal the General's review agent keys off — making
+# it automatic means a hand-created PR can never silently skip review. `reopened` is included
+# because a close→reopen (if the label was stripped) does not fire `opened`.
 #
 # Bot-authored PRs (Dependabot et al., which report user.type == 'Bot') are skipped: dependency
 # bumps are not "our" PRs and do not need an agent review. Flip the `if` below to include them.
 
 on:
     pull_request:
-        types: [opened, ready_for_review]
+        types: [opened, reopened, ready_for_review]
 
 permissions:
     pull-requests: write
