@@ -40,7 +40,6 @@ export const createMockFamilyServices = (overrides?: FamilyServicesOverrides): F
             deleteRequest: vi.fn<HttpService['deleteRequest']>(),
             downloadRequest: vi.fn<HttpService['downloadRequest']>(),
             previewRequest: vi.fn<HttpService['previewRequest']>(),
-            streamRequest: vi.fn<HttpService['streamRequest']>(),
             registerRequestMiddleware: vi.fn<HttpService['registerRequestMiddleware']>(() => vi.fn<() => void>()),
             registerResponseMiddleware: vi.fn<HttpService['registerResponseMiddleware']>(() => vi.fn<() => void>()),
             registerResponseErrorMiddleware: vi.fn<HttpService['registerResponseErrorMiddleware']>(() =>
