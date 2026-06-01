@@ -27,6 +27,20 @@ final readonly class UpdateFamilySetAction
 
             if ($updateFamilySetData->status instanceof FamilySetStatus) {
                 $familySet->status = $updateFamilySetData->status;
+
+                if (
+                    $updateFamilySetData->status === FamilySetStatus::InProgress
+                    && $familySet->build_started_at === null
+                ) {
+                    $familySet->build_started_at = $this->dateFactory->now();
+                }
+
+                if (
+                    $updateFamilySetData->status === FamilySetStatus::Built
+                    && $familySet->built_at === null
+                ) {
+                    $familySet->built_at = $this->dateFactory->now();
+                }
             }
 
             if ($updateFamilySetData->purchaseDateProvided) {
