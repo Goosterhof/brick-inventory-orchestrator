@@ -41,6 +41,10 @@ The Brickworks is a single firm with two named production wings and a central at
 
 Session-level texture is captured as per-session minutes files in `.claude/records/minutes/` (`YYYY-MM-DD-<slug>.md`) via the `/minutes` skill — one file per session so parallel-dispatch branches never collide on a shared ledger. The repo-root `MINUTES.md` is the frozen archive of minutes through 2026-05-28. Minutes feed the Retrospective — the `/retro` skill mines minutes (plus Build Records, Audits, Standups) for what reversed, what repeated, what surprised.
 
+### Pull-Request Review Signal
+
+Every crew-authored PR (human or agent — anything that isn't a bot like Dependabot) carries the **`Agent Review Requested`** label. That label is the standing signal for the General's review agent to pick the PR up; an unlabelled PR is invisible to review. The `.github/workflows/agent-review-label.yml` workflow applies it automatically on PR open / ready-for-review, so the convention holds even for hand-created PRs (`gh pr create` does not add it on its own — a gap that once let a manually-reopened PR skip review). If you ever open a PR through a path that bypasses the workflow, add the label yourself.
+
 ### Vocabulary Source of Truth
 
 [`docs/vocabulary-lock.md`](docs/vocabulary-lock.md) records the CEO-locked name choices and the alternative that was declined. If this charter and the lock-file disagree, the lock-file wins until a new lock-file is filed.
