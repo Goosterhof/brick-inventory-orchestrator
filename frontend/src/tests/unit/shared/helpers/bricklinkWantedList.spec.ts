@@ -104,6 +104,55 @@ describe('bricklinkWantedList', () => {
             const itemCount = xml.split('<ITEM>').length - 1;
             expect(itemCount).toBe(2);
         });
+
+        it('serialises a single coloured entry as the exact newline-delimited document', () => {
+            // Arrange
+            const entries: BrickLinkWantedListEntry[] = [{partNum: '3001', brickLinkColorId: 5, shortfall: 7}];
+
+            // Act
+            const xml = toBrickLinkWantedListXml(entries);
+
+            // Assert — exact structure pins the newline joins (inner + outer) and the closing </ITEM> tag.
+            expect(xml).toBe(
+                [
+                    '<?xml version="1.0" encoding="UTF-8"?>',
+                    '<INVENTORY>',
+                    '    <ITEM>',
+                    '        <ITEMTYPE>P</ITEMTYPE>',
+                    '        <ITEMID>3001</ITEMID>',
+                    '        <COLOR>5</COLOR>',
+                    '        <MINQTY>7</MINQTY>',
+                    '    </ITEM>',
+                    '</INVENTORY>',
+                ].join('\n'),
+            );
+        });
+
+        it('drops skipped entries entirely rather than leaving a blank line in the document', () => {
+            // Arrange — a non-positive shortfall renders null and must be filtered out, not joined as an empty line.
+            const entries: BrickLinkWantedListEntry[] = [
+                {partNum: '3001', brickLinkColorId: 1, shortfall: 0},
+                {partNum: '3002', brickLinkColorId: 2, shortfall: 3},
+            ];
+
+            // Act
+            const xml = toBrickLinkWantedListXml(entries);
+
+            // Assert — without the null-filter the skipped entry would inject a blank line here.
+            expect(xml).toBe(
+                [
+                    '<?xml version="1.0" encoding="UTF-8"?>',
+                    '<INVENTORY>',
+                    '    <ITEM>',
+                    '        <ITEMTYPE>P</ITEMTYPE>',
+                    '        <ITEMID>3002</ITEMID>',
+                    '        <COLOR>2</COLOR>',
+                    '        <MINQTY>3</MINQTY>',
+                    '    </ITEM>',
+                    '</INVENTORY>',
+                ].join('\n'),
+            );
+        });
     });
 
     describe('downloadBrickLinkWantedList', () => {

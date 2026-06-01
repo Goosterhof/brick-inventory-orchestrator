@@ -63,5 +63,5 @@ Priority is **Soon** rather than **Now** — v2 needs to settle in CI for a spri
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filled when filed_
+**Status:** Open _(flips to Closed in a post-merge follow-up per ADR-0028 uniform-rule)_
+**Build Record:** [2026-06-01-mutation-per-file-floor](../build-records/2026-06-01-mutation-per-file-floor.md)

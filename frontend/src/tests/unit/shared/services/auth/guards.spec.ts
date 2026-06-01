@@ -178,5 +178,50 @@ describe('auth guards', () => {
             // Assert
             expect(routerService.currentRouteRef.value.name).toBe('dashboard');
         });
+
+        it('cancels the original navigation (short-circuits later middleware) when redirecting an unauthorised authOnly visit', async () => {
+            // Arrange
+            const routes = createTestRoutes();
+            const routerService = createRouterService(routes);
+            const authService = createMockAuthService(false);
+            registerAuthGuard(authService, routerService, 'login', 'home');
+            // A follow-on middleware only runs for navigations the auth guard lets through:
+            // returning `true` from the guard cancels the hop and short-circuits the chain.
+            const observed: string[] = [];
+            routerService.registerBeforeRouteMiddleware((to) => {
+                observed.push(String(to.name));
+                return false;
+            });
+
+            // Act
+            await routerService.goToRoute('dashboard');
+            await flushPromises();
+
+            // Assert — the blocked 'dashboard' hop must never reach the follow-on middleware
+            // (a `return false` mutant on the redirect would let it through).
+            expect(observed).not.toContain('dashboard');
+            expect(routerService.currentRouteRef.value.name).toBe('login');
+        });
+
+        it('cancels the original navigation when redirecting a logged-in visit away from a guest-only route', async () => {
+            // Arrange
+            const routes = createTestRoutes();
+            const routerService = createRouterService(routes);
+            const authService = createMockAuthService(true);
+            registerAuthGuard(authService, routerService, 'login', 'dashboard');
+            const observed: string[] = [];
+            routerService.registerBeforeRouteMiddleware((to) => {
+                observed.push(String(to.name));
+                return false;
+            });
+
+            // Act
+            await routerService.goToRoute('login');
+            await flushPromises();
+
+            // Assert — the blocked 'login' hop must never reach the follow-on middleware.
+            expect(observed).not.toContain('login');
+            expect(routerService.currentRouteRef.value.name).toBe('dashboard');
+        });
     });
 });

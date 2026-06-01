@@ -37,3 +37,4 @@ __screenshots__/
 # Stryker
 .stryker-tmp/
 .stryker-incremental.json
+reports/mutation/
