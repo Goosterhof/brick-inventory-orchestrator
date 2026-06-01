@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 final readonly class FamilySetResourceData extends ResourceData
 {
-    public const array EAGER_LOAD = ['set'];
+    public const array EAGER_LOAD = ['set', 'set.theme'];
 
     public function __construct(
         public int $id,
