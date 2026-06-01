@@ -14,14 +14,9 @@
 
 Sweep finding **G-arch-1** (medium): the showcase app bypasses the RouterService wrapper (ADR-0003, "no exceptions for 'simple' apps") — `router/index.ts` calls `createRouter`/`createWebHistory` directly, `main.ts` does `app.use(showcaseRouter)`, `App.vue` uses raw `RouterLink`/`RouterView`. Families and admin both comply. The violation survives every gate because oxlint's `no-restricted-imports` bans only `useRouter`/`useRoute` and `lint-vue-conventions.mjs` check 6 is scoped to `src/shared/` only. The showcase is the design-system showroom — the artifact a prospective client opens to judge pattern discipline.
 
-## ⚠️ Issuer Decision Required
+## Issuer Decision — RESOLVED 2026-05-29: (a) Migrate
 
-Two routes; **Steward recommends (a)**:
-
-- **(a) Migrate** showcase to `createRouterService()` to match families/admin. Removes the inconsistency, keeps one routing dialect. *Recommended.*
-- **(b) Amend ADR-0003** to document a deliberate dev-only carve-out for showcase, with rationale.
-
-This WO is written for **(a)**. If the CEO chooses (b), the scope becomes an ADR amendment instead of a migration; the linter-gap item below applies either way.
+The CEO ruled **(a) Migrate** showcase to `createRouterService()` to match families/admin — keep one routing dialect, no ADR carve-out. (Declined: (b) amend ADR-0003 for a dev-only exception.) Scope below executes path (a) + the linter-gap close.
 
 ## Scope
 
@@ -36,10 +31,10 @@ This WO is written for **(a)**. If the CEO chooses (b), the scope becomes an ADR
 
 ## Acceptance Criteria
 
-- [ ] (Path a) Showcase routes through `createRouterService()`; no raw `vue-router` primitives remain in the app.
-- [ ] Linter flags raw Vue Router usage anywhere under `src/apps/**`; a regression test/fixture proves it.
-- [ ] Gallery gauntlet green (type-check, lint, lint:vue, knip, test:coverage, build).
-- [ ] Build Record filed.
+- [x] (Path a) Showcase routes through `createRouterService()`; no raw `vue-router` primitives remain in the app.
+- [x] Linter flags raw Vue Router usage anywhere under `src/apps/**`; a regression test/fixture proves it.
+- [x] Gallery gauntlet green (type-check, lint, lint:vue, knip, test:coverage, build).
+- [x] Build Record filed.
 
 ## References
 
@@ -48,4 +43,6 @@ This WO is written for **(a)**. If the CEO chooses (b), the scope becomes an ADR
 
 ---
 
-**Status:** Open — pending Issuer decision (a)/(b)
+**Status:** Completed (2026-05-29) — [Build Record](../build-records/2026-05-29-showcase-routerservice-compliance.md)
+
+_Steward note: Brickwright's new linter messages initially cited "ADR-003" (deprecated pre-merger format, mirroring the adjacent stale check-4 string). Steward corrected the four new RouterService citations to the consolidated **ADR-0003** on review; the pre-existing stale numbers remain for the `warden-sweep-doc-reconciliation` WO (G-arch-2) to reconcile wholesale._
