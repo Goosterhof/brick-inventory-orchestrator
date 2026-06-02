@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int             $set_id
  * @property int             $quantity
  * @property FamilySetStatus $status
+ * @property Carbon|null     $build_started_at
+ * @property Carbon|null     $built_at
  * @property Carbon|null     $purchase_date
  * @property string|null     $notes
  * @property Carbon|null     $created_at
@@ -68,6 +70,8 @@ class FamilySet extends Model implements BelongsToFamilyInterface
     {
         return [
             'status' => FamilySetStatus::class,
+            'build_started_at' => 'immutable_datetime',
+            'built_at' => 'immutable_datetime',
             'purchase_date' => 'date',
             'quantity' => 'integer',
         ];

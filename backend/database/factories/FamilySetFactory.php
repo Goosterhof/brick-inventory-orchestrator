@@ -22,6 +22,8 @@ class FamilySetFactory extends Factory
             'set_id' => Set::factory(),
             'quantity' => fake()->numberBetween(1, 3),
             'status' => fake()->randomElement(FamilySetStatus::cases()),
+            'build_started_at' => null,
+            'built_at' => null,
             'purchase_date' => fake()->optional()->date(),
             'notes' => fake()->optional()->sentence(),
         ];
