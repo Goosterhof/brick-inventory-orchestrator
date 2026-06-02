@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use App\Enums\SetSyncStatus;
 use App\Http\Middleware\SetCacheHeaders;
 use App\Http\Middleware\SetEtagHeaders;
 use App\Models\Color;
@@ -57,6 +58,24 @@ describe('Response Caching', function(): void {
             $response->assertStatus(200);
             $response->assertHeader('ETag');
             $response->assertHeader('Cache-Control', 'max-age=3600, private');
+        });
+
+        it('should forbid caching the 202 envelope while parts are still syncing', function(): void {
+            $user = User::factory()->create();
+
+            // Mid-sync set: the endpoint returns a 202 "retry shortly" envelope. If this
+            // gets cached, the frontend poll loop reads the stale pending state from the
+            // browser cache forever and the "Load parts" spinner never finishes.
+            Set::factory()->create([
+                'set_num' => '10281-1',
+                'parts_sync_status' => SetSyncStatus::InProgress,
+            ]);
+
+            $response = $this->actingAs($user)->getJson('/api/sets/10281-1/parts');
+
+            $response->assertStatus(202);
+            $response->assertHeader('Cache-Control', 'no-store');
+            expect($response->headers->has('ETag'))->toBeFalse();
         });
 
         it('should return 304 when If-None-Match matches on set parts endpoint', function(): void {

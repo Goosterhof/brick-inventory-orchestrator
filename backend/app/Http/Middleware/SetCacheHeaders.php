@@ -31,6 +31,18 @@ final readonly class SetCacheHeaders
             return $response;
         }
 
+        // 202 Accepted is a transient "still processing — retry shortly" envelope
+        // (the parts-sync polling endpoints return it while a sync job runs). It is
+        // technically a 2xx success, so it slips past the guard above — but caching it
+        // would pin the pending state in the client's HTTP cache, and the frontend poll
+        // loop would keep reading the stale envelope and never observe completion.
+        // Forbid storage so every poll reaches the server fresh.
+        if ($response->getStatusCode() === Response::HTTP_ACCEPTED) {
+            $response->headers->set('Cache-Control', 'no-store');
+
+            return $response;
+        }
+
         $parsed = $this->parseDirectives($directives);
 
         if ($parsed !== '') {
