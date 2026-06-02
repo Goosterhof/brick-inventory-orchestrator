@@ -31,6 +31,13 @@ final readonly class SetEtagHeaders
             return $response;
         }
 
+        // 202 Accepted is a transient polling envelope (parts-sync in progress). An ETag
+        // with no explicit freshness can trip browser heuristic caching, re-pinning the
+        // pending state the SetCacheHeaders no-store is there to prevent. Leave it bare.
+        if ($response->getStatusCode() === Response::HTTP_ACCEPTED) {
+            return $response;
+        }
+
         $content = $response->getContent();
 
         if ($content === false || $content === '') {

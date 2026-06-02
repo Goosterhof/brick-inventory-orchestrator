@@ -60,6 +60,17 @@ describe('SetEtagHeaders', function(): void {
         expect($result->headers->has('ETag'))->toBeFalse();
     });
 
+    it('should not add ETag to 202 Accepted responses', function(): void {
+        $middleware = new SetEtagHeaders;
+        $request = Request::create('/test', 'GET');
+        $response = new Response('{"status":"pending"}', 202);
+
+        $result = $middleware->handle($request, fn(): Response => $response);
+
+        expect($result->headers->has('ETag'))->toBeFalse();
+        expect($result->getStatusCode())->toBe(202);
+    });
+
     it('should not add ETag to POST responses', function(): void {
         $middleware = new SetEtagHeaders;
         $request = Request::create('/test', 'POST');

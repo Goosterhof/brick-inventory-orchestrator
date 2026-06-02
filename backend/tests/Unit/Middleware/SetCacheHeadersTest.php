@@ -53,6 +53,19 @@ describe('SetCacheHeaders', function(): void {
         expect($result->headers->get('Cache-Control'))->not->toContain('max-age=3600');
     });
 
+    it('should force no-store on 202 Accepted polling envelopes', function(): void {
+        $middleware = new SetCacheHeaders;
+        $request = Request::create('/test', 'GET');
+        $response = new Response('{"status":"pending"}', 202);
+
+        $result = $middleware->handle($request, fn(): Response => $response, 'private;max_age=3600');
+
+        // The transient sync envelope must never be cached, regardless of the route directive.
+        // Symfony's ResponseHeaderBag appends `private` whenever no public/private directive is set.
+        expect($result->headers->get('Cache-Control'))->toBe('no-store, private');
+        expect($result->headers->get('Cache-Control'))->not->toContain('max-age=3600');
+    });
+
     it('should not set headers on non-successful responses', function(): void {
         $middleware = new SetCacheHeaders;
         $request = Request::create('/test', 'GET');
