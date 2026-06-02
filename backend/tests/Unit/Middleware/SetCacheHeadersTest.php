@@ -61,7 +61,8 @@ describe('SetCacheHeaders', function(): void {
         $result = $middleware->handle($request, fn(): Response => $response, 'private;max_age=3600');
 
         // The transient sync envelope must never be cached, regardless of the route directive.
-        expect($result->headers->get('Cache-Control'))->toBe('no-store');
+        // Symfony's ResponseHeaderBag appends `private` whenever no public/private directive is set.
+        expect($result->headers->get('Cache-Control'))->toBe('no-store, private');
         expect($result->headers->get('Cache-Control'))->not->toContain('max-age=3600');
     });
 

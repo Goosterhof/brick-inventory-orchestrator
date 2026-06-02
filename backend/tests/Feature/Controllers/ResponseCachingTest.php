@@ -74,7 +74,8 @@ describe('Response Caching', function(): void {
             $response = $this->actingAs($user)->getJson('/api/sets/10281-1/parts');
 
             $response->assertStatus(202);
-            $response->assertHeader('Cache-Control', 'no-store');
+            $response->assertHeader('Cache-Control', 'no-store, private');
+
             expect($response->headers->has('ETag'))->toBeFalse();
         });
 
