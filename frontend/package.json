@@ -33,6 +33,7 @@
         "knip": "knip",
         "lint": "oxlint --type-aware",
         "lint:vue": "node scripts/lint-vue-conventions.mjs",
+        "posttest:mutation": "node scripts/check-mutation-per-file-floor.mjs",
         "prepare": "echo 'frontend hooks are dispatched from .githooks/ at the orchestrator root'",
         "pretest:coverage": "node -e \"require('fs').rmSync('coverage', {recursive: true, force: true})\"",
         "preview": "cross-env APP_NAME=families vite preview",
