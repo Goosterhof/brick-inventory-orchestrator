@@ -35,6 +35,10 @@ updates:
     labels:
       - dependencies
       - frontend
+    groups:
+      fs-packages:
+        patterns:
+          - "@script-development/fs-*"
 
   - package-ecosystem: github-actions
     directory: /
