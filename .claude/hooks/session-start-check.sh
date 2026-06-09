@@ -86,10 +86,16 @@ if [ ! -d "$FRONTEND_DIR" ]; then
     # Working from outside the monorepo — skip the dependency check silently.
     :
 elif gallery_deps_stale; then
+    INSTALL_RC=""
     if [ "$IS_REMOTE" = "true" ] && [ "${CURRENT_NODE_MAJOR:-0}" -ge 24 ] 2>/dev/null; then
         (cd "$FRONTEND_DIR" && npm install --no-audit --no-fund >/dev/null 2>&1)
+        INSTALL_RC=$?
     fi
-    if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
+    # A failed install can still touch node_modules mtime, so the staleness
+    # checks alone would report a broken tree as clean — surface the rc first.
+    if [ -n "$INSTALL_RC" ] && [ "$INSTALL_RC" -ne 0 ]; then
+        ISSUES="${ISSUES}\n- frontend npm install FAILED (exit $INSTALL_RC) during session-start repair — run (cd frontend && npm install) manually and check the output"
+    elif [ ! -d "$FRONTEND_DIR/node_modules" ]; then
         ISSUES="${ISSUES}\n- frontend/node_modules missing — run (cd frontend && npm install) before starting Gallery-Wing work"
     elif [ "$FRONTEND_DIR/package.json" -nt "$FRONTEND_DIR/node_modules" ]; then
         ISSUES="${ISSUES}\n- frontend/package.json is newer than frontend/node_modules — run (cd frontend && npm install) to sync dependencies"
