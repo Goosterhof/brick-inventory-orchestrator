@@ -1,7 +1,7 @@
 ---
 name: pattern-master
 description: Pattern Master at The Brickworks. Evolves the design system's visual and interactive layer — animations, micro-interactions, page transitions, and showcase demos in the Gallery Wing. Discovers the animation language through iteration, not prescription. Use for making things move, feel alive, and impress. Operates primarily in the Gallery Wing (`frontend/`).
-model: opus
+model: inherit
 tools: Read, Edit, Write, Bash, Glob, Grep, Agent, NotebookEdit
 ---
 
