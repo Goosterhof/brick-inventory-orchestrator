@@ -21,6 +21,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use ScriptDevelopment\KendoErrorTracker\ErrorTracker;
 use ScriptDevelopment\KendoReportTool\Exceptions\ReportSubmissionException;
 
 return Application::configure(basePath: \dirname(__DIR__))
@@ -42,6 +43,26 @@ return Application::configure(basePath: \dirname(__DIR__))
         ]);
     })
     ->withExceptions(function(Exceptions $exceptions): void {
+        // Rendered domain control-flow signals (the 4xx mappings below) are not
+        // telemetry — keep them out of Kendo. External-fault exceptions
+        // (RebrickableApiException, BrickognizeApiException,
+        // InvalidApiResponseException) stay reported: genuine upstream failures
+        // are exactly what error tracking is for.
+        $exceptions->dontReport([
+            SetNotFoundException::class,
+            MissingRebrickableTokenException::class,
+            NotFamilyHeadException::class,
+            CannotRemoveSelfException::class,
+            UserNotInFamilyException::class,
+            InviteCodeNotFoundException::class,
+            InvalidInviteCodeException::class,
+            ImportAlreadyInProgressException::class,
+        ]);
+
+        $exceptions->report(function(\Throwable $e): void {
+            resolve(ErrorTracker::class)->report($e);
+        });
+
         $exceptions->render(fn(SetNotFoundException $setNotFoundException, Request $request): JsonResponse => response()->json(['error' => 'Set not found'], 404));
 
         $exceptions->render(fn(MissingRebrickableTokenException $missingRebrickableTokenException, Request $request): JsonResponse => response()->json(['error' => 'Rebrickable user token not configured'], 400));

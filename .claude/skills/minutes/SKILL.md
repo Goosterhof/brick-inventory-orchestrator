@@ -92,7 +92,7 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 
 ### Action Items
 
-- [ ] [Owner]: [What needs to happen]
+- [Owner]: [What needs to happen]
 
 ### Open Questions
 
@@ -109,6 +109,7 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - Omit empty sections (if no false starts surfaced, don't include the False Starts heading) — but don't pad sections to feel complete; an honest empty is better than a manufactured entry
 - The texture sections (False Starts, Friction, Dynamics, Process Meta) feed the `/retro` skill — they only generate learning if filed honestly
 - Keep entries concise — one line per item, two max
+- Action items are plain owned bullets (`- [Owner]: ...`), never `- [ ]` checkboxes — a minutes file is an immutable record, so checkbox state can never be ticked there; completion is tracked on the board or in the PRs (review nit, 2026-06-12, PR #198)
 - After writing, confirm what was added (and the filename) in a brief summary (do not show the full file)
 - The repo-root `MINUTES.md` is a frozen archive (through 2026-05-28). Never write to it.
 

@@ -62,5 +62,5 @@ Keep the credential out of the tree. The war room runs this exact MCP at user sc
 
 ---
 
-**Status:** Open
-**Build Record:** _link when filed_
+**Status:** Built — read-path verified; create/delete smoke test pending CEO permission (see Build Record)
+**Build Record:** [`2026-06-12-kendo-board-wiring`](../build-records/2026-06-12-kendo-board-wiring.md)

@@ -480,6 +480,9 @@ describe('FamilySetController', function(): void {
             $response->assertStatus(409)
                 ->assertJson(['error' => 'An import is already in progress for this family']);
 
+            // ImportAlreadyInProgressException sits in the dontReport set
+            // (bootstrap/app.php), so the kendo report hook must not fire here:
+            // nothing at all reaches the queue on the 409 path.
             Queue::assertNothingPushed();
         });
 
