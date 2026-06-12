@@ -835,7 +835,10 @@
             "consumers": {
                 "families": {
                     "parts": ["src/apps/families/domains/parts/modals/PartUsageModal.vue"],
-                    "_root": ["src/apps/families/modals/PlacePartModal.vue"]
+                    "_root": [
+                        "src/apps/families/modals/FeedbackModal.vue",
+                        "src/apps/families/modals/PlacePartModal.vue"
+                    ]
                 },
                 "showcase": {"_root": ["src/apps/showcase/components/ComponentGallery.vue"]},
                 "shared": {"_root": ["src/shared/components/ConfirmDialog.vue"]}
@@ -1066,7 +1069,10 @@
                         "src/apps/families/domains/storage/pages/StorageDetailPage.vue",
                         "src/apps/families/domains/storage/pages/StorageOverviewPage.vue"
                     ],
-                    "_root": ["src/apps/families/modals/PlacePartModal.vue"]
+                    "_root": [
+                        "src/apps/families/modals/FeedbackModal.vue",
+                        "src/apps/families/modals/PlacePartModal.vue"
+                    ]
                 },
                 "showcase": {
                     "_root": [
@@ -1174,7 +1180,8 @@
                     "storage": [
                         "src/apps/families/domains/storage/pages/AddStoragePage.vue",
                         "src/apps/families/domains/storage/pages/EditStoragePage.vue"
-                    ]
+                    ],
+                    "_root": ["src/apps/families/modals/FeedbackModal.vue"]
                 },
                 "showcase": {
                     "_root": [
@@ -1222,7 +1229,8 @@
                         "src/apps/families/domains/storage/pages/AddStoragePage.vue",
                         "src/apps/families/domains/storage/pages/EditStoragePage.vue",
                         "src/apps/families/domains/storage/pages/StorageOverviewPage.vue"
-                    ]
+                    ],
+                    "_root": ["src/apps/families/modals/FeedbackModal.vue"]
                 },
                 "showcase": {
                     "_root": [

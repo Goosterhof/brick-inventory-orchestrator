@@ -22,3 +22,7 @@ export const PhTrash = iconStub;
 
 // Icons used in src/apps/families/App.vue
 export const PhSignOut = iconStub;
+export const PhMegaphone = iconStub;
+
+// Icons used in src/apps/families/modals/FeedbackModal.vue
+export const PhPaperclip = iconStub;

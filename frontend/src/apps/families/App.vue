@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackModal from '@app/modals/FeedbackModal.vue';
 import {
     FamilyRouterLink,
     FamilyRouterView,
@@ -7,14 +8,16 @@ import {
     familyToastService,
     familyTranslationService,
 } from '@app/services';
-import {PhSignOut} from '@phosphor-icons/vue';
+import {PhMegaphone, PhSignOut} from '@phosphor-icons/vue';
 import NavHeader from '@shared/components/NavHeader.vue';
 import NavMobileLink from '@shared/components/NavMobileLink.vue';
 import PageTransition from '@shared/components/PageTransition.vue';
-import {computed} from 'vue';
+import {computed, ref} from 'vue';
 
 const {t} = familyTranslationService;
 const currentRouteName = computed(() => familyRouterService.currentRouteRef.value.name);
+
+const feedbackOpen = ref(false);
 
 const handleLogout = async () => {
     await familyAuthService.logout();
@@ -122,6 +125,27 @@ const handleLogout = async () => {
         <template #actions>
             <button
                 v-if="familyAuthService.isLoggedIn.value"
+                data-testid="feedback-button"
+                @click="feedbackOpen = true"
+                flex
+                items="center"
+                gap="2"
+                p="x-4 y-2"
+                bg="[var(--brick-card-bg)] hover:brick-yellow focus:brick-yellow"
+                font="bold"
+                uppercase
+                tracking="wide"
+                cursor="pointer"
+                outline="none"
+                focus-visible:brick-focus
+                class="brick-border brick-shadow brick-transition hover:brick-shadow-hover focus:brick-shadow-hover active:brick-shadow-active active:translate-x-[2px] active:translate-y-[2px]"
+            >
+                <PhMegaphone size="20" aria-hidden="true" />
+                {{ t('feedback.buttonLabel').value }}
+            </button>
+            <button
+                v-if="familyAuthService.isLoggedIn.value"
+                data-testid="logout-button"
                 @click="handleLogout"
                 flex
                 items="center"
@@ -147,6 +171,8 @@ const handleLogout = async () => {
             <FamilyRouterView />
         </PageTransition>
     </main>
+
+    <FeedbackModal :open="feedbackOpen" @close="feedbackOpen = false" />
 
     <component :is="familyToastService.ToastContainerComponent" />
 </template>
