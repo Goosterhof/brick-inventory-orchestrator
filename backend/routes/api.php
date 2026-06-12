@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BrickIdentificationController;
 use App\Http\Controllers\FamilyController;
 use App\Http\Controllers\FamilySetController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\InviteCodeController;
 use App\Http\Controllers\SetController;
 use App\Http\Controllers\StorageOptionController;
@@ -136,4 +137,8 @@ Route::middleware(['auth:sanctum', 'family.ownership'])->group(function(): void 
     Route::post('/identify-brick', [BrickIdentificationController::class, 'identify'])
         ->middleware('throttle:brick-identification')
         ->can('identify');
+
+    // Feedback
+    Route::post('/feedback', [FeedbackController::class, 'store'])
+        ->can('submitFeedback', Family::class);
 });

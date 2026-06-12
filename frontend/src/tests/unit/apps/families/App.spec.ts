@@ -1,8 +1,16 @@
+import type {VueWrapper} from '@vue/test-utils';
+import type {ComponentPublicInstance} from 'vue';
+
 import App from '@app/App.vue';
 import NavHeader from '@shared/components/NavHeader.vue';
 import NavMobileLink from '@shared/components/NavMobileLink.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+
+/** Emit an event from a stub component looked up by name. */
+const emitFrom = (wrapper: VueWrapper | undefined, event: string): void => {
+    (wrapper?.vm as ComponentPublicInstance | undefined)?.$emit(event);
+};
 
 const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices} = await vi.hoisted(
     () => import('../../../helpers'),
@@ -16,6 +24,8 @@ vi.mock('@phosphor-icons/vue', () => ({
     PhSignOut: {template: '<i />'},
     PhList: {template: '<i />'},
     PhX: {template: '<i />'},
+    PhMegaphone: {template: '<i />'},
+    PhPaperclip: {template: '<i />'},
 }));
 
 const {mockLogout, mockGoToRoute, mockIsLoggedIn, mockCurrentRouteRef} = vi.hoisted(() => ({
@@ -33,6 +43,14 @@ vi.mock('@app/services', () =>
         familyRouterService: {goToRoute: mockGoToRoute, currentRouteRef: mockCurrentRouteRef},
     }),
 );
+
+// FeedbackModal is the spec's heaviest transitive dependency — it pulls in the
+// form inputs and ModalDialog. Stubbing it at the spec boundary keeps that
+// chain off the collect path (ADR-0012); its behavior is covered by
+// modals/FeedbackModal.spec.ts.
+vi.mock('@app/modals/FeedbackModal.vue', () => ({
+    default: {name: 'FeedbackModal', props: ['open'], template: '<div />'},
+}));
 
 vi.mock('@shared/components/NavHeader.vue', () => ({
     default: {
@@ -141,9 +159,69 @@ describe('App', () => {
         const wrapper = mountApp();
 
         // Assert
-        const button = wrapper.find('button');
+        const button = wrapper.find('[data-testid="logout-button"]');
         expect(button.exists()).toBe(true);
         expect(button.text()).toContain('auth.logout');
+    });
+
+    it('should not show feedback button when not logged in', () => {
+        // Arrange & Act
+        const wrapper = mountApp();
+
+        // Assert
+        expect(wrapper.find('[data-testid="feedback-button"]').exists()).toBe(false);
+    });
+
+    it('should show feedback button when logged in', () => {
+        // Arrange
+        mockIsLoggedIn.value = true;
+
+        // Act
+        const wrapper = mountApp();
+
+        // Assert
+        const button = wrapper.find('[data-testid="feedback-button"]');
+        expect(button.exists()).toBe(true);
+        expect(button.text()).toContain('feedback.buttonLabel');
+    });
+
+    it('should not render the feedback modal in the DOM when closed', () => {
+        // Arrange & Act — e2e strict-mode regression guard: a closed modal must
+        // contribute nothing to the DOM, or its form labels collide with
+        // page-level labels (getByLabel('Description') resolved to 2 elements).
+        mockIsLoggedIn.value = true;
+        const wrapper = mountApp();
+
+        // Assert
+        expect(wrapper.findComponent({name: 'FeedbackModal'}).exists()).toBe(false);
+    });
+
+    it('should open the feedback modal when the feedback button is clicked', async () => {
+        // Arrange
+        mockIsLoggedIn.value = true;
+        const wrapper = mountApp();
+
+        // Act
+        await wrapper.find('[data-testid="feedback-button"]').trigger('click');
+
+        // Assert
+        const modal = wrapper.findComponent({name: 'FeedbackModal'});
+        expect(modal.exists()).toBe(true);
+        expect(modal.props('open')).toBe(true);
+    });
+
+    it('should remove the feedback modal from the DOM on its close event', async () => {
+        // Arrange
+        mockIsLoggedIn.value = true;
+        const wrapper = mountApp();
+        await wrapper.find('[data-testid="feedback-button"]').trigger('click');
+
+        // Act
+        emitFrom(wrapper.findComponent({name: 'FeedbackModal'}), 'close');
+        await wrapper.vm.$nextTick();
+
+        // Assert
+        expect(wrapper.findComponent({name: 'FeedbackModal'}).exists()).toBe(false);
     });
 
     it('should show sets link when logged in', () => {
@@ -168,7 +246,7 @@ describe('App', () => {
         const wrapper = mountApp();
 
         // Act
-        await wrapper.find('button').trigger('click');
+        await wrapper.find('[data-testid="logout-button"]').trigger('click');
         await flushPromises();
 
         // Assert

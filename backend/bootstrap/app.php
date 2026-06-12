@@ -22,6 +22,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use ScriptDevelopment\KendoErrorTracker\ErrorTracker;
+use ScriptDevelopment\KendoReportTool\Exceptions\ReportSubmissionException;
 
 return Application::configure(basePath: \dirname(__DIR__))
     ->withRouting(
@@ -94,4 +95,6 @@ return Application::configure(basePath: \dirname(__DIR__))
         $exceptions->render(fn(InvalidInviteCodeException $invalidInviteCodeException, Request $request): JsonResponse => response()->json(['error' => 'The invite code is invalid, expired, or revoked'], 422));
 
         $exceptions->render(fn(ImportAlreadyInProgressException $importAlreadyInProgressException, Request $request): JsonResponse => response()->json(['error' => 'An import is already in progress for this family'], 409));
+
+        $exceptions->render(fn(ReportSubmissionException $reportSubmissionException, Request $request): JsonResponse => response()->json(['error' => 'Failed to send feedback'], 502));
     })->create();

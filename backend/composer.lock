@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "486a36d618986658e5dc3de16264d22b",
+    "content-hash": "54f95bf65210c6b1978678aac08e10cf",
     "packages": [
         {
             "name": "brick/math",
@@ -3659,6 +3659,62 @@
                 "source": "https://github.com/script-development/kendo-error-tracker/tree/v0.1.0"
             },
             "time": "2026-06-08T09:21:07+00:00"
+        },
+        {
+            "name": "script-development/kendo-report-tool",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/script-development/kendo-report-tool.git",
+                "reference": "aaf69e76457bb1092521f3023566f60da17b2295"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/script-development/kendo-report-tool/zipball/aaf69e76457bb1092521f3023566f60da17b2295",
+                "reference": "aaf69e76457bb1092521f3023566f60da17b2295",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
+                "illuminate/http": "^11.0 || ^12.0 || ^13.0",
+                "illuminate/support": "^11.0 || ^12.0 || ^13.0",
+                "php": "^8.4"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.18",
+                "orchestra/testbench": "^9.0 || ^10.0",
+                "pestphp/pest": "^3.0",
+                "phpstan/phpstan": "^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ScriptDevelopment\\KendoReportTool\\KendoReportToolServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ScriptDevelopment\\KendoReportTool\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel client library that submits user reports into a kendo project's report endpoint.",
+            "keywords": [
+                "feedback",
+                "kendo",
+                "laravel",
+                "reports"
+            ],
+            "support": {
+                "issues": "https://github.com/script-development/kendo-report-tool/issues",
+                "source": "https://github.com/script-development/kendo-report-tool/tree/v0.1.0"
+            },
+            "time": "2026-06-09T10:22:21+00:00"
         },
         {
             "name": "symfony/clock",

@@ -315,6 +315,18 @@ const translations = {
             themeDark: 'Dark mode',
             themeLight: 'Light mode',
         },
+        feedback: {
+            buttonLabel: 'Feedback',
+            title: 'Send Feedback',
+            titleLabel: 'Title',
+            descriptionLabel: 'Description',
+            screenshotsLabel: 'Screenshots',
+            screenshotsHint: 'Up to 5 images (JPG, PNG, GIF, BMP, TIFF, WebP), max 3 MB each.',
+            removeScreenshot: 'Remove {name}',
+            send: 'Send feedback',
+            success: 'Thanks — sent to the board',
+            error: "Couldn't send, try again",
+        },
     },
     nl: {
         common: {
@@ -631,6 +643,18 @@ const translations = {
             themeDescription: 'Kies hoe Brick Inventory eruitziet.',
             themeDark: 'Donkere modus',
             themeLight: 'Lichte modus',
+        },
+        feedback: {
+            buttonLabel: 'Feedback',
+            title: 'Feedback versturen',
+            titleLabel: 'Titel',
+            descriptionLabel: 'Omschrijving',
+            screenshotsLabel: 'Screenshots',
+            screenshotsHint: 'Maximaal 5 afbeeldingen (JPG, PNG, GIF, BMP, TIFF, WebP), max 3 MB per stuk.',
+            removeScreenshot: 'Verwijder {name}',
+            send: 'Feedback versturen',
+            success: 'Bedankt — verstuurd naar het bord',
+            error: 'Versturen mislukt, probeer het opnieuw',
         },
     },
 } as const;
