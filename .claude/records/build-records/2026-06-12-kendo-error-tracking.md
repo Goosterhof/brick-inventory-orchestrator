@@ -80,3 +80,24 @@ Until then the integration degrades exactly as designed: `ReportErrorJob` runs o
 
 - **External-state verification (graduated 2026-05-03):** WO claims verified against ground truth — vendor `ErrorTracker::report(Throwable): void` surface, async-dispatch-always behavior, and `send()`-side config short-circuit all confirmed by reading the installed package source, not the WO text. Railway env state is **not verifiable from this session** (no dashboard access) — flagged above as the CEO-actionable prerequisite.
 - The WO's `use Throwable;` import line was unnecessary (`bootstrap/app.php` is unnamespaced); Pint settled on inline `\Throwable`.
+
+---
+
+## Review Follow-up (2026-06-12) — dontReport split for rendered domain exceptions
+
+**Trigger:** General's review on PR #194 (`bootstrap/app.php:45`): the global `report()` hook fired for every handled throwable, including the 11 domain exceptions the same block renders to 4xx. Expected control-flow signals (404/403/409/422) would land as distinct error groups in Kendo project 3 on day one — the package does no client-side filtering by design.
+
+**Steward decision:** reviewer's option A, scoped to expected-condition domain exceptions only.
+
+**The rule as shipped (comment in `bootstrap/app.php`):** rendered domain control-flow signals are not telemetry; external faults are.
+
+| Disposition | Exceptions |
+|---|---|
+| **Suppressed** (`$exceptions->dontReport([...])`) | `SetNotFoundException`, `MissingRebrickableTokenException`, `NotFamilyHeadException`, `CannotRemoveSelfException`, `UserNotInFamilyException`, `InviteCodeNotFoundException`, `InvalidInviteCodeException`, `ImportAlreadyInProgressException` |
+| **Still reported** (deliberate) | `RebrickableApiException` (yes, even its 404 render path — the 502 case is worth the occasional 404 noise), `BrickognizeApiException`, `InvalidApiResponseException` — genuine upstream failures, which is exactly what error tracking is for |
+
+**Test restoration:** the earlier narrowing of `FamilySetControllerTest`'s 409 test is reverted. With `ImportAlreadyInProgressException` in the dontReport set, Laravel's handler short-circuits before the custom report callback, so `Queue::assertNothingPushed()` holds again — and now doubles as a regression guard proving the suppression works (it failed before the dontReport landed, passes after).
+
+**Environment note:** mid-follow-up the suite failed with `Target class [ScriptDevelopment\KendoErrorTracker\ErrorTracker] does not exist` — `backend/vendor/` had lost the package (a `composer install` against a package-less lock ran in this shared working copy while another branch was checked out; the stale `autoload_psr4.php` still referenced it). `composer install` from this branch's lock restored it. No code change involved; noting for the next crew member who hits a vendor/branch drift.
+
+**Gauntlet (re-run, post-fix):** `lint:test` / `phpstan` / `phpstan:types` / `deptrac` all clean; `test:arch` green; `composer test` **711 passed** (2906 assertions); unit coverage **100.0%**; feature coverage **100.0%**.

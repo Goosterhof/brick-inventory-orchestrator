@@ -42,6 +42,22 @@ return Application::configure(basePath: \dirname(__DIR__))
         ]);
     })
     ->withExceptions(function(Exceptions $exceptions): void {
+        // Rendered domain control-flow signals (the 4xx mappings below) are not
+        // telemetry — keep them out of Kendo. External-fault exceptions
+        // (RebrickableApiException, BrickognizeApiException,
+        // InvalidApiResponseException) stay reported: genuine upstream failures
+        // are exactly what error tracking is for.
+        $exceptions->dontReport([
+            SetNotFoundException::class,
+            MissingRebrickableTokenException::class,
+            NotFamilyHeadException::class,
+            CannotRemoveSelfException::class,
+            UserNotInFamilyException::class,
+            InviteCodeNotFoundException::class,
+            InvalidInviteCodeException::class,
+            ImportAlreadyInProgressException::class,
+        ]);
+
         $exceptions->report(function(\Throwable $e): void {
             resolve(ErrorTracker::class)->report($e);
         });

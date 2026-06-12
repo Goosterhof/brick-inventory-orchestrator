@@ -480,9 +480,10 @@ describe('FamilySetController', function(): void {
             $response->assertStatus(409)
                 ->assertJson(['error' => 'An import is already in progress for this family']);
 
-            // Not assertNothingPushed(): the global report hook dispatches the
-            // error tracker's ReportErrorJob for the rendered 409 exception.
-            Queue::assertNotPushed(ImportOwnedSetsJob::class);
+            // ImportAlreadyInProgressException sits in the dontReport set
+            // (bootstrap/app.php), so the kendo report hook must not fire here:
+            // nothing at all reaches the queue on the 409 path.
+            Queue::assertNothingPushed();
         });
 
         it('should return 409 when import is pending', function(): void {
