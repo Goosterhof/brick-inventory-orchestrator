@@ -480,7 +480,9 @@ describe('FamilySetController', function(): void {
             $response->assertStatus(409)
                 ->assertJson(['error' => 'An import is already in progress for this family']);
 
-            Queue::assertNothingPushed();
+            // Not assertNothingPushed(): the global report hook dispatches the
+            // error tracker's ReportErrorJob for the rendered 409 exception.
+            Queue::assertNotPushed(ImportOwnedSetsJob::class);
         });
 
         it('should return 409 when import is pending', function(): void {

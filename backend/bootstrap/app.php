@@ -21,6 +21,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use ScriptDevelopment\KendoErrorTracker\ErrorTracker;
 
 return Application::configure(basePath: \dirname(__DIR__))
     ->withRouting(
@@ -41,6 +42,10 @@ return Application::configure(basePath: \dirname(__DIR__))
         ]);
     })
     ->withExceptions(function(Exceptions $exceptions): void {
+        $exceptions->report(function(\Throwable $e): void {
+            resolve(ErrorTracker::class)->report($e);
+        });
+
         $exceptions->render(fn(SetNotFoundException $setNotFoundException, Request $request): JsonResponse => response()->json(['error' => 'Set not found'], 404));
 
         $exceptions->render(fn(MissingRebrickableTokenException $missingRebrickableTokenException, Request $request): JsonResponse => response()->json(['error' => 'Rebrickable user token not configured'], 400));
