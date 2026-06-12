@@ -97,4 +97,5 @@ Agree the API contract (`POST /api/feedback`, field names, error shape) between 
 ---
 
 **Status:** Open
-**Build Record:** _link when filed_
+**Built:** 2026-06-12 — code complete on `feat/kendo-report-filing`; awaiting CEO-provisioned prerequisites (report-tool feature gate + report:create token) for the live smoke test. Status stays `Open` until merge per ADR-0028 § Amendment 2026-05-27 (WOs close post-merge on `main`) — the PrePushPermitGate requires an active permit at push time.
+**Build Record:** [`2026-06-12-kendo-report-filing`](../build-records/2026-06-12-kendo-report-filing.md)
