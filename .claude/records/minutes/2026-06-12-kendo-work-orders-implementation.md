@@ -50,12 +50,14 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 
 ### Action Items
 
-- [ ] CEO: resolve the one open review thread on each of #194 / #195 / #196 and merge (any order).
-- [ ] Steward: refresh the second of #194/#196 after the first merges; reconcile WO footer statuses post-merge.
-- [ ] CEO: mint `error-events:write` token, set `ERROR_TRACKER_TOKEN` on Railway web **and** worker (then run the #194 smoke test).
-- [ ] CEO: activate `report-tool` feature on Kendo project 3, mint `report:create` token, set `REPORT_TOOL_TOKEN` on Railway web (then run the #196 end-to-end smoke test).
-- [ ] CEO: decide on allowlisting `mcp__kendo-goosterhof__*` write tools in `.claude/settings.json` (board-wiring write-path smoke test still pending).
-- [ ] Quality Warden: pick up the `LoginPage.spec.ts` teardown-race flake.
+_Recorded as owned follow-ups, not live checklist state — minutes are an immutable record; track completion on the board or in the PRs themselves._
+
+- CEO: resolve the one open review thread on each of #194 / #195 / #196 and merge (any order).
+- Steward: refresh the second of #194/#196 after the first merges; reconcile WO footer statuses post-merge.
+- CEO: mint `error-events:write` token, set `ERROR_TRACKER_TOKEN` on Railway web **and** worker (then run the #194 smoke test).
+- CEO: activate `report-tool` feature on Kendo project 3, mint `report:create` token, set `REPORT_TOOL_TOKEN` on Railway web (then run the #196 end-to-end smoke test).
+- CEO: decide on allowlisting `mcp__kendo-goosterhof__*` write tools in `.claude/settings.json` (board-wiring write-path smoke test still pending).
+- Quality Warden: pick up the `LoginPage.spec.ts` teardown-race flake.
 
 ### Open Questions
 
