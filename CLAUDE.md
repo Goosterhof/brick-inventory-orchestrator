@@ -97,6 +97,15 @@ Both surfaces were absorbed into this repo via `git subtree add` on 2026-05-17. 
 
 This territory is also governed by war-room ADRs: **0002** (Cascade Deletion), **0004** (Import Atomicity), **0009** (ResourceData Pattern), **0011** (Action Architecture), **0012** (FormRequest → DTO Flow), **0014** (Domain-Driven Frontend Structure), **0016** (Config Attribute Injection), **0019** (Explicit Model Hydration). Canonical source: `adrs.script.nl`. Per **ADR-0015** (ADR Governance), BIO operates as the **ADR development laboratory** — full ADR content in sovereign numbering, not distilled projections.
 
+### Kanban Board (Kendo)
+
+The Brickworks' issue board lives on Kendo:
+
+- **Tenant:** `https://goosterhof.kendo.dev` · **MCP server:** `kendo-goosterhof` (user scope, `~/.claude.json` — the connection carries a personal credential and is never committed) · **Project:** **Brick Inventory**, `project_id` **3**.
+- **Gather → act.** `project_id 3` is the only durable fact — everything else on the board (lane ids, sprint ids, member ids, `current_user`) churns. Call `prepare-project-context` with `project_id: 3` to resolve lanes / active sprint / members at use; never hardcode or cache them here. Then `create-issue` / `update-issue` / `start-work-on-issue` against project 3. If a call 404s on the project, the id drifted — re-confirm via `kendo://projects` and correct this line.
+- **The paper trail stays file-based.** Work Orders, Build Records, Audits, Standups, Retrospectives, and Minutes remain in `.claude/records/` — the board is additive for issue tracking, not a replacement (CEO scope decision 2026-06-09).
+- **Don't conflate instances:** `kendo-script` also has a project id 3 ("HardwareInsight") — a different tenant that happens to share the number. BIO binds `kendo-goosterhof` id 3 only.
+
 ## Wing Manuals
 
 The two production wings of The Brickworks each carry their own operational manual. The Atrium (this file) holds the umbrella identity and the paper-trail vocabulary; each wing manual holds the surface-specific conventions, machinery, and quality gauntlets.
