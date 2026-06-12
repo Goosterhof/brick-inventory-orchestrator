@@ -64,7 +64,7 @@ It POSTs a multipart request to `{kendo_url}/api/projects/{project}/reports` wit
 
 ### ⚠ Gotchas (read before you build)
 
-- **`multipart/form-data` vs the snake_case middleware (ADR-0029).** BIO's request middleware converts camelCase→snake_case for JSON bodies. With `FormData` (file upload) that conversion may not apply — send field names exactly as `SubmitFeedbackRequest` expects (`title`, `description`, `screenshots[]`). Verify the request middleware path for multipart before assuming auto-conversion.
+- **`multipart/form-data` vs the snake_case middleware (BIO ADR-0029).** BIO's request middleware converts camelCase→snake_case for JSON bodies. With `FormData` (file upload) that conversion may not apply — send field names exactly as `SubmitFeedbackRequest` expects (`title`, `description`, `screenshots[]`). Verify the request middleware path for multipart before assuming auto-conversion.
 - **Synchronous blocking call.** `submit()` blocks the web request up to the configured timeout (default 2 s connect / 5 s total). Acceptable for a feedback form; don't lower the timeouts below the package defaults.
 
 ## Prerequisites (CEO-provisioned)
@@ -86,7 +86,7 @@ It POSTs a multipart request to `{kendo_url}/api/projects/{project}/reports` wit
 
 - War Room Context: General-issued. Companion WOs `2026-06-09-kendo-error-tracking`, `2026-06-09-kendo-board-wiring`.
 - Package: `script-development/kendo-report-tool` (packagist; public, MIT). README is the integration contract.
-- Architecture: ADR-0011 (Actions), ADR-0012 (FormRequest→DTO), ADR-0020 (Input/Result DTO split), ADR-0009/0029 (ResourceData / case conversion). War-room principle #9 (`#[CurrentUser]`).
+- Architecture: war-room ADR-0011 (Actions), war-room ADR-0012 (FormRequest→DTO), war-room ADR-0020 (Input/Result DTO split), war-room ADR-0009 (ResourceData); BIO ADR-0029 (case conversion via HTTP middleware — these are different sequences; BIO 0011/0012/0020/0009 mean other decisions, see `.claude/docs/decisions.md`). War-room principle #9 (`#[CurrentUser]`).
 
 ## Notes from the Issuer
 
