@@ -29,15 +29,16 @@ describe('App', () => {
         expect(wrapper.find('nav').text()).toContain('Brick & Mortar');
     });
 
-    it('should render both showcase navigation links', () => {
+    it('should render all showcase navigation links', () => {
         // Arrange & Act
         const wrapper = shallowMount(App);
 
         // Assert
         const links = wrapper.findAllComponents({name: 'ShowcaseRouterLink'});
-        expect(links).toHaveLength(2);
+        expect(links).toHaveLength(3);
         expect(links[0]?.props('to')).toStrictEqual({name: 'showcase'});
         expect(links[1]?.props('to')).toStrictEqual({name: 'playground'});
+        expect(links[2]?.props('to')).toStrictEqual({name: 'brick-lab'});
     });
 
     it('should render the ShowcaseRouterView', () => {

@@ -34,6 +34,18 @@ const currentRouteName = computed(() => showcaseRouterService.currentRouteRef.va
             >
                 Playground
             </ShowcaseRouterLink>
+            <ShowcaseRouterLink
+                :to="{name: 'brick-lab'}"
+                p="x-4 y-2"
+                font="bold"
+                text="sm"
+                uppercase
+                tracking="wide"
+                class="brick-transition"
+                :class="currentRouteName === 'brick-lab' ? 'bg-black text-white' : 'hover:bg-gray-100'"
+            >
+                Brick Lab
+            </ShowcaseRouterLink>
         </nav>
 
         <ShowcaseRouterView />
