@@ -96,6 +96,6 @@ Agree the API contract (`POST /api/feedback`, field names, error shape) between 
 
 ---
 
-**Status:** Open
-**Built:** 2026-06-12 — code complete on `feat/kendo-report-filing`; awaiting CEO-provisioned prerequisites (report-tool feature gate + report:create token) for the live smoke test. Status stays `Open` until merge per ADR-0028 § Amendment 2026-05-27 (WOs close post-merge on `main`) — the PrePushPermitGate requires an active permit at push time.
+**Status:** Built — merged to `main` 2026-06-12 (PR #196); awaiting CEO-provisioned prerequisites (report-tool feature gate + report:create token) for the live smoke test
+**Built:** 2026-06-12 — code complete on `feat/kendo-report-filing`; merge conflicts with PR #194 (error-tracking) on `composer.json`/`composer.lock`/`.env.example`/`bootstrap/app.php` resolved at merge time as the WO predicted — both packages kept, lockfile regenerated via `composer update script-development/kendo-report-tool`.
 **Build Record:** [`2026-06-12-kendo-report-filing`](../build-records/2026-06-12-kendo-report-filing.md)
