@@ -185,20 +185,32 @@ describe('App', () => {
         expect(button.text()).toContain('feedback.buttonLabel');
     });
 
+    it('should not render the feedback modal in the DOM when closed', () => {
+        // Arrange & Act — e2e strict-mode regression guard: a closed modal must
+        // contribute nothing to the DOM, or its form labels collide with
+        // page-level labels (getByLabel('Description') resolved to 2 elements).
+        mockIsLoggedIn.value = true;
+        const wrapper = mountApp();
+
+        // Assert
+        expect(wrapper.findComponent({name: 'FeedbackModal'}).exists()).toBe(false);
+    });
+
     it('should open the feedback modal when the feedback button is clicked', async () => {
         // Arrange
         mockIsLoggedIn.value = true;
         const wrapper = mountApp();
-        expect(wrapper.findComponent({name: 'FeedbackModal'}).props('open')).toBe(false);
 
         // Act
         await wrapper.find('[data-testid="feedback-button"]').trigger('click');
 
         // Assert
-        expect(wrapper.findComponent({name: 'FeedbackModal'}).props('open')).toBe(true);
+        const modal = wrapper.findComponent({name: 'FeedbackModal'});
+        expect(modal.exists()).toBe(true);
+        expect(modal.props('open')).toBe(true);
     });
 
-    it('should close the feedback modal on its close event', async () => {
+    it('should remove the feedback modal from the DOM on its close event', async () => {
         // Arrange
         mockIsLoggedIn.value = true;
         const wrapper = mountApp();
@@ -209,7 +221,7 @@ describe('App', () => {
         await wrapper.vm.$nextTick();
 
         // Assert
-        expect(wrapper.findComponent({name: 'FeedbackModal'}).props('open')).toBe(false);
+        expect(wrapper.findComponent({name: 'FeedbackModal'}).exists()).toBe(false);
     });
 
     it('should show sets link when logged in', () => {

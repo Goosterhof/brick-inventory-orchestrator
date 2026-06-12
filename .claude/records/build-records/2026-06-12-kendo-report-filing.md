@@ -127,4 +127,36 @@ Until then, the forced-failure path is the guaranteed behavior in production: a 
 
 ---
 
-**Status:** Completed — code shipped on `ac7fd3f` + `ee86c90`; live smoke test awaiting CEO-provisioned prerequisites (see above)
+## Review Follow-up (2026-06-12, post-PR — Steward-routed)
+
+Two findings against the Gallery leg after the e2e image was repaired (#197). Both fixed in one commit on the same branch.
+
+### 1. e2e regression — closed FeedbackModal polluted the DOM (ACCEPT)
+
+`e2e/tests/storage.spec.ts:25` failed on all three browsers: `getByLabel('Description') resolved to 2 elements`. **Root cause confirmed:** `App.vue` rendered `<FeedbackModal :open="feedbackOpen">` **unconditionally**, and `ModalDialog`'s `<dialog>` content (including the Description `TextareaInput` and its label) is present in the DOM even when the dialog is closed — colliding with the storage form's own Description label under Playwright strict mode. The established house pattern gets this right: every domain modal (`PartUsageModal` in `PartsPage.vue:338`, `PlacePartModal` in `PartsUnsortedPage.vue:325` and `SetDetailPage.vue:570`) mounts with **`v-if` + `:open`** so a closed modal contributes nothing to the DOM. The original build followed the `:open`-only half of the pattern and missed the `v-if` half. Clean miss — accepted, app fixed, e2e selector untouched.
+
+**Fix:** `<FeedbackModal v-if="feedbackOpen" :open="feedbackOpen" @close="feedbackOpen = false" />` with an explanatory comment. Side effect (intentional, matches house pattern): the modal unmounts on close, so a half-typed draft does not survive close/reopen — same behavior as `PlacePartModal`.
+
+**Regression guard:** new `App.spec.ts` test "should not render the feedback modal in the DOM when closed" asserts `findComponent({name: 'FeedbackModal'}).exists() === false` while logged in with the modal closed; the open/close tests now assert DOM presence/absence (`exists()`), not just the `open` prop. e2e itself is CI-verified (no local Docker in this environment).
+
+### 2. Review nit — `screenshotsError` showed only the first error (ACCEPT)
+
+`entries.find(...)` surfaced one `screenshots*` error per submit, so multiple failed attachments dripped out across resubmits. Replaced with `flatMap(...).join(' ')` — every `screenshots*` message (array-level `screenshots` plus per-file `screenshots.N`) now joins into the control's single error display. Spec updated: new test asserts three simultaneous errors (array-level + two per-file) all render in the one `[role="alert"]`; the empty-message-list edge test still covers the filtered-out branch.
+
+### Verification — review follow-up
+
+| Gate | Result | Numbers |
+|---|---|---|
+| `npm run format:check` | ✅ GREEN | All matched files correct |
+| `npm run lint` | ✅ GREEN | 0 errors |
+| `npm run lint:vue` | ✅ GREEN | All conventions passed |
+| `npm run type-check` | ✅ GREEN | vue-tsc clean |
+| `npm run test:coverage` | ✅ GREEN | **1451 tests / 118 files** (+2 net); statements **100%** (1501/1501), branches **100%** (1141/1141), functions **100%** (439/439), lines **100%** (1395/1395) |
+| `npm run knip` | ✅ GREEN | 0 findings |
+| `npm run build` | ✅ GREEN | All 3 apps built |
+| `npm run test:integration:run` | ✅ GREEN | 143/143, no unhandled errors this run |
+| Playwright e2e | ⛔ deferred to CI | No Docker in this environment; the failing selector path is now structurally impossible — no second Description label exists in the DOM until the modal opens, and the modal never opens during the storage flow |
+
+---
+
+**Status:** Completed — code shipped on `ac7fd3f` + `ee86c90` + review-follow-up fix; live smoke test awaiting CEO-provisioned prerequisites (see above)

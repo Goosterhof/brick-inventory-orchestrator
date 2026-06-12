@@ -332,6 +332,29 @@ describe('FeedbackModal', () => {
         expect(wrapper.text()).toContain('The screenshot may not be greater than 3072 kilobytes.');
     });
 
+    it('should join all screenshots errors into the single error display', async () => {
+        // Arrange — the files share one control, so array-level and per-file
+        // errors must all surface at once, not one resubmit at a time.
+        const wrapper = mountModal();
+        await fillRequiredFields(wrapper);
+        rejectWithValidationError(
+            makeValidationError(422, {
+                screenshots: ['The screenshots field must not have more than 5 items.'],
+                'screenshots.0': ['The screenshot may not be greater than 3072 kilobytes.'],
+                'screenshots.1': ['The screenshot must be an image.'],
+            }),
+        );
+
+        // Act
+        await submitForm(wrapper);
+
+        // Assert
+        const alert = wrapper.find('[role="alert"]');
+        expect(alert.text()).toContain('The screenshots field must not have more than 5 items.');
+        expect(alert.text()).toContain('The screenshot may not be greater than 3072 kilobytes.');
+        expect(alert.text()).toContain('The screenshot must be an image.');
+    });
+
     it('should not surface a screenshots error when the validation payload carries an empty message list', async () => {
         // Arrange
         const wrapper = mountModal();

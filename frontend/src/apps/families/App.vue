@@ -172,7 +172,10 @@ const handleLogout = async () => {
         </PageTransition>
     </main>
 
-    <FeedbackModal :open="feedbackOpen" @close="feedbackOpen = false" />
+    <!-- v-if (house modal pattern, cf. PlacePartModal/PartUsageModal): the closed
+         modal must contribute nothing to the DOM — its form labels would otherwise
+         collide with page-level labels (e2e strict-mode getByLabel('Description')). -->
+    <FeedbackModal v-if="feedbackOpen" :open="feedbackOpen" @close="feedbackOpen = false" />
 
     <component :is="familyToastService.ToastContainerComponent" />
 </template>

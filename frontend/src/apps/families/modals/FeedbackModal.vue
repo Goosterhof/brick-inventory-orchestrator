@@ -34,12 +34,15 @@ const fileInputKey = ref(0);
 const fileInputId = useId();
 
 // The backend keys per-file errors as `screenshots.0`, `screenshots.1`, … —
-// surface the array-level error or the first per-file error on the input.
+// the files share one control, so join every screenshots* error (array-level
+// and per-file) into its single error display instead of surfacing them one
+// resubmit at a time.
 const screenshotsError = computed(() => {
     const entries = Object.entries(errors.value as Record<string, string | undefined>);
-    const match = entries.find(([key, message]) => key.startsWith('screenshots') && message !== undefined);
 
-    return match?.[1] ?? '';
+    return entries
+        .flatMap(([key, message]) => (key.startsWith('screenshots') && message !== undefined ? [message] : []))
+        .join(' ');
 });
 
 const handleFilesSelected = (event: Event) => {
