@@ -85,5 +85,5 @@ One token, one ability (`error-events:write`). Do **not** reuse the report-filin
 
 ---
 
-**Status:** Open
-**Build Record:** _link when filed_
+**Status:** Built — awaiting CEO-provisioned token for smoke test
+**Build Record:** [2026-06-12-kendo-error-tracking](../build-records/2026-06-12-kendo-error-tracking.md)

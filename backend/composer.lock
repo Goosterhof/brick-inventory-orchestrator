@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "008171da3c6e183609ff2836d84518df",
+    "content-hash": "486a36d618986658e5dc3de16264d22b",
     "packages": [
         {
             "name": "brick/math",
@@ -3601,6 +3601,64 @@
                 "source": "https://github.com/resend/resend-php/tree/v1.3.0"
             },
             "time": "2026-04-11T10:48:32+00:00"
+        },
+        {
+            "name": "script-development/kendo-error-tracker",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/script-development/kendo-error-tracker.git",
+                "reference": "80e1e5f0bc54177e906b911f8b2d45e3d1adc227"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/script-development/kendo-error-tracker/zipball/80e1e5f0bc54177e906b911f8b2d45e3d1adc227",
+                "reference": "80e1e5f0bc54177e906b911f8b2d45e3d1adc227",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/bus": "^11.0 || ^12.0 || ^13.0",
+                "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
+                "illuminate/http": "^11.0 || ^12.0 || ^13.0",
+                "illuminate/queue": "^11.0 || ^12.0 || ^13.0",
+                "illuminate/support": "^11.0 || ^12.0 || ^13.0",
+                "php": "^8.4"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.18",
+                "orchestra/testbench": "^9.0 || ^10.0",
+                "pestphp/pest": "^3.0",
+                "phpstan/phpstan": "^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ScriptDevelopment\\KendoErrorTracker\\ErrorTrackerServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ScriptDevelopment\\KendoErrorTracker\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel client library that reports scrubbed exceptions into kendo's error-tracking endpoint.",
+            "keywords": [
+                "error-tracking",
+                "exception-reporting",
+                "kendo",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/script-development/kendo-error-tracker/issues",
+                "source": "https://github.com/script-development/kendo-error-tracker/tree/v0.1.0"
+            },
+            "time": "2026-06-08T09:21:07+00:00"
         },
         {
             "name": "symfony/clock",
