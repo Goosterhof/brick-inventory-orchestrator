@@ -12,10 +12,17 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_pgsql pcntl zip gd \
-    && pecl install pcov \
+    && curl -fsSL https://github.com/krakjoe/pcov/archive/refs/tags/v1.0.12.tar.gz -o /tmp/pcov.tar.gz \
+    && tar -xzf /tmp/pcov.tar.gz -C /tmp \
+    && (cd /tmp/pcov-1.0.12 && phpize && ./configure --enable-pcov && make -j"$(nproc)" && make install) \
     && docker-php-ext-enable pcov \
+    && rm -rf /tmp/pcov.tar.gz /tmp/pcov-1.0.12 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+# pcov is built from the krakjoe/pcov GitHub tag, not `pecl install pcov`:
+# pecl.php.net outages (504s on 2026-06-12) break this image build, and PECL
+# is being sunset upstream. Pin tracks the latest pcov release; bump it when
+# the PHP base image moves.
 
 # Bump memory_limit above the php:8.5-cli default of 128M. `composer test`
 # runs the full Pest suite with pcov coverage and refresh-DB; 128M OOMs
