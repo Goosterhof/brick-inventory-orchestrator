@@ -12,7 +12,8 @@
         "laravel/octane": "^2.13",
         "laravel/sanctum": "^4.2",
         "laravel/tinker": "^3.0.0",
-        "resend/resend-php": "^1.3"
+        "resend/resend-php": "^1.3",
+        "script-development/kendo-report-tool": "^0.1.0"
     },
     "require-dev": {
         "captainhook/captainhook": "*",

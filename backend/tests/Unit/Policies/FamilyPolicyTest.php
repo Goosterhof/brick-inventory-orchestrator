@@ -22,6 +22,7 @@ describe('FamilyPolicy', function(): void {
             'viewParts' => ['viewParts'],
             'viewStats' => ['viewStats'],
             'viewBrickDna' => ['viewBrickDna'],
+            'submitFeedback' => ['submitFeedback'],
         ]);
     });
 

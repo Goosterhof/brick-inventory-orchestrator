@@ -28,6 +28,11 @@ final readonly class FamilyPolicy
         return true;
     }
 
+    public function submitFeedback(User $user): bool
+    {
+        return true;
+    }
+
     public function setRebrickableToken(User $user): bool
     {
         return $user->family->head_id === $user->id;
