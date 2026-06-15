@@ -59,7 +59,7 @@
         "@script-development/fs-router": "^0.1.1",
         "@script-development/fs-storage": "^0.1.0",
         "@script-development/fs-theme": "^0.1.0",
-        "@script-development/fs-toast": "^0.1.0",
+        "@script-development/fs-toast": "^0.2.0",
         "@script-development/fs-translation": "^0.1.0",
         "axios": "^1.17.0",
         "barcode-detector": "^3.2.0",
