@@ -133,9 +133,14 @@ const aimedSlot = (): Slot | null => {
         return null;
     }
     const span = PARTS[selectedPart.value]?.studs ?? 4;
-    const col = Math.min(columns - span, Math.max(0, Math.round(aim / UNIT.pitch + columns / 2 - span / 2)));
+    // Clamp the low bound LAST so col can never go negative: when the sheet is
+    // narrower than the part (columns < span), `columns - span` is negative and
+    // would win the Math.min, pushing the brick off-sheet to the left into
+    // negative array indices. maxCol floors at 0; the degenerate sheet is blocked.
+    const maxCol = Math.max(0, columns - span);
+    const col = Math.min(maxCol, Math.max(0, Math.round(aim / UNIT.pitch + columns / 2 - span / 2)));
     const level = restLevelFor(col, span, heightsByColumn());
-    return {col, span, level, blocked: level > maxLevel() || bricks.length >= MAX_BRICKS};
+    return {col, span, level, blocked: columns < span || level > maxLevel() || bricks.length >= MAX_BRICKS};
 };
 
 const spawnHeightFor = (slot: Slot): number => {
