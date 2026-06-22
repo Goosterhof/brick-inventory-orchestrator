@@ -6923,16 +6923,16 @@
         },
         {
             "name": "dedoc/scramble",
-            "version": "v0.13.26",
+            "version": "v0.13.28",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dedoc/scramble.git",
-                "reference": "5ca42b5e23b9d5c120607138f790b51e22d8b4a1"
+                "reference": "e50927c732a341bb743671066892eec6bd2e958b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dedoc/scramble/zipball/5ca42b5e23b9d5c120607138f790b51e22d8b4a1",
-                "reference": "5ca42b5e23b9d5c120607138f790b51e22d8b4a1",
+                "url": "https://api.github.com/repos/dedoc/scramble/zipball/e50927c732a341bb743671066892eec6bd2e958b",
+                "reference": "e50927c732a341bb743671066892eec6bd2e958b",
                 "shasum": ""
             },
             "require": {
@@ -6991,7 +6991,7 @@
             ],
             "support": {
                 "issues": "https://github.com/dedoc/scramble/issues",
-                "source": "https://github.com/dedoc/scramble/tree/v0.13.26"
+                "source": "https://github.com/dedoc/scramble/tree/v0.13.28"
             },
             "funding": [
                 {
@@ -6999,7 +6999,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-06-02T14:43:17+00:00"
+            "time": "2026-06-14T18:21:12+00:00"
         },
         {
             "name": "deptrac/deptrac",
