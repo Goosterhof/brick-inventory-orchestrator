@@ -88,7 +88,11 @@ const updateAdaptiveScale = (now: number, frameMs: number): void => {
     renderScale.value = SCALE_STEPS[scaleIndex] ?? 1;
     frameAvgMs = (SLOW_FRAME_MS + FAST_FRAME_MS) / 2;
     lastScaleAdjustMs = now;
-    resizeCanvas();
+    // Resize WITHOUT scheduling a frame: this runs inside tick, which already
+    // reschedules at the bottom. Calling resizeCanvas() here would re-enter
+    // requestFrame() after tick cleared rafId, leaking the prior frame id and
+    // multiplying the rAF loop on every scale transition.
+    resizeCanvasOnly();
 };
 
 const tick = (now: number): void => {
@@ -150,13 +154,19 @@ const onPointerUp = (event: PointerEvent): void => {
     canvasEl.value?.releasePointerCapture(event.pointerId);
 };
 
-const resizeCanvas = (): void => {
+// Resize the backing store only. Callers that are NOT already inside the rAF
+// loop should use resizeCanvas(), which also schedules a frame to repaint.
+const resizeCanvasOnly = (): void => {
     const canvas = canvasEl.value;
     if (!canvas) {
         return;
     }
     canvas.width = Math.max(1, Math.round(canvas.clientWidth * renderScale.value));
     canvas.height = Math.max(1, Math.round(canvas.clientHeight * renderScale.value));
+};
+
+const resizeCanvas = (): void => {
+    resizeCanvasOnly();
     requestFrame();
 };
 
