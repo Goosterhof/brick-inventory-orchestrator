@@ -75,7 +75,7 @@
         "@stryker-mutator/core": "^9",
         "@stryker-mutator/vitest-runner": "^9",
         "@tsconfig/node24": "^24.0.4",
-        "@types/node": "^24.11.0",
+        "@types/node": "^25.9.3",
         "@types/three": "^0.184.1",
         "@typescript/native-preview": "^7.0.0-dev.20260609.1",
         "@unocss/reset": "^66.6.5",
