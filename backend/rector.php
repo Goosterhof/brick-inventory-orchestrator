@@ -67,7 +67,7 @@ return RectorConfig::configure()
         naming: true,
     )
     ->withSets([
-        LaravelLevelSetList::UP_TO_LARAVEL_120,
+        LaravelLevelSetList::UP_TO_LARAVEL_130,
         LaravelSetList::LARAVEL_CODE_QUALITY,
         LaravelSetList::LARAVEL_COLLECTION,
         LaravelSetList::LARAVEL_TESTING,
