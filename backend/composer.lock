@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "54f95bf65210c6b1978678aac08e10cf",
+    "content-hash": "8b07d6d94c02968017b5e3d4645e3174",
     "packages": [
         {
             "name": "brick/math",
@@ -9612,16 +9612,16 @@
         },
         {
             "name": "script-development/phpstan-warroom-rules",
-            "version": "v0.3.0",
+            "version": "v0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/script-development/phpstan-warroom-rules.git",
-                "reference": "e3572b9fe11ab63d2a4e3212a37990c3c382a833"
+                "reference": "1e37859d080d3f7093cea0e9040a76ea60327ba0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/script-development/phpstan-warroom-rules/zipball/e3572b9fe11ab63d2a4e3212a37990c3c382a833",
-                "reference": "e3572b9fe11ab63d2a4e3212a37990c3c382a833",
+                "url": "https://api.github.com/repos/script-development/phpstan-warroom-rules/zipball/1e37859d080d3f7093cea0e9040a76ea60327ba0",
+                "reference": "1e37859d080d3f7093cea0e9040a76ea60327ba0",
                 "shasum": ""
             },
             "require": {
@@ -9639,7 +9639,8 @@
             "require-dev": {
                 "infection/infection": "^0.33.1",
                 "laravel/pint": "^1.18",
-                "phpunit/phpunit": "^11.0"
+                "phpunit/phpunit": "^11.0",
+                "symfony/console": "^7.2"
             },
             "type": "phpstan-extension",
             "extra": {
@@ -9667,9 +9668,9 @@
             ],
             "support": {
                 "issues": "https://github.com/script-development/phpstan-warroom-rules/issues",
-                "source": "https://github.com/script-development/phpstan-warroom-rules/tree/v0.3.0"
+                "source": "https://github.com/script-development/phpstan-warroom-rules/tree/v0.6.0"
             },
-            "time": "2026-05-29T13:57:47+00:00"
+            "time": "2026-07-01T13:13:33+00:00"
         },
         {
             "name": "sebastian/cli-parser",
