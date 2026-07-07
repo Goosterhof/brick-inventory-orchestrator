@@ -2,6 +2,7 @@ import type {HttpService} from '@script-development/fs-http';
 import type {AxiosError} from 'axios';
 import type {Ref} from 'vue';
 
+import {guarded} from '@script-development/fs-http';
 import {deepCamelKeys} from '@shared/helpers/string';
 import {onUnmounted, ref} from 'vue';
 
@@ -36,11 +37,13 @@ export const useValidationErrors = <T extends string = string>(httpService: Http
         errors.value = {};
     };
 
-    const unregister = httpService.registerResponseErrorMiddleware((error) => {
-        if (isValidationError(error) && error.response?.data) {
-            errors.value = parseValidationErrors<T>(error.response.data);
-        }
-    });
+    const unregister = httpService.registerResponseErrorMiddleware(
+        guarded((error) => {
+            if (isValidationError(error) && error.response?.data) {
+                errors.value = parseValidationErrors<T>(error.response.data);
+            }
+        }),
+    );
 
     onUnmounted(unregister);
 

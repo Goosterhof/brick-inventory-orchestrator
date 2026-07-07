@@ -274,6 +274,50 @@ describe('useValidationErrors', () => {
         wrapper.unmount();
     });
 
+    it('should not let a throw in the error-parse body escape and mask the real AxiosError', () => {
+        // Arrange — fs-http runs response-error middleware as a synchronous, un-caught loop
+        // (`for (const mw of responseErrorMiddleware) mw(error)`). A throw in this body would
+        // corrupt the interceptor chain and mask the real AxiosError. The body is wrapped in
+        // `guarded(...)` from @script-development/fs-http, which try/catches and never re-throws.
+        const {httpService} = createMockHttpService();
+        let capturedMiddleware: ResponseErrorMiddlewareFunc | undefined;
+        (httpService.registerResponseErrorMiddleware as Mock).mockImplementation((fn: ResponseErrorMiddlewareFunc) => {
+            capturedMiddleware = fn;
+            return vi.fn<() => void>();
+        });
+
+        const wrapper = shallowMount(
+            defineComponent({setup: () => useValidationErrors(httpService), template: '<div />'}),
+        );
+
+        // A malformed 422 payload: `errors` is present (passes the guard) but its own enumerable
+        // property throws on read, so the real deepCamelKeys traversal inside parseValidationErrors
+        // throws — the exact "throw on a malformed error payload" the guard defends against.
+        const malformedErrors = {};
+        Object.defineProperty(malformedErrors, 'first_name', {
+            enumerable: true,
+            get() {
+                throw new Error('malformed error payload');
+            },
+        });
+        const error = createAxiosError(422, {errors: malformedErrors} as unknown as AxiosResponseError);
+
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+        // Act + Assert — the guarded middleware must swallow the throw (never propagate), so the
+        // real AxiosError continues down fs-http's `Promise.reject(error)` path intact.
+        expect(() => capturedMiddleware?.(error)).not.toThrow();
+
+        // The throw happened mid-parse, before assignment — errors stay empty, and the swallow is
+        // loud (guarded's default handler logs), not silent.
+        const vm = wrapper.vm as unknown as ReturnType<typeof useValidationErrors>;
+        expect(vm.errors).toStrictEqual({});
+        expect(consoleErrorSpy).toHaveBeenCalledOnce();
+
+        consoleErrorSpy.mockRestore();
+        wrapper.unmount();
+    });
+
     it('should not overwrite existing errors when a non-422 response arrives afterwards', () => {
         // Arrange — populate with a real 422, then deliver a non-422 to the same instance
         const {httpService} = createMockHttpService();
