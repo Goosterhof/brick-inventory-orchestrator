@@ -92,7 +92,7 @@ final class StorageOptionRequest extends FormRequest
     {
         $parentId = $this->input(self::PARENT_ID);
 
-        if (!is_int($parentId) && !(is_string($parentId) && ctype_digit($parentId))) {
+        if (!is_int($parentId) && (!is_string($parentId) || !ctype_digit($parentId))) {
             return null;
         }
 
