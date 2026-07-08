@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import {familyHttpService, familyToastService, familyTranslationService} from '@app/services';
 import {PhPaperclip, PhX} from '@phosphor-icons/vue';
+import {useForm} from '@script-development/fs-form';
 import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
 import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import ModalDialog from '@shared/components/ModalDialog.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {useFormSubmit} from '@shared/composables/useFormSubmit';
-import {useValidationErrors} from '@shared/composables/useValidationErrors';
+import {camelKey} from '@shared/helpers/string';
 import {isAxiosError} from 'axios';
 import {computed, ref, useId} from 'vue';
 
@@ -19,9 +19,7 @@ const emit = defineEmits<{close: []}>();
 const {t} = familyTranslationService;
 
 type FeedbackField = 'title' | 'description' | 'screenshots';
-const validationErrors = useValidationErrors<FeedbackField>(familyHttpService);
-const {errors} = validationErrors;
-const {handleSubmit, submitting} = useFormSubmit(validationErrors);
+const {errors, handleSubmit, submitting} = useForm<FeedbackField>(familyHttpService, {keyMapper: camelKey});
 
 const title = ref('');
 const description = ref('');

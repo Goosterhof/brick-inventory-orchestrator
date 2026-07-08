@@ -186,10 +186,9 @@ describe('Architecture', () => {
                 }
             }
 
-            expect(
-                violations,
-                "Composable files must be prefixed with 'use' (e.g., useValidationErrors.ts)",
-            ).toStrictEqual([]);
+            expect(violations, "Composable files must be prefixed with 'use' (e.g., useBrickPickup.ts)").toStrictEqual(
+                [],
+            );
         });
 
         it("should export a function named with the 'use' prefix", () => {

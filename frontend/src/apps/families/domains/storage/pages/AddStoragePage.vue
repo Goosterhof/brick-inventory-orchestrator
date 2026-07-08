@@ -1,20 +1,18 @@
 <script setup lang="ts">
 import {familyHttpService, familyRouterService, familyTranslationService} from '@app/services';
 import {storageOptionStoreModule} from '@app/stores';
+import {useForm} from '@script-development/fs-form';
 import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
 import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
 import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {useFormSubmit} from '@shared/composables/useFormSubmit';
-import {useValidationErrors} from '@shared/composables/useValidationErrors';
+import {camelKey} from '@shared/helpers/string';
 
 const {t} = familyTranslationService;
 const adapted = storageOptionStoreModule.generateNew();
 
 type AddStorageField = 'name' | 'description' | 'parentId' | 'row' | 'column';
-const validationErrors = useValidationErrors<AddStorageField>(familyHttpService);
-const {errors} = validationErrors;
-const {handleSubmit, submitting} = useFormSubmit(validationErrors);
+const {errors, handleSubmit, submitting} = useForm<AddStorageField>(familyHttpService, {keyMapper: camelKey});
 
 const onSubmit = () =>
     handleSubmit(async () => {

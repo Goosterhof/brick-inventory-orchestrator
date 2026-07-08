@@ -2,14 +2,14 @@
 import type {HttpService} from '@script-development/fs-http';
 import type {AxiosError} from 'axios';
 
+import {useForm} from '@script-development/fs-form';
 import DateInput from '@shared/components/forms/inputs/DateInput.vue';
 import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
 import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
 import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
 import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {useFormSubmit} from '@shared/composables/useFormSubmit';
-import {useValidationErrors} from '@shared/composables/useValidationErrors';
+import {camelKey} from '@shared/helpers/string';
 import {AxiosError as AxiosErrorClass} from 'axios';
 import {computed, ref, watch} from 'vue';
 
@@ -28,8 +28,7 @@ const mockHttpService = {
     },
 } as unknown as HttpService;
 
-const {errors, clearErrors} = useValidationErrors<SetFormField>(mockHttpService);
-const {handleSubmit, submitting} = useFormSubmit<SetFormField>({errors, clearErrors});
+const {errors, clearErrors, handleSubmit, submitting} = useForm<SetFormField>(mockHttpService, {keyMapper: camelKey});
 
 const name = ref('');
 const setNumber = ref('');
@@ -115,11 +114,13 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
         <SectionHeading number="11" title="Form Validation Workbench" />
 
         <p text="lg" leading="relaxed" max-w="prose" m="b-10">
-            End-to-end demonstration of
+            End-to-end demonstration of the one-call
+            <code font="mono" text="sm" bg="gray-100" p="x-1.5 y-0.5">useForm</code>
+            composable — which composes the
             <code font="mono" text="sm" bg="gray-100" p="x-1.5 y-0.5">useValidationErrors</code>
             and
             <code font="mono" text="sm" bg="gray-100" p="x-1.5 y-0.5">useFormSubmit</code>
-            composables working with every input type. Simulates real HTTP middleware behavior without a backend.
+            primitives — working with every input type. Simulates real HTTP middleware behavior without a backend.
         </p>
 
         <!-- Demo Form -->
@@ -127,7 +128,7 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
             <p class="brick-label" m="b-6">Add a LEGO Set</p>
             <div p="6" class="brick-border" bg="gray-50">
                 <p text="xs" font="mono" text-color="gray-500" m="b-3">
-                    useValidationErrors(httpService) + useFormSubmit(validationErrors)
+                    useForm(httpService) = useValidationErrors + useFormSubmit
                 </p>
                 <div grid="~ cols-1 md:cols-2" gap="4" m="b-6">
                     <TextInput
@@ -196,7 +197,8 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
             <p class="brick-label" m="b-6">How It Works</p>
             <div p="6" class="brick-border" bg="gray-50">
                 <p text="sm" leading="relaxed" text-color="gray-700" m="b-3">
-                    The composables intercept HTTP 422 responses via middleware registered on the
+                    <code font="mono" text="xs" bg="gray-100" p="x-1.5 y-0.5">useForm</code>
+                    intercepts HTTP 422 responses via middleware registered on the
                     <code font="mono" text="xs" bg="gray-100" p="x-1.5 y-0.5">HttpService</code>. Backend validation
                     errors arrive as
                     <code font="mono" text="xs" bg="gray-100" p="x-1.5 y-0.5">snake_case</code>
@@ -206,8 +208,7 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
                     attempt.
                 </p>
                 <pre m="t-3" p="3" bg="gray-100" class="brick-border" text="xs" font="mono" overflow="x-auto">
-const {errors, clearErrors} = useValidationErrors&lt;SetFormField&gt;(httpService);
-const {handleSubmit, submitting} = useFormSubmit(validationErrors);</pre
+const {errors, clearErrors, handleSubmit, submitting} = useForm&lt;SetFormField&gt;(httpService);</pre
                 >
             </div>
         </div>

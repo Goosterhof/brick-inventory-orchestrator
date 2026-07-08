@@ -10,14 +10,14 @@ import {
     familyThemeService,
     familyTranslationService,
 } from '@app/services';
+import {useForm} from '@script-development/fs-form';
 import BadgeLabel from '@shared/components/BadgeLabel.vue';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
 import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {useFormSubmit} from '@shared/composables/useFormSubmit';
-import {useValidationErrors} from '@shared/composables/useValidationErrors';
+import {camelKey} from '@shared/helpers/string';
 import {isAxiosError} from 'axios';
 import {computed, onMounted, onUnmounted, ref} from 'vue';
 
@@ -143,9 +143,11 @@ const recipientName = ref('');
 const inviteEmailSent = ref(false);
 const inviteEmailError = ref('');
 
-const inviteEmailValidation = useValidationErrors<'recipientEmail' | 'recipientName'>(familyHttpService);
-const {errors: inviteEmailErrors} = inviteEmailValidation;
-const {handleSubmit: handleInviteEmailSubmit, submitting: inviteEmailSubmitting} = useFormSubmit(inviteEmailValidation);
+const {
+    errors: inviteEmailErrors,
+    handleSubmit: handleInviteEmailSubmit,
+    submitting: inviteEmailSubmitting,
+} = useForm<'recipientEmail' | 'recipientName'>(familyHttpService, {keyMapper: camelKey});
 
 const sendInviteByEmail = () =>
     handleInviteEmailSubmit(async () => {

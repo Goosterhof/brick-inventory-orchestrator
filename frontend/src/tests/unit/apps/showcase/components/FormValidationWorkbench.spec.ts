@@ -91,8 +91,8 @@ describe('FormValidationWorkbench', () => {
         const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
 
         // Assert
-        expect(wrapper.text()).toContain('useValidationErrors<SetFormField>(httpService)');
-        expect(wrapper.text()).toContain('useFormSubmit(validationErrors)');
+        expect(wrapper.text()).toContain('useForm<SetFormField>(httpService)');
+        expect(wrapper.text()).toContain('useForm(httpService) = useValidationErrors + useFormSubmit');
     });
 
     it('should show success message and reset form after successful submit', async () => {

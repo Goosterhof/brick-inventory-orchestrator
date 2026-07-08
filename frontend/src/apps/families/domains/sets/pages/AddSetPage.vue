@@ -3,14 +3,14 @@ import type {FamilySetStatus} from '@app/types/familySet';
 
 import {familyHttpService, familyRouterService, familyTranslationService} from '@app/services';
 import {familySetStoreModule} from '@app/stores';
+import {useForm} from '@script-development/fs-form';
 import DateInput from '@shared/components/forms/inputs/DateInput.vue';
 import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
 import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
 import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
 import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {useFormSubmit} from '@shared/composables/useFormSubmit';
-import {useValidationErrors} from '@shared/composables/useValidationErrors';
+import {camelKey} from '@shared/helpers/string';
 import {isAxiosError} from 'axios';
 import {computed, ref, watch} from 'vue';
 
@@ -40,9 +40,7 @@ const dismissDuplicate = () => {
 };
 
 type AddSetField = 'setNum' | 'quantity' | 'status' | 'purchaseDate' | 'notes';
-const validationErrors = useValidationErrors<AddSetField>(familyHttpService);
-const {errors} = validationErrors;
-const {handleSubmit, submitting} = useFormSubmit(validationErrors);
+const {errors, handleSubmit, submitting} = useForm<AddSetField>(familyHttpService, {keyMapper: camelKey});
 
 const statusOptions: {
     value: FamilySetStatus;

@@ -5,6 +5,7 @@ import type {Adapted} from '@script-development/fs-adapter-store';
 import {familyHttpService, familyRouterService, familySoundService, familyTranslationService} from '@app/services';
 import {storageOptionStoreModule} from '@app/stores';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
+import {useForm} from '@script-development/fs-form';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
 import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
@@ -12,8 +13,7 @@ import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
 import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {useFormSubmit} from '@shared/composables/useFormSubmit';
-import {useValidationErrors} from '@shared/composables/useValidationErrors';
+import {camelKey} from '@shared/helpers/string';
 import {onMounted, ref} from 'vue';
 
 const {t} = familyTranslationService;
@@ -22,9 +22,7 @@ const loading = ref(true);
 const showDeleteConfirm = ref(false);
 
 type EditStorageField = 'name' | 'description' | 'parentId' | 'row' | 'column';
-const validationErrors = useValidationErrors<EditStorageField>(familyHttpService);
-const {errors} = validationErrors;
-const {handleSubmit, submitting} = useFormSubmit(validationErrors);
+const {errors, handleSubmit, submitting} = useForm<EditStorageField>(familyHttpService, {keyMapper: camelKey});
 
 onMounted(async () => {
     const id = familyRouterService.currentRouteId.value;

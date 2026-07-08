@@ -56,7 +56,7 @@ src/
     │   ├── forms/inputs/    # Standard window/door units (Text, Select, Date, Number, Textarea)
     │   └── scanner/         # Barcode scanning module
     ├── services/            # Service factories (http, auth, router, loading, toast, translation)
-    ├── composables/         # Reusable engineering specs (useFormSubmit, useValidationErrors)
+    ├── composables/         # Reusable engineering specs (useBrickPickup; forms use @script-development/fs-form)
     ├── helpers/             # Tools in the toolbox (string, csv, copy, type-check)
     ├── errors/              # Structural failure reports
     ├── types/               # Universal building codes
@@ -71,7 +71,7 @@ src/
 | ------------------- | ---------- | ------------------- |
 | Components          | PascalCase | `PrimaryButton.vue` |
 | Vue files           | kebab-case | `modal-dialog.vue`  |
-| TS files            | camelCase  | `useFormSubmit.ts`  |
+| TS files            | camelCase  | `useBrickPickup.ts` |
 | Variables/functions | camelCase  | `validationErrors`  |
 | Types/Interfaces    | PascalCase | `StorageItem`       |
 
@@ -125,9 +125,9 @@ Middleware can be registered/unregistered at runtime. Services live in each app'
 
 ### Forms
 
-- `useValidationErrors()` — tracks field-level errors
-- `useFormSubmit(validationErrors)` — handles submission + 422 parsing
-- Backend validation errors (HTTP 422) are parsed to field errors automatically
+- `useForm(httpService)` from `@script-development/fs-form` — the one-call form composable: returns `{errors, clearErrors, handleSubmit, submitting}`, wiring field-level error tracking together with 422-aware submission (double-submit prevention + error clearing).
+- The underlying `useValidationErrors` / `useFormSubmit` primitives are still exported by the package — reach for one directly only when you need one half without the other.
+- Backend validation errors (HTTP 422) are parsed to field errors automatically.
 
 ### Error Handling
 
