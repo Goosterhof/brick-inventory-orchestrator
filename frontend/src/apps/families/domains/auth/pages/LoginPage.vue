@@ -6,10 +6,10 @@ import {
     familyRouterService,
     familyTranslationService,
 } from '@app/services';
+import {useForm} from '@script-development/fs-form';
 import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {useFormSubmit} from '@shared/composables/useFormSubmit';
-import {useValidationErrors} from '@shared/composables/useValidationErrors';
+import {camelKey} from '@shared/helpers/string';
 import {ref} from 'vue';
 
 const {t} = familyTranslationService;
@@ -17,9 +17,7 @@ const email = ref('');
 const password = ref('');
 
 type LoginField = 'email' | 'password';
-const validationErrors = useValidationErrors<LoginField>(familyHttpService);
-const {errors} = validationErrors;
-const {handleSubmit, submitting} = useFormSubmit(validationErrors);
+const {errors, handleSubmit, submitting} = useForm<LoginField>(familyHttpService, {keyMapper: camelKey});
 
 const onSubmit = () =>
     handleSubmit(async () => {

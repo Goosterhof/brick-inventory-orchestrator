@@ -1,6 +1,11 @@
 import {vi} from 'vitest';
 
 export class MockAxiosError extends Error {
+    // Real axios error instances carry this flag, and `axios.isAxiosError` checks
+    // `payload.isAxiosError === true`. fs-form/fs-http resolve the *real* (un-mocked)
+    // axios from node_modules, so its 422 detection relies on this flag rather than on
+    // this module's `instanceof`-based mock.
+    isAxiosError = true;
     response?: {status: number; data: unknown; statusText: string; headers: unknown; config: unknown};
 }
 

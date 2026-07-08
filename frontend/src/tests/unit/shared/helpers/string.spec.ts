@@ -1,6 +1,6 @@
 import type {Item} from '@shared/types/item';
 
-import {deepSnakeKeys, toCamelCaseTyped} from '@shared/helpers/string';
+import {camelKey, deepSnakeKeys, toCamelCaseTyped} from '@shared/helpers/string';
 import {describe, expect, it} from 'vitest';
 
 interface TestItem extends Item {
@@ -112,5 +112,39 @@ describe('deepSnakeKeys', () => {
 
         // Assert
         expect(result).toStrictEqual({user_name: 'test', created_at: '2024-01-01'});
+    });
+});
+
+describe('camelKey', () => {
+    it('should convert a single snake_case key to camelCase', () => {
+        // Act
+        const result = camelKey('family_name');
+
+        // Assert
+        expect(result).toBe('familyName');
+    });
+
+    it('should convert a multi-word snake_case key to camelCase', () => {
+        // Act
+        const result = camelKey('set_number');
+
+        // Assert
+        expect(result).toBe('setNumber');
+    });
+
+    it('should treat a dotted key segment as a word boundary and drop the dot', () => {
+        // Act — dotted keys arrive from array-field 422 errors (e.g. `screenshots.0`)
+        const result = camelKey('screenshots.0');
+
+        // Assert
+        expect(result).toBe('screenshots0');
+    });
+
+    it('should return an already-camelCase key unchanged', () => {
+        // Act
+        const result = camelKey('already');
+
+        // Assert
+        expect(result).toBe('already');
     });
 });
