@@ -11,6 +11,8 @@ use App\Enums\SetSyncStatus;
 use App\Jobs\SyncSetPartsJob;
 use App\Models\Set;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Queue\Attributes\FailOnTimeout;
+use Illuminate\Queue\Attributes\Timeout;
 
 covers(SyncSetPartsJob::class);
 
@@ -18,15 +20,16 @@ uses(RefreshDatabase::class);
 
 describe('SyncSetPartsJob', function(): void {
     it('should declare a 600 second timeout', function(): void {
-        $job = new SyncSetPartsJob(setId: 1);
+        $attributes = new \ReflectionClass(SyncSetPartsJob::class)->getAttributes(Timeout::class);
 
-        expect($job->timeout)->toBe(600);
+        expect($attributes)->toHaveCount(1)
+            ->and($attributes[0]->newInstance()->timeout)->toBe(600);
     });
 
     it('should declare failOnTimeout so the failed() hook fires when the worker kills the import', function(): void {
-        $job = new SyncSetPartsJob(setId: 1);
+        $attributes = new \ReflectionClass(SyncSetPartsJob::class)->getAttributes(FailOnTimeout::class);
 
-        expect($job->failOnTimeout)->toBeTrue();
+        expect($attributes)->toHaveCount(1);
     });
 
     it('should flip status from Pending to InProgress before delegating to StoreSetPartsAction', function(): void {

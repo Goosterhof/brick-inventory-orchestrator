@@ -9,6 +9,8 @@ use App\Jobs\ImportOwnedSetsJob;
 use App\Models\Family;
 use App\Models\ImportJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Queue\Attributes\FailOnTimeout;
+use Illuminate\Queue\Attributes\Timeout;
 use Illuminate\Support\Facades\Log;
 
 covers(ImportOwnedSetsJob::class);
@@ -183,19 +185,18 @@ describe('ImportOwnedSetsJob', function(): void {
     });
 
     it('should declare a 600 second timeout', function(): void {
-        // arrange
-        $job = new ImportOwnedSetsJob(importJobId: 1, familyId: 1);
+        // act + assert — the queue worker reads the #[Timeout] class attribute
+        $attributes = new \ReflectionClass(ImportOwnedSetsJob::class)->getAttributes(Timeout::class);
 
-        // act + assert — strict equality on the property the queue worker reads
-        expect($job->timeout)->toBe(600);
+        expect($attributes)->toHaveCount(1)
+            ->and($attributes[0]->newInstance()->timeout)->toBe(600);
     });
 
     it('should declare failOnTimeout so the failed() hook fires when the worker kills the import', function(): void {
-        // arrange
-        $job = new ImportOwnedSetsJob(importJobId: 1, familyId: 1);
+        // act + assert — presence of the #[FailOnTimeout] class attribute signals fail-on-timeout
+        $attributes = new \ReflectionClass(ImportOwnedSetsJob::class)->getAttributes(FailOnTimeout::class);
 
-        // act + assert — strict equality on the property the queue worker reads
-        expect($job->failOnTimeout)->toBeTrue();
+        expect($attributes)->toHaveCount(1);
     });
 
     it('should set status to in_progress before executing import', function(): void {

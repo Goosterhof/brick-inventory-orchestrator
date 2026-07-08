@@ -10,15 +10,15 @@ use App\Enums\SetSyncStatus;
 use App\Models\Set;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Attributes\FailOnTimeout;
+use Illuminate\Queue\Attributes\Timeout;
 use Throwable;
 
+#[FailOnTimeout]
+#[Timeout(600)]
 final class SyncSetPartsJob implements ShouldQueue
 {
     use Queueable;
-
-    public int $timeout = 600;
-
-    public bool $failOnTimeout = true;
 
     public function __construct(
         public readonly int $setId,
