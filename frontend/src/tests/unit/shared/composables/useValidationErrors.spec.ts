@@ -347,4 +347,75 @@ describe('useValidationErrors', () => {
 
         wrapper.unmount();
     });
+
+    it('should short-circuit a response-less error cleanly, without a guarded swallow', () => {
+        // Arrange — a network-level error has no `response`. `isValidationError` guards this via
+        // `error.response?.status`; the optional chain must SHORT-CIRCUIT, not throw-then-get-caught
+        // by `guarded`. A non-optional `error.response.status` would throw a TypeError on the missing
+        // response, which `guarded` swallows loudly (console.error) — same empty-bag outcome, so only
+        // asserting "no throw / errors === {}" cannot tell the two apart. Asserting the swallow never
+        // fires is what distinguishes a clean skip from a caught throw.
+        const {httpService} = createMockHttpService();
+        let capturedMiddleware: ResponseErrorMiddlewareFunc | undefined;
+        (httpService.registerResponseErrorMiddleware as Mock).mockImplementation((fn: ResponseErrorMiddlewareFunc) => {
+            capturedMiddleware = fn;
+            return vi.fn<() => void>();
+        });
+
+        const wrapper = shallowMount(
+            defineComponent({setup: () => useValidationErrors(httpService), template: '<div />'}),
+        );
+
+        const networkError = {
+            isAxiosError: true,
+            response: undefined,
+            config: {} as never,
+            toJSON: () => ({}),
+            name: 'AxiosError',
+            message: 'Network Error',
+        } as unknown as AxiosError<AxiosResponseError>;
+
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+        // Act
+        capturedMiddleware?.(networkError);
+
+        // Assert — the guard short-circuited; `guarded`'s error handler was never reached.
+        expect(consoleErrorSpy).not.toHaveBeenCalled();
+        const vm = wrapper.vm as unknown as ReturnType<typeof useValidationErrors>;
+        expect(vm.errors).toStrictEqual({});
+
+        consoleErrorSpy.mockRestore();
+        wrapper.unmount();
+    });
+
+    it('should reset existing errors when a later 422 carries no errors object', () => {
+        // Arrange — populate the bag with a real 422, then deliver a 422 whose body has NO `errors`
+        // key. `parseValidationErrors`' `if (!data.errors) return {}` guard must reset the bag to {}.
+        // A mutant that drops that early-return falls into `deepCamelKeys(undefined)` → its
+        // `Object.entries(undefined)` throws → `guarded` catches → the stale bag is left in place.
+        // Starting from a POPULATED bag (not the initial {}) is what makes that survival observable.
+        const {httpService} = createMockHttpService();
+        let capturedMiddleware: ResponseErrorMiddlewareFunc | undefined;
+        (httpService.registerResponseErrorMiddleware as Mock).mockImplementation((fn: ResponseErrorMiddlewareFunc) => {
+            capturedMiddleware = fn;
+            return vi.fn<() => void>();
+        });
+
+        const wrapper = shallowMount(
+            defineComponent({setup: () => useValidationErrors(httpService), template: '<div />'}),
+        );
+
+        capturedMiddleware?.(createAxiosError(422, {errors: {name: ['Name is required']}}));
+        const vm = wrapper.vm as unknown as ReturnType<typeof useValidationErrors>;
+        expect(vm.errors).toStrictEqual({name: 'Name is required'});
+
+        // Act — a second 422, body present but no `errors` key.
+        capturedMiddleware?.(createAxiosError(422, {message: 'Validation failed'}));
+
+        // Assert — the bag is reset to {}, not left holding the previous field errors.
+        expect(vm.errors).toStrictEqual({});
+
+        wrapper.unmount();
+    });
 });
