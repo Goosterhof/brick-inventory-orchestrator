@@ -8,9 +8,10 @@ import StatCard from '@shared/components/StatCard.vue';
 import {flushPromises, mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-vi.mock('@script-development/fs-http', async () => {
+vi.mock('@script-development/fs-http', async (importOriginal) => {
+    const actual = await importOriginal<Record<string, unknown>>();
     const {mockHttpService} = await import('@integration/helpers/mock-server');
-    return {createHttpService: () => mockHttpService};
+    return {...actual, createHttpService: () => mockHttpService};
 });
 
 /**
