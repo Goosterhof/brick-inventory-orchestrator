@@ -8,8 +8,13 @@ export {deepCamelKeys, deepSnakeKeys, toCamelCaseTyped};
  * `useForm`, which defaults to identity keys; this preserves the Gallery's convention of
  * addressing 422 field errors in camelCase (e.g. `set_number` → `setNumber`).
  */
-export const camelKey = (key: string): string =>
-    // `deepCamelKeys` transforms the single key in place; joining the (always single-element)
-    // key list reads it back as a plain string without a nullable index access — keeping the
-    // helper branch-free for the Gallery's 100%-coverage gate.
-    Object.keys(deepCamelKeys({[key]: null})).join('');
+export const camelKey = (key: string): string => {
+    // `deepCamelKeys` returns a single-key object; read that one camelCased key back out.
+    // `String(...)` coerces the `noUncheckedIndexedAccess` `string | undefined` element to a
+    // plain `string` — without a `?? ''` fallback (a dead branch, since the object always has
+    // exactly one key) and without `.join('')` (whose separator is a Stryker-equivalent mutant:
+    // a length-1 array never exercises the separator, so no test can kill that mutation).
+    const [camelCased] = Object.keys(deepCamelKeys({[key]: null}));
+
+    return String(camelCased);
+};

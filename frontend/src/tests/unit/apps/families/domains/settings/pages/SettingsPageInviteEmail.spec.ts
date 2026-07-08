@@ -238,11 +238,12 @@ describe('SettingsPage — invite by email', () => {
         expect(wrapper.text()).not.toContain('settings.inviteEmailSent');
     });
 
-    it('should register a response-error middleware so 422 field errors flow through useValidationErrors', () => {
+    it("should register a response-error middleware so 422 field errors flow through fs-form's useForm", () => {
         // Arrange & Act
         shallowMount(SettingsPage);
 
-        // Assert — the composable subscribes; the rest of useValidationErrors is covered by its own tests.
+        // Assert — the page subscribes; the 422 → field-error handling itself lives in
+        // @script-development/fs-form's useForm and is covered by that package's own tests.
         expect(mockRegisterResponseErrorMiddleware).toHaveBeenCalled();
     });
 });
