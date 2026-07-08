@@ -104,9 +104,7 @@ describe('UpdateFamilySetAction', function(): void {
         $action = new UpdateFamilySetAction($this->dateFactory, $this->db);
         $data = new UpdateFamilySetData(
             purchaseDateProvided: true,
-            purchaseDate: null,
             notesProvided: true,
-            notes: null,
         );
 
         // act

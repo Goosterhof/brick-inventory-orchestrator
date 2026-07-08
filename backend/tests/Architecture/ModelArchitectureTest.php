@@ -32,7 +32,7 @@ it('should have @property annotations in models', function(): void {
 it('should not have fillable property in models', function(): void {
     foreach (getClassesInDirectory(\dirname(__DIR__, 2) . '/app/Models', 'App\Models\\') as $className) {
         $reflection = new \ReflectionClass($className);
-        $hasFillable = array_any($reflection->getProperties(), fn($property): bool => $property->getDeclaringClass()->getName() === $className && $property->getName() === 'fillable');
+        $hasFillable = array_any($reflection->getProperties(), fn(\ReflectionProperty $property): bool => $property->getDeclaringClass()->getName() === $className && $property->getName() === 'fillable');
 
         expect($hasFillable)->toBeFalse(
             \sprintf('Model %s should not have $fillable property - use explicit property assignment instead (ADR-0017 / War Room ADR-0019)', $className),
@@ -43,7 +43,7 @@ it('should not have fillable property in models', function(): void {
 it('should not have guarded property in models', function(): void {
     foreach (getClassesInDirectory(\dirname(__DIR__, 2) . '/app/Models', 'App\Models\\') as $className) {
         $reflection = new \ReflectionClass($className);
-        $hasGuarded = array_any($reflection->getProperties(), fn($property): bool => $property->getDeclaringClass()->getName() === $className && $property->getName() === 'guarded');
+        $hasGuarded = array_any($reflection->getProperties(), fn(\ReflectionProperty $property): bool => $property->getDeclaringClass()->getName() === $className && $property->getName() === 'guarded');
 
         expect($hasGuarded)->toBeFalse(
             \sprintf('Model %s should not have $guarded property - use explicit property assignment instead (ADR-0017 / War Room ADR-0019)', $className),
