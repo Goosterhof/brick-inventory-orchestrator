@@ -41,6 +41,7 @@ app/
 │   ├── BrickIdentification/    #   Forensic brick analysis
 │   ├── Family/                 #   Family office operations
 │   ├── FamilySet/              #   Inventory desk procedures
+│   ├── Feedback/               #   Customer feedback relay (kendo-report-tool)
 │   ├── StorageOption/          #   Storage aisle management
 │   └── Sync/                   #   Receiving dock operations
 ├── Services/                   # External API adapters only
@@ -48,10 +49,12 @@ app/
 │   └── BrickognizeService      #   Forensics lab connection
 ├── Models/                     # Eloquent models
 │   ├── User, Family            #   Crew & tenant records
-│   ├── Set, Part, Color        #   Catalog data (from suppliers)
+│   ├── Set, Part, Color, Theme #   Catalog data (from suppliers)
 │   ├── FamilySet, SetPart      #   What families own & what's inside
 │   ├── StorageOption           #   Physical locations (hierarchical)
-│   └── StorageOptionPart       #   What's stored where
+│   ├── StorageOptionPart       #   What's stored where
+│   ├── ImportJob               #   Async Rebrickable import tracking
+│   └── InviteCode              #   Family invitation codes
 ├── Http/
 │   ├── Controllers/            # Thin request handlers
 │   ├── Requests/               # Validated input DTOs (FormRequests)
@@ -110,7 +113,7 @@ Thin. Receive the request, hand it to the right Action, send back the result.
 
 - No constructors — method injection only
 - Return `JsonResponse` or `array` — nothing else
-- No `ResourceData` construction — Actions return the shaped data
+- Construct `ResourceData` in the controller via `::from()` and return `->toResponse()` / `->toResponseWithStatus()` — never return `ResourceData` directly; Actions return Models or Result DTOs, never `ResourceData` (ADR-0021)
 - No try-catch — the global exception handler catches typed failures
 - No query builders — controllers don't browse the shelves directly
 
@@ -192,14 +195,21 @@ The Foundry writes async work; a `queue:work` worker reads it. **Production need
 
 ### Exceptions
 
-Typed failures with global handling. No silent swallowing.
+Typed failures with global handling. No silent swallowing. All 12 rendered mappings (source of truth: `bootstrap/app.php`):
 
 ```
 SetNotFoundException              → 404
 MissingRebrickableTokenException  → 400
 NotFamilyHeadException            → 403
-RebrickableApiException           → 502 or 404
+RebrickableApiException           → 502 (404 when the upstream 404s)
 BrickognizeApiException           → 502
+InvalidApiResponseException       → 502
+CannotRemoveSelfException         → 422
+UserNotInFamilyException          → 404
+InviteCodeNotFoundException       → 404
+InvalidInviteCodeException        → 422
+ImportAlreadyInProgressException  → 409
+ReportSubmissionException         → 502 (vendor — kendo-report-tool)
 ```
 
 ## Quality Gauntlet
