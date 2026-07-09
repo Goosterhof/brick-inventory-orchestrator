@@ -8,8 +8,8 @@ import {flushPromises, mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 vi.mock('@script-development/fs-http', async () => {
-    const {mockHttpService} = await import('@integration/helpers/mock-server');
-    return {createHttpService: () => mockHttpService};
+    const {guarded, mockHttpService} = await import('@integration/helpers/mock-server');
+    return {createHttpService: () => mockHttpService, guarded};
 });
 
 describe('IdentifyBrickPage — integration', () => {

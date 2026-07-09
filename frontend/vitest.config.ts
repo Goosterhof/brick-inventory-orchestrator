@@ -75,6 +75,9 @@ export default mergeConfig(
                 // Families app — cross-domain UI primitives at app level
                 project('families/modals', 'apps/families/modals'),
 
+                // Families app — app-level service wiring
+                project('families/services', 'apps/families/services'),
+
                 // App roots — files directly in the app directory, not in domains
                 rootProject('families/root', 'apps/families'),
                 rootProject('admin/root', 'apps/admin'),
