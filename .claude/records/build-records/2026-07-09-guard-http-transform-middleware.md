@@ -52,7 +52,7 @@ Swept every `registerRequestMiddleware` / `registerResponseMiddleware` / `regist
 - [x] **Sibling registrations audited** — table above; only the families service carried the gap (matches the WO's note that the emmie sibling came out complete).
 - [x] **Full Gallery gauntlet green** — `format:check` ✅ ("All matched files use the correct format."), `lint` ✅ (exit 0, pre-existing warnings only, zero errors), `lint:vue` ✅ ("All conventions passed."), `type-check` ✅ (exit 0), `test:coverage` ✅ (**Statements 100% 1470/1470, Branches 100% 1129/1129, Functions 100% 432/432, Lines 100% 1366/1366**), `knip` ✅ (exit 0), `build` ✅ (all 3 apps), `size` ✅ (families 133.93 kB / 350 kB, admin 30.51 kB / 150 kB). Pre-commit hook pipeline passed on commit.
   - **Mutation per-file floor:** the WO lists "plus mutation per-file floor" — the Gallery gauntlet (`frontend/CLAUDE.md`, pre-push hook, npm scripts) carries no mutation-testing step; that floor is Foundry machinery (Infection). Treated as not applicable to this wing; flagging rather than silently dropping. See Open Item #1.
-- [ ] **Carries the `Agent Review Requested` label** — applied automatically by `.github/workflows/agent-review-label.yml` on PR open; verified on the PR after creation.
+- [x] **Carries the `Agent Review Requested` label** — applied automatically by `.github/workflows/agent-review-label.yml` on PR #253 open; verified via `gh pr view 253 --json labels` after creation.
 
 ## Decisions
 
