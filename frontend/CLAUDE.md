@@ -25,7 +25,7 @@ Domain layouts live at [`/.claude/docs/domain-map.md`](../.claude/docs/domain-ma
 | Icons        | Phosphor Icons (`@phosphor-icons/vue`)                                |
 | HTTP         | Axios with custom middleware-based HttpService                        |
 | Routing      | Vue Router 5 with custom RouterService wrapper                        |
-| Testing      | Vitest + @vue/test-utils (JSDOM)                                      |
+| Testing      | Vitest + @vue/test-utils (happy-dom)                                  |
 | Linting      | oxlint (type-aware)                                                   |
 | Formatting   | oxfmt                                                                 |
 | Git Hooks    | Husky + lint-staged + commitlint                                      |
@@ -55,9 +55,9 @@ src/
     ├── components/          # Prefab wall sections
     │   ├── forms/inputs/    # Standard window/door units (Text, Select, Date, Number, Textarea)
     │   └── scanner/         # Barcode scanning module
-    ├── services/            # Service factories (http, auth, router, loading, toast, translation)
+    ├── services/            # Locally-owned factories (auth/, sound.ts) — http/router/loading/toast/translation/storage come from @script-development/fs-* packages
     ├── composables/         # Reusable engineering specs (useBrickPickup; forms use @script-development/fs-form)
-    ├── helpers/             # Tools in the toolbox (string, csv, copy, type-check)
+    ├── helpers/             # Tools in the toolbox (bricklinkWantedList, csv, string, type-check)
     ├── errors/              # Structural failure reports
     ├── types/               # Universal building codes
     └── assets/              # Raw materials
@@ -103,13 +103,12 @@ defineEmits<{click: []}>();
 
 ### Services
 
-Services are built from factory functions. Each app creates its own instances.
+Services are built from factory functions. Each app creates its own instances in its `services/` directory (families instantiates auth, dialog, http, loading, router, sound, storage, theme, toast, and translation).
 
-- `createHttpService()` — water main
-- `createAuthService()` — security system
-- `createRouterService()` — elevator control
+- **Platform factories** ship as `@script-development/fs-*` packages: `createHttpService()` (fs-http — water main), `createRouterService()` (fs-router — elevator control), plus fs-loading, fs-toast, fs-translation, and fs-storage.
+- **Locally-owned factories** live in `src/shared/services/`: `createAuthService()` (`auth/` — security system, session-based over the http service) and `createSoundService()` (`sound.ts` — Web-Audio brick sound effects; respects `prefers-reduced-motion`, persists the on/off toggle via fs-storage).
 
-Middleware can be registered/unregistered at runtime. Services live in each app's `services/` directory.
+HTTP middleware can be registered/unregistered at runtime.
 
 ### API Communication
 
@@ -228,7 +227,6 @@ The lint config is `.oxlintrc.json`, mostly aligned with `war-room/templates/oxl
 - Path-alias enforcement: `no-restricted-imports` doctrine across `src/shared/`, `src/apps/families/`, `src/apps/admin/`, and `src/apps/*/domains/` is Gallery-shaped (`@app/`/`@shared/` aliases, app-isolation, no cross-domain imports)
 - Default-export ban for TS: `import/no-default-export: "error"` for `src/**/*.ts` (Vue components keep defaults; TS files require named exports)
 - `scripts/` added to `ignorePatterns` (Gallery has a `scripts/` dir for component registry + Vue-conventions linter)
-- Singleton exemption: `src/shared/services/storage.ts` exempts `no-console` and `no-restricted-globals` (the storage service IS the canonical localStorage wrapper)
 
 **Disabled correctness-category rules with rationale:**
 
