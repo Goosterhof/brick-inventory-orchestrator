@@ -20,7 +20,6 @@ covers(StoreSetPartsAction::class);
 describe('StoreSetPartsAction', function(): void {
     beforeEach(function(): void {
         $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->allows('transaction')->andReturnUsing(fn(\Closure $callback): mixed => $callback());
     });
 
     /**
@@ -124,6 +123,8 @@ describe('StoreSetPartsAction', function(): void {
 
     it('should dedupe colors by rebrickable_id into a single bulk upsert with full payload, uniqueBy, and update args', function() use ($buildPartMock, $buildSetPartMock): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback): mixed => $callback());
+
         $set = \Mockery::mock(Set::class);
         $set->allows('getAttribute')->with('id')->andReturn(42);
 
@@ -204,6 +205,8 @@ describe('StoreSetPartsAction', function(): void {
 
     it('should dedupe parts by part_num into a single bulk upsert with full payload, uniqueBy, and update args', function() use ($buildColorMock, $buildSetPartMock): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback): mixed => $callback());
+
         $set = \Mockery::mock(Set::class);
         $set->allows('getAttribute')->with('id')->andReturn(42);
 
@@ -283,6 +286,8 @@ describe('StoreSetPartsAction', function(): void {
 
     it('should pass null through to the parts upsert when categoryId is null, and stringify when present', function() use ($buildColorMock, $buildSetPartMock): void {
         // arrange — both branches of the categoryId ternary covered in one test.
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback): mixed => $callback());
+
         $set = \Mockery::mock(Set::class);
         $set->allows('getAttribute')->with('id')->andReturn(42);
 
@@ -343,6 +348,8 @@ describe('StoreSetPartsAction', function(): void {
 
     it('should dedupe set_parts by natural key (last-write-wins) and emit a single chunk with full payload, uniqueBy, and update args', function() use ($buildColorMock, $buildPartMock): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback): mixed => $callback());
+
         $set = \Mockery::mock(Set::class);
         $set->allows('getAttribute')->with('id')->andReturn(42);
 
@@ -406,6 +413,8 @@ describe('StoreSetPartsAction', function(): void {
 
     it('should treat regular and spare rows as distinct natural keys (is_spare in the dedupe key)', function() use ($buildColorMock, $buildPartMock): void {
         // arrange — same part+color, one regular and one spare. Both must land as distinct rows.
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback): mixed => $callback());
+
         $set = \Mockery::mock(Set::class);
         $set->allows('getAttribute')->with('id')->andReturn(42);
 
@@ -462,6 +471,8 @@ describe('StoreSetPartsAction', function(): void {
 
     it('should chunk the set_parts upsert at 500 rows', function() use ($buildPartMock, $buildColorMock): void {
         // arrange — build 600 unique-natural-key rows by varying part_num.
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback): mixed => $callback());
+
         $set = \Mockery::mock(Set::class);
         $set->allows('getAttribute')->with('id')->andReturn(42);
 
@@ -507,6 +518,8 @@ describe('StoreSetPartsAction', function(): void {
 
     it('should be idempotent on re-run with overlapping data', function() use ($buildColorMock, $buildPartMock): void {
         // arrange — same payload run twice; both runs hit the upsert path.
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback): mixed => $callback());
+
         $set = \Mockery::mock(Set::class);
         $set->allows('getAttribute')->with('id')->andReturn(42);
 

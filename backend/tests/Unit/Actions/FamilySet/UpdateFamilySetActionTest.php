@@ -16,7 +16,7 @@ covers(UpdateFamilySetAction::class);
 describe('UpdateFamilySetAction', function(): void {
     beforeEach(function(): void {
         $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->allows('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $this->dateFactory = \Mockery::mock(DateFactory::class);
         $this->dateFactory->allows('instance')->andReturnUsing(

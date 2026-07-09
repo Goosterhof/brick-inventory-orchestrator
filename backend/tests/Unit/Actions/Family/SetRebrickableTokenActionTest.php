@@ -14,11 +14,12 @@ covers(SetRebrickableTokenAction::class);
 describe('SetRebrickableTokenAction', function(): void {
     beforeEach(function(): void {
         $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->allows('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
     });
 
     it('should set the rebrickable user token on the family', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $user = \Mockery::mock(User::class);
         $user->allows('getAttribute')->with('id')->andReturn(1);
 
@@ -52,6 +53,8 @@ describe('SetRebrickableTokenAction', function(): void {
 
     it('should return the updated family', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $user = \Mockery::mock(User::class);
         $user->allows('getAttribute')->with('id')->andReturn(1);
 
@@ -75,6 +78,8 @@ describe('SetRebrickableTokenAction', function(): void {
 
     it('should overwrite existing token', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $user = \Mockery::mock(User::class);
         $user->allows('getAttribute')->with('id')->andReturn(1);
 
@@ -107,7 +112,9 @@ describe('SetRebrickableTokenAction', function(): void {
     });
 
     it('should throw NotFamilyHeadException when user is not the family head', function(): void {
-        // arrange
+        // arrange — the guard fires before any transaction is opened
+        $this->db->shouldNotReceive('transaction');
+
         $user = \Mockery::mock(User::class);
         $user->allows('getAttribute')->with('id')->andReturn(2);
 
@@ -128,6 +135,8 @@ describe('SetRebrickableTokenAction', function(): void {
 
     it('should allow action when user is the family head', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $user = \Mockery::mock(User::class);
         $user->allows('getAttribute')->with('id')->andReturn(5);
 

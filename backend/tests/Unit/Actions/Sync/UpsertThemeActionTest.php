@@ -15,7 +15,7 @@ describe('UpsertThemeAction', function(): void {
     it('should create a new theme when it does not exist', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $queryBuilder = \Mockery::mock(Builder::class);
         $queryBuilder->shouldReceive('where')->with('rebrickable_id', 158)->once()->andReturnSelf();
@@ -55,7 +55,7 @@ describe('UpsertThemeAction', function(): void {
     it('should update an existing theme when it exists', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $existingSavedValues = ['id' => 1, 'rebrickable_id' => 158];
         $existingTheme = \Mockery::mock(Theme::class);
@@ -96,7 +96,7 @@ describe('UpsertThemeAction', function(): void {
         // Parent linking happens in SyncThemesAction; this Action must never
         // touch parent_id.
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $queryBuilder = \Mockery::mock(Builder::class);
         $queryBuilder->shouldReceive('where')->andReturnSelf();

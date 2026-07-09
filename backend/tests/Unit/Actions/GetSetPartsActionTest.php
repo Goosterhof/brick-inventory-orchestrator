@@ -19,7 +19,6 @@ covers(GetSetPartsAction::class);
 describe('GetSetPartsAction', function(): void {
     beforeEach(function(): void {
         $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->allows('transaction')->andReturnUsing(fn(\Closure $callback): mixed => $callback());
     });
 
     /**
@@ -38,6 +37,8 @@ describe('GetSetPartsAction', function(): void {
 
     it('should upsert metadata, dispatch SyncSetPartsJob, and return Pending when the set does not exist locally', function() use ($buildSetLookup): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback): mixed => $callback());
+
         $setLookup = $buildSetLookup(null);
 
         $legoSetData = new LegoSetData(
@@ -90,7 +91,9 @@ describe('GetSetPartsAction', function(): void {
     });
 
     it('should pass through Completed status without dispatching when the set is already synced', function() use ($buildSetLookup): void {
-        // arrange
+        // arrange — pass-through path opens no transaction
+        $this->db->shouldNotReceive('transaction');
+
         $existingSet = \Mockery::mock(Set::class);
         $existingSet->allows('getAttribute')->with('parts_sync_status')->andReturn(SetSyncStatus::Completed);
         $existingSet->allows('getAttribute')->with('parts_sync_failed_reason')->andReturn(null);
@@ -123,7 +126,9 @@ describe('GetSetPartsAction', function(): void {
     });
 
     it('should pass through Pending status without dispatching when a sync is already queued', function() use ($buildSetLookup): void {
-        // arrange
+        // arrange — pass-through path opens no transaction
+        $this->db->shouldNotReceive('transaction');
+
         $existingSet = \Mockery::mock(Set::class);
         $existingSet->allows('getAttribute')->with('parts_sync_status')->andReturn(SetSyncStatus::Pending);
         $existingSet->allows('getAttribute')->with('parts_sync_failed_reason')->andReturn(null);
@@ -149,7 +154,9 @@ describe('GetSetPartsAction', function(): void {
     });
 
     it('should pass through InProgress status without dispatching when a sync is mid-flight', function() use ($buildSetLookup): void {
-        // arrange
+        // arrange — pass-through path opens no transaction
+        $this->db->shouldNotReceive('transaction');
+
         $existingSet = \Mockery::mock(Set::class);
         $existingSet->allows('getAttribute')->with('parts_sync_status')->andReturn(SetSyncStatus::InProgress);
         $existingSet->allows('getAttribute')->with('parts_sync_failed_reason')->andReturn(null);
@@ -176,6 +183,8 @@ describe('GetSetPartsAction', function(): void {
 
     it('should surface Failed once with the prior reason while auto-dispatching a fresh sync in the background', function() use ($buildSetLookup): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback): mixed => $callback());
+
         $savedFields = ['parts_sync_status' => SetSyncStatus::Failed, 'parts_sync_failed_reason' => 'old reason'];
         $existingSet = \Mockery::mock(Set::class);
         $existingSet->allows('setAttribute')->andReturnUsing(function(string $key, mixed $value) use (&$savedFields): void {

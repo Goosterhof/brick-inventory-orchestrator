@@ -16,7 +16,7 @@ describe('AssignPartToStorageAction', function(): void {
     it('should create a new assignment when one does not exist', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $savedValues = [];
         $storageOptionPartInstance = \Mockery::mock(StorageOptionPart::class);
@@ -62,7 +62,7 @@ describe('AssignPartToStorageAction', function(): void {
     it('should update existing assignment when one exists', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $existingSavedValues = [];
         $existingInstance = \Mockery::mock(StorageOptionPart::class);
@@ -104,7 +104,7 @@ describe('AssignPartToStorageAction', function(): void {
     it('should call save on the storage option part', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $storageOptionPartInstance = \Mockery::mock(StorageOptionPart::class);
         $storageOptionPartInstance->allows('setAttribute');

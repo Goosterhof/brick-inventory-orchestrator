@@ -23,11 +23,12 @@ covers(ImportOwnedSetsAction::class);
 describe('ImportOwnedSetsAction', function(): void {
     beforeEach(function(): void {
         $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->allows('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
     });
 
     it('should throw MissingRebrickableTokenException when family has no token', function(): void {
-        // arrange
+        // arrange — the token guard fires before any transaction is opened
+        $this->db->shouldNotReceive('transaction');
+
         $legoDataService = \Mockery::mock(LegoDataServiceInterface::class);
         $upsertSetAction = \Mockery::mock(UpsertSetAction::class);
         $familySetModel = \Mockery::mock(FamilySet::class);
@@ -44,7 +45,9 @@ describe('ImportOwnedSetsAction', function(): void {
     });
 
     it('should fetch user sets from the service using the family token', function(): void {
-        // arrange
+        // arrange — the generator yields no pages, so no transaction is opened
+        $this->db->shouldNotReceive('transaction');
+
         $legoDataService = \Mockery::mock(LegoDataServiceInterface::class);
         $legoDataService->shouldReceive('fetchUserSets')
             ->with(1, 'user-token-123')
@@ -70,6 +73,8 @@ describe('ImportOwnedSetsAction', function(): void {
 
     it('should create new family sets for sets not already owned', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $legoSetData = new LegoSetData(
             setNum: '75192-1',
             name: 'Millennium Falcon',
@@ -133,6 +138,8 @@ describe('ImportOwnedSetsAction', function(): void {
 
     it('should update quantity for existing family sets when exactly one exists', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $legoSetData = new LegoSetData(
             setNum: '75192-1',
             name: 'Millennium Falcon',
@@ -190,6 +197,8 @@ describe('ImportOwnedSetsAction', function(): void {
 
     it('should return correct counts for created and updated sets', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $legoSetData1 = new LegoSetData(
             setNum: '75192-1',
             name: 'Millennium Falcon',
@@ -266,7 +275,9 @@ describe('ImportOwnedSetsAction', function(): void {
     });
 
     it('should return zero counts when no sets are found', function(): void {
-        // arrange
+        // arrange — the generator yields no pages, so no transaction is opened
+        $this->db->shouldNotReceive('transaction');
+
         $legoDataService = \Mockery::mock(LegoDataServiceInterface::class);
         $legoDataService->shouldReceive('fetchUserSets')
             ->andReturnUsing(function(): \Generator {
@@ -297,6 +308,8 @@ describe('ImportOwnedSetsAction', function(): void {
 
     it('should skip sets when multiple family sets exist for the same set', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $legoSetData = new LegoSetData(
             setNum: '75192-1',
             name: 'Millennium Falcon',
@@ -359,6 +372,8 @@ describe('ImportOwnedSetsAction', function(): void {
 
     it('should preload family sets per page in a single query', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $legoSetData1 = new LegoSetData(
             setNum: '75192-1',
             name: 'Millennium Falcon',
@@ -451,7 +466,9 @@ describe('ImportOwnedSetsAction', function(): void {
     });
 
     it('should report partial import when API fails after first page', function(): void {
-        // arrange
+        // arrange — one successful page before the failure, so exactly one transaction
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $legoSetData = new LegoSetData(
             setNum: '75192-1',
             name: 'Millennium Falcon',
@@ -509,7 +526,9 @@ describe('ImportOwnedSetsAction', function(): void {
     });
 
     it('should re-throw exception when first page fails', function(): void {
-        // arrange
+        // arrange — the fetch fails before any page lands, so no transaction is opened
+        $this->db->shouldNotReceive('transaction');
+
         $legoDataService = \Mockery::mock(LegoDataServiceInterface::class);
         $legoDataService->shouldReceive('fetchUserSets')
             ->andThrow(new RebrickableApiException('Failed to fetch user sets: HTTP 401', 401));
@@ -529,7 +548,9 @@ describe('ImportOwnedSetsAction', function(): void {
     });
 
     it('should skip processing when page has no user sets', function(): void {
-        // arrange
+        // arrange — an empty page still opens its per-page transaction; the early return happens inside it
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $legoDataService = \Mockery::mock(LegoDataServiceInterface::class);
         $legoDataService->shouldReceive('fetchUserSets')
             ->andReturnUsing(function(): \Generator {

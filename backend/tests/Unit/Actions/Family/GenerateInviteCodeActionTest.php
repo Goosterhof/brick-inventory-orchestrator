@@ -14,7 +14,7 @@ covers(GenerateInviteCodeAction::class);
 describe('GenerateInviteCodeAction', function(): void {
     beforeEach(function(): void {
         $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->allows('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
     });
 
     it('should create an invite code with correct attributes', function(): void {

@@ -13,11 +13,22 @@ covers(DeleteStorageOptionAction::class);
 describe('DeleteStorageOptionAction', function(): void {
     beforeEach(function(): void {
         $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->allows('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
     });
 
-    it('should call delete on the storage option', function(): void {
-        // arrange
+    it('should delete the storage option inside the transaction boundary', function(): void {
+        // arrange — record the order of events to prove the delete runs inside the transaction
+        $events = [];
+
+        $this->db->shouldReceive('transaction')
+            ->once()
+            ->andReturnUsing(function(\Closure $callback) use (&$events): mixed {
+                $events[] = 'transaction:begin';
+                $result = $callback();
+                $events[] = 'transaction:end';
+
+                return $result;
+            });
+
         $storageOptionPartsRelation = \Mockery::mock(HasMany::class);
         $storageOptionPartsRelation->shouldReceive('delete')->once();
 
@@ -28,18 +39,25 @@ describe('DeleteStorageOptionAction', function(): void {
             ->andReturnSelf();
         $storageOption->shouldReceive('getAttribute')->with('children')->andReturn(new Collection);
         $storageOption->shouldReceive('storageOptionParts')->once()->andReturn($storageOptionPartsRelation);
-        $storageOption->shouldReceive('delete')->once();
+        $storageOption->shouldReceive('delete')->once()->andReturnUsing(function() use (&$events): bool {
+            $events[] = 'delete';
+
+            return true;
+        });
 
         $action = new DeleteStorageOptionAction($this->db);
 
         // act
         $action->execute($storageOption);
 
-        // assert - Mockery expectations verify the interactions
+        // assert — the delete happened, and it happened inside the transaction
+        expect($events)->toBe(['transaction:begin', 'delete', 'transaction:end']);
     });
 
     it('should recursively delete children', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $childPartsRelation = \Mockery::mock(HasMany::class);
         $childPartsRelation->shouldReceive('delete')->once();
 
@@ -70,8 +88,15 @@ describe('DeleteStorageOptionAction', function(): void {
 
     it('should delete storage option parts', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
+        $partsDeleted = false;
         $storageOptionPartsRelation = \Mockery::mock(HasMany::class);
-        $storageOptionPartsRelation->shouldReceive('delete')->once();
+        $storageOptionPartsRelation->shouldReceive('delete')->once()->andReturnUsing(function() use (&$partsDeleted): int {
+            $partsDeleted = true;
+
+            return 1;
+        });
 
         $storageOption = \Mockery::mock(StorageOption::class);
         $storageOption->shouldReceive('load')
@@ -87,11 +112,22 @@ describe('DeleteStorageOptionAction', function(): void {
         // act
         $action->execute($storageOption);
 
-        // assert - Mockery expectations verify the interactions
+        // assert — the storage option parts were deleted
+        expect($partsDeleted)->toBeTrue();
     });
 
     it('should eager load the full tree before the transaction', function(): void {
-        // arrange
+        // arrange — record the order of events to prove load() runs before the transaction opens
+        $events = [];
+
+        $this->db->shouldReceive('transaction')
+            ->once()
+            ->andReturnUsing(function(\Closure $callback) use (&$events): mixed {
+                $events[] = 'transaction:begin';
+
+                return $callback();
+            });
+
         $storageOptionPartsRelation = \Mockery::mock(HasMany::class);
         $storageOptionPartsRelation->shouldReceive('delete')->once();
 
@@ -99,7 +135,11 @@ describe('DeleteStorageOptionAction', function(): void {
         $storageOption->shouldReceive('load')
             ->with('children.storageOptionParts', 'storageOptionParts')
             ->once()
-            ->andReturnSelf();
+            ->andReturnUsing(function() use (&$events, &$storageOption): StorageOption {
+                $events[] = 'load';
+
+                return $storageOption;
+            });
         $storageOption->shouldReceive('getAttribute')->with('children')->andReturn(new Collection);
         $storageOption->shouldReceive('storageOptionParts')->once()->andReturn($storageOptionPartsRelation);
         $storageOption->shouldReceive('delete')->once();
@@ -109,6 +149,7 @@ describe('DeleteStorageOptionAction', function(): void {
         // act
         $action->execute($storageOption);
 
-        // assert - Mockery expectations verify load() was called
+        // assert — the eager load completed before the transaction opened
+        expect($events)->toBe(['load', 'transaction:begin']);
     });
 });
