@@ -49,8 +49,11 @@ _Closed 2026-05-25:_
 
 | Concern | Severity | Status | Notes |
 |---|---|---|---|
-| **`php8.5-pcov` missing again on dev host** | Medium | Open — regression of the 2026-05-20 closure, needs CEO sudo | Verified 2026-07-09 during WO dispatch: `php -v` = 8.5.4, only `php8.4-pcov` installed — the PHP install changed under the 2026-05-20 "pcov confirmed on 8.5.5" closure. `composer test:coverage` / `composer mutation` fail locally with "no coverage driver"; CI's PHP-8.5+pcov jobs still carry those gates (deferral precedent: WO 2026-06-01). Fix: `sudo apt install php8.5-pcov`. The 2026-05-20 Casebook note (*post-environmental-install, re-verify on next standup*) earns a corollary: environmental closures can silently regress — re-verify before relying on them in dispatches. |
 | Dockerfile build verification (`docker compose build backend`) | Low | Open — network-environmental | Docker daemon accessible as of 2026-05-26 (`docker info` returns client v29.4.3). Build attempt 2026-05-26 fails on `pecl install pcov` with PECL network error ("cannot download pecl/pcov"); not a code defect. The Dockerfile's pcov install is structurally correct. Re-verify during a session with reliable outbound network access. Surfaced/refreshed by [`2026-05-26-foundry-pulse-refresh`](../records/audits/2026-05-26-foundry-pulse-refresh.md). |
+
+_Closed 2026-07-09 (same-day, within the sweep-follow-up session):_
+
+- ~~`php8.5-pcov` missing again on dev host~~ — **Closed 2026-07-09.** Regression of the 2026-05-20 closure, surfaced by the family-id-archtest dispatch (PR #251): host PHP had moved to 8.5.4 with only `php8.4-pcov` installed. CEO installed `php8.5-pcov` same-session; verified with `php --ri pcov` (1.0.12 enabled) + full `composer test:coverage` (100.0%) and `composer test:feature-coverage` (100.0%) runs. Lesson recorded in the 2026-07-09 audit's Steward Evaluation: environmental closures can silently regress — re-verify before citing them in dispatches.
 
 _Closed 2026-05-20 during first-standup verification (CEO triggered `/standup`, Pulse refresh acted on findings):_
 
