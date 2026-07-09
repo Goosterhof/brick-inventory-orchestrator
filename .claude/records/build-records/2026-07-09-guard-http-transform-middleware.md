@@ -6,7 +6,7 @@
 **Wing:** Gallery
 **Work Order:** [`2026-07-08-guard-http-transform-middleware`](../work-orders/2026-07-08-guard-http-transform-middleware.md)
 **Branch:** `guard-http-transform-middleware`
-**Build commits:** `e9d69115` (`fix: guard families http transform middleware against throwing transforms`)
+**Build commits:** `e9d69115` (`fix: guard families http transform middleware against throwing transforms`), `6244042c` (`fix: add guarded export to the integration fs-http mock` — CI follow-up)
 
 ---
 
@@ -64,6 +64,14 @@ Swept every `registerRequestMiddleware` / `registerResponseMiddleware` / `regist
 
 1. **WO AC wording drift:** "plus mutation per-file floor" appears to be Foundry boilerplate carried into a Gallery WO — the Gallery has no mutation tooling. If a Stryker-style floor is intended for the Gallery, that is a separate Work Order.
 2. The `Agent Review Requested` label relies on the workflow; checked post-creation per the Atrium charter note about `gh pr create` not adding it on its own.
+
+## CI Follow-Up (commit `6244042c`)
+
+First CI run on PR #253 failed in the **integration suite** (`npm run test:integration:run`) — a CI-only step that is not part of the pre-push gauntlet, so no local run had executed it: `[vitest] No "guarded" export is defined on the "@script-development/fs-http" mock`. All 19 integration specs mock fs-http wholesale via a byte-identical factory returning only `{createHttpService}`; the new `guarded` import in `http.ts` wasn't in the mock's export set.
+
+Fix: `src/tests/integration/helpers/mock-server.ts` now exports a **faithful** `guarded` stand-in (try/catch around the middleware body, loud `console.error` default handler matching the real message, custom `onError` supported) and all 19 factories return `{createHttpService, guarded}`. Chose the local stand-in over `importOriginal` spreading deliberately: the wholesale mock exists to keep the real fs-http/axios modules out of the integration import chain (ADR-0012 test isolation), and pulling the actual module back in via `importOriginal` would defeat that. The `console.error` inside the stand-in carries a justified `eslint-disable-next-line no-console` (the tests dir is not exempt from `no-console`; precedent for justified disables exists in `SettingsPageMembers.spec.ts`). Integration suite 19 files / 143 tests green locally; unit coverage re-confirmed unchanged at 100% across all four dimensions.
+
+**Note for The Steward:** the pre-push gauntlet (`type-check → knip → test:coverage → build`) does not include `test:integration:run`, so a change to a module the integration layer mocks can pass every local gate and still break CI. Possible future WO: add the integration suite to the pre-push hook or document the CI-only step in `frontend/CLAUDE.md`'s gauntlet table.
 
 ## Self-Debrief
 
