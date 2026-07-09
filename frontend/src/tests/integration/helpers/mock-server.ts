@@ -22,8 +22,8 @@
  *   import {mockHttpService, mockServer} from "../helpers/mock-server";
  *
  *   vi.mock("@script-development/fs-http", async () => {
- *       const {mockHttpService} = await import("../helpers/mock-server");
- *       return {createHttpService: () => mockHttpService};
+ *       const {guarded, mockHttpService} = await import("../helpers/mock-server");
+ *       return {createHttpService: () => mockHttpService, guarded};
  *   });
  *
  *   beforeEach(() => mockServer.reset());
@@ -77,6 +77,29 @@ const unregister = <T>(array: T[], item: T) => {
     return () => {
         const index = array.indexOf(item);
         if (index > -1) array.splice(index, 1);
+    };
+};
+
+/**
+ * Faithful stand-in for fs-http's `guarded()` middleware wrapper: the body is
+ * try/caught so a throwing middleware cannot corrupt the transport chain, and
+ * the swallowed throw is surfaced loudly by default — the same contract as
+ * the real implementation. Kept local (rather than pulled via importOriginal)
+ * so the wholesale fs-http mock keeps the real fs-http/axios modules out of
+ * the integration import chain (ADR-0012 test isolation).
+ */
+export const guarded = <T>(fn: (arg: T) => void, onError?: (error: unknown) => void): ((arg: T) => void) => {
+    return (arg: T) => {
+        try {
+            fn(arg);
+        } catch (error) {
+            if (onError) {
+                onError(error);
+                return;
+            }
+            // eslint-disable-next-line no-console -- mirrors fs-http guarded()'s loud default handler
+            console.error('[fs-http] middleware body threw and was swallowed by guarded():', error);
+        }
     };
 };
 
