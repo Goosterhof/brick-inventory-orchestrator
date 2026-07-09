@@ -15,7 +15,7 @@ describe('UpsertPartAction', function(): void {
     it('should create a new part when it does not exist', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $queryBuilder = \Mockery::mock(Builder::class);
         $queryBuilder->shouldReceive('where')->with('part_num', '3001')->once()->andReturnSelf();
@@ -58,7 +58,7 @@ describe('UpsertPartAction', function(): void {
     it('should update an existing part when it exists', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $existingSavedValues = ['id' => 1, 'part_num' => '3001'];
         $existingPart = \Mockery::mock(Part::class);
@@ -99,7 +99,7 @@ describe('UpsertPartAction', function(): void {
     it('should handle null part_cat_id and part_img_url', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $queryBuilder = \Mockery::mock(Builder::class);
         $queryBuilder->shouldReceive('where')->andReturnSelf();

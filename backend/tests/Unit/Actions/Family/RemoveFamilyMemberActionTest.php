@@ -15,11 +15,12 @@ covers(RemoveFamilyMemberAction::class);
 describe('RemoveFamilyMemberAction', function(): void {
     beforeEach(function(): void {
         $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->allows('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
     });
 
     it('should create a new family for the removed member', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $actor = \Mockery::mock(User::class);
         $actor->allows('getAttribute')->with('id')->andReturn(1);
 
@@ -63,6 +64,8 @@ describe('RemoveFamilyMemberAction', function(): void {
 
     it('should reassign the member to the new family', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $actor = \Mockery::mock(User::class);
         $actor->allows('getAttribute')->with('id')->andReturn(1);
 
@@ -108,6 +111,8 @@ describe('RemoveFamilyMemberAction', function(): void {
 
     it('should set the removed member as head of the new family', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $actor = \Mockery::mock(User::class);
         $actor->allows('getAttribute')->with('id')->andReturn(1);
 
@@ -146,6 +151,8 @@ describe('RemoveFamilyMemberAction', function(): void {
 
     it('should save in correct order: new family, member, then family head update', function(): void {
         // arrange
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
         $saveOrder = [];
 
         $actor = \Mockery::mock(User::class);
@@ -188,7 +195,9 @@ describe('RemoveFamilyMemberAction', function(): void {
     });
 
     it('should throw NotFamilyHeadException when actor is not the family head', function(): void {
-        // arrange
+        // arrange — the guard fires before any transaction is opened
+        $this->db->shouldNotReceive('transaction');
+
         $actor = \Mockery::mock(User::class);
         $actor->allows('getAttribute')->with('id')->andReturn(2);
 
@@ -207,7 +216,9 @@ describe('RemoveFamilyMemberAction', function(): void {
     });
 
     it('should throw CannotRemoveSelfException when actor tries to remove themselves', function(): void {
-        // arrange
+        // arrange — the guard fires before any transaction is opened
+        $this->db->shouldNotReceive('transaction');
+
         $actor = \Mockery::mock(User::class);
         $actor->allows('getAttribute')->with('id')->andReturn(1);
 
@@ -224,7 +235,9 @@ describe('RemoveFamilyMemberAction', function(): void {
     });
 
     it('should throw UserNotInFamilyException when member is not in the family', function(): void {
-        // arrange
+        // arrange — the guard fires before any transaction is opened
+        $this->db->shouldNotReceive('transaction');
+
         $actor = \Mockery::mock(User::class);
         $actor->allows('getAttribute')->with('id')->andReturn(1);
 
@@ -246,7 +259,9 @@ describe('RemoveFamilyMemberAction', function(): void {
     });
 
     it('should not save anything when actor is not the family head', function(): void {
-        // arrange
+        // arrange — the guard fires before any transaction is opened
+        $this->db->shouldNotReceive('transaction');
+
         $actor = \Mockery::mock(User::class);
         $actor->allows('getAttribute')->with('id')->andReturn(2);
 
@@ -272,7 +287,9 @@ describe('RemoveFamilyMemberAction', function(): void {
     });
 
     it('should not save anything when actor tries to remove themselves', function(): void {
-        // arrange
+        // arrange — the guard fires before any transaction is opened
+        $this->db->shouldNotReceive('transaction');
+
         $actor = \Mockery::mock(User::class);
         $actor->allows('getAttribute')->with('id')->andReturn(1);
         $actor->shouldReceive('save')->never();
@@ -296,7 +313,9 @@ describe('RemoveFamilyMemberAction', function(): void {
     });
 
     it('should not save anything when member is not in the family', function(): void {
-        // arrange
+        // arrange — the guard fires before any transaction is opened
+        $this->db->shouldNotReceive('transaction');
+
         $actor = \Mockery::mock(User::class);
         $actor->allows('getAttribute')->with('id')->andReturn(1);
 

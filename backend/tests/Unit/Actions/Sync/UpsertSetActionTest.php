@@ -45,7 +45,7 @@ describe('UpsertSetAction', function(): void {
     it('should create a new set when it does not exist and resolve theme_id from local catalog', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $queryBuilder = \Mockery::mock(Builder::class);
         $queryBuilder->shouldReceive('where')->with('set_num', '75192-1')->once()->andReturnSelf();
@@ -94,7 +94,7 @@ describe('UpsertSetAction', function(): void {
     it('should set theme_id to null when the rebrickable theme is not in local catalog', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $queryBuilder = \Mockery::mock(Builder::class);
         $queryBuilder->shouldReceive('where')->with('set_num', '75192-1')->once()->andReturnSelf();
@@ -138,7 +138,7 @@ describe('UpsertSetAction', function(): void {
     it('should update an existing set when it exists', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $existingSavedValues = ['id' => 1, 'set_num' => '75192-1'];
         $existingSet = \Mockery::mock(Set::class);
@@ -185,7 +185,7 @@ describe('UpsertSetAction', function(): void {
     it('should leave theme_id null and skip the theme lookup when themeId is null', function(): void {
         // arrange
         $connection = \Mockery::mock(ConnectionInterface::class);
-        $connection->shouldReceive('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
 
         $queryBuilder = \Mockery::mock(Builder::class);
         $queryBuilder->shouldReceive('where')->andReturnSelf();

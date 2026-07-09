@@ -12,7 +12,7 @@ covers(UpdateStorageOptionAction::class);
 describe('UpdateStorageOptionAction', function(): void {
     beforeEach(function(): void {
         $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->allows('transaction')->andReturnUsing(fn(\Closure $callback) => $callback());
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
     });
 
     it('should update storage option properties', function(): void {

@@ -128,6 +128,49 @@ it('should declare covers() in all test files', function(): void {
     }
 });
 
+it('should pin the transaction boundary with counted expectations in transactional Action unit tests', function(): void {
+    $actionsDir = \dirname(__DIR__, 2) . '/app/Actions';
+
+    $iterator = new \RecursiveIteratorIterator(
+        new \RecursiveDirectoryIterator($actionsDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+    );
+
+    foreach ($iterator as $file) {
+        if (!$file->isFile()) {
+            continue;
+        }
+
+        if ($file->getExtension() !== 'php') {
+            continue;
+        }
+
+        if (!str_contains(file_get_contents($file->getPathname()), 'ConnectionInterface')) {
+            continue;
+        }
+
+        $relativeAction = str_replace($actionsDir . '/', '', $file->getPathname());
+        $testPath = \dirname(__DIR__) . '/Unit/Actions/' . mb_substr($relativeAction, 0, -4) . 'Test.php';
+        $relativeTest = str_replace(\dirname(__DIR__) . '/', 'tests/', $testPath);
+
+        expect(file_exists($testPath))
+            ->toBeTrue(\sprintf('Transactional Action app/Actions/%s must have a unit test at %s', $relativeAction, $relativeTest));
+
+        $content = file_get_contents($testPath);
+
+        // A permissive allows('transaction') passthrough stays green when the wrapper is dropped.
+        expect(preg_match('/allows\(\s*[\'"]transaction[\'"]/', $content))
+            ->toBe(0, \sprintf("%s must not stub the transaction with allows() - use shouldReceive('transaction')->once()", $relativeTest));
+
+        // Every shouldReceive('transaction') must chain a count first: once/twice/times/never.
+        expect(preg_match('/shouldReceive\(\s*[\'"]transaction[\'"]\s*\)\s*->\s*(?!once\b|twice\b|times\b|never\b)\w/s', $content))
+            ->toBe(0, \sprintf("%s must pin every shouldReceive('transaction') with a count (once/twice/times/never)", $relativeTest));
+
+        // At least one test must positively assert the transaction opens.
+        expect(preg_match('/shouldReceive\(\s*[\'"]transaction[\'"]\s*\)\s*->\s*(?:once|twice|times)\b/s', $content))
+            ->toBe(1, \sprintf('%s must contain at least one counted transaction expectation', $relativeTest));
+    }
+});
+
 it('should not use makePartial in unit tests', function(): void {
     $unitDir = \dirname(__DIR__) . '/Unit';
     if (!is_dir($unitDir)) {
