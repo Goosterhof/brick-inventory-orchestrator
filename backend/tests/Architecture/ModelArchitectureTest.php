@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use App\Contracts\BelongsToFamilyInterface;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -96,6 +97,39 @@ it('should have family relationship in models with family_id', function(): void 
         // Model has family_id, so it should have a family() method
         expect($reflection->hasMethod('family'))->toBeTrue(
             \sprintf('Model %s has family_id but is missing family() relationship method', $className),
+        );
+    }
+});
+
+it('should implement BelongsToFamilyInterface in models with family_id', function(): void {
+    // Documented ADR-0014 exemption: User carries family_id but is the authenticated
+    // agent, not a tenant-owned object — EnsureFamilyOwnership must not check User
+    // against itself, so User intentionally does not implement the interface.
+    $allowlist = [User::class];
+
+    foreach (getClassesInDirectory(\dirname(__DIR__, 2) . '/app/Models', 'App\Models\\') as $className) {
+        $reflection = new \ReflectionClass($className);
+        $docComment = $reflection->getDocComment();
+
+        if ($docComment === false) {
+            continue;
+        }
+
+        // Check if model has family_id property annotation
+        if (!preg_match('/@property.*\$family_id/', $docComment)) {
+            continue;
+        }
+
+        if (\in_array($className, $allowlist, true)) {
+            continue;
+        }
+
+        expect($reflection->implementsInterface(BelongsToFamilyInterface::class))->toBeTrue(
+            \sprintf(
+                'Model %s has family_id but does not implement %s (ADR-0014; User is the sole documented exemption)',
+                $className,
+                BelongsToFamilyInterface::class,
+            ),
         );
     }
 });
