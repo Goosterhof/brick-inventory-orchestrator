@@ -90,7 +90,7 @@ describe('RegisterPage', () => {
         const optionalInputs = inputs.filter((i) => i.props('optional') === true);
         expect(requiredInputs).toHaveLength(5);
         expect(optionalInputs).toHaveLength(1);
-        expect(optionalInputs.find((i) => i.props('label') === 'auth.inviteCode')).toBeTruthy();
+        expect(optionalInputs.find((i) => i.props('label') === 'auth.inviteCode')).toBeDefined();
     });
 
     it('should render submit button', () => {

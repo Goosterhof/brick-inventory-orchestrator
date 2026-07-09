@@ -168,7 +168,7 @@ describe('PartUsageModal', () => {
 
         // Assert
         expect(mockGoToRoute).toHaveBeenCalledWith('sets-detail', 42);
-        expect(wrapper.emitted('close')).toBeTruthy();
+        expect(wrapper.emitted('close')).toBeDefined();
     });
 
     it('shows the empty state when usages is empty', async () => {
@@ -217,7 +217,7 @@ describe('PartUsageModal', () => {
         wrapper.findComponent(ModalDialog).vm.$emit('close');
 
         // Assert
-        expect(wrapper.emitted('close')).toBeTruthy();
+        expect(wrapper.emitted('close')).toBeDefined();
     });
 
     it('clears stale data when reopening with a different part to avoid flicker', async () => {

@@ -29,7 +29,7 @@ describe('DateInput', () => {
         const label = wrapper.findComponent({name: 'FormLabel'});
 
         // Assert
-        expect(input.attributes('id')).toBeTruthy();
+        expect(input.attributes('id')).toBeDefined();
         expect(label.props('for')).toBe(input.attributes('id'));
     });
 
@@ -42,7 +42,7 @@ describe('DateInput', () => {
 
         // Assert
         const emitted = wrapper.emitted('update:modelValue');
-        expect(emitted).toBeTruthy();
+        expect(emitted).toBeDefined();
         expect(emitted?.[0]).toStrictEqual(['2024-01-15']);
     });
 

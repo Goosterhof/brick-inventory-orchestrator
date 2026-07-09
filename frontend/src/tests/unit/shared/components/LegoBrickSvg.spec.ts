@@ -115,7 +115,7 @@ describe('LegoBrickSvg', () => {
         expect(defs.exists()).toBe(true);
         const gradient = defs.find('radialGradient');
         expect(gradient.exists()).toBe(true);
-        expect(gradient.attributes('id')).toBeTruthy();
+        expect(gradient.attributes('id')).toBeDefined();
     });
 
     it('should compute correct viewBox based on columns and rows', () => {

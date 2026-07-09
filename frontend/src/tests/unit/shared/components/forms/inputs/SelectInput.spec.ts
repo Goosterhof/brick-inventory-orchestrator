@@ -36,7 +36,7 @@ describe('SelectInput', () => {
         const label = wrapper.findComponent({name: 'FormLabel'});
 
         // Assert
-        expect(select.attributes('id')).toBeTruthy();
+        expect(select.attributes('id')).toBeDefined();
         expect(label.props('for')).toBe(select.attributes('id'));
     });
 
@@ -52,7 +52,7 @@ describe('SelectInput', () => {
 
         // Assert
         const emitted = wrapper.emitted('update:modelValue');
-        expect(emitted).toBeTruthy();
+        expect(emitted).toBeDefined();
         expect(emitted?.[0]).toStrictEqual(['b']);
     });
 

@@ -73,9 +73,9 @@ describe('HomePage', () => {
             // Assert
             const bricks = wrapper.findAllComponents(LegoBrick);
             expect(bricks).toHaveLength(3);
-            expect(bricks.find((b) => b.props('color') === '#F5C518')).toBeTruthy();
-            expect(bricks.find((b) => b.props('color') === '#C41A16')).toBeTruthy();
-            expect(bricks.find((b) => b.props('color') === '#0055BF')).toBeTruthy();
+            expect(bricks.find((b) => b.props('color') === '#F5C518')).toBeDefined();
+            expect(bricks.find((b) => b.props('color') === '#C41A16')).toBeDefined();
+            expect(bricks.find((b) => b.props('color') === '#0055BF')).toBeDefined();
         });
 
         it('should not fetch stats', () => {

@@ -353,7 +353,7 @@ describe('BarcodeScanner', () => {
 
             // Assert
             const emitted = wrapper.emitted('detect');
-            expect(emitted).toBeTruthy();
+            expect(emitted).toBeDefined();
             expect(emitted?.[0]?.[0]).toBe('5702015357197');
         });
 
