@@ -1,5 +1,4 @@
 import type {VueWrapper} from '@vue/test-utils';
-import type {ComponentPublicInstance} from 'vue';
 
 import FeedbackModal from '@app/modals/FeedbackModal.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
@@ -7,7 +6,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 /** Emit an event from a stub component looked up by name. */
 const emitFrom = (wrapper: VueWrapper | undefined, event: string): void => {
-    (wrapper?.vm as ComponentPublicInstance | undefined)?.$emit(event);
+    wrapper?.vm.$emit(event);
 };
 
 // Child components are referenced via `findComponent({name: 'X'})` rather than

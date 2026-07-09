@@ -60,7 +60,7 @@ const applyRequestMiddleware = (data: unknown): void => {
 };
 
 const applyResponseMiddleware = <T>(response: MockResponse<T>): MockResponse<T> => {
-    for (const middleware of responseMiddleware) middleware(response as MockResponse<unknown>);
+    for (const middleware of responseMiddleware) middleware(response);
     return response;
 };
 

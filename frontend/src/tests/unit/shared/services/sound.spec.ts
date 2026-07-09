@@ -8,7 +8,7 @@ const createMockStorageService = (initialData: Record<string, unknown> = {}): St
 
     return {
         put: vi.fn<(key: string, value: unknown) => void>((key: string, value: unknown) => store.set(key, value)),
-        get: vi.fn<(key: string) => unknown>((key: string) => store.get(key)) as unknown as StorageService['get'],
+        get: vi.fn<(key: string) => unknown>((key: string) => store.get(key)),
         remove: vi.fn<(key: string) => void>((key: string) => {
             store.delete(key);
         }),

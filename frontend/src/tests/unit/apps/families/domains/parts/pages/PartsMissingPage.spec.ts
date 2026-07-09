@@ -1,5 +1,4 @@
 import type {VueWrapper} from '@vue/test-utils';
-import type {ComponentPublicInstance} from 'vue';
 
 import PartsMissingPage from '@app/domains/parts/pages/PartsMissingPage.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
@@ -114,7 +113,7 @@ const makePayload = (shortfalls: Record<string, unknown>[] = [makeEntry()], unkn
 
 /** Emit an event from a stub component looked up by name. */
 const emit = (wrapper: VueWrapper | undefined, event: string): void => {
-    (wrapper?.vm as ComponentPublicInstance | undefined)?.$emit(event);
+    wrapper?.vm.$emit(event);
 };
 
 describe('PartsMissingPage', () => {

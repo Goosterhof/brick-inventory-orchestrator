@@ -11,7 +11,7 @@ const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamil
 const {mockRegister, mockGoToRoute, currentRouteRef} = vi.hoisted(() => ({
     mockRegister: vi.fn<() => Promise<void>>(),
     mockGoToRoute: vi.fn<() => Promise<void>>(),
-    currentRouteRef: {value: {query: {} as Record<string, unknown>}},
+    currentRouteRef: {value: {query: {}}},
 }));
 
 vi.mock('axios', () => createMockAxios());
