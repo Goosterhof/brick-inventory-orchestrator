@@ -6,7 +6,7 @@
 **Assigned To:** Brickwright (Foundry Wing)
 **Wing:** Foundry
 **Priority:** Elevated — the only sweep finding touching a data-integrity guarantee (ADR-0016 atomicity)
-**Status:** Open
+**Status:** Completed (2026-07-09, batched close-out per ADR-0028 § Amendment 2026-07-09 Transition — merged in PR #254) — [Build Record](../build-records/2026-07-09-transaction-boundary-test-rigor.md)
 **Branch slug (for PrePushPermitGate):** `transaction-boundary-test-rigor`
 
 ---

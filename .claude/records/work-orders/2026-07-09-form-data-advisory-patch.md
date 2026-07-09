@@ -6,7 +6,7 @@
 **Assigned To:** Brickwright (Gallery Wing)
 **Wing:** Gallery
 **Priority:** Elevated — high-severity advisory
-**Status:** Open
+**Status:** Completed (2026-07-09, batched close-out per ADR-0028 § Amendment 2026-07-09 Transition — resolved inside PR #250: the form-data 4.0.6 lockfile sync satisfied every AC; npm audit 0 vulnerabilities. Record = PR #250 body + the 2026-07-09 audit Steward Evaluation; no separate Build Record)
 **Branch slug (for PrePushPermitGate):** `form-data-advisory-patch`
 
 ---
