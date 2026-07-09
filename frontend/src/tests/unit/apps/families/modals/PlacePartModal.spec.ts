@@ -270,7 +270,7 @@ describe('PlacePartModal', () => {
             expect(wrapper.emitted('assigned')).toStrictEqual([
                 [{storageOptionId: 1, storageOptionName: 'Drawer A', quantity: 3}],
             ]);
-            expect(wrapper.emitted('close')).toBeTruthy();
+            expect(wrapper.emitted('close')).toBeDefined();
         });
 
         it('should emit assigned with empty storageOptionName when the option vanishes mid-submit', async () => {
@@ -317,7 +317,7 @@ describe('PlacePartModal', () => {
             wrapper.findComponent(ModalDialog).vm.$emit('close');
 
             // Assert
-            expect(wrapper.emitted('close')).toBeTruthy();
+            expect(wrapper.emitted('close')).toBeDefined();
         });
     });
 

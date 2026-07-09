@@ -30,7 +30,7 @@ describe('TextInput', () => {
         const inputId = input.attributes('id');
 
         // Assert
-        expect(inputId).toBeTruthy();
+        expect(inputId).toBeDefined();
         expect(label.props('for')).toBe(inputId);
     });
 
@@ -43,7 +43,7 @@ describe('TextInput', () => {
 
         // Assert
         const emitted = wrapper.emitted('update:modelValue');
-        expect(emitted).toBeTruthy();
+        expect(emitted).toBeDefined();
         expect(emitted?.[0]).toStrictEqual(['John']);
     });
 

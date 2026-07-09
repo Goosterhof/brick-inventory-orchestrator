@@ -162,7 +162,7 @@ describe('ConfirmDialog', () => {
             const wrapper = mountDialog(false, undefined, soundService);
 
             // Assert
-            expect(wrapper.findComponent(ModalDialog).props('soundService')).toBeTruthy();
+            expect(wrapper.findComponent(ModalDialog).props('soundService')).toBeDefined();
         });
 
         it('should not play sound when confirm is clicked without soundService', async () => {

@@ -87,7 +87,7 @@ describe('CollapsibleSection', () => {
             await wrapper.find('button').trigger('click');
 
             // Assert
-            expect(wrapper.emitted('toggle')).toBeTruthy();
+            expect(wrapper.emitted('toggle')).toBeDefined();
         });
 
         it('should default to collapsed when expanded prop is not provided', () => {

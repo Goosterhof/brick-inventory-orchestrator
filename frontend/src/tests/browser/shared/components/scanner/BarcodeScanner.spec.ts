@@ -179,9 +179,9 @@ describe('BarcodeScanner (browser)', () => {
 
             // Assert
             const emitted = wrapper.emitted('detect');
-            expect(emitted).toBeTruthy();
+            expect(emitted).toBeDefined();
             const firstEvent = emitted?.find((e) => e[0] === '5702015357197');
-            expect(firstEvent).toBeTruthy();
+            expect(firstEvent).toBeDefined();
         });
 
         it('should display detected barcode overlay', async () => {

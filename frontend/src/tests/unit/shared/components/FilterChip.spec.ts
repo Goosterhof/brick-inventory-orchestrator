@@ -22,7 +22,7 @@ describe('FilterChip', () => {
             await wrapper.trigger('click');
 
             // Assert
-            expect(wrapper.emitted('click')).toBeTruthy();
+            expect(wrapper.emitted('click')).toBeDefined();
         });
     });
 

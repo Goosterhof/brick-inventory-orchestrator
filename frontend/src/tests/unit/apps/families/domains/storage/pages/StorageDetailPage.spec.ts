@@ -234,7 +234,7 @@ describe('StorageDetailPage', () => {
         const subLocationsRow = wrapper
             .findAllComponents(DetailRow)
             .find((row) => row.props('label') === 'storage.subLocations');
-        expect(subLocationsRow).toBeTruthy();
+        expect(subLocationsRow).toBeDefined();
         expect(subLocationsRow?.text()).toContain('2');
     });
 

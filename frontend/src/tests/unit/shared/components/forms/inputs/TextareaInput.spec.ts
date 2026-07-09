@@ -28,7 +28,7 @@ describe('TextareaInput', () => {
         const label = wrapper.findComponent({name: 'FormLabel'});
 
         // Assert
-        expect(textarea.attributes('id')).toBeTruthy();
+        expect(textarea.attributes('id')).toBeDefined();
         expect(label.props('for')).toBe(textarea.attributes('id'));
     });
 
@@ -41,7 +41,7 @@ describe('TextareaInput', () => {
 
         // Assert
         const emitted = wrapper.emitted('update:modelValue');
-        expect(emitted).toBeTruthy();
+        expect(emitted).toBeDefined();
         expect(emitted?.[0]).toStrictEqual(['Hello world']);
     });
 

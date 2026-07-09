@@ -435,7 +435,7 @@ describe('CameraCapture', () => {
             // Assert
             expect(mockContext.drawImage).toHaveBeenCalledWith(videoElement, 0, 0);
             const emitted = wrapper.emitted('capture');
-            expect(emitted).toBeTruthy();
+            expect(emitted).toBeDefined();
             expect(emitted?.[0]?.[0]).toBeInstanceOf(Blob);
         });
 
@@ -495,7 +495,7 @@ describe('CameraCapture', () => {
             // Assert
             expect(wrapper.emitted('capture')).toBeUndefined();
             const errorEmitted = wrapper.emitted('error');
-            expect(errorEmitted).toBeTruthy();
+            expect(errorEmitted).toBeDefined();
             expect(errorEmitted?.[0]?.[0]).toBe('Failed to capture image. Please try again.');
         });
 
@@ -525,7 +525,7 @@ describe('CameraCapture', () => {
 
             // Assert
             const errorEmitted = wrapper.emitted('error');
-            expect(errorEmitted).toBeTruthy();
+            expect(errorEmitted).toBeDefined();
             expect(errorEmitted?.[0]?.[0]).toBe('Unable to capture image. Canvas context not available.');
         });
 
@@ -667,7 +667,7 @@ describe('CameraCapture', () => {
 
             // Assert
             const emitted = wrapper.emitted('capture');
-            expect(emitted).toBeTruthy();
+            expect(emitted).toBeDefined();
             expect(emitted?.[0]?.[0]).toBeInstanceOf(Blob);
         });
     });

@@ -135,7 +135,7 @@ describe('SetListItem', () => {
         await wrapper.findComponent({name: 'ListItemButton'}).trigger('click');
 
         // Assert
-        expect(wrapper.emitted('click')).toBeTruthy();
+        expect(wrapper.emitted('click')).toBeDefined();
     });
 
     it('should mark wishlist sets with the muted badge variant', () => {
