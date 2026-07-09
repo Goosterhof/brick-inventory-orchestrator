@@ -6,7 +6,7 @@
 **Assigned To:** The Steward (small infra slice, built directly)
 **Wing:** Atrium (root hooks) + Gallery (lint-staged, pre-push chain)
 **Priority:** Standard
-**Status:** Open
+**Status:** Completed (2026-07-09, batched close-out per ADR-0028 § Amendment 2026-07-09 Transition — merged in PR #255) — [Build Record](../build-records/2026-07-09-local-gauntlet-hygiene.md)
 **Branch slug (for PrePushPermitGate):** `local-gauntlet-hygiene`
 
 ---

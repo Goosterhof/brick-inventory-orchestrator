@@ -41,4 +41,4 @@ Sweep ADR-pressure signal **F-adr-0014-1** (resolves an ADR-0014 Open Question):
 
 ---
 
-**Status:** Open
+**Status:** Completed (2026-07-09, batched close-out per ADR-0028 § Amendment 2026-07-09 Transition — merged in PR #251; executed as X-adr-0014-1 carry-forward from the 2026-07-09 sweep) — [Build Record](../build-records/2026-07-09-family-id-belongs-archtest.md)

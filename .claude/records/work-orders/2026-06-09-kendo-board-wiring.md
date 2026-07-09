@@ -62,5 +62,5 @@ Keep the credential out of the tree. The war room runs this exact MCP at user sc
 
 ---
 
-**Status:** Built — read-path verified; create/delete smoke test pending CEO permission (see Build Record)
+**Status:** Completed (2026-07-09, batched close-out per ADR-0028 § Amendment 2026-07-09 Transition — build merged 2026-06-12 in PR #196; carried the non-doctrine status "Built" for 27 days, drift instances #3-5 in the amendment's evidence ledger. The deferred live smoke test is NOT waived by this close — it remains an open CEO action item on the 2026-07-09 standup: provision the prerequisites or explicitly waive)
 **Build Record:** [`2026-06-12-kendo-board-wiring`](../build-records/2026-06-12-kendo-board-wiring.md)

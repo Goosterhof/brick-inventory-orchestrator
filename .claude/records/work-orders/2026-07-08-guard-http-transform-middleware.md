@@ -6,6 +6,7 @@
 **Assigned To:** Brickwright (Gallery Wing)
 **Wing:** Gallery
 **Priority:** Standard
+**Status:** Completed (2026-07-09, batched close-out per ADR-0028 § Amendment 2026-07-09 Transition — merged in PR #253) — [Build Record](../build-records/2026-07-09-guard-http-transform-middleware.md)
 **Branch slug (for PrePushPermitGate):** `guard-http-transform-middleware`
 
 ---

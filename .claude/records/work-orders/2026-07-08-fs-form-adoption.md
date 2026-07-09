@@ -6,6 +6,7 @@
 **Assigned To:** The Steward / Engineer soldier
 **Wing:** Gallery (`frontend/`)
 **Priority:** Standard
+**Status:** Completed (2026-07-09, batched close-out per ADR-0028 § Amendment 2026-07-09 Transition — merged 2026-07-08 in PR #245; shipped with no Status field and no Build Record, drift instance #2 in the amendment's evidence ledger. Record = the 2026-07-08 open-PR-review-sweep minutes)
 **Branch slug (for PrePushPermitGate):** `fs-form-adoption`
 
 ---

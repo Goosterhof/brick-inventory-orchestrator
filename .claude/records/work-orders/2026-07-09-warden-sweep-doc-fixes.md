@@ -6,7 +6,7 @@
 **Assigned To:** Brickwright (cross-wing)
 **Wing:** Atrium (touches both wing manuals + one lint config)
 **Priority:** Standard — but F-arch-1 and G-doc-1 are the audit's two named "cheapest credibility wins"
-**Status:** Open
+**Status:** Completed (2026-07-09, batched close-out per ADR-0028 § Amendment 2026-07-09 Transition — merged in PR #252) — [Build Record](../build-records/2026-07-09-warden-sweep-doc-fixes.md)
 **Branch slug (for PrePushPermitGate):** `warden-sweep-doc-fixes`
 
 ---

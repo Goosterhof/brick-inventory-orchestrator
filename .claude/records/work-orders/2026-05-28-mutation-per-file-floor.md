@@ -63,5 +63,5 @@ Priority is **Soon** rather than **Now** — v2 needs to settle in CI for a spri
 
 ---
 
-**Status:** Open _(flips to Closed in a post-merge follow-up per ADR-0028 uniform-rule)_
+**Status:** Closed (2026-07-09, batched close-out per ADR-0028 § Amendment 2026-07-09 Transition — work merged 2026-06-01; this WO sat unflipped for 38 days and is drift instance #1 in the amendment's evidence ledger)
 **Build Record:** [2026-06-01-mutation-per-file-floor](../build-records/2026-06-01-mutation-per-file-floor.md)
