@@ -155,7 +155,7 @@ HTTP middleware can be registered/unregistered at runtime.
 
 ### Pre-Push Gauntlet
 
-Husky enforces: **type-check → knip → test:coverage → build**. Dispatched from the orchestrator's `.githooks/pre-push` only when the pushed range touches `frontend/**`.
+Husky enforces: **type-check → knip → test:coverage → test:integration → build**. Dispatched from the orchestrator's `.githooks/pre-push` only when the pushed range touches `frontend/**`. The integration step was added 2026-07-09 after a change to a module the integration layer mocks wholesale passed every local gate and failed only in CI (PR #253).
 
 ### Coverage Policy
 
