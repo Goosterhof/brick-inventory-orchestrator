@@ -1,5 +1,4 @@
 import type {VueWrapper} from '@vue/test-utils';
-import type {ComponentPublicInstance} from 'vue';
 
 import PartsPage from '@app/domains/parts/pages/PartsPage.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
@@ -12,7 +11,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 /** Emit an event from a stub component looked up by name. */
 const emit = (wrapper: VueWrapper | undefined, event: string): void => {
-    (wrapper?.vm as ComponentPublicInstance | undefined)?.$emit(event);
+    wrapper?.vm.$emit(event);
 };
 
 const {
