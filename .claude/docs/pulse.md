@@ -14,22 +14,23 @@ A consolidated, current-state assessment of both wings. Updated by The Steward a
 
 ## Overall Health
 
-**Gallery Wing Rating:** 8/10
-**Foundry Wing Rating:** 8.5/10
-**Assessed:** 2026-05-26 (Foundry), 2026-05-29 (Gallery)
+**Gallery Wing Rating:** 7.5/10
+**Foundry Wing Rating:** 8/10
+**Assessed:** 2026-07-09 (both wings — [`2026-07-09-warden-cross-wing-sweep`](../records/audits/2026-07-09-warden-cross-wing-sweep.md))
 
-**Gallery (frontend):** Strong architectural foundation with 100% unit test coverage maintained (lines / branches / functions / statements). Multi-app structure with strict isolation. Showcase app fully tested. Adapter-store and resource-adapter patterns battle-tested. Page integration test layer (ADR-0024) Battle-tested — 19 specs / 143 tests green on `main`, wired as a required gating step in `frontend-ci.yml`. Router migration to `@script-development/fs-router` complete. **Frontend Mutation Testing v2 shipped 2026-05-28 (Stryker 9 + Vitest runner, PR #135): 9 files / 242 mutants, 91.70% score against `break: 90`, CI-gated between "Test with coverage" and "Integration tests" — `npm audit` clean via the `qs` override.** Worktree-mode git-hook regression resolved on both legs (PR #138 pre-commit, PR #140 backend pre-push dispatch). Pattern Master agent operational. Unit gauntlet fully green. The 2026-05-20 `PartsPage`/`SetsOverviewPage`/`ComponentGallery` collect-guard cluster was closed 2026-05-27 (PRs #119/#120/#121); the remaining test-perf signal is `AboutPage.spec.ts` (warning-zone, baseline-order-sensitive, structurally tracked on the SUT-only arch-test legacy allowlist — PR #127). Documentation drift addressed by recurring Pulse-refresh audits.
+**Gallery (frontend):** Strong unit layer — factory mocks, exact-navigation assertions, 100% coverage gauntlet maintained; full assigned gauntlet green in the 2026-07-09 sweep (format / lint / type-check / knip / unit suite, 116 files / 1431 tests). Multi-app structure with strict isolation; import boundaries and ADR-0029 middleware verified clean. Page integration test layer (ADR-0024) Battle-tested and CI-gated (spec list from the filesystem, counts from `npm run test:integration:run`). Mutation Testing v2 CI-gated with per-file 90% floor (96.27% aggregate at last measure, 2026-06-01). fs-form adoption complete (PR #245) — local form composables retired. Rating held back (8 → 7.5) by due-diligence-visible drift: the wing manual misdescribes its own service layer post-fs-*-extraction and claims JSDOM (happy-dom is actual), the Parts copy-paste cluster and 13 assertion-free flow tests recurred at occurrence 2 with their 2026-05-29 WOs unexecuted. Doc-fix WO dispatched 2026-07-09; one high `form-data` npm advisory open (WO filed).
 
-**Foundry (backend):** PHPStan at max with zero errors (339 files), Deptrac with zero violations (743 allowed), 107 architecture tests passing (up from 105). Full quality gauntlet operational on canonical PHP 8.5.5 host with `php8.5-pcov` — coverage and mutation drills unblocked as of 2026-05-20; first full re-measure landed 2026-05-26 with 100% unit / 98.1% feature coverage and 79.68% mutation score (above all thresholds). Governed by the consolidated `0001`–`0029` Brickworks ADR sequence. Recent deliveries since 2026-04-16: Laravel 13.7 deprecation cleanup + PHP 8.5 tightening, storage-map ResourceData, reverse-lookup-lens endpoint with `DB::listen` query-budget proof, PHPStan war-room rules adoption (four custom rules), ADR-0028 pre-push permit verification gate, `ImportJob` model + `ImportOwnedSetsJob` (Rebrickable import flow — Job layer now 2 classes, both convention-compliant).
+**Foundry (backend):** Code architecture clean on independent re-verification — 40 Actions / 12 Controllers / 2 Services fully comply, ADR-0015 try-catch roster still reconciled, policy/factory parity holds. 2026-07-09 sweep measures: PHPStan max 0 errors (348 files), Deptrac 0 violations (753 allowed), 109 architecture tests passing, full `composer test` green (2976 assertions). Coverage/mutation last measured 2026-05-26/29: 100% unit, 100% feature, 79.68% mutation. Rating trimmed (8.5 → 8) on two findings: the transaction-boundary test gap (~14/21 transactional Actions stub `transaction()` permissively — atomicity regressions would ship green; elevated WO dispatched) and the manual-vs-ADR-0021 contradiction plus an exception map documenting 5 of 12 rendered mappings (doc-fix WO dispatched). **Anomaly resolved 2026-07-09 (same day):** the 728 suite-wide warnings were NOT a PHP 8.5 deprecation — the host lacked `backend/.env`, and phpdotenv's suppressed `@file_get_contents` probe surfaced as an unsuppressed `fopen` warning through the `BypassFinals` stream wrapper (PHP's `@` does not extend into userland stream-wrapper internals), once per test boot. Fixed by provisioning `backend/.env` from `.env.example` and syncing the stale host vendor (`composer install` — vendor had drifted behind the 2026-07-08 lockfile bumps). Suite now reports 728 passed / 2976 assertions, zero warnings. Environmental, not a code defect. The root cause (`make init` never provisioned `backend/.env` — it only copies the root env file) was fixed same-day: `make init` now also copies `backend/.env.example → backend/.env`.
 
 ## Active Concerns
 
-**Assessed:** 2026-05-29 (Gallery), 2026-05-26 (Foundry)
+**Assessed:** 2026-07-09 (all wings)
 
 ### Gallery Wing
 
 | Concern | Severity | Status | Notes |
 |---|---|---|---|
+| `form-data` 4.0.0–4.0.5 high advisory (GHSA-hmw2-7cc7-3qxx, CRLF injection) | Medium | Open — WO filed | Surfaced by `npm audit` 2026-07-09 during environment sync. Transitive dep, single instance. WO [`2026-07-09-form-data-advisory-patch`](../records/work-orders/2026-07-09-form-data-advisory-patch.md). |
 | `AboutPage.spec.ts` collect guard warning | Low | Monitoring | Baseline-order-sensitive in 2x coverage mode: re-measured 2026-05-29 between below-the-400ms-warning-floor and 932ms delta (932ms raw, 0ms cold baseline); execution 811–1165ms / 35 tests. Under the 1000ms FAIL cap. Root cause unchanged: 16 named Lego shape imports (lines 2–17), now enumerated on the SUT-only arch-test legacy allowlist (`architecture.spec.ts`, PR #127). Paydown = `findComponent({name})` + `vi.mock`. |
 | `Item` type constraint mismatch | Low | Aware | `FamilySet` has `id` but no `createdAt`/`updatedAt` — may surface in future domains |
 | `format:check` failures on `.claude/` md | Low | Known | oxfmt reformats markdown — agent docs and journal files drift; not a code defect |
@@ -50,6 +51,10 @@ _Closed 2026-05-25:_
 |---|---|---|---|
 | Dockerfile build verification (`docker compose build backend`) | Low | Open — network-environmental | Docker daemon accessible as of 2026-05-26 (`docker info` returns client v29.4.3). Build attempt 2026-05-26 fails on `pecl install pcov` with PECL network error ("cannot download pecl/pcov"); not a code defect. The Dockerfile's pcov install is structurally correct. Re-verify during a session with reliable outbound network access. Surfaced/refreshed by [`2026-05-26-foundry-pulse-refresh`](../records/audits/2026-05-26-foundry-pulse-refresh.md). |
 
+_Closed 2026-07-09 (same-day, within the sweep-follow-up session):_
+
+- ~~`php8.5-pcov` missing again on dev host~~ — **Closed 2026-07-09.** Regression of the 2026-05-20 closure, surfaced by the family-id-archtest dispatch (PR #251): host PHP had moved to 8.5.4 with only `php8.4-pcov` installed. CEO installed `php8.5-pcov` same-session; verified with `php --ri pcov` (1.0.12 enabled) + full `composer test:coverage` (100.0%) and `composer test:feature-coverage` (100.0%) runs. Lesson recorded in the 2026-07-09 audit's Steward Evaluation: environmental closures can silently regress — re-verify before citing them in dispatches.
+
 _Closed 2026-05-20 during first-standup verification (CEO triggered `/standup`, Pulse refresh acted on findings):_
 
 - ~~`php8.5-pcov` not installed on dev host~~ — **Closed 2026-05-20.** Standup-triggered `php -m` check confirmed `pcov` module loaded on canonical PHP 8.5.5 dev host. CEO had installed it on a workstation; Pulse concern was 21+ days stale-on-paper. Casebook Methodology Note candidate: *post-environmental-install, re-verify on next standup and close immediately.*
@@ -60,6 +65,7 @@ _Closed 2026-05-20 during first-standup verification (CEO triggered `/standup`, 
 
 | Concern | Severity | Status | Notes |
 |---|---|---|---|
+| **ADR-0028 Devil's Court re-interrogation overdue** | Medium | Open — needs CEO | Trigger 2 (audit citing ADR-0028 by name) was ruled fired 2026-05-29; the queued `/adr-interrogator` re-run was never dispatched and dropped from tracking — the 2026-07-09 standup initially mis-reported the triggers as untripped (since corrected). The 2026-07-09 sweep is a second by-name citation. The re-run interrogates the CEO, so it cannot be dispatched without them. Surfaced as X-adr-0028-1 in [`2026-07-09-warden-cross-wing-sweep`](../records/audits/2026-07-09-warden-cross-wing-sweep.md). |
 | **Work Order paper-trail drift — Status field not updated post-shipping** | Medium | Open — discovered at first standup | First `/standup` run (2026-05-20) surfaced 29 WOs marked Open/In-Progress; triage matrix found **24 of them already have matching Build Records filed** (work shipped, Status field never closed). The real outstanding backlog is ~5 WOs, not 29. Pattern: at delivery time, the Brickwright files the Build Record but the WO file itself doesn't get its `**Status:** Open` line flipped to `**Status:** Completed` with a back-link to the Build Record. The Casebook flagged a related pattern (`Persistent low-severity open items`, 2026-04-25) but not the full scale until the Standup forced a roll-call. Remediation: a sweep WO to close the 24 already-shipped WOs (mechanical), plus a Brickwright training proposal candidate: *when filing a Build Record, also edit the corresponding WO's Status field and Build Record link in the same commit.* Closes when (a) the sweep ships, and (b) two subsequent Build Records close their parent WO in the same commit without prompting. |
 | No SOP for doc-sweep step after framework version upgrades | Low | Open — preventative | The Laravel 13 upgrade shipped 2026-04-19; four governance docs still claimed "Laravel 12" thirty-one days later, surfaced by [`2026-05-20-post-merger-baseline`](../records/audits/2026-05-20-post-merger-baseline.md) Finding 2. SOP shape: framework upgrade Build Records should include an acceptance criterion of the form `rg -n "<old-framework-name> <old-version>" backend/CLAUDE.md CLAUDE.md .claude/docs/ .claude/agents/` returning no hits in active (non-historical) docs. The 2026-05-20 laravel-13-doc-sweep WO carried this AC, but as same-day remediation rather than as an unprompted next-upgrade pattern. Closes out when either (a) the next framework upgrade Build Record carries this AC unprompted, or (b) the convention is codified into the Build Record template at `.claude/records/build-records/.build-record-template.md`. |
 
@@ -89,7 +95,7 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 | Resource adapter (frozen + mutable) | Battle-tested | Sets domain: all 4 CRUD pages consume |
 | Adapter-store module | Battle-tested | Sets domain: getAll, getOrFailById, generateNew, retrieveAll in production use |
 | Brick Brutalism design system | Battle-tested | Showcase app fully tested, brand guide |
-| Page integration tests (ADR-0024) | Battle-tested | 19 test files covering all domain pages; 143/143 green on `main`. Permit A (assertion repairs) and Permit B (CI wiring) both shipped and merged 2026-05-25 in PR #100. Suite now runs as a required, gating step in `frontend-ci.yml` between `Test with coverage` and `Build` — first PR-run verification landed green (job `ci` succeeded in 1m 46s on commit `53194aa`). Promoted Established → Battle-tested 2026-05-25 per CEO authorization, closing the 2026-05-05 integration-test cluster. |
+| Page integration tests (ADR-0024) | Battle-tested | All domain pages covered (spec/test counts from `npm run test:integration:run`); green on `main`. Permit A (assertion repairs) and Permit B (CI wiring) both shipped and merged 2026-05-25 in PR #100. Suite now runs as a required, gating step in `frontend-ci.yml` between `Test with coverage` and `Build` — first PR-run verification landed green (job `ci` succeeded in 1m 46s on commit `53194aa`). Promoted Established → Battle-tested 2026-05-25 per CEO authorization, closing the 2026-05-05 integration-test cluster. |
 | Form submit loading guard | Battle-tested | `useFormSubmit` returns `submitting` ref, prevents double-submission |
 | Mutation testing (Stryker) v2 | Established | Shipped 2026-05-28 in PR #135 (commit `f8887e3`) after v1 was retired as VESTIGIAL in PR #133. Stryker 9 + Vitest runner, config mirrored from `script-development/fs-packages` template. Scope: `src/shared/{helpers,composables,middleware,services/auth}/**/*.ts` (9 files, 242 mutants). 91.70% mutation score against a `break: 90` threshold (fs-packages parity). **CI-gated from day one** in `frontend-ci.yml` between `Test with coverage` and `Integration tests` — this addresses the v1 failure mode (no consumer = vestigial). Transitive `qs` advisory chain (the one that motivated PR #133) closed via `overrides: {qs: "^6.15.2"}` in `package.json` — `npm audit` reports 0 vulnerabilities. **Per-file floor added 2026-06-01 (`mutation-per-file-floor` WO):** the aggregate-only `break` let weak files hide behind strong siblings (General review of PR #135). The two sub-floor laggards were triaged — `bricklinkWantedList.ts` 88.64 → 100% and `guards.ts` 89.47 → 100% — lifting the aggregate to **96.27%**, and a `posttest:mutation` script (`scripts/check-mutation-per-file-floor.mjs`) now parses Stryker's JSON report and fails the build if any single file drops below 90% (Stryker has no native per-file `break`). **Promotion Established → Battle-tested remains pending: condition is one sprint of green CI runs; the new per-file gate also needs to ride CI green before promotion. Gate green on `main` since landing (the one failing CI run since was a commit-lint failure, not the mutation step).** |
 
@@ -170,11 +176,11 @@ Ideas planted but deferred — revisit when the trigger condition is met. Seeds 
 
 ## Quality Metrics
 
-**Assessed:** 2026-05-26 (Foundry), 2026-05-29 (Gallery)
+**Assessed:** 2026-07-09 (static/arch/suite rows via warden sweep gauntlet; coverage & mutation rows retain their 2026-05-26/29 and 2026-06-01 measure dates — those gates were outside the sweep's assigned set)
 
 ### Gallery Wing
 
-_Coverage figures below reflect the unit test gauntlet only. The integration suite (`npm run test:integration:run`) is a separate, independently-gated layer per ADR-0024 — 19 specs / 143 tests, green on `main`, executed as a required step in `frontend-ci.yml` between `Test with coverage` and `Build` (PR #100, merged 2026-05-25)._
+_Coverage figures below reflect the unit test gauntlet only. The integration suite (`npm run test:integration:run`) is a separate, independently-gated layer per ADR-0024 — spec/test counts come from the runner, green on `main`, executed as a required step in `frontend-ci.yml` between `Test with coverage` and `Build` (PR #100, merged 2026-05-25)._
 
 | Metric | Value | Source |
 |---|---|---|
@@ -193,10 +199,10 @@ _Coverage figures below reflect the unit test gauntlet only. The integration sui
 | Unit coverage | **100.0%** (measured 2026-05-26) | 100% |
 | Feature coverage | **100.0%** (re-measured 2026-05-29 — `Auth/LogoutController` now 100% after PR #122; was 98.1% on 2026-05-26) | 90% |
 | Mutation score | **79.68%** (measured 2026-05-26, improved from 76.97%) | 76% |
-| Architecture tests | **107 passing** (measured 2026-05-26, up from 105) | All passing |
-| PHPStan | Level max, **0 errors** across 339 files (measured 2026-05-26) | Level max, zero errors |
-| Deptrac | **0 violations**, 743 allowed (measured 2026-05-26) | Zero violations |
-| Full test suite | 697 tests, 2846 assertions, 24.55s (measured 2026-05-26) | — |
+| Architecture tests | **109 passing** (measured 2026-07-09, up from 107) | All passing |
+| PHPStan | Level max, **0 errors** across 348 files (measured 2026-07-09) | Level max, zero errors |
+| Deptrac | **0 violations**, 753 allowed (measured 2026-07-09) | Zero violations |
+| Full test suite | **728 passed**, 2976 assertions, ~19.7s (measured 2026-07-09, post-`.env` fix — the earlier same-day all-warnings anomaly was environmental; see Overall Health) | — |
 
 ### Atrium
 

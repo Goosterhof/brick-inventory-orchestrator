@@ -95,6 +95,7 @@ hooks-install:
 # Initialize after clone
 init: hooks-install
 	cp -n .env.example .env 2>/dev/null || true
+	cp -n backend/.env.example backend/.env 2>/dev/null || true
 	docker compose build
 	docker compose up -d
 	docker compose exec backend composer install
