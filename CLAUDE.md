@@ -237,7 +237,9 @@ Pre-commit and pre-push hooks are dispatched from `.githooks/` at the repo root 
 **Pre-push** mirrors the same split:
 
 - Push range touches `backend/` → backend's `PrePushPermitGate → composer test` runs from `backend/` cwd, with git's pushed-ref stdin replayed through unchanged.
-- Push range touches `frontend/` → frontend's `.husky/pre-push` runs from `frontend/` cwd (`type-check → knip → test:coverage → build`).
+- Push range touches `frontend/` → frontend's `.husky/pre-push` runs from `frontend/` cwd (`type-check → knip → test:coverage → test:integration → build`).
+
+**Commit-msg** runs repo-wide (not path-routed): `.githooks/commit-msg` lints the message with commitlint (frontend workspace binary + `.commitlintrc.json`) so Conventional Commits violations fail at write time instead of 20 minutes later in CI — which only checks PRs touching `frontend/**` anyway. Skips with a notice if `frontend/node_modules` is absent (fresh clone); CI remains the backstop.
 
 **Wire-up:** `make init` runs `make hooks-install`, which sets `git config core.hooksPath .githooks`. Clone-and-bootstrap is a single command.
 

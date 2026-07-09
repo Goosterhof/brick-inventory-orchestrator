@@ -1,1 +1,1 @@
-npm run type-check && npm run knip && npm run test:coverage && npm run build
+npm run type-check && npm run knip && npm run test:coverage && npm run test:integration:run && npm run build

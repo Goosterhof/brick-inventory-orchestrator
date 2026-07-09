@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Commit-message stage for the root dispatcher (core.hooksPath=.githooks).
+#
+# Conventional Commits is firm-wide doctrine (both wing manuals), but the
+# only automated check was CI's frontend workflow — which runs solely on
+# PRs touching frontend/**, and 20+ minutes after the message was written.
+# frontend/.husky/commit-msg exists but never fires: hooksPath bypasses
+# Husky entirely. This stage closes the gap at write time, repo-wide.
+#
+# The linter and its config live in the frontend workspace. If the
+# workspace isn't installed yet (fresh clone, pre-`make init`), skip with
+# a notice rather than block unrelated commits on a missing dev
+# dependency — CI remains the backstop.
+
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+
+# git passes the message file path relative to the repo root; anchor it
+# absolutely before changing directory (worktree-safe).
+msg_file=$1
+case "$msg_file" in
+    /*) ;;
+    *) msg_file="$repo_root/$msg_file" ;;
+esac
+
+if [ ! -d "$repo_root/frontend/node_modules/@commitlint/cli" ]; then
+    echo "commit-msg: commitlint not installed (frontend/node_modules missing); skipping — CI enforces on PRs"
+    exit 0
+fi
+
+cd "$repo_root/frontend"
+npx --no -- commitlint --edit "$msg_file"
