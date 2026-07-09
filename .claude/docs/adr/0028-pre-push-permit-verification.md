@@ -1,9 +1,10 @@
 # Decision: Pre-Push Permit Verification Gate
 
 **Date**: 2026-05-05
-**Last Amended**: 2026-05-28 (II — bypass-log retirement; see § Amendment 2026-05-28 (II) below, which supersedes the bypass-log clause). Prior amendments: 2026-05-28 (I — bypass-log scope, now superseded), 2026-05-27 (uniform-rule convention).
+**Last Amended**: 2026-07-09 (documented-dual-mode — Devil's Court revision superseding the uniform-rule convention; see § Amendment 2026-07-09 below). Prior amendments: 2026-05-28 (II — bypass-log retirement), 2026-05-28 (I — bypass-log scope, superseded), 2026-05-27 (uniform-rule convention, superseded).
 **Feature**: CaptainHook pre-push gate; Operations Protocol enforcement
-**Status**: accepted (bypass-log clause retired; uniform-rule amendment remains trial doctrine with a Devil's Court trigger scheduled)
+**Status**: accepted (bypass-log clause retired; WO-close convention is documented-dual-mode, settled doctrine)
+**Stress-Tested**: 2026-07-09 (§ Amendment 2026-05-27 re-interrogated at its own Devil's Court triggers — outcome **Cracked**, revised by § Amendment 2026-07-09)
 **Transferability**: project-specific
 
 ## Context
@@ -124,6 +125,8 @@ The Sorter's original proposal (prompt-only) is preserved in the audit report's 
 ---
 
 ## Amendment 2026-05-27 — Uniform-Rule Convention
+
+> **SUPERSEDED** by § Amendment 2026-07-09 — Documented-Dual-Mode (below), the outcome of this amendment's own scheduled Devil's Court re-interrogation (ruling: **Cracked**). Retained for the paper trail.
 
 **Triggering signal:** On 2026-05-20, two PR reviewers independently flagged (within 12 seconds of each other on PR #77 and PR #78) that the gate's behavior implies an undocumented rule for when a Work Order may be closed. The doctrine "WO stays In Progress through push" lived only in PR-body workflow notes — not in any ADR, CLAUDE.md, or template.
 
@@ -269,6 +272,8 @@ The two amendments are independent axes of paper-trail discipline:
 
 Neither amendment modifies the gate's mechanical behavior; both are procedural. They can be evaluated, confirmed, cracked, or strained independently — but with one inheritance to name explicitly: this amendment's **operational pattern of "the WO closes post-merge on `main`"** (used by this amendment's own Work Order, and by every future amendment-style WO) inherits the 2026-05-27 uniform-rule. If § Amendment 2026-05-27 is later cracked and reverted at its Devil's Court re-interrogation, the WO-close mechanics this amendment uses need re-evaluation. The convention layers remain independent; the operational pattern does not.
 
+> **Inheritance resolved 2026-07-09:** § Amendment 2026-05-27 was cracked at its Devil's Court re-interrogation. The WO-close mechanics named here now follow § Amendment 2026-07-09 (documented-dual-mode): amendment-style WOs — Atrium/docs-only, gate never fires — close **in the work PR itself**.
+
 ### Trial Doctrine — Devil's Court Re-Interrogation Triggers
 
 This amendment is recorded as **trial doctrine**, not settled doctrine. The first of two independent triggers fires a full nine-step `/adr-interrogator` re-run:
@@ -331,3 +336,57 @@ Unlike the two prior amendments, this one is recorded as **settled doctrine**, n
 ### Reversal Cost
 
 Low. Doc-only. Reversing it means reinstating the § Documented Escape Hatch logging requirement (and optionally the Category distinction). No code, no tests, no fixtures. The 2026-05-27 uniform-rule amendment remains independently in force.
+
+---
+
+## Amendment 2026-07-09 — Documented-Dual-Mode (Devil's Court revision of § Amendment 2026-05-27)
+
+**Triggering signal:** § Amendment 2026-05-27's own Devil's Court triggers. Trigger 2 (audit citing ADR-0028 by name) was ruled fired on **2026-05-29** — the ruling is on file in `audits/2026-05-29-warden-cross-wing-sweep.md` — and fired a second time in `audits/2026-07-09-warden-cross-wing-sweep.md` (X-adr-0028-1, medium). Trigger 1 (twenty uniform-rule closes) stood at ~19 at re-run time. The nine-step `/adr-interrogator` re-run executed 2026-07-09 — **41 days after the first ruling**; the lateness itself is a finding (see § Trigger-Tracking Meta-Finding below).
+
+**Ruling: CRACKED.** The uniform rule's reasoning no longer holds under its own accumulated evidence.
+
+### The Evidence Ledger (43 days of uniform-rule operation)
+
+| Measure | Value |
+|---|---|
+| WOs closed cleanly under uniform-rule | ~19 |
+| WOs drifted (work merged, Status never flipped) | 5 — `2026-05-28-mutation-per-file-floor` (merged 2026-06-01, Status still "Open _(flips to Closed in a post-merge follow-up per ADR-0028 uniform-rule)_" for 38 days — the WO cites the rule it violates); `2026-07-08-fs-form-adoption` (merged in PR #245 with **no Status field at all**); 3× `2026-06-09-kendo-*` (merged 2026-06-12, carrying the non-doctrine status vocabulary "Built") |
+| Realized drift rate | ~20%, discovered at standup/audit time — **verbatim the failure mode this amendment's own Negative Consequences predicted** ("Discovery happens at audit time, not at push time") |
+| Cost-model invalidation | `main` gained branch protection (observed 2026-07-08: direct WO-close commit to `main` rejected by the protected-branch hook). The Operational Pattern's "follow-up commit on `main` (**direct** or via a small chore PR — either is fine)" lost its cheap half; every close-out now costs a full PR cycle through the CI gate |
+
+Confronted with the ledger, the CEO withdrew the taste preference the uniform rule was purchased on: *"I am paying the rule's cost while the audits absorb its failures."* The 2026-05-27 interrogation had already established that documented-dual-mode satisfied the original reviewers' complaint at lower cost; the taste premium was the only thing holding uniform-rule up, and it is now withdrawn with evidence.
+
+### The Convention (revised) — Documented-Dual-Mode
+
+1. **Default (≈95% of cases — frontend, Atrium/docs, sub-threshold backend):** the Work Order's `Status:` flips to `Completed` **in the work PR itself**, in the same change set as the Build Record, with the Build Record back-link added at the same time. The close travels with the work: reviewed together, merged together. There is no follow-up step to forget — the drift mode is structurally removed.
+2. **Exception (gate-active slice — backend-touching push over 20 files OR 500 lines):** the PrePushPermitGate mechanically requires a matching **open** Work Order at push time, so these WOs stay Open through the push and close post-merge (small chore PR, batching permitted).
+3. **The gate teaches its own exception:** an over-threshold backend push carrying an already-closed WO is *rejected at push time* — immediate mechanical feedback, not audit-time discovery. The junior reverts the flip, pushes, and closes post-merge. Gate code, failure messages, and tests remain untouched by this amendment.
+
+### Basis
+
+Chosen on **evidence, not taste** — the reverse of its predecessor's basis, recorded plainly. The uniform rule's sole surviving argument (symmetric paper trail) was not delivered in practice: the drifted WOs are asymmetries that sat unnoticed for weeks. Dual-mode aligns the doctrine with the mechanics that actually enforce it, and it fits the firm's current delivery shape: parallel worktree-dispatched builds already materialize WOs in-branch, so the Status flip rides the same PR at zero marginal cost, and the Steward's post-merge close-out queue disappears.
+
+### Enforcement (honest description)
+
+- **Exception slice:** mechanical, unchanged — the PrePushPermitGate refuses the push.
+- **Default slice:** the closed-in-PR Status is reviewer-visible in the diff (an improvement over the invisible not-yet-flipped state under uniform-rule), but not yet machine-checked. **Recommended follow-up:** a CI-side check that flags any PR adding a Build Record whose parent WO in the same tree still reads Open — converting the `fs-form-adoption` failure mode into a red check. Until that ships, the default slice remains convention-plus-review; this asymmetry is named honestly, as the 2026-05-27 amendment named its own.
+
+### Transition
+
+WOs already merged or in-flight with `Status: Open` under the uniform rule (including the 2026-07-09 batch: PRs #250–#255 and the five drifted WOs in the ledger) are closed via **one final batched post-merge pass**. Dual-mode applies to every WO filed or shipped after this amendment merges. Build Records and PR bodies that cite "closes post-merge per ADR-0028 uniform rule" stand as written — no retroactive edits.
+
+### Training-Rule Consequence
+
+The "close parent WO in same commit as Build Record" training rule — graduated 2026-05-26, retracted by § Amendment 2026-05-27 one day later — is **reinstated with a scope clause**: it applies everywhere except the gate-active slice, where the inverse holds. The full history (graduate → retract → reinstate inside six weeks) stays on the record; the oscillation is the trial-doctrine mechanism functioning, not indecision to be smoothed over. The Casebook Methodology Note from the retraction (*trial-doctrine conventions require validation in the contested case*) remains in force and was honored here: dual-mode's contested case is the gate rejection itself, which is mechanically enforced.
+
+### Trigger-Tracking Meta-Finding
+
+The trial-doctrine scaffolding failed independently of the rule's content: a trigger ruled fired on 2026-05-29 went un-actioned for 41 days, its disposition dropped from tracking, and the 2026-07-09 standup initially mis-reported the triggers as untripped (since corrected in that standup). A committed governance ritual that lives only inside ADR prose is de-facto non-binding. **Standing rule going forward:** when a Devil's Court trigger is ruled fired, the ruling must be recorded as a Pulse **Active Concern** in the same session — the standup's stale-detection pass checks the Pulse mechanically, which is exactly where this one was finally caught.
+
+### Settled, Not Trial Doctrine
+
+This amendment is recorded as **settled doctrine**. The trial already happened: 43 days of lived uniform-rule experience, a full evidence ledger, and a complete nine-step re-interrogation are what trial doctrine exists to produce. Re-litigating dual-mode on a fresh trial clock would repeat the scaffolding failure documented above. If dual-mode produces a concrete incident — a gate-active WO closed early that the gate misses, or default-slice drift recurring despite the close-in-PR mechanics — that incident is the trigger to reconsider; file a new amendment then.
+
+### Reversal Cost
+
+Low. Doc-only: this section, the superseded banner on § Amendment 2026-05-27, the inheritance note in § Amendment 2026-05-28 (I), and any templates/docs that cite the close convention. Gate code, tests, and failure messages are untouched.
