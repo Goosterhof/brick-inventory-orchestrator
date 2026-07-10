@@ -161,6 +161,7 @@ Thin wrappers that move actions onto the async conveyor belt.
 - `handle()`: inject Actions for business logic, inject Models for lookups — resolved from the container
 - Job body: look up records via `$model->newQuery()->findOrFail()`, delegate to Action, update status. No business logic in the Job itself
 - `failed()` callback: static Model queries are acceptable here — this method is called by the queue worker directly, not resolved from the container
+- `failed()` leak discipline: persist an **opaque** user-facing failure message; raw exception detail (`getMessage()`, `getTraceAsString()`) goes to the server-side log sink (`logger()` / `Log::`) **only** — never into a persisted column or response body (it can carry DSN credentials, SQL, or API keys). Canonical shape: `ImportOwnedSetsJob::failed()`. Enforced by `tests/Architecture/JobFailedHandlerLeakArchitectureTest.php` (war-room enforcement queue #140/#134)
 
 ### Mail
 

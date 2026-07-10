@@ -13,6 +13,7 @@ use App\Models\Set;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Queue\Attributes\FailOnTimeout;
 use Illuminate\Queue\Attributes\Timeout;
+use Illuminate\Support\Facades\Log;
 
 covers(SyncSetPartsJob::class);
 
@@ -102,7 +103,7 @@ describe('SyncSetPartsJob', function(): void {
         expect($set->parts_sync_failed_reason)->toBeNull();
     });
 
-    it('should mark the set as Failed and store the truncated reason on failed()', function(): void {
+    it('should persist an opaque failure reason and log the raw exception detail server-side only on failed()', function(): void {
         // arrange
         $set = Set::factory()->create([
             'set_num' => '75192-1',
@@ -110,36 +111,25 @@ describe('SyncSetPartsJob', function(): void {
         ]);
 
         $job = new SyncSetPartsJob(setId: $set->id);
+
+        Log::shouldReceive('error')
+            ->once()
+            ->withArgs(fn(string $message, array $context): bool => $message === 'SyncSetPartsJob failed'
+                && $context['set_id'] === $set->id
+                && $context['exception'] === 'Connection timeout: pgsql://user:pass@host/db'
+                && \array_key_exists('trace', $context));
 
         // act
         $job->failed(new \RuntimeException('Connection timeout: pgsql://user:pass@host/db'));
 
-        // assert
+        // assert — the raw DSN-bearing message never reaches the persisted, user-visible column
         $set->refresh();
         expect($set->parts_sync_status)->toBe(SetSyncStatus::Failed);
-        expect($set->parts_sync_failed_reason)->toBe('Connection timeout: pgsql://user:pass@host/db');
+        expect($set->parts_sync_failed_reason)->toBe('Sync failed due to an unexpected error');
+        expect($set->parts_sync_failed_reason)->not->toContain('pgsql://');
     });
 
-    it('should truncate the failed reason to 500 characters', function(): void {
-        // arrange
-        $set = Set::factory()->create([
-            'set_num' => '75192-1',
-            'parts_sync_status' => SetSyncStatus::InProgress,
-        ]);
-
-        $longMessage = str_repeat('A', 750);
-        $job = new SyncSetPartsJob(setId: $set->id);
-
-        // act
-        $job->failed(new \RuntimeException($longMessage));
-
-        // assert
-        $set->refresh();
-        expect($set->parts_sync_status)->toBe(SetSyncStatus::Failed);
-        expect($set->parts_sync_failed_reason)->toHaveLength(500);
-    });
-
-    it('should record an Unknown error reason when failed() is called with null', function(): void {
+    it('should persist the opaque reason without logging when failed() is called with null', function(): void {
         // arrange
         $set = Set::factory()->create([
             'set_num' => '75192-1',
@@ -147,6 +137,8 @@ describe('SyncSetPartsJob', function(): void {
         ]);
 
         $job = new SyncSetPartsJob(setId: $set->id);
+
+        Log::shouldReceive('error')->never();
 
         // act
         $job->failed(null);
@@ -154,7 +146,7 @@ describe('SyncSetPartsJob', function(): void {
         // assert
         $set->refresh();
         expect($set->parts_sync_status)->toBe(SetSyncStatus::Failed);
-        expect($set->parts_sync_failed_reason)->toBe('Unknown error');
+        expect($set->parts_sync_failed_reason)->toBe('Sync failed due to an unexpected error');
     });
 
     it('should handle failed() gracefully when the set does not exist', function(): void {
