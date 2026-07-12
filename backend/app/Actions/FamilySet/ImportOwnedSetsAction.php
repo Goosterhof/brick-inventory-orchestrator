@@ -70,6 +70,17 @@ final readonly class ImportOwnedSetsAction
             }
 
             $complete = false;
+            // SECURITY: $e->getMessage() is safe to surface to the end user here. Both caught
+            // types build their message from app-controlled inputs only — never raw upstream
+            // detail. RebrickableApiException::fromResponse() emits "<fixed context>: HTTP <status>"
+            // (the Response BODY is held on a property, never spliced into the message); the API key
+            // rides an Authorization header and the token-bearing request URL is never referenced in
+            // any message. InvalidApiResponseException::{missingFields,invalidStructure}() emit fixed
+            // prose + hardcoded *_REQUIRED_FIELDS names + set-num/EAN/index identifiers. A raw Guzzle
+            // ConnectionException is NOT in this catch union (retry(throw:false) yields a failed
+            // Response, converted to the controlled factory) — it propagates as a total failure, not
+            // into this partial-import string. Guarded by the message-shape tripwire in
+            // ImportOwnedSetsActionTest ("should not leak raw upstream detail ..."). Queue #140 sibling.
             $error = sprintf(
                 'Import incomplete: %s. %d sets were imported successfully. Retry to fetch remaining sets.',
                 $e->getMessage(),

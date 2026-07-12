@@ -9,14 +9,17 @@ use App\DataTransferObjects\Input\Lego\LegoSetData;
 use App\DataTransferObjects\Input\Lego\RebrickableUserSetData;
 use App\DataTransferObjects\Result\FamilySet\ImportOwnedSetsResultData;
 use App\Enums\FamilySetStatus;
+use App\Exceptions\InvalidApiResponseException;
 use App\Exceptions\MissingRebrickableTokenException;
 use App\Exceptions\RebrickableApiException;
 use App\Models\Family;
 use App\Models\FamilySet;
 use App\Models\Set;
+use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Client\Response as HttpResponse;
 
 covers(ImportOwnedSetsAction::class);
 
@@ -523,6 +526,138 @@ describe('ImportOwnedSetsAction', function(): void {
         expect($result->error)->toContain('Import incomplete');
         expect($result->error)->toContain('1 sets were imported successfully');
         expect($result->error)->toContain('Retry to fetch remaining sets');
+    });
+
+    it('should not leak raw upstream response detail into the partial-import error string (RebrickableApiException)', function(): void {
+        // arrange — one page lands, then the REAL fromResponse() factory throws mid-stream.
+        // The wrapped Response carries a deliberately sensitive-looking body (fake API key + DSN);
+        // fromResponse() must keep the message "<context>: HTTP <status>" and never fold the body in.
+        // Tripwire: if a future change splices $response->body() into the message, the leak
+        // assertions below fail. This pins the proven-safe disposition (queue #140 sibling of the
+        // SyncSetPartsJob::failed() leak) so the user-return path can't silently start leaking.
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
+        $legoSetData = new LegoSetData(
+            setNum: '75192-1',
+            name: 'Millennium Falcon',
+            year: 2_017,
+            themeId: 158,
+            numParts: 7_541,
+            imageUrl: null,
+        );
+        $userSetData = new RebrickableUserSetData(set: $legoSetData, quantity: 1);
+
+        $set = \Mockery::mock(Set::class);
+        $set->allows('getAttribute')->with('id')->andReturn(42);
+
+        $sensitiveBody = '{"detail":"key abc123SECRET at pgsql://user:pass@db.internal/rebrickable"}';
+        $upstreamResponse = new HttpResponse(new Psr7Response(502, [], $sensitiveBody));
+
+        $legoDataService = \Mockery::mock(LegoDataServiceInterface::class);
+        $legoDataService->shouldReceive('fetchUserSets')
+            ->andReturnUsing(function() use ($userSetData, $upstreamResponse): \Generator {
+                yield [$userSetData];
+
+                throw RebrickableApiException::fromResponse($upstreamResponse, 'Failed to fetch user sets');
+            });
+
+        $upsertSetAction = \Mockery::mock(UpsertSetAction::class);
+        $upsertSetAction->shouldReceive('execute')->andReturn($set);
+
+        $newFamilySet = \Mockery::mock(FamilySet::class);
+        $newFamilySet->allows('setAttribute');
+        $newFamilySet->allows('getAttribute');
+        $newFamilySet->shouldReceive('save');
+
+        $queryBuilder = \Mockery::mock(Builder::class);
+        $queryBuilder->shouldReceive('where')->with('family_id', 1)->andReturnSelf();
+        $queryBuilder->shouldReceive('whereIn')->with('set_id', [42])->andReturnSelf();
+        $queryBuilder->shouldReceive('get')->andReturn(new Collection([]));
+
+        $familySetModel = \Mockery::mock(FamilySet::class);
+        $familySetModel->shouldReceive('newQuery')->andReturn($queryBuilder);
+        $familySetModel->shouldReceive('newInstance')->andReturn($newFamilySet);
+
+        $family = \Mockery::mock(Family::class);
+        $family->allows('getAttribute')->with('id')->andReturn(1);
+        $family->allows('getAttribute')->with('rebrickable_user_token')->andReturn('user-token-123');
+
+        $action = new ImportOwnedSetsAction($legoDataService, $upsertSetAction, $familySetModel, $this->db);
+
+        // act
+        $result = $action->execute($family);
+
+        // assert — partial-import UX preserved
+        expect($result->created)->toBe(1);
+        expect($result->total)->toBe(1);
+        expect($result->complete)->toBeFalse();
+        // exact shape pin: controlled context + HTTP status only
+        expect($result->error)->toBe(
+            'Import incomplete: Failed to fetch user sets: HTTP 502. 1 sets were imported successfully. Retry to fetch remaining sets.',
+        );
+        // leak tripwire — no fragment of the sensitive body reaches the user string
+        expect($result->error)->not->toContain('abc123SECRET');
+        expect($result->error)->not->toContain('pgsql://');
+        expect($result->error)->not->toContain('db.internal');
+    });
+
+    it('should surface only controlled prose for InvalidApiResponseException partial failures', function(): void {
+        // arrange — the other caught type. Its real factory builds fixed prose only (no upstream
+        // text), so the partial-import string is fully app-controlled. Shape-pinned as a tripwire.
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
+        $legoSetData = new LegoSetData(
+            setNum: '75192-1',
+            name: 'Millennium Falcon',
+            year: 2_017,
+            themeId: 158,
+            numParts: 7_541,
+            imageUrl: null,
+        );
+        $userSetData = new RebrickableUserSetData(set: $legoSetData, quantity: 1);
+
+        $set = \Mockery::mock(Set::class);
+        $set->allows('getAttribute')->with('id')->andReturn(42);
+
+        $legoDataService = \Mockery::mock(LegoDataServiceInterface::class);
+        $legoDataService->shouldReceive('fetchUserSets')
+            ->andReturnUsing(function() use ($userSetData): \Generator {
+                yield [$userSetData];
+
+                throw InvalidApiResponseException::invalidStructure('Fetching user sets', "Missing or invalid 'results' field");
+            });
+
+        $upsertSetAction = \Mockery::mock(UpsertSetAction::class);
+        $upsertSetAction->shouldReceive('execute')->andReturn($set);
+
+        $newFamilySet = \Mockery::mock(FamilySet::class);
+        $newFamilySet->allows('setAttribute');
+        $newFamilySet->allows('getAttribute');
+        $newFamilySet->shouldReceive('save');
+
+        $queryBuilder = \Mockery::mock(Builder::class);
+        $queryBuilder->shouldReceive('where')->with('family_id', 1)->andReturnSelf();
+        $queryBuilder->shouldReceive('whereIn')->with('set_id', [42])->andReturnSelf();
+        $queryBuilder->shouldReceive('get')->andReturn(new Collection([]));
+
+        $familySetModel = \Mockery::mock(FamilySet::class);
+        $familySetModel->shouldReceive('newQuery')->andReturn($queryBuilder);
+        $familySetModel->shouldReceive('newInstance')->andReturn($newFamilySet);
+
+        $family = \Mockery::mock(Family::class);
+        $family->allows('getAttribute')->with('id')->andReturn(1);
+        $family->allows('getAttribute')->with('rebrickable_user_token')->andReturn('user-token-123');
+
+        $action = new ImportOwnedSetsAction($legoDataService, $upsertSetAction, $familySetModel, $this->db);
+
+        // act
+        $result = $action->execute($family);
+
+        // assert — exact shape pin; message is fixed prose only
+        expect($result->complete)->toBeFalse();
+        expect($result->error)->toBe(
+            "Import incomplete: Fetching user sets: Invalid response structure - Missing or invalid 'results' field. 1 sets were imported successfully. Retry to fetch remaining sets.",
+        );
     });
 
     it('should re-throw exception when first page fails', function(): void {
