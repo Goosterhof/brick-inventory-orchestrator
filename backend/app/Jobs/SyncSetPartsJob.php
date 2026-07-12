@@ -53,14 +53,16 @@ final class SyncSetPartsJob implements ShouldQueue
             return;
         }
 
-        $reason = $throwable?->getMessage() ?? 'Unknown error';
-        // Truncate to fit the parts_sync_failed_reason column.
-        if (mb_strlen($reason) > 500) {
-            $reason = mb_substr($reason, 0, 500);
-        }
-
         $set->parts_sync_status = SetSyncStatus::Failed;
-        $set->parts_sync_failed_reason = $reason;
+        $set->parts_sync_failed_reason = 'Sync failed due to an unexpected error';
         $set->save();
+
+        if ($throwable instanceof Throwable) {
+            logger()->error('SyncSetPartsJob failed', [
+                'set_id' => $this->setId,
+                'exception' => $throwable->getMessage(),
+                'trace' => $throwable->getTraceAsString(),
+            ]);
+        }
     }
 }
