@@ -304,11 +304,12 @@ describe('PartsUnsortedPage — integration', () => {
             await wrapper.findAllComponents(ListItemButton)[0]?.find('button').trigger('click');
             await flushPromises();
 
-            // Drive the real modal: pick the storage option, set the quantity, submit.
+            // Drive the real modal: open the SingleSelect, pick the storage option, submit.
             // The modal renders its own form; submitting it fires the POST and emits assigned + close.
             const modal = wrapper.findComponent(PlacePartModal);
-            const select = modal.find('select');
-            await select.setValue('5');
+            await modal.get('[role="combobox"]').trigger('click');
+            await flushPromises();
+            await modal.get('[role="option"]').trigger('click');
             await flushPromises();
 
             await modal.find('form').trigger('submit.prevent');

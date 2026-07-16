@@ -2,8 +2,7 @@
 import {familyHttpService, familyToastService, familyTranslationService} from '@app/services';
 import {PhPaperclip, PhX} from '@phosphor-icons/vue';
 import {useForm} from '@script-development/fs-form';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import ModalDialog from '@shared/components/ModalDialog.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
@@ -30,6 +29,8 @@ const screenshots = ref<File[]>([]);
 const fileInputKey = ref(0);
 
 const fileInputId = useId();
+const titleId = useId();
+const descriptionId = useId();
 
 // The backend keys per-file errors as `screenshots.0`, `screenshots.1`, … —
 // the files share one control, so join every screenshots* error (array-level
@@ -91,14 +92,37 @@ const onSubmit = () =>
         <template #title>{{ t('feedback.title').value }}</template>
 
         <form flex="~ col" gap="4" @submit.prevent="onSubmit">
-            <TextInput v-model="title" :label="t('feedback.titleLabel').value" :error="errors.title" />
+            <FormField :id="titleId" :label="t('feedback.titleLabel').value" required :error="errors.title">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <TextInput
+                        :id="controlId"
+                        v-model="title"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
-            <TextareaInput
-                v-model="description"
+            <FormField
+                :id="descriptionId"
                 :label="t('feedback.descriptionLabel').value"
-                :rows="5"
+                required
                 :error="errors.description"
-            />
+            >
+                <template #default="{controlId, required, invalid, describedby}">
+                    <textarea
+                        :id="controlId"
+                        v-model="description"
+                        class="ui-control"
+                        :class="{'is-invalid': invalid}"
+                        rows="5"
+                        :aria-required="required || undefined"
+                        :aria-invalid="invalid || undefined"
+                        :aria-describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
             <div flex="~ col" gap="2">
                 <label :for="fileInputId" font="bold" uppercase tracking="wide" text="sm">

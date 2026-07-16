@@ -1,26 +1,18 @@
+import type {ComponentPublicInstance} from 'vue';
+
 import PlacePartModal from '@app/modals/PlacePartModal.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
+import {FormField} from '@script-development/ui-inputs';
 import ModalDialog from '@shared/components/ModalDialog.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-const {
-    createMockAxios,
-    createMockFsHelpers,
-    createMockStringTs,
-    createMockFamilyServices,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
-} = await vi.hoisted(() => import('../../../../helpers'));
+const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices, createMockUiInputs} =
+    await vi.hoisted(() => import('../../../../helpers'));
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
 
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
@@ -62,9 +54,19 @@ const mountModal = (props: Record<string, unknown> = {}) =>
                 // Default shallowMount stubs do not render named slots; this surfaces them for testing.
                 // We declare `open` so findComponent(ModalDialog).props('open') still resolves correctly.
                 ModalDialog: {props: ['open'], template: '<div><slot name="title" /><slot /></div>'},
+                // Unstub the package pair so the FormField scoped slots + SingleSelect listbox render.
+                FormField: false,
+                SingleSelect: false,
             },
         },
     });
+
+// Select a storage option by id through the mock SingleSelect (v-model emits the
+// option id) — this also covers ids absent from the list, which a DOM click can't.
+const selectStorage = (wrapper: ReturnType<typeof shallowMount>, id: number): void => {
+    const select = wrapper.findComponent({name: 'SingleSelect'}).vm as ComponentPublicInstance;
+    select.$emit('update:modelValue', id);
+};
 
 describe('PlacePartModal', () => {
     beforeEach(() => {
@@ -123,9 +125,8 @@ describe('PlacePartModal', () => {
         const wrapper = mountModal();
         await flushPromises();
 
-        // Assert — only the disabled placeholder option remains.
-        const options = wrapper.findAll('option');
-        expect(options).toHaveLength(1);
+        // Assert — no options remain in the listbox
+        expect(wrapper.findAll('[role="option"]')).toHaveLength(0);
     });
 
     it('should render storage select with options', async () => {
@@ -133,12 +134,12 @@ describe('PlacePartModal', () => {
         const wrapper = mountModal();
         await flushPromises();
 
-        // Assert
-        expect(wrapper.findComponent(SelectInput).exists()).toBe(true);
-        const options = wrapper.findAll('option');
-        expect(options).toHaveLength(3);
-        expect(options[1]?.text()).toBe('Drawer A');
-        expect(options[2]?.text()).toBe('Drawer B');
+        // Assert — SingleSelect renders the two storage options as listbox items
+        expect(wrapper.findComponent({name: 'SingleSelect'}).exists()).toBe(true);
+        const options = wrapper.findAll('[role="option"]');
+        expect(options).toHaveLength(2);
+        expect(options[0]?.text()).toBe('Drawer A');
+        expect(options[1]?.text()).toBe('Drawer B');
     });
 
     it('should render quantity input prefilled with defaultQuantity', async () => {
@@ -146,10 +147,8 @@ describe('PlacePartModal', () => {
         const wrapper = mountModal({defaultQuantity: 7});
         await flushPromises();
 
-        // Assert
-        const input = wrapper.findComponent(NumberInput);
-        expect(input.exists()).toBe(true);
-        expect(input.props('modelValue')).toBe(7);
+        // Assert — native number input prefilled with defaultQuantity
+        expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('7');
     });
 
     it('should pass maxQuantity to the NumberInput', async () => {
@@ -157,8 +156,8 @@ describe('PlacePartModal', () => {
         const wrapper = mountModal({defaultQuantity: 4, maxQuantity: 4});
         await flushPromises();
 
-        // Assert
-        expect(wrapper.findComponent(NumberInput).props('max')).toBe(4);
+        // Assert — max forwarded to the native number input
+        expect(wrapper.get('input[type="number"]').attributes('max')).toBe('4');
     });
 
     it('should render the placement button copy from the parts.placeAction key', async () => {
@@ -207,8 +206,8 @@ describe('PlacePartModal', () => {
             mockPostRequest.mockResolvedValue({data: {}});
             const wrapper = mountModal();
             await flushPromises();
-            await wrapper.findComponent(SelectInput).setValue('1');
-            await wrapper.findComponent(NumberInput).setValue(5);
+            selectStorage(wrapper, 1);
+            await wrapper.get('input[type="number"]').setValue('5');
 
             // Act
             await wrapper.find('form').trigger('submit');
@@ -227,8 +226,8 @@ describe('PlacePartModal', () => {
             mockPostRequest.mockResolvedValue({data: {}});
             const wrapper = mountModal({defaultQuantity: 5});
             await flushPromises();
-            await wrapper.findComponent(SelectInput).setValue('2');
-            await wrapper.findComponent(NumberInput).setValue(null);
+            selectStorage(wrapper, 2);
+            await wrapper.get('input[type="number"]').setValue('');
 
             // Act
             await wrapper.find('form').trigger('submit');
@@ -260,7 +259,7 @@ describe('PlacePartModal', () => {
             mockPostRequest.mockResolvedValue({data: {}});
             const wrapper = mountModal({defaultQuantity: 3});
             await flushPromises();
-            await wrapper.findComponent(SelectInput).setValue('1');
+            selectStorage(wrapper, 1);
 
             // Act
             await wrapper.find('form').trigger('submit');
@@ -278,8 +277,8 @@ describe('PlacePartModal', () => {
             mockPostRequest.mockResolvedValue({data: {}});
             const wrapper = mountModal({defaultQuantity: 3});
             await flushPromises();
-            // Select an id that exists in the list, but pre-clear the list to force the lookup miss.
-            await wrapper.findComponent(SelectInput).setValue('999');
+            // Select an id that is NOT in the list to force the lookup miss.
+            selectStorage(wrapper, 999);
 
             // Act
             await wrapper.find('form').trigger('submit');
@@ -296,14 +295,14 @@ describe('PlacePartModal', () => {
             mockPostRequest.mockRejectedValue(new Error('Server error'));
             const wrapper = mountModal();
             await flushPromises();
-            await wrapper.findComponent(SelectInput).setValue('1');
+            selectStorage(wrapper, 1);
 
             // Act
             await wrapper.find('form').trigger('submit');
             await flushPromises();
 
-            // Assert
-            expect(wrapper.findComponent(SelectInput).props('error')).toBe('sets.assignError');
+            // Assert — the storage FormField (field 0) surfaces the error
+            expect(wrapper.findAllComponents(FormField)[0]?.props('error')).toBe('sets.assignError');
             expect(wrapper.emitted('assigned')).toBeUndefined();
             expect(wrapper.emitted('close')).toBeUndefined();
         });

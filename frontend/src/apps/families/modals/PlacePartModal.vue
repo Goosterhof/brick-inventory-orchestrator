@@ -3,11 +3,10 @@ import type {StorageMapEntry} from '@app/types/part';
 import type {StorageOption} from '@app/types/storageOption';
 
 import {familyHttpService, familyTranslationService} from '@app/services';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
+import {FormField, SingleSelect} from '@script-development/ui-inputs';
 import ModalDialog from '@shared/components/ModalDialog.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {computed, onMounted, ref} from 'vue';
+import {computed, onMounted, ref, useId} from 'vue';
 
 export interface PartIdentity {
     partId: number;
@@ -53,13 +52,23 @@ const emit = defineEmits<{close: []; assigned: [PlacedDetail]}>();
 const {t} = familyTranslationService;
 
 const storageOptions = ref<StorageOption[]>([]);
-const selectedStorageId = ref('');
+const selectedStorageId = ref<number | null>(null);
 const quantity = ref<number | null>(defaultQuantity);
 const saving = ref(false);
 const error = ref('');
 const loadingOptions = ref(true);
 
+const storageFieldId = useId();
+const quantityId = useId();
+
 const resolvedTitle = computed(() => title ?? t('parts.placeTitle').value);
+
+// quantity is a nullable number; clear-to-null on empty/NaN input (preserving the
+// old NumberInput molecule's behaviour). `handleSubmit` falls back to 1 on null.
+const onQuantityInput = (event: Event) => {
+    const value = (event.target as HTMLInputElement).valueAsNumber;
+    quantity.value = Number.isNaN(value) ? null : value;
+};
 
 const inlineNeededBy = computed(() => neededBySetNums.slice(0, NEEDED_BY_INLINE_LIMIT));
 const overflowNeededByCount = computed(() => Math.max(0, neededBySetNums.length - NEEDED_BY_INLINE_LIMIT));
@@ -79,7 +88,7 @@ const findStorageOptionById = (id: number): StorageOption | undefined =>
     storageOptions.value.find((option) => option.id === id);
 
 const handleSubmit = async () => {
-    const storageId = Number(selectedStorageId.value);
+    const storageId = selectedStorageId.value;
     if (!storageId) return;
 
     saving.value = true;
@@ -187,14 +196,39 @@ const handleSubmit = async () => {
                 <p v-if="loadingOptions" text="[var(--brick-muted-text)]">{{ t('common.loading').value }}</p>
 
                 <template v-else>
-                    <SelectInput v-model="selectedStorageId" :label="t('sets.selectStorage').value" :error="error">
-                        <option value="" disabled>{{ t('sets.selectStoragePlaceholder').value }}</option>
-                        <option v-for="option in storageOptions" :key="option.id" :value="option.id">
-                            {{ option.name }}
-                        </option>
-                    </SelectInput>
+                    <FormField :id="storageFieldId" :label="t('sets.selectStorage').value" required :error="error">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <SingleSelect
+                                :id="controlId"
+                                v-model="selectedStorageId"
+                                :options="storageOptions"
+                                label="name"
+                                :options-label="t('sets.selectStorage').value"
+                                :placeholder="t('sets.selectStoragePlaceholder').value"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
 
-                    <NumberInput v-model="quantity" :label="t('sets.quantity').value" :min="1" :max="maxQuantity" />
+                    <FormField :id="quantityId" :label="t('sets.quantity').value">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <input
+                                :id="controlId"
+                                class="ui-control ui-input"
+                                :class="{'is-invalid': invalid}"
+                                type="number"
+                                :min="1"
+                                :max="maxQuantity"
+                                :value="quantity"
+                                :aria-required="required || undefined"
+                                :aria-invalid="invalid || undefined"
+                                :aria-describedby="describedby"
+                                @input="onQuantityInput"
+                            />
+                        </template>
+                    </FormField>
 
                     <PrimaryButton type="submit" :disabled="saving || !selectedStorageId">
                         {{ t('parts.placeAction').value }}
