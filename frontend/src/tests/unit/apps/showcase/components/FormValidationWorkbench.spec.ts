@@ -1,8 +1,6 @@
-import DateInput from '@shared/components/forms/inputs/DateInput.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import type {ComponentPublicInstance} from 'vue';
+
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {shallowMount} from '@vue/test-utils';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
@@ -11,8 +9,21 @@ import {nextTick} from 'vue';
 import FormValidationWorkbench from '@/apps/showcase/components/FormValidationWorkbench.vue';
 import SectionHeading from '@/apps/showcase/components/SectionHeading.vue';
 
+const {createMockUiInputs} = await vi.hoisted(() => import('../../../../helpers'));
+
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
+
+// atom-at-call-site: labels/errors live on FormField; name/setNumber use the
+// package TextInput, the other three fields are native controls in the slot.
+const fieldByLabel = (wrapper: ReturnType<typeof shallowMount>, label: string) =>
+    wrapper.findAllComponents(FormField).find((field) => field.props('label') === label);
+
+const textInputByLabel = (wrapper: ReturnType<typeof shallowMount>, label: string) =>
+    fieldByLabel(wrapper, label)?.findComponent(TextInput);
+
 describe('FormValidationWorkbench', () => {
-    const stubs = {SectionHeading, TextInput, NumberInput, SelectInput, DateInput, TextareaInput, PrimaryButton};
+    const stubs = {SectionHeading, FormField: false, TextInput: false, SingleSelect: false, PrimaryButton};
+    const mount = () => shallowMount(FormValidationWorkbench, {global: {stubs}});
 
     beforeEach(() => {
         vi.useFakeTimers();
@@ -23,39 +34,26 @@ describe('FormValidationWorkbench', () => {
     });
 
     it('should render the section heading with correct number and title', () => {
-        // Act
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Assert
+        const wrapper = mount();
         expect(wrapper.text()).toContain('11');
         expect(wrapper.text()).toContain('Form Validation Workbench');
     });
 
     it('should render the section element with correct id', () => {
-        // Act
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Assert
+        const wrapper = mount();
         expect(wrapper.find('section#form-validation-workbench').exists()).toBe(true);
     });
 
     it('should render all demo subsections', () => {
-        // Act
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Assert
-        const labels = wrapper.findAll('.brick-label');
-        const labelTexts = labels.map((l) => l.text());
+        const wrapper = mount();
+        const labelTexts = wrapper.findAll('.brick-label').map((l) => l.text());
         expect(labelTexts).toContain('Add a LEGO Set');
         expect(labelTexts).toContain('Inspector Panel');
         expect(labelTexts).toContain('How It Works');
     });
 
     it('should render all six form inputs', () => {
-        // Act
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Assert
+        const wrapper = mount();
         expect(wrapper.text()).toContain('Set Name');
         expect(wrapper.text()).toContain('Set Number');
         expect(wrapper.text()).toContain('Piece Count');
@@ -65,111 +63,77 @@ describe('FormValidationWorkbench', () => {
     });
 
     it('should render three submit buttons', () => {
-        // Act
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Assert
-        const buttons = wrapper.findAll('button');
-        const buttonTexts = buttons.map((b) => b.text());
+        const wrapper = mount();
+        const buttonTexts = wrapper.findAll('button').map((b) => b.text());
         expect(buttonTexts).toContain('Submit (Success)');
         expect(buttonTexts).toContain('Submit (422 Errors)');
         expect(buttonTexts).toContain('Submit (Server Error)');
     });
 
     it('should render the inspector panel with empty initial state', () => {
-        // Act
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Assert
+        const wrapper = mount();
         const inspectorJson = wrapper.find('[data-testid="inspector-json"]');
         expect(inspectorJson.exists()).toBe(true);
         expect(inspectorJson.text()).toBe('{}');
     });
 
     it('should render the how-it-works code snippet', () => {
-        // Act
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Assert
+        const wrapper = mount();
         expect(wrapper.text()).toContain('useForm<SetFormField>(httpService)');
         expect(wrapper.text()).toContain('useForm(httpService) = useValidationErrors + useFormSubmit');
     });
 
     it('should show success message and reset form after successful submit', async () => {
         // Arrange
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-        const nameInput = wrapper.findAllComponents(TextInput).find((c) => c.props('label') === 'Set Name');
-        await nameInput?.setValue('Millennium Falcon');
+        const wrapper = mount();
+        await textInputByLabel(wrapper, 'Set Name')?.setValue('Millennium Falcon');
 
         // Act
         const successBtn = wrapper.findAll('button').find((b) => b.text() === 'Submit (Success)');
         await successBtn?.trigger('click');
-
-        // Advance past the 400ms simulated delay
         await vi.advanceTimersByTimeAsync(400);
         await nextTick();
 
-        // Assert — success message visible
+        // Assert — success message visible + form reset
         expect(wrapper.text()).toContain('Set added successfully!');
-
-        // Assert — form was reset (name input cleared)
-        const nameInputAfter = wrapper.findAllComponents(TextInput).find((c) => c.props('label') === 'Set Name');
-        expect(nameInputAfter?.props('modelValue')).toBe('');
+        expect(textInputByLabel(wrapper, 'Set Name')?.props('modelValue')).toBe('');
 
         // Advance past the 2000ms success message timeout
         await vi.advanceTimersByTimeAsync(2000);
         await nextTick();
-
-        // Assert — success message gone
         expect(wrapper.text()).not.toContain('Set added successfully!');
     });
 
     it('should show submitting state during success submission', async () => {
-        // Arrange
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Act
+        const wrapper = mount();
         const successBtn = wrapper.findAll('button').find((b) => b.text() === 'Submit (Success)');
         await successBtn?.trigger('click');
         await nextTick();
 
-        // Assert — button shows submitting text
         expect(wrapper.text()).toContain('Submitting...');
 
-        // Clean up — advance timers to complete the submit
         await vi.advanceTimersByTimeAsync(400);
         await nextTick();
         await vi.advanceTimersByTimeAsync(2000);
     });
 
     it('should display validation errors on all fields after 422 response', async () => {
-        // Arrange
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Act
+        const wrapper = mount();
         const errorBtn = wrapper.findAll('button').find((b) => b.text() === 'Submit (422 Errors)');
         await errorBtn?.trigger('click');
         await nextTick();
 
-        // Assert — errors appear on input components
-        const textInputs = wrapper.findAllComponents(TextInput);
-        const nameInput = textInputs.find((c) => c.props('label') === 'Set Name');
-        expect(nameInput?.props('error')).toBe('The name field is required.');
-
-        const setNumberInput = textInputs.find((c) => c.props('label') === 'Set Number');
-        expect(setNumberInput?.props('error')).toBe('The set number must be unique.');
+        // Errors are surfaced by FormField now
+        expect(fieldByLabel(wrapper, 'Set Name')?.props('error')).toBe('The name field is required.');
+        expect(fieldByLabel(wrapper, 'Set Number')?.props('error')).toBe('The set number must be unique.');
     });
 
     it('should show validation errors in inspector panel after 422 response', async () => {
-        // Arrange
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Act
+        const wrapper = mount();
         const errorBtn = wrapper.findAll('button').find((b) => b.text() === 'Submit (422 Errors)');
         await errorBtn?.trigger('click');
         await nextTick();
 
-        // Assert — inspector panel shows errors as JSON
         const inspectorJson = wrapper.find('[data-testid="inspector-json"]');
         expect(inspectorJson.text()).toContain('The name field is required.');
         expect(inspectorJson.text()).toContain('The set number must be unique.');
@@ -180,144 +144,104 @@ describe('FormValidationWorkbench', () => {
     });
 
     it('should display server error message after non-422 error', async () => {
-        // Arrange
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Act
+        const wrapper = mount();
         const serverErrorBtn = wrapper.findAll('button').find((b) => b.text() === 'Submit (Server Error)');
         await serverErrorBtn?.trigger('click');
         await nextTick();
 
-        // Assert
         expect(wrapper.text()).toContain('Internal Server Error: The brick vault is offline.');
     });
 
     it('should clear validation errors when form fields change', async () => {
-        // Arrange
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Trigger 422 errors first
+        const wrapper = mount();
         const errorBtn = wrapper.findAll('button').find((b) => b.text() === 'Submit (422 Errors)');
         await errorBtn?.trigger('click');
         await nextTick();
 
-        // Verify errors are present
         const inspectorJson = wrapper.find('[data-testid="inspector-json"]');
         expect(inspectorJson.text()).toContain('The name field is required.');
 
-        // Act — change a form field to trigger the watcher
-        const nameInput = wrapper.findAllComponents(TextInput).find((c) => c.props('label') === 'Set Name');
-        nameInput?.vm.$emit('update:modelValue', 'New Value');
+        // Act — change a field to trigger the clearing watcher
+        textInputByLabel(wrapper, 'Set Name')?.vm.$emit('update:modelValue', 'New Value');
         await nextTick();
 
-        // Assert — errors cleared
         expect(inspectorJson.text()).toBe('{}');
     });
 
     it('should clear server error when form fields change', async () => {
-        // Arrange
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Trigger server error first
+        const wrapper = mount();
         const serverErrorBtn = wrapper.findAll('button').find((b) => b.text() === 'Submit (Server Error)');
         await serverErrorBtn?.trigger('click');
         await nextTick();
         expect(wrapper.text()).toContain('Internal Server Error: The brick vault is offline.');
 
-        // Act — change a form field
-        const nameInput = wrapper.findAllComponents(TextInput).find((c) => c.props('label') === 'Set Name');
-        nameInput?.vm.$emit('update:modelValue', 'Something');
+        textInputByLabel(wrapper, 'Set Name')?.vm.$emit('update:modelValue', 'Something');
         await nextTick();
 
-        // Assert
         expect(wrapper.text()).not.toContain('Internal Server Error: The brick vault is offline.');
     });
 
     it('should not show success message or server error initially', () => {
-        // Act
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Assert
+        const wrapper = mount();
         expect(wrapper.text()).not.toContain('Set added successfully!');
         expect(wrapper.text()).not.toContain('Internal Server Error');
     });
 
     it('should render select input with theme options', () => {
-        // Act
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Assert
+        const wrapper = mount();
         expect(wrapper.text()).toContain('Star Wars');
         expect(wrapper.text()).toContain('Technic');
         expect(wrapper.text()).toContain('City');
         expect(wrapper.text()).toContain('Creator');
     });
 
-    it('should render textarea with optional label', () => {
-        // Act
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Assert
-        const textarea = wrapper.findComponent(TextareaInput);
-        expect(textarea.props('optional')).toBe(true);
-        expect(textarea.props('label')).toBe('Notes');
+    it('should render the notes field as optional', () => {
+        const wrapper = mount();
+        // required polarity replaces the old `optional` prop; notes is optional
+        expect(fieldByLabel(wrapper, 'Notes')?.props('required')).toBe(false);
     });
 
     it('should trigger watcher without errors present to cover the no-op branch', async () => {
-        // Arrange — mount with no errors (initial state)
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Act — change a form field when there are no errors
-        const nameInput = wrapper.findAllComponents(TextInput).find((c) => c.props('label') === 'Set Name');
-        nameInput?.vm.$emit('update:modelValue', 'Some Value');
+        const wrapper = mount();
+        textInputByLabel(wrapper, 'Set Name')?.vm.$emit('update:modelValue', 'Some Value');
         await nextTick();
 
-        // Assert — still no errors (inspector panel still empty)
         const inspectorJson = wrapper.find('[data-testid="inspector-json"]');
         expect(inspectorJson.text()).toBe('{}');
     });
 
     it('should update all form field values via v-model', async () => {
-        // Arrange
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
+        const wrapper = mount();
 
-        // Act — emit update:modelValue on each input component
-        const setNumberInput = wrapper.findAllComponents(TextInput).find((c) => c.props('label') === 'Set Number');
-        setNumberInput?.vm.$emit('update:modelValue', '75192');
+        // Set Number — package TextInput
+        textInputByLabel(wrapper, 'Set Number')?.vm.$emit('update:modelValue', '75192');
         await nextTick();
 
-        const pieceCountInput = wrapper.findComponent(NumberInput);
-        pieceCountInput.vm.$emit('update:modelValue', 7541);
+        // Piece Count — native number input driven through onPieceCountInput
+        await wrapper.get('input[type="number"]').setValue('7541');
+
+        // Theme — SingleSelect emits the option id
+        (wrapper.findComponent({name: 'SingleSelect'}).vm as ComponentPublicInstance).$emit(
+            'update:modelValue',
+            'star-wars',
+        );
         await nextTick();
 
-        const selectInput = wrapper.findComponent(SelectInput);
-        selectInput.vm.$emit('update:modelValue', 'star-wars');
-        await nextTick();
+        // Purchase Date + Notes — native controls
+        await wrapper.get('input[type="date"]').setValue('2026-01-15');
+        await wrapper.get('textarea').setValue('Great set!');
 
-        const dateInput = wrapper.findComponent(DateInput);
-        dateInput.vm.$emit('update:modelValue', '2026-01-15');
-        await nextTick();
-
-        const textareaInput = wrapper.findComponent(TextareaInput);
-        textareaInput.vm.$emit('update:modelValue', 'Great set!');
-        await nextTick();
-
-        // Assert — values propagated (check via props on re-render)
-        expect(setNumberInput?.props('modelValue')).toBe('75192');
-        expect(pieceCountInput.props('modelValue')).toBe(7541);
-        expect(selectInput.props('modelValue')).toBe('star-wars');
-        expect(dateInput.props('modelValue')).toBe('2026-01-15');
-        expect(textareaInput.props('modelValue')).toBe('Great set!');
+        // Assert — values propagated back to the controls
+        expect(textInputByLabel(wrapper, 'Set Number')?.props('modelValue')).toBe('75192');
+        expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('7541');
+        expect(wrapper.get('[role="combobox"]').text()).toBe('star-wars');
+        expect((wrapper.get('input[type="date"]').element as HTMLInputElement).value).toBe('2026-01-15');
+        expect(wrapper.get('textarea').element.value).toBe('Great set!');
     });
 
     it('should clean up middleware on unmount', () => {
-        // Arrange
-        const wrapper = shallowMount(FormValidationWorkbench, {global: {stubs}});
-
-        // Act — unmount triggers onUnmounted which calls the unregister callback
+        const wrapper = mount();
         wrapper.unmount();
-
-        // Assert — no errors (component is unmounted cleanly)
         expect(wrapper.vm).toBeDefined();
     });
 });

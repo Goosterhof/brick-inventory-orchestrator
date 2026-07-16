@@ -1,6 +1,5 @@
+import {TextInput} from '@script-development/ui-inputs';
 import DangerButton from '@shared/components/DangerButton.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {shallowMount} from '@vue/test-utils';
 import {describe, expect, it, vi} from 'vitest';
@@ -8,18 +7,16 @@ import {nextTick} from 'vue';
 
 import ResourceAdapterPlayground from '@/apps/showcase/components/ResourceAdapterPlayground.vue';
 
+const {createMockUiInputs} = await vi.hoisted(() => import('../../../../helpers'));
+
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
+
 // Mock heavy shared components to keep import chain under 1000ms (ADR-0012).
-const {mkStub, mkModelStub, mkButtonStub} = vi.hoisted(() => ({
+const {mkStub, mkButtonStub} = vi.hoisted(() => ({
     mkStub: (name: string) => ({
         name,
         props: {number: String, title: String},
         template: `<div data-stub="${name}">{{ number }} {{ title }}<slot /></div>`,
-    }),
-    mkModelStub: (name: string) => ({
-        name,
-        props: {modelValue: [String, Number, Object], label: String, placeholder: String, min: Number},
-        emits: ['update:modelValue'],
-        template: `<div data-stub="${name}">{{ label }}<slot /></div>`,
     }),
     mkButtonStub: (name: string) => ({
         name,
@@ -30,15 +27,13 @@ const {mkStub, mkModelStub, mkButtonStub} = vi.hoisted(() => ({
 
 vi.mock('@shared/components/PrimaryButton.vue', () => ({default: mkButtonStub('PrimaryButton')}));
 vi.mock('@shared/components/DangerButton.vue', () => ({default: mkButtonStub('DangerButton')}));
-vi.mock('@shared/components/forms/inputs/TextInput.vue', () => ({default: mkModelStub('TextInput')}));
-vi.mock('@shared/components/forms/inputs/NumberInput.vue', () => ({default: mkModelStub('NumberInput')}));
 vi.mock('@/apps/showcase/components/SectionHeading.vue', () => ({default: mkStub('SectionHeading')}));
 
 describe('ResourceAdapterPlayground', () => {
     const stubs = {
         SectionHeading: false as const,
+        FormField: false as const,
         TextInput: false as const,
-        NumberInput: false as const,
         PrimaryButton: false as const,
         DangerButton: false as const,
     };
@@ -139,7 +134,7 @@ describe('ResourceAdapterPlayground', () => {
 
         // Fill in the form
         const textInputs = wrapper.findAllComponents(TextInput);
-        const displayNameInput = textInputs.find((c) => c.props('label') === 'Display Name');
+        const displayNameInput = textInputs.find((c) => c.props('placeholder') === 'e.g. Police Officer');
         displayNameInput?.vm.$emit('update:modelValue', 'Police Officer');
         await nextTick();
 
@@ -176,7 +171,7 @@ describe('ResourceAdapterPlayground', () => {
 
         // Create an item
         const textInputs = wrapper.findAllComponents(TextInput);
-        const displayNameInput = textInputs.find((c) => c.props('label') === 'Display Name');
+        const displayNameInput = textInputs.find((c) => c.props('placeholder') === 'e.g. Police Officer');
         displayNameInput?.vm.$emit('update:modelValue', 'Firefighter');
         await nextTick();
 
@@ -223,8 +218,9 @@ describe('ResourceAdapterPlayground', () => {
         await nextTick();
 
         // Edit the display name in the edit panel
-        const editTextInputs = wrapper.findAllComponents(TextInput).filter((c) => c.props('label') === 'Display Name');
-        const editInput = editTextInputs.find((c) => c.props('placeholder') === 'e.g. Firefighter');
+        const editInput = wrapper
+            .findAllComponents(TextInput)
+            .find((c) => c.props('placeholder') === 'e.g. Firefighter');
         editInput?.vm.$emit('update:modelValue', 'Updated Name');
         await nextTick();
 
@@ -242,7 +238,7 @@ describe('ResourceAdapterPlayground', () => {
 
         // Create an item with a name
         const textInputs = wrapper.findAllComponents(TextInput);
-        const displayNameInput = textInputs.find((c) => c.props('label') === 'Display Name');
+        const displayNameInput = textInputs.find((c) => c.props('placeholder') === 'e.g. Police Officer');
         displayNameInput?.vm.$emit('update:modelValue', 'Original Name');
         await nextTick();
 
@@ -255,8 +251,9 @@ describe('ResourceAdapterPlayground', () => {
         await nextTick();
 
         // Modify the mutable state
-        const editTextInputs = wrapper.findAllComponents(TextInput).filter((c) => c.props('label') === 'Display Name');
-        const editInput = editTextInputs.find((c) => c.props('placeholder') === 'e.g. Firefighter');
+        const editInput = wrapper
+            .findAllComponents(TextInput)
+            .find((c) => c.props('placeholder') === 'e.g. Firefighter');
         editInput?.vm.$emit('update:modelValue', 'Changed Name');
         await nextTick();
 
@@ -302,7 +299,7 @@ describe('ResourceAdapterPlayground', () => {
 
         // Change the form values
         const textInputs = wrapper.findAllComponents(TextInput);
-        const displayNameInput = textInputs.find((c) => c.props('label') === 'Display Name');
+        const displayNameInput = textInputs.find((c) => c.props('placeholder') === 'e.g. Police Officer');
         displayNameInput?.vm.$emit('update:modelValue', 'Some Name');
         await nextTick();
 
@@ -346,7 +343,7 @@ describe('ResourceAdapterPlayground', () => {
         const wrapper = shallowMount(ResourceAdapterPlayground, {global: {stubs}});
 
         const textInputs = wrapper.findAllComponents(TextInput);
-        const displayNameInput = textInputs.find((c) => c.props('label') === 'Display Name');
+        const displayNameInput = textInputs.find((c) => c.props('placeholder') === 'e.g. Police Officer');
         displayNameInput?.vm.$emit('update:modelValue', 'Space Ranger');
         await nextTick();
 
@@ -372,7 +369,7 @@ describe('ResourceAdapterPlayground', () => {
         const wrapper = shallowMount(ResourceAdapterPlayground, {global: {stubs}});
 
         const textInputs = wrapper.findAllComponents(TextInput);
-        const displayNameInput = textInputs.find((c) => c.props('label') === 'Display Name');
+        const displayNameInput = textInputs.find((c) => c.props('placeholder') === 'e.g. Police Officer');
         displayNameInput?.vm.$emit('update:modelValue', 'Auto Selected');
         await nextTick();
 
@@ -388,7 +385,7 @@ describe('ResourceAdapterPlayground', () => {
         const wrapper = shallowMount(ResourceAdapterPlayground, {global: {stubs}});
 
         const textInputs = wrapper.findAllComponents(TextInput);
-        const displayNameInput = textInputs.find((c) => c.props('label') === 'Display Name');
+        const displayNameInput = textInputs.find((c) => c.props('placeholder') === 'e.g. Police Officer');
         displayNameInput?.vm.$emit('update:modelValue', 'Test Minifig');
         await nextTick();
 
@@ -475,8 +472,7 @@ describe('ResourceAdapterPlayground', () => {
     it('should update part count via number input', async () => {
         const wrapper = shallowMount(ResourceAdapterPlayground, {global: {stubs}});
 
-        const numberInput = wrapper.findComponent(NumberInput);
-        numberInput.vm.$emit('update:modelValue', 10);
+        await wrapper.get('input[type="number"]').setValue('10');
         await nextTick();
 
         const camelView = wrapper.find('[data-testid="camel-case-view"]');
@@ -530,7 +526,7 @@ describe('ResourceAdapterPlayground', () => {
         const wrapper = shallowMount(ResourceAdapterPlayground, {global: {stubs}});
 
         const textInputs = wrapper.findAllComponents(TextInput);
-        const themeGroupInput = textInputs.find((c) => c.props('label') === 'Theme Group');
+        const themeGroupInput = textInputs.find((c) => c.props('placeholder') === 'e.g. City');
         themeGroupInput?.vm.$emit('update:modelValue', 'Space');
         await nextTick();
 
@@ -546,10 +542,10 @@ describe('ResourceAdapterPlayground', () => {
         await nextTick();
 
         // Edit panel should be visible, interact with part count
-        const editNumberInputs = wrapper.findAllComponents(NumberInput);
-        const editPartCount = editNumberInputs.find((c) => c.props('placeholder') === 'e.g. 5');
-        editPartCount?.vm.$emit('update:modelValue', 7);
-        await nextTick();
+        const editPartCount = wrapper
+            .findAll('input[type="number"]')
+            .find((i) => i.attributes('placeholder') === 'e.g. 5');
+        await editPartCount?.setValue('7');
 
         // Interact with theme group in edit panel
         const editTextInputs = wrapper.findAllComponents(TextInput);

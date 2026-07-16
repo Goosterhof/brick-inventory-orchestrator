@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {FormField, SingleSelect, TextInput} from '@script-development/ui-inputs';
 import BackButton from '@shared/components/BackButton.vue';
 import BadgeLabel from '@shared/components/BadgeLabel.vue';
 import CardContainer from '@shared/components/CardContainer.vue';
@@ -7,14 +8,6 @@ import DangerButton from '@shared/components/DangerButton.vue';
 import DetailRow from '@shared/components/DetailRow.vue';
 import EmptyState from '@shared/components/EmptyState.vue';
 import FilterChip from '@shared/components/FilterChip.vue';
-import FormError from '@shared/components/forms/FormError.vue';
-import FormField from '@shared/components/forms/FormField.vue';
-import FormLabel from '@shared/components/forms/FormLabel.vue';
-import DateInput from '@shared/components/forms/inputs/DateInput.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import LegoBrick from '@shared/components/LegoBrick.vue';
 import LegoBrickCuboidCss from '@shared/components/LegoBrickCuboidCss.vue';
 import LegoBrickIsometricSvg from '@shared/components/LegoBrickIsometricSvg.vue';
@@ -32,7 +25,7 @@ import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import SectionDivider from '@shared/components/SectionDivider.vue';
 import StatCard from '@shared/components/StatCard.vue';
 import ToastMessage from '@shared/components/ToastMessage.vue';
-import {ref} from 'vue';
+import {ref, useId} from 'vue';
 
 import SectionHeading from './SectionHeading.vue';
 
@@ -49,6 +42,28 @@ const demoNumber = ref<number | null>(42);
 const demoSelect = ref('built');
 const demoDate = ref('2024-01-15');
 const demoTextarea = ref('Stored in the top drawer, second shelf from the left.');
+
+const demoInputId = useId();
+const errorInputId = useId();
+const demoTextId = useId();
+const demoNumberId = useId();
+const demoSelectId = useId();
+const demoDateId = useId();
+const demoTextareaId = useId();
+
+const demoStatusOptions = [
+    {id: 'sealed', label: 'Sealed'},
+    {id: 'built', label: 'Built'},
+    {id: 'in_progress', label: 'In Progress'},
+    {id: 'in_storage', label: 'In Storage'},
+    {id: 'incomplete', label: 'Incomplete'},
+];
+
+// demoNumber is a nullable number; clear-to-null on empty/NaN input.
+const onDemoNumberInput = (event: Event) => {
+    const value = (event.target as HTMLInputElement).valueAsNumber;
+    demoNumber.value = Number.isNaN(value) ? null : value;
+};
 
 const resetToasts = () => {
     toastVisible.value = true;
@@ -114,76 +129,123 @@ const noop = () => {};
             <div grid="~ cols-1 md:cols-2" gap="6">
                 <div p="6" class="brick-border" bg="gray-50">
                     <p text="xs" font="mono" text-color="gray-500" m="b-3">Default + Focus</p>
-                    <FormField>
-                        <FormLabel for="demo-input" :optional="false">Part Name</FormLabel>
-                        <input
-                            id="demo-input"
-                            v-model="demoInput"
-                            type="text"
-                            p="x-4 y-3"
-                            text="black"
-                            font="medium"
-                            w="full"
-                            outline="none"
-                            focus-visible:brick-focus
-                            class="brick-border brick-shadow brick-transition focus:brick-shadow-hover focus:bg-brick-yellow"
-                            bg="white"
-                        />
+                    <FormField :id="demoInputId" label="Part Name" required>
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <TextInput
+                                :id="controlId"
+                                v-model="demoInput"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
                     </FormField>
                 </div>
 
                 <div p="6" class="brick-border" bg="gray-50">
                     <p text="xs" font="mono" text-color="gray-500" m="b-3">Error State</p>
-                    <FormField>
-                        <FormLabel for="error-input" :optional="false">Part Number</FormLabel>
-                        <input
-                            id="error-input"
-                            v-model="errorInput"
-                            type="text"
-                            placeholder="Required"
-                            p="x-4 y-3"
-                            text="black"
-                            font="medium"
-                            w="full"
-                            outline="none"
-                            focus-visible:brick-focus
-                            class="brick-border brick-transition bg-brick-red-light border-brick-red brick-shadow-error focus:brick-shadow-error-hover"
-                            aria-invalid="true"
-                            aria-describedby="error-input-error"
-                        />
-                        <FormError id="error-input-error" message="Part number is required." />
+                    <FormField :id="errorInputId" label="Part Number" required error="Part number is required.">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <TextInput
+                                :id="controlId"
+                                v-model="errorInput"
+                                placeholder="Required"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
                     </FormField>
                 </div>
 
                 <div p="6" class="brick-border" bg="gray-50">
                     <p text="xs" font="mono" text-color="gray-500" m="b-3">TextInput</p>
-                    <TextInput v-model="demoText" label="Description" />
+                    <FormField :id="demoTextId" label="Description">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <TextInput
+                                :id="controlId"
+                                v-model="demoText"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
                 </div>
 
                 <div p="6" class="brick-border" bg="gray-50">
-                    <p text="xs" font="mono" text-color="gray-500" m="b-3">NumberInput</p>
-                    <NumberInput v-model="demoNumber" label="Quantity" :min="0" :max="999" />
+                    <p text="xs" font="mono" text-color="gray-500" m="b-3">Number field</p>
+                    <FormField :id="demoNumberId" label="Quantity">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <input
+                                :id="controlId"
+                                class="ui-control ui-input"
+                                :class="{'is-invalid': invalid}"
+                                type="number"
+                                :min="0"
+                                :max="999"
+                                :value="demoNumber"
+                                :aria-required="required || undefined"
+                                :aria-invalid="invalid || undefined"
+                                :aria-describedby="describedby"
+                                @input="onDemoNumberInput"
+                            />
+                        </template>
+                    </FormField>
                 </div>
 
                 <div p="6" class="brick-border" bg="gray-50">
-                    <p text="xs" font="mono" text-color="gray-500" m="b-3">SelectInput</p>
-                    <SelectInput v-model="demoSelect" label="Status">
-                        <option value="sealed">Sealed</option>
-                        <option value="built">Built</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="in_storage">In Storage</option>
-                        <option value="incomplete">Incomplete</option>
-                    </SelectInput>
+                    <p text="xs" font="mono" text-color="gray-500" m="b-3">SingleSelect</p>
+                    <FormField :id="demoSelectId" label="Status">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <SingleSelect
+                                :id="controlId"
+                                v-model="demoSelect"
+                                :options="demoStatusOptions"
+                                label="label"
+                                options-label="Status"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
                 </div>
 
                 <div p="6" class="brick-border" bg="gray-50">
-                    <p text="xs" font="mono" text-color="gray-500" m="b-3">DateInput</p>
-                    <DateInput v-model="demoDate" label="Purchase Date" optional />
+                    <p text="xs" font="mono" text-color="gray-500" m="b-3">Date field</p>
+                    <FormField :id="demoDateId" label="Purchase Date">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <input
+                                :id="controlId"
+                                v-model="demoDate"
+                                class="ui-control ui-input"
+                                :class="{'is-invalid': invalid}"
+                                type="date"
+                                :aria-required="required || undefined"
+                                :aria-invalid="invalid || undefined"
+                                :aria-describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
                 </div>
 
                 <div p="6" class="brick-border" bg="gray-50" md:col-span="2">
-                    <p text="xs" font="mono" text-color="gray-500" m="b-3">TextareaInput</p>
-                    <TextareaInput v-model="demoTextarea" label="Notes" optional />
+                    <p text="xs" font="mono" text-color="gray-500" m="b-3">Textarea field</p>
+                    <FormField :id="demoTextareaId" label="Notes">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <textarea
+                                :id="controlId"
+                                v-model="demoTextarea"
+                                class="ui-control"
+                                :class="{'is-invalid': invalid}"
+                                rows="3"
+                                :aria-required="required || undefined"
+                                :aria-invalid="invalid || undefined"
+                                :aria-describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
                 </div>
             </div>
         </div>

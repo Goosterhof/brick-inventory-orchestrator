@@ -6,10 +6,14 @@ import {nextTick} from 'vue';
 
 import ComponentGallery from '@/apps/showcase/components/ComponentGallery.vue';
 
+const {createMockUiInputs} = await vi.hoisted(() => import('../../../../helpers'));
+
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
+
 // Mock heavy shared components to keep import chain under 1000ms (ADR-0012).
 // Using globalThis stubs: vi.mock factories are hoisted above imports, so we
 // use vi.hoisted to make the factory function available in the hoisted scope.
-const {mkStub, mkDialogStub, mkModelStub, mkButtonStub, mkToastStub} = vi.hoisted(() => ({
+const {mkStub, mkDialogStub, mkButtonStub, mkToastStub} = vi.hoisted(() => ({
     mkStub: (name: string, slotted: boolean) => ({
         name,
         template: slotted
@@ -21,12 +25,6 @@ const {mkStub, mkDialogStub, mkModelStub, mkButtonStub, mkToastStub} = vi.hoiste
         props: {open: Boolean},
         emits: ['close', 'confirm', 'cancel'],
         template: `<div data-stub="${name}"><slot /><slot name="title" /><slot name="confirm" /><slot name="cancel" /></div>`,
-    }),
-    mkModelStub: (name: string) => ({
-        name,
-        props: {modelValue: [String, Number, Object]},
-        emits: ['update:modelValue'],
-        template: `<div data-stub="${name}"><slot /></div>`,
     }),
     mkButtonStub: (name: string) => ({
         name,
@@ -53,14 +51,6 @@ vi.mock('@shared/components/LegoBrickCuboidCss.vue', () => ({default: mkStub('Le
 vi.mock('@shared/components/LegoBrickIsometricSvg.vue', () => ({default: mkStub('LegoBrickIsometricSvg', false)}));
 vi.mock('@shared/components/LegoBrickSideSvg.vue', () => ({default: mkStub('LegoBrickSideSvg', false)}));
 vi.mock('@shared/components/LegoBrickSvg.vue', () => ({default: mkStub('LegoBrickSvg', false)}));
-vi.mock('@shared/components/forms/inputs/TextInput.vue', () => ({default: mkModelStub('TextInput')}));
-vi.mock('@shared/components/forms/inputs/NumberInput.vue', () => ({default: mkModelStub('NumberInput')}));
-vi.mock('@shared/components/forms/inputs/SelectInput.vue', () => ({default: mkModelStub('SelectInput')}));
-vi.mock('@shared/components/forms/inputs/DateInput.vue', () => ({default: mkModelStub('DateInput')}));
-vi.mock('@shared/components/forms/inputs/TextareaInput.vue', () => ({default: mkModelStub('TextareaInput')}));
-vi.mock('@shared/components/forms/FormError.vue', () => ({default: mkStub('FormError', false)}));
-vi.mock('@shared/components/forms/FormField.vue', () => ({default: mkStub('FormField', true)}));
-vi.mock('@shared/components/forms/FormLabel.vue', () => ({default: mkStub('FormLabel', true)}));
 vi.mock('@shared/components/LoadingState.vue', () => ({default: mkStub('LoadingState', false)}));
 vi.mock('@shared/components/PartListItem.vue', () => ({default: mkStub('PartListItem', false)}));
 vi.mock('@shared/components/PrimaryButton.vue', () => ({default: mkButtonStub('PrimaryButton')}));
@@ -106,6 +96,10 @@ describe('ComponentGallery', () => {
         // NavHeader renders #links / #mobile-links / #actions slots whose @click="noop" handlers are
         // covered by the "should exercise nav link click handlers via noop" test. Auto-stub drops slots.
         'NavHeader',
+        // ui-inputs atoms — unstub so the FormField scoped slots + controls render.
+        'FormField',
+        'TextInput',
+        'SingleSelect',
     ] as const;
     const stubs = Object.fromEntries(unstubForSlotRendering.map((name) => [name, false as const]));
 
@@ -336,37 +330,38 @@ describe('ComponentGallery', () => {
         // Arrange
         const wrapper = shallowMount(ComponentGallery, {global: {stubs}});
 
-        // Act — type in the raw input fields
-        const demoInput = wrapper.find('#demo-input');
-        await demoInput.setValue('New Brick Name');
+        // Locate a field's control by its FormField label (labels no longer live on the input).
+        const fieldInput = (label: string) =>
+            wrapper
+                .findAllComponents({name: 'FormField'})
+                .find((f) => f.props('label') === label)
+                ?.find('input');
 
-        const errorInput = wrapper.find('#error-input');
-        await errorInput.setValue('12345');
+        // Read a field's input value with instanceof-narrowing (no unsafe cast).
+        const inputValue = (label: string): string | undefined => {
+            const el = fieldInput(label)?.element;
+            return el instanceof HTMLInputElement ? el.value : undefined;
+        };
 
-        // Act — trigger v-model updates on stubbed shared components
-        const textInput = wrapper.findComponent({name: 'TextInput'});
-        (textInput.vm as ComponentPublicInstance).$emit('update:modelValue', 'Updated description');
+        // Act — drive the two demo text inputs + the Description text input
+        await fieldInput('Part Name')?.setValue('New Brick Name');
+        await fieldInput('Part Number')?.setValue('12345');
+        await fieldInput('Description')?.setValue('Updated description');
+
+        // Native number/date + the SingleSelect + the textarea
+        await wrapper.get('input[type="number"]').setValue('99');
+        await wrapper.get('input[type="date"]').setValue('2025-06-15');
+        (wrapper.findComponent({name: 'SingleSelect'}).vm as ComponentPublicInstance).$emit(
+            'update:modelValue',
+            'sealed',
+        );
+        await wrapper.get('textarea').setValue('Updated notes');
         await nextTick();
 
-        const numberInput = wrapper.findComponent({name: 'NumberInput'});
-        (numberInput.vm as ComponentPublicInstance).$emit('update:modelValue', 99);
-        await nextTick();
-
-        const selectInput = wrapper.findComponent({name: 'SelectInput'});
-        (selectInput.vm as ComponentPublicInstance).$emit('update:modelValue', 'sealed');
-        await nextTick();
-
-        const dateInput = wrapper.findComponent({name: 'DateInput'});
-        (dateInput.vm as ComponentPublicInstance).$emit('update:modelValue', '2025-06-15');
-        await nextTick();
-
-        const textareaInput = wrapper.findComponent({name: 'TextareaInput'});
-        (textareaInput.vm as ComponentPublicInstance).$emit('update:modelValue', 'Updated notes');
-        await nextTick();
-
-        // Assert — raw inputs accepted values
-        expect((demoInput.element as HTMLInputElement).value).toBe('New Brick Name');
-        expect((errorInput.element as HTMLInputElement).value).toBe('12345');
+        // Assert — the demo text inputs accepted their values
+        expect(inputValue('Part Name')).toBe('New Brick Name');
+        expect(inputValue('Part Number')).toBe('12345');
+        expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('99');
     });
 
     it('should close the modal via ModalDialog close event', async () => {
