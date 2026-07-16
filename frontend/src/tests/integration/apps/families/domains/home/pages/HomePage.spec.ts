@@ -1,5 +1,5 @@
 import HomePage from '@app/domains/home/pages/HomePage.vue';
-import {familyAuthService} from '@app/services';
+import {familyAuthService, familyRouterService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
 import NavLink from '@shared/components/NavLink.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
@@ -59,6 +59,9 @@ describe('HomePage — integration', () => {
 
         const labels = statCards.map((c) => c.props('label'));
         expect(labels).toStrictEqual(['Sets', 'Storage locations', 'Stored parts']);
+
+        // The dashboard fires the stats request on mount — recorded by the mock server (GETs carry no body).
+        expect(mockServer.calls()).toContainEqual({method: 'GET', endpoint: '/family/stats', body: undefined});
     });
 
     it('renders quick action NavLinks that delegate navigation to router service', async () => {
@@ -75,7 +78,12 @@ describe('HomePage — integration', () => {
         const setsLink = navLinks.find((l) => l.text().includes('My Sets'));
         expect(setsLink).toBeDefined();
 
-        // No assertion on navigation — integration tests verify composition, not side effects.
+        // Clicking the quick action delegates to goToRoute("sets") on the real router service.
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
+        await setsLink?.find('a').trigger('click');
+        await flushPromises();
+
+        expect(goToRoute).toHaveBeenCalledWith('sets');
     });
 
     it('shows loading state before stats resolve', async () => {

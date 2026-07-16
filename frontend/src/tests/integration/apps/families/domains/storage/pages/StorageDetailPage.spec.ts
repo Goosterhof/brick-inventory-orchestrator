@@ -130,11 +130,13 @@ describe('StorageDetailPage — integration', () => {
         mockServer.onGet('/storage-options/1/parts', []);
         const wrapper = mount(StorageDetailPage);
         await flushPromises();
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
 
         const backButton = wrapper.findComponent(BackButton);
         await backButton.find('button').trigger('click');
         await flushPromises();
 
-        // No assertion on navigation — integration tests verify composition, not side effects.
+        // The BackButton click delegates to goToRoute("storage") on the real router service.
+        expect(goToRoute).toHaveBeenCalledWith('storage');
     });
 });

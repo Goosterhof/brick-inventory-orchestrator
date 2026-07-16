@@ -1,4 +1,5 @@
 import RegisterPage from '@app/domains/auth/pages/RegisterPage.vue';
+import {familyRouterService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
 import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
@@ -63,12 +64,31 @@ describe('RegisterPage — integration', () => {
     it('flows form submission through real components', async () => {
         mockServer.onPost('/register', {id: 1, name: 'Jane', email: 'jane@example.com'});
         const wrapper = mountPage();
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
+
+        // Inputs in template order: invite code, family name, name, email, password, password confirmation
+        const htmlInputs = wrapper.findAll('input');
+        const values = ['CODE-123', 'Bricksons', 'Jane', 'jane@example.com', 'secret', 'secret'];
+        for (const [index, value] of values.entries()) {
+            await htmlInputs.at(index)?.setValue(value);
+        }
 
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
-        // No assertion on navigation — integration tests verify composition, not side effects.
-        // The form submission fires register() on the real auth service, then goToRoute("home") on the real router.
+        // The form submission fires register() on the real auth service — the multiword camelCase
+        // fields must hit the wire as snake_case (ADR-0029) — then goToRoute("home") on the real router.
+        const registerCalls = mockServer.callsTo('POST', '/register');
+        expect(registerCalls).toHaveLength(1);
+        expect(registerCalls[0]?.body).toStrictEqual({
+            invite_code: 'CODE-123',
+            family_name: 'Bricksons',
+            name: 'Jane',
+            email: 'jane@example.com',
+            password: 'secret',
+            password_confirmation: 'secret',
+        });
+        expect(goToRoute).toHaveBeenCalledWith('home');
     });
 
     it('renders a real PrimaryButton for submission', () => {

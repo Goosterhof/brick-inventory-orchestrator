@@ -28,9 +28,17 @@
  *
  *   beforeEach(() => mockServer.reset());
  *   mockServer.onGet("storage-options", [...]); // register before mount
+ *
+ * Every handled request is recorded — method, endpoint, and the body AFTER
+ * request middleware ran (i.e. the wire shape: snake_case per ADR-0029).
+ * Flow tests assert side effects via `mockServer.callsTo("POST", "/login")`.
  */
 
 type RouteHandler = unknown;
+
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+type RecordedCall = {method: HttpMethod; endpoint: string; body: unknown};
 
 type MockResponse<T> = {data: T; status: number; statusText: string; headers: object; config: object};
 type MockRequestConfig = {data: unknown};
@@ -51,12 +59,19 @@ const requestMiddleware: RequestMiddleware[] = [];
 const responseMiddleware: ResponseMiddleware[] = [];
 const responseErrorMiddleware: ResponseErrorMiddleware[] = [];
 
+const recordedCalls: RecordedCall[] = [];
+
 const makeResponse = <T>(data: T): MockResponse<T> => ({data, status: 200, statusText: 'OK', headers: {}, config: {}});
 
-const applyRequestMiddleware = (data: unknown): void => {
-    if (requestMiddleware.length === 0) return;
+/**
+ * Runs registered request middleware against a config-like object and returns
+ * the resulting body — the wire shape (e.g. snake_case after the ADR-0029
+ * conversion middleware wired by `familyHttpService`).
+ */
+const applyRequestMiddleware = (data: unknown): unknown => {
     const config: MockRequestConfig = {data};
     for (const middleware of requestMiddleware) middleware(config);
+    return config.data;
 };
 
 const applyResponseMiddleware = <T>(response: MockResponse<T>): MockResponse<T> => {
@@ -69,7 +84,8 @@ const resolveRoute = <T>(method: keyof typeof routes, endpoint: string, data?: u
     if (handler === undefined) {
         return Promise.reject(new Error(`[mock-server] No ${method} handler registered for "${endpoint}"`));
     }
-    applyRequestMiddleware(data);
+    const body = applyRequestMiddleware(data);
+    recordedCalls.push({method, endpoint, body});
     return Promise.resolve(applyResponseMiddleware(makeResponse(handler as T)));
 };
 
@@ -166,7 +182,23 @@ export const mockServer = {
     },
 
     /**
-     * Clear all registered routes. Call in beforeEach.
+     * All handled requests recorded so far, in order — method, endpoint, and
+     * the body as it would hit the wire (after request middleware, so
+     * snake_case per ADR-0029). Returns a snapshot copy.
+     */
+    calls: (): readonly RecordedCall[] => [...recordedCalls],
+
+    /**
+     * The recorded requests matching a method + endpoint. The primary
+     * side-effect assertion hook for flow tests:
+     *
+     *   expect(mockServer.callsTo('POST', '/login')).toHaveLength(1);
+     */
+    callsTo: (method: HttpMethod, endpoint: string): readonly RecordedCall[] =>
+        recordedCalls.filter((call) => call.method === method && call.endpoint === endpoint),
+
+    /**
+     * Clear all registered routes and recorded calls. Call in beforeEach.
      *
      * Registered middleware is intentionally NOT cleared here — in production,
      * `familyHttpService` registers its snake↔camel middleware once at module
@@ -180,6 +212,7 @@ export const mockServer = {
         for (const map of Object.values(routes)) {
             map.clear();
         }
+        recordedCalls.length = 0;
     },
 
     /**

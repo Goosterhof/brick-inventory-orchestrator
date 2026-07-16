@@ -96,12 +96,14 @@ describe('EditSetPage — integration', () => {
         vi.spyOn(familySetStoreModule, 'getOrFailById').mockResolvedValue(makeAdapted());
         const wrapper = mount(EditSetPage);
         await flushPromises();
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
 
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
         expect(mockPatch).toHaveBeenCalled();
-        // No assertion on navigation — integration tests verify composition, not side effects.
+        // After a successful patch the page navigates back to the set's detail route.
+        expect(goToRoute).toHaveBeenCalledWith('sets-detail', 1);
     });
 
     it('renders set name in subtitle after loading', async () => {
