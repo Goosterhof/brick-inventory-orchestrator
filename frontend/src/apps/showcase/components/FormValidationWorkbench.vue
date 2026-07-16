@@ -225,7 +225,7 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
                                 class="ui-control"
                                 :class="{'is-invalid': invalid}"
                                 rows="3"
-                                :aria-required="required || undefined"
+                                :aria-required="required"
                                 :aria-invalid="invalid || undefined"
                                 :aria-describedby="describedby"
                             />

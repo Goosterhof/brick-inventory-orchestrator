@@ -185,7 +185,7 @@ const noop = () => {};
                                 :min="0"
                                 :max="999"
                                 :value="demoNumber"
-                                :aria-required="required || undefined"
+                                :aria-required="required"
                                 :aria-invalid="invalid || undefined"
                                 :aria-describedby="describedby"
                                 @input="onDemoNumberInput"
@@ -222,7 +222,7 @@ const noop = () => {};
                                 class="ui-control ui-input"
                                 :class="{'is-invalid': invalid}"
                                 type="date"
-                                :aria-required="required || undefined"
+                                :aria-required="required"
                                 :aria-invalid="invalid || undefined"
                                 :aria-describedby="describedby"
                             />
@@ -240,7 +240,7 @@ const noop = () => {};
                                 class="ui-control"
                                 :class="{'is-invalid': invalid}"
                                 rows="3"
-                                :aria-required="required || undefined"
+                                :aria-required="required"
                                 :aria-invalid="invalid || undefined"
                                 :aria-describedby="describedby"
                             />

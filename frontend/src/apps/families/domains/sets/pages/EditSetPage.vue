@@ -110,7 +110,7 @@ const handleDelete = async () => {
                             type="number"
                             :min="1"
                             :value="adapted.mutable.quantity"
-                            :aria-required="required || undefined"
+                            :aria-required="required"
                             :aria-invalid="invalid || undefined"
                             :aria-describedby="describedby"
                             @input="onQuantityInput($event, adapted.mutable)"
@@ -141,7 +141,7 @@ const handleDelete = async () => {
                             class="ui-control ui-input"
                             :class="{'is-invalid': invalid}"
                             type="date"
-                            :aria-required="required || undefined"
+                            :aria-required="required"
                             :aria-invalid="invalid || undefined"
                             :aria-describedby="describedby"
                         />
@@ -156,7 +156,7 @@ const handleDelete = async () => {
                             class="ui-control"
                             :class="{'is-invalid': invalid}"
                             rows="3"
-                            :aria-required="required || undefined"
+                            :aria-required="required"
                             :aria-invalid="invalid || undefined"
                             :aria-describedby="describedby"
                         />

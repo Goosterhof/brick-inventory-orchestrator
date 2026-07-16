@@ -222,7 +222,7 @@ const handleSubmit = async () => {
                                 :min="1"
                                 :max="maxQuantity"
                                 :value="quantity"
-                                :aria-required="required || undefined"
+                                :aria-required="required"
                                 :aria-invalid="invalid || undefined"
                                 :aria-describedby="describedby"
                                 @input="onQuantityInput"

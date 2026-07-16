@@ -148,7 +148,7 @@ const onSubmit = () => {
                         type="number"
                         :min="1"
                         :value="adapted.mutable.value.quantity"
-                        :aria-required="required || undefined"
+                        :aria-required="required"
                         :aria-invalid="invalid || undefined"
                         :aria-describedby="describedby"
                         @input="onQuantityInput"
@@ -179,7 +179,7 @@ const onSubmit = () => {
                         :class="{'is-invalid': invalid}"
                         type="date"
                         v-model="adapted.mutable.value.purchaseDate"
-                        :aria-required="required || undefined"
+                        :aria-required="required"
                         :aria-invalid="invalid || undefined"
                         :aria-describedby="describedby"
                     />
@@ -194,7 +194,7 @@ const onSubmit = () => {
                         :class="{'is-invalid': invalid}"
                         rows="3"
                         v-model="adapted.mutable.value.notes"
-                        :aria-required="required || undefined"
+                        :aria-required="required"
                         :aria-invalid="invalid || undefined"
                         :aria-describedby="describedby"
                     />
