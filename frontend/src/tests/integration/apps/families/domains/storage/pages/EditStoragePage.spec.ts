@@ -5,10 +5,9 @@ import EditStoragePage from '@app/domains/storage/pages/EditStoragePage.vue';
 import {familyRouterService} from '@app/services';
 import {storageOptionStoreModule} from '@app/stores';
 import {mockServer} from '@integration/helpers/mock-server';
+import {TextInput} from '@script-development/ui-inputs';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, mount} from '@vue/test-utils';
@@ -59,9 +58,7 @@ describe('EditStoragePage — integration', () => {
         await flushPromises();
 
         expect(wrapper.findComponent(TextInput).exists()).toBe(true);
-
-        const numberInputs = wrapper.findAllComponents(NumberInput);
-        expect(numberInputs).toHaveLength(2);
+        expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
     });
 
     it('renders real PrimaryButton and DangerButton', async () => {

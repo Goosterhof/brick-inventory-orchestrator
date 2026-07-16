@@ -1,10 +1,8 @@
 import EditStoragePage from '@app/domains/storage/pages/EditStoragePage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
+import {TextInput} from '@script-development/ui-inputs';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
@@ -18,20 +16,19 @@ const {
     createMockStringTs,
     createMockFamilyServices,
     createMockFamilyStores,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
 
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+// atom-at-call-site: the page composes FormField + a package TextInput (name) and
+// native textarea/number controls; unstub the package pair so the slots render.
+const renderPage = () => shallowMount(EditStoragePage, {global: {stubs: {FormField: false, TextInput: false}}});
 
 const {mockGetOrFailById, mockGoToRoute, mockCurrentRouteId, mockPatch, mockDelete, mockRetrieveAll} = vi.hoisted(
     () => ({
@@ -96,7 +93,7 @@ describe('EditStoragePage', () => {
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
 
         // Act
-        shallowMount(EditStoragePage);
+        renderPage();
         await flushPromises();
 
         // Assert
@@ -108,7 +105,7 @@ describe('EditStoragePage', () => {
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
 
         // Act
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Assert
@@ -121,19 +118,50 @@ describe('EditStoragePage', () => {
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
 
         // Act
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
+        await flushPromises();
+
+        // Assert — name via package TextInput; row/column native numbers; description textarea
+        expect(wrapper.findComponent(TextInput).props('modelValue')).toBe('Lade A');
+
+        const numberValues = wrapper
+            .findAll('input[type="number"]')
+            .map((input) => (input.element as HTMLInputElement).value);
+        expect(numberValues).toStrictEqual(['1', '2']);
+
+        expect((wrapper.get('textarea').element as HTMLTextAreaElement).value).toBe('Linkerla op plank 1');
+    });
+
+    it('should update a number field on valid numeric input', async () => {
+        // Arrange
+        mockGetOrFailById.mockResolvedValue(createMockAdapted());
+        mockPatch.mockResolvedValue({});
+        const wrapper = renderPage();
+        await flushPromises();
+
+        // Act — a valid number flows through onNumberInput's value branch
+        await wrapper.findAll('input[type="number"]')[0]?.setValue('9');
+        await wrapper.find('form').trigger('submit');
         await flushPromises();
 
         // Assert
-        const textInput = wrapper.findComponent(TextInput);
-        expect(textInput.props('modelValue')).toBe('Lade A');
+        expect(mockPatch).toHaveBeenCalledWith(expect.objectContaining({row: 9}));
+    });
 
-        const numberInputs = wrapper.findAllComponents(NumberInput);
-        expect(numberInputs[0]?.props('modelValue')).toBe(1);
-        expect(numberInputs[1]?.props('modelValue')).toBe(2);
+    it('should clear a number field to null on empty input', async () => {
+        // Arrange
+        mockGetOrFailById.mockResolvedValue(createMockAdapted());
+        mockPatch.mockResolvedValue({});
+        const wrapper = renderPage();
+        await flushPromises();
 
-        const textareaInput = wrapper.findComponent(TextareaInput);
-        expect(textareaInput.props('modelValue')).toBe('Linkerla op plank 1');
+        // Act — clearing the number input yields NaN; onNumberInput's null branch fires
+        await wrapper.findAll('input[type="number"]')[0]?.setValue('');
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        // Assert
+        expect(mockPatch).toHaveBeenCalledWith(expect.objectContaining({row: null}));
     });
 
     it('should show loading state initially', () => {
@@ -141,7 +169,7 @@ describe('EditStoragePage', () => {
         mockGetOrFailById.mockReturnValue(new Promise(() => {}));
 
         // Act
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
 
         // Assert
         expect(wrapper.findComponent(LoadingState).exists()).toBe(true);
@@ -151,7 +179,7 @@ describe('EditStoragePage', () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
         mockPatch.mockResolvedValue({});
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -172,7 +200,7 @@ describe('EditStoragePage', () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
         mockPatch.mockResolvedValue({});
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -189,7 +217,7 @@ describe('EditStoragePage', () => {
         const axiosError = new AxiosError('Validation failed');
         axiosError.response = {status: 422, data: {}, statusText: '', headers: {}, config: {} as never};
         mockPatch.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -206,7 +234,7 @@ describe('EditStoragePage', () => {
         const axiosError = new AxiosError('Server error');
         axiosError.response = {status: 500, data: {}, statusText: '', headers: {}, config: {} as never};
         mockPatch.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -224,7 +252,7 @@ describe('EditStoragePage', () => {
     it('should open confirm dialog when delete button is clicked', async () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -239,7 +267,7 @@ describe('EditStoragePage', () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
         mockDelete.mockResolvedValue(undefined);
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -256,7 +284,7 @@ describe('EditStoragePage', () => {
     it('should close dialog when user cancels confirmation', async () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -275,7 +303,7 @@ describe('EditStoragePage', () => {
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
 
         // Act
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Assert
@@ -294,7 +322,7 @@ describe('EditStoragePage', () => {
         mockRetrieveAll.mockResolvedValue(undefined);
 
         // Act
-        shallowMount(EditStoragePage);
+        renderPage();
         await flushPromises();
 
         // Assert
@@ -309,7 +337,7 @@ describe('EditStoragePage', () => {
 
         // Act
         const errorHandler = vi.fn<(err: unknown, instance: unknown, info: string) => void>();
-        const wrapper = shallowMount(EditStoragePage);
+        const wrapper = renderPage();
         wrapper.vm.$.appContext.config.errorHandler = errorHandler;
         await flushPromises();
 

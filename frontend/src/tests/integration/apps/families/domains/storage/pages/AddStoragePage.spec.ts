@@ -1,8 +1,6 @@
 import AddStoragePage from '@app/domains/storage/pages/AddStoragePage.vue';
 import {mockServer} from '@integration/helpers/mock-server';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -24,23 +22,17 @@ describe('AddStoragePage — integration', () => {
     it('renders all real form input components', () => {
         const wrapper = mountPage();
 
-        const textInputs = wrapper.findAllComponents(TextInput);
-        expect(textInputs).toHaveLength(1);
-        expect(textInputs.find((i) => i.props('label') === 'Name')).toBeDefined();
-
-        expect(wrapper.findComponent(TextareaInput).exists()).toBe(true);
-
-        const numberInputs = wrapper.findAllComponents(NumberInput);
-        expect(numberInputs).toHaveLength(2);
+        // name is a package TextInput; description a textarea; row/column native numbers
+        expect(wrapper.findAllComponents(TextInput)).toHaveLength(1);
+        expect(wrapper.find('textarea').exists()).toBe(true);
+        expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
     });
 
-    it('renders real NumberInputs for row and column', () => {
+    it('labels every field', () => {
         const wrapper = mountPage();
 
-        const numberInputs = wrapper.findAllComponents(NumberInput);
-        const labels = numberInputs.map((n) => n.props('label'));
-        expect(labels).toContain('Row');
-        expect(labels).toContain('Column');
+        const labels = wrapper.findAll('.ui-label').map((label) => label.text().replace(/\*$/, ''));
+        expect(labels).toStrictEqual(['Name', 'Description', 'Row', 'Column']);
     });
 
     it('renders real PrimaryButton for submission', () => {

@@ -1,7 +1,5 @@
 import AddStoragePage from '@app/domains/storage/pages/AddStoragePage.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {AxiosError} from 'axios';
@@ -14,6 +12,7 @@ const {
     createMockStringTs,
     createMockFamilyServices,
     createMockFamilyStores,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
 const {mockCreate, mockGoToRoute} = vi.hoisted(() => ({
@@ -24,6 +23,7 @@ const {mockCreate, mockGoToRoute} = vi.hoisted(() => ({
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 vi.mock('@app/services', () =>
     createMockFamilyServices({
         familyAuthService: {isLoggedIn: {value: true}},
@@ -53,6 +53,10 @@ vi.mock('@app/stores', () =>
     }),
 );
 
+// atom-at-call-site: unstub the package pair so the FormField slots + text input
+// render; number/description are native controls composed in the slots.
+const renderPage = () => shallowMount(AddStoragePage, {global: {stubs: {FormField: false, TextInput: false}}});
+
 describe('AddStoragePage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -60,7 +64,7 @@ describe('AddStoragePage', () => {
 
     it('should render page title', () => {
         // Arrange & Act
-        const wrapper = shallowMount(AddStoragePage);
+        const wrapper = renderPage();
 
         // Assert
         expect(wrapper.find('h1').text()).toBe('storage.addStorage');
@@ -68,24 +72,22 @@ describe('AddStoragePage', () => {
 
     it('should render form fields', () => {
         // Arrange & Act
-        const wrapper = shallowMount(AddStoragePage);
+        const wrapper = renderPage();
 
-        // Assert
-        const textInputs = wrapper.findAllComponents(TextInput);
-        expect(textInputs).toHaveLength(1);
-        expect(textInputs[0]?.props('label')).toBe('storage.name');
+        // Assert — four labelled fields (name, description, row, column)
+        expect(wrapper.findAllComponents(FormField)).toHaveLength(4);
+        const labels = wrapper.findAll('.ui-label').map((label) => label.text().replace(/\*$/, ''));
+        expect(labels).toStrictEqual(['storage.name', 'storage.description', 'storage.row', 'storage.column']);
 
-        const numberInputs = wrapper.findAllComponents(NumberInput);
-        expect(numberInputs).toHaveLength(2);
-        expect(numberInputs[0]?.props('label')).toBe('storage.row');
-        expect(numberInputs[1]?.props('label')).toBe('storage.column');
-
-        expect(wrapper.findComponent(TextareaInput).exists()).toBe(true);
+        // name is a package TextInput; description a textarea; row/column native numbers
+        expect(wrapper.findAllComponents(TextInput)).toHaveLength(1);
+        expect(wrapper.find('textarea').exists()).toBe(true);
+        expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
     });
 
     it('should render submit button', () => {
         // Arrange & Act
-        const wrapper = shallowMount(AddStoragePage);
+        const wrapper = renderPage();
 
         // Assert
         const button = wrapper.findComponent(PrimaryButton);
@@ -105,13 +107,41 @@ describe('AddStoragePage', () => {
             column: null,
             childIds: [],
         });
-        const wrapper = shallowMount(AddStoragePage);
+        const wrapper = renderPage();
 
         const textInput = wrapper.findComponent(TextInput);
         textInput.vm.$emit('update:modelValue', 'Lade A');
         await flushPromises();
 
         // Act
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        // Assert
+        expect(mockCreate).toHaveBeenCalled();
+    });
+
+    it('should accept a numeric row value', async () => {
+        // Arrange
+        mockCreate.mockResolvedValue({id: 1, name: 'Lade A', childIds: []});
+        const wrapper = renderPage();
+
+        // Act — a valid number flows through onNumberInput's value branch
+        await wrapper.findAll('input[type="number"]')[0]?.setValue('3');
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        // Assert
+        expect(mockCreate).toHaveBeenCalled();
+    });
+
+    it('should clear a number field to null on empty input', async () => {
+        // Arrange
+        mockCreate.mockResolvedValue({id: 1, name: 'Lade A', childIds: []});
+        const wrapper = renderPage();
+
+        // Act — clearing the number input yields NaN; onNumberInput's null branch fires
+        await wrapper.findAll('input[type="number"]')[0]?.setValue('');
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
@@ -130,7 +160,7 @@ describe('AddStoragePage', () => {
             column: null,
             childIds: [],
         });
-        const wrapper = shallowMount(AddStoragePage);
+        const wrapper = renderPage();
 
         // Act
         await wrapper.find('form').trigger('submit');
@@ -145,7 +175,7 @@ describe('AddStoragePage', () => {
         const axiosError = new AxiosError('Validation failed');
         axiosError.response = {status: 422, data: {}, statusText: '', headers: {}, config: {} as never};
         mockCreate.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(AddStoragePage);
+        const wrapper = renderPage();
 
         // Act
         await wrapper.find('form').trigger('submit');
@@ -160,7 +190,7 @@ describe('AddStoragePage', () => {
         const axiosError = new AxiosError('Server error');
         axiosError.response = {status: 500, data: {}, statusText: '', headers: {}, config: {} as never};
         mockCreate.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(AddStoragePage);
+        const wrapper = renderPage();
 
         // Act
         const errorHandler = vi.fn<(err: unknown, instance: unknown, info: string) => void>();
@@ -174,12 +204,12 @@ describe('AddStoragePage', () => {
         expect(mockGoToRoute).not.toHaveBeenCalled();
     });
 
-    it('should have name required by default', () => {
+    it('should mark the name field required', () => {
         // Arrange & Act
-        const wrapper = shallowMount(AddStoragePage);
+        const wrapper = renderPage();
 
-        // Assert
-        const textInput = wrapper.findComponent(TextInput);
-        expect(textInput.props('optional')).toBe(false);
+        // Assert — name is the first field
+        const fields = wrapper.findAllComponents(FormField);
+        expect(fields[0]?.props('required')).toBe(true);
     });
 });

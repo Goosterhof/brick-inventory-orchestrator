@@ -6,15 +6,13 @@ import {familyHttpService, familyRouterService, familySoundService, familyTransl
 import {storageOptionStoreModule} from '@app/stores';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import {useForm} from '@script-development/fs-form';
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
-import {onMounted, ref} from 'vue';
+import {onMounted, ref, useId} from 'vue';
 
 const {t} = familyTranslationService;
 const adapted = ref<Adapted<StorageOption> | null>(null);
@@ -23,6 +21,19 @@ const showDeleteConfirm = ref(false);
 
 type EditStorageField = 'name' | 'description' | 'parentId' | 'row' | 'column';
 const {errors, handleSubmit, submitting} = useForm<EditStorageField>(familyHttpService, {keyMapper: camelKey});
+
+const nameId = useId();
+const descriptionId = useId();
+const rowId = useId();
+const columnId = useId();
+
+// row/column are nullable numbers; clear-to-null on empty/NaN. The mutable object
+// is passed in from the template (narrowed non-null by v-else-if), so there is no
+// unreachable null branch to leave uncovered.
+const onNumberInput = (event: Event, mutable: {row: number | null; column: number | null}, field: 'row' | 'column') => {
+    const value = (event.target as HTMLInputElement).valueAsNumber;
+    mutable[field] = Number.isNaN(value) ? null : value;
+};
 
 onMounted(async () => {
     const id = familyRouterService.currentRouteId.value;
@@ -70,28 +81,69 @@ const handleDelete = async () => {
             <p text="[var(--brick-muted-text)]" m="b-6">{{ adapted.name }}</p>
 
             <form flex="~ col" gap="4" @submit.prevent="onSubmit">
-                <TextInput v-model="adapted.mutable.name" :label="t('storage.name').value" :error="errors.name" />
+                <FormField :id="nameId" :label="t('storage.name').value" required :error="errors.name">
+                    <template #default="{controlId, required, invalid, describedby}">
+                        <TextInput
+                            :id="controlId"
+                            v-model="adapted.mutable.name"
+                            :required="required"
+                            :invalid="invalid"
+                            :describedby="describedby"
+                        />
+                    </template>
+                </FormField>
 
-                <TextareaInput v-model="adapted.mutable.description" :label="t('storage.description').value" optional />
+                <FormField :id="descriptionId" :label="t('storage.description').value">
+                    <template #default="{controlId, required, invalid, describedby}">
+                        <textarea
+                            :id="controlId"
+                            v-model="adapted.mutable.description"
+                            class="ui-control"
+                            :class="{'is-invalid': invalid}"
+                            rows="3"
+                            :aria-required="required || undefined"
+                            :aria-invalid="invalid || undefined"
+                            :aria-describedby="describedby"
+                        />
+                    </template>
+                </FormField>
 
                 <div flex gap="4">
                     <div flex="1 ~ col" gap="2">
-                        <NumberInput
-                            v-model="adapted.mutable.row"
-                            :label="t('storage.row').value"
-                            :error="errors.row"
-                            :min="0"
-                            optional
-                        />
+                        <FormField :id="rowId" :label="t('storage.row').value" :error="errors.row">
+                            <template #default="{controlId, required, invalid, describedby}">
+                                <input
+                                    :id="controlId"
+                                    class="ui-control ui-input"
+                                    :class="{'is-invalid': invalid}"
+                                    type="number"
+                                    :min="0"
+                                    :value="adapted.mutable.row"
+                                    :aria-required="required || undefined"
+                                    :aria-invalid="invalid || undefined"
+                                    :aria-describedby="describedby"
+                                    @input="onNumberInput($event, adapted.mutable, 'row')"
+                                />
+                            </template>
+                        </FormField>
                     </div>
                     <div flex="1 ~ col" gap="2">
-                        <NumberInput
-                            v-model="adapted.mutable.column"
-                            :label="t('storage.column').value"
-                            :error="errors.column"
-                            :min="0"
-                            optional
-                        />
+                        <FormField :id="columnId" :label="t('storage.column').value" :error="errors.column">
+                            <template #default="{controlId, required, invalid, describedby}">
+                                <input
+                                    :id="controlId"
+                                    class="ui-control ui-input"
+                                    :class="{'is-invalid': invalid}"
+                                    type="number"
+                                    :min="0"
+                                    :value="adapted.mutable.column"
+                                    :aria-required="required || undefined"
+                                    :aria-invalid="invalid || undefined"
+                                    :aria-describedby="describedby"
+                                    @input="onNumberInput($event, adapted.mutable, 'column')"
+                                />
+                            </template>
+                        </FormField>
                     </div>
                 </div>
 

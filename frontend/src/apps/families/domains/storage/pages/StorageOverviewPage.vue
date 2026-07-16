@@ -4,17 +4,18 @@ import type {Adapted} from '@script-development/fs-adapter-store';
 
 import {familyLoadingService, familyRouterService, familySoundService, familyTranslationService} from '@app/services';
 import {storageOptionStoreModule} from '@app/stores';
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import EmptyState from '@shared/components/EmptyState.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import ListItemButton from '@shared/components/ListItemButton.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {computed, onMounted, ref} from 'vue';
+import {computed, onMounted, ref, useId} from 'vue';
 
 const {t} = familyTranslationService;
 const {isLoading} = familyLoadingService;
 const {getAll, retrieveAll} = storageOptionStoreModule;
 const searchQuery = ref('');
+const searchId = useId();
 
 const isSearching = computed(() => searchQuery.value.trim().length > 0);
 
@@ -65,13 +66,19 @@ const goToDetail = async (id: number) => {
 
         <template v-else>
             <div m="b-4">
-                <TextInput
-                    v-model="searchQuery"
-                    :label="t('common.search').value"
-                    type="search"
-                    :placeholder="t('storage.searchPlaceholder').value"
-                    optional
-                />
+                <FormField :id="searchId" :label="t('common.search').value">
+                    <template #default="{controlId, required, invalid, describedby}">
+                        <TextInput
+                            :id="controlId"
+                            v-model="searchQuery"
+                            type="search"
+                            :placeholder="t('storage.searchPlaceholder').value"
+                            :required="required"
+                            :invalid="invalid"
+                            :describedby="describedby"
+                        />
+                    </template>
+                </FormField>
             </div>
 
             <!-- Flat list when searching -->
