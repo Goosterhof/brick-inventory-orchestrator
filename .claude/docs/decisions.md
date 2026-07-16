@@ -39,7 +39,7 @@ Every significant decision goes through a **Steward-mediated review**: the Brick
 | [0025](./adr/0025-computed-resource-data.md) | ComputedResourceData for DTO-sourced API responses | 2026-03-28 | Foundry | Accepted |
 | [0026](./adr/0026-creative-engine-agent.md) | Pattern Master agent (originally "Creative Engine") — dedicated design & animation role | 2026-04-09 | Gallery | Accepted |
 | [0027](./adr/0027-tighten-runtime-to-php-85.md) | Tighten supported PHP runtime to 8.5+ | 2026-04-30 | Foundry | Accepted |
-| [0028](./adr/0028-pre-push-permit-verification.md) | Pre-push permit verification gate (CaptainHook structural enforcement of Operations Protocol) | 2026-05-05 | Foundry | Accepted |
+| [0028](./adr/0028-pre-push-permit-verification.md) | Pre-push permit verification gate (CaptainHook structural enforcement of Operations Protocol) | 2026-05-05 | Foundry | Retired 2026-07-16 |
 | [0029](./adr/0029-case-conversion-via-http-middleware.md) | Case conversion via HTTP middleware (supersedes [0006](./adr/0006-case-conversion-boundary.md)) | 2026-05-05 | Gallery | Accepted |
 | [0030](./adr/0030-path-based-permission-allow-for-subagent-writes.md) | Path-based permission allow for paper-trail subagent writes | 2026-05-25 | Atrium | Accepted |
 
