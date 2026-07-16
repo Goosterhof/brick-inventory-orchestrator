@@ -1,10 +1,10 @@
 # Decision: Pre-Push Permit Verification Gate
 
 **Date**: 2026-05-05
-**Last Amended**: 2026-07-09 (documented-dual-mode — Devil's Court revision superseding the uniform-rule convention; see § Amendment 2026-07-09 below). Prior amendments: 2026-05-28 (II — bypass-log retirement), 2026-05-28 (I — bypass-log scope, superseded), 2026-05-27 (uniform-rule convention, superseded).
+**Last Amended**: 2026-07-16 (retirement — Devil's Court re-interrogation of the root decision; ruling **Cracked**, gate retired; see § Amendment 2026-07-16 below). Prior amendments: 2026-07-09 (documented-dual-mode), 2026-05-28 (II — bypass-log retirement), 2026-05-28 (I — bypass-log scope, superseded), 2026-05-27 (uniform-rule convention, superseded).
 **Feature**: CaptainHook pre-push gate; Operations Protocol enforcement
-**Status**: accepted (bypass-log clause retired; WO-close convention is documented-dual-mode, settled doctrine)
-**Stress-Tested**: 2026-07-09 (§ Amendment 2026-05-27 re-interrogated at its own Devil's Court triggers — outcome **Cracked**, revised by § Amendment 2026-07-09)
+**Status**: retired (gate removed 2026-07-16; the permit-before-work guarantee lives upstream on the Kendo board — see § Amendment 2026-07-16)
+**Stress-Tested**: 2026-07-16 (root decision re-interrogated — outcome **Cracked**, retired). Prior: 2026-07-09 (§ Amendment 2026-05-27 re-interrogated — outcome **Cracked**, revised by § Amendment 2026-07-09)
 **Transferability**: project-specific
 
 ## Context
@@ -390,3 +390,68 @@ This amendment is recorded as **settled doctrine**. The trial already happened: 
 ### Reversal Cost
 
 Low. Doc-only: this section, the superseded banner on § Amendment 2026-05-27, the inheritance note in § Amendment 2026-05-28 (I), and any templates/docs that cite the close convention. Gate code, tests, and failure messages are untouched.
+
+---
+
+## Amendment 2026-07-16 — Retirement (Devil's Court re-interrogation of the root decision)
+
+**Triggering signal:** Two converging pressures forced the re-interrogation the Pulse had carried as an Active Concern since 2026-07-09: (1) the un-actioned 2026-05-29 trigger ruling (Trigger 2, audit citing ADR-0028 by name — 48 days outstanding at re-run time); (2) the 2026-07-16 Kendo migration froze `.claude/records/work-orders/` — no new Work Order files are filed, so the gate's ground truth stopped being written. Every future above-threshold backend push would fail against a permanently frozen permit directory; the interim rule (sanctioned `--no-verify` with a board issue standing in as the permit) was institutionalized bypass — a gate whose escape hatch is the main door. BIO-0012 tracked the amendment; the nine-step `/adr-interrogator` re-run executed 2026-07-16 with the CEO.
+
+**Ruling: CRACKED at the root.** Not an amendment's reasoning this time — the original decision's. The gate is **retired**.
+
+### The Evidence Ledger (72 days of gate operation, 2026-05-05 → 2026-07-16)
+
+| Measure | Value |
+|---|---|
+| True positives (pushes correctly refused) | **1** — PR #77, commit `b5a8597`, 2026-05-20 |
+| False refusals | 1 — worktree blindness (PR #254, 2026-07-09; filed as BIO-0011: `getRoot()` resolves through the git common dir, so a permit existing only on the worktree's branch is invisible) |
+| Amendments required | 4 before this one (uniform-rule; bypass-log scope; bypass-log retirement; documented-dual-mode) |
+| Open maintenance issues at retirement | 2 (BIO-0011 worktree blindness; BIO-0012 permit-source relocation) |
+| Ground truth | Frozen 2026-07-16 — the permit directory is a read-only archive |
+
+### The Interrogation Outcome
+
+**The problem moved upstream and got solved there.** The 2026-05-05 context was that nothing structural guaranteed a permit existed before large work shipped — enforcement was human memory, and it had failed three audit cycles running. In the board era the guarantee is enforced *before code exists*, not at push time: the autonomous-shift charter requires an open `BIO-xxxx` issue before a Brickwright is dispatched; `start-work-on-issue`/`link-branch` binds the branch to the issue; the `Agent Review Requested` label workflow puts every crew PR in front of review before merge. Asked what failure the gate still catches that the board-era workflow does not catch upstream, the CEO answered on the record: *"nobody, anymore — the gate is a relic of the file era."*
+
+**Alternatives considered and eliminated:**
+
+| Option | Why eliminated |
+|---|---|
+| **Kendo-querying gate** (permit lookup against the board at push time) | Dead on arrival mechanically: the Kendo credential is an MCP connection in `~/.claude.json` — unreachable from a PHP CaptainHook action. It would require a separate REST token provisioned into every pushing environment (dev hosts, worktrees, CI), adds a network dependency to an offline git operation, and guards against an actor the CEO states no longer exists. |
+| **Branch-name pattern check** (`bio-\d{4}` slug ⇒ permitted) | Trivially satisfiable by naming a branch after a nonexistent issue — enforcement theater, not enforcement. |
+| **CI-layer replacement** (flag over-threshold `backend/**` PRs with no `BIO-xxxx` reference) | Offered explicitly — the right layer for a board check (network and credentials live there). **Declined by the CEO** in favor of clean retirement; revisit if the accepted risk below materializes. |
+| **Clean retirement** | **Chosen.** |
+
+### The Decision
+
+`PrePushPermitGate` is removed: the action class, its unit tests, and its `captainhook.json` pre-push entry are deleted. The pre-push gauntlet for backend-touching pushes becomes `composer test` alone. Doctrine references in the wing manuals, the root charter, and the `/enter` skill are swept in the same change set. The frozen Work Order archive is untouched.
+
+### Named Accepted Risk
+
+**Large, hand-run, non-shift work has no mechanical permit check** (CEO, 2026-07-16: "I accept the risk, and the risk is low"). The shift charter covers agent work; PR review covers everything that merges; the audit cycle is the after-the-fact backstop — the same backstop that existed before ADR-0028, now supplemented by a board that makes missing paper trail visible at standup rather than at audit. If a concrete incident occurs that a permit check would have prevented, that incident is the trigger to revisit the declined CI-layer option — file a new ADR then.
+
+### Consequences
+
+**Positive:**
+
+- The institutionalized-bypass contradiction is resolved by removing the gate rather than by teaching every future session to `--no-verify` past it.
+- BIO-0011 (worktree blindness) dissolves — a retired gate cannot be blind. Closed on this amendment's merge.
+- Backend pushes from worktrees, CI, and fresh clones lose a failure mode that produced 1 false refusal per 1 true refusal.
+- The retirement carries its full evidence ledger — in due-diligence review, a gate retired with reasoning reads as governance maturity; a gate bypassed on every push reads as rot.
+
+**Negative:**
+
+- The named accepted risk above. Recorded here, in the Pulse, and in BIO-0012's closing comment — not smoothed over.
+- The documented-dual-mode convention (§ Amendment 2026-07-09) loses its mechanical slice and becomes fully historical: with WO files frozen and the gate gone, there is no close-in-commit question left to govern. Board lanes replaced it.
+
+### What the Paper Trail Keeps
+
+This ADR remains on file with all five amendments as the canonical record of a full enforcement lifecycle: structural fix → convention disputes → bypass-log retirement → dual-mode revision → retirement when the problem moved upstream. The pattern (evidence ledger → named residual risk → clean removal) is the transferable artifact; the gate itself never was.
+
+### Settled Doctrine
+
+Retirement removes a mechanism rather than adding a convention to validate; there is no behavior left to put on a trial clock. The revisit trigger is the concrete-incident clause under § Named Accepted Risk.
+
+### Reversal Cost
+
+Moderate. Code restoration is a `git revert` (class + tests + captainhook entry), but reinstating the gate would also require solving the permit-source problem that motivated this amendment — the file archive stays frozen, so any resurrection is a redesign against the board (see the eliminated alternatives), not a rollback.

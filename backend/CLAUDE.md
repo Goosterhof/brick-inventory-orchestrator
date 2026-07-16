@@ -234,10 +234,9 @@ CaptainHook enforces on every commit (PHP files only): **lint:test → phpstan �
 
 ### Pre-Push Gauntlet
 
-**PrePushPermitGate → composer test**, dispatched from `.githooks/pre-push` only when the pushed range touches `backend/**`.
+**composer test** (the full quality inspection rig), dispatched from `.githooks/pre-push` only when the pushed range touches `backend/**`.
 
-- **PrePushPermitGate** (ADR-0028) — verifies that any non-trivial branch has a corresponding open Work Order on file. Threshold: more than 20 files OR more than 500 lines changed against `origin/main`. Slug match: strict equality between the branch slug (portion after the last `/`, lowercased) and the Work Order slug (filename minus the `YYYY-MM-DD-` prefix and `.md` suffix, lowercased). Branches under the threshold and pushes from `main` skip the check entirely. The `--no-verify` escape hatch remains available with no logging obligation — the bypass-log clause was retired in ADR-0028 § Amendment 2026-05-28 (II); the gate's mechanical refusal is the enforcement, not an after-the-fact record.
-- **composer test** — full quality inspection rig.
+The PrePushPermitGate that used to precede it was retired 2026-07-16 (ADR-0028 § Amendment 2026-07-16 — Devil's Court ruling: Cracked at root). The permit-before-work guarantee lives upstream on the Kendo board: an open `BIO-xxxx` issue precedes work, `link-branch` binds the branch to it, and the `Agent Review Requested` label precedes merge.
 
 ### Coverage Policy
 
