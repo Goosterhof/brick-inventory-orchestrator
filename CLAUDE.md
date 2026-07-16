@@ -30,15 +30,19 @@ The Brickworks is a single firm with two named production wings and a central at
 
 ### The Paper Trail
 
-| Artifact | Filed When | Filed By | Folder |
+**As of 2026-07-16, trackable work lives on the Kendo board** (CEO decision, reversing the 2026-06-09 "board is additive" scope — see Kanban Board section). Narrative records stay file-based.
+
+| Artifact | Lives | Filed When | Filed By |
 |---|---|---|---|
-| **Work Order** | Before work starts | CEO, Steward, or General | `.claude/records/work-orders/` |
-| **Build Record** | After work completes | Brickwright | `.claude/records/build-records/` |
-| **Audit** | After an inspection | Quality Warden | `.claude/records/audits/` |
-| **Standup Note** | At cross-wing sync points | The Steward (via `/standup`) | `.claude/records/standups/` |
-| **Retrospective** | When the CEO calls `/retro` to learn across sessions | The Steward (fresh context) | `.claude/records/retrospectives/` |
-| **Minutes** | During/after a session (via `/minutes`) | Meeting Minutes Secretary | `.claude/records/minutes/` |
-| **Shift Report** | At the end of each autonomous shift (via `/enter`) | The Steward | `.claude/records/shifts/` |
+| **Work Order** | Kendo issue on project 3 (`create-issue`, To Do lane, key `BIO-xxxx`) | Before work starts | CEO, Steward, or General |
+| **Build Record** | Closing comment on the Kendo issue; issue moves to Done | After work completes | Brickwright |
+| **Audit** | Narrative report in `.claude/records/audits/`; each actionable finding filed as a labeled board issue | After an inspection | Quality Warden |
+| **Standup Note** | `.claude/records/standups/` | At cross-wing sync points | The Steward (via `/standup`) |
+| **Retrospective** | `.claude/records/retrospectives/` | When the CEO calls `/retro` to learn across sessions | The Steward (fresh context) |
+| **Minutes** | `.claude/records/minutes/` | During/after a session (via `/minutes`) | Meeting Minutes Secretary |
+| **Shift Report** | `.claude/records/shifts/` | At the end of each autonomous shift (via `/enter`) | The Steward |
+
+`.claude/records/work-orders/` and `.claude/records/build-records/` are **frozen archives** (through 2026-07-16). The ~150 completed records stay read-only history; the 12 then-open Work Orders were recreated on the board (Epic #1 + BIO-0001…BIO-0011) and their files stamped `Migrated to Kendo`. Do not file new Work Order or Build Record files.
 
 Session-level texture is captured as per-session minutes files in `.claude/records/minutes/` (`YYYY-MM-DD-<slug>.md`) via the `/minutes` skill — one file per session so parallel-dispatch branches never collide on a shared ledger. The repo-root `MINUTES.md` is the frozen archive of minutes through 2026-05-28. Minutes feed the Retrospective — the `/retro` skill mines minutes (plus Build Records, Audits, Standups) for what reversed, what repeated, what surprised.
 
@@ -108,7 +112,9 @@ The Brickworks' issue board lives on Kendo:
 
 - **Tenant:** `https://goosterhof.kendo.dev` · **MCP server:** `kendo-goosterhof` (user scope, `~/.claude.json` — the connection carries a personal credential and is never committed) · **Project:** **Brick Inventory**, `project_id` **3**.
 - **Gather → act.** `project_id 3` is the only durable fact — everything else on the board (lane ids, sprint ids, member ids, `current_user`) churns. Call `prepare-project-context` with `project_id: 3` to resolve lanes / active sprint / members at use; never hardcode or cache them here. Then `create-issue` / `update-issue` / `start-work-on-issue` against project 3. If a call 404s on the project, the id drifted — re-confirm via `kendo://projects` and correct this line.
-- **The paper trail stays file-based.** Work Orders, Build Records, Audits, Standups, Retrospectives, and Minutes remain in `.claude/records/` — the board is additive for issue tracking, not a replacement (CEO scope decision 2026-06-09).
+- **The board is the primary work-tracking system** (CEO decision 2026-07-16, reversing the additive-only scope of 2026-06-09). Work Orders are filed as issues (key `BIO-xxxx`), branches are linked via `start-work-on-issue` / `link-branch`, and the Build Record is filed as a closing comment on the issue before it moves to Done. Narrative records (Audits, Standups, Retrospectives, Minutes) remain file-based in `.claude/records/`; the work-orders and build-records folders are frozen archives.
+- **Write tools are allowlisted** in `.claude/settings.json` (create/update issue, comments, epics, labels, sprints, branch links). `delete-*` tools and `complete-sprint` intentionally still prompt — destructive board ops stay gated.
+- **ADR-0028 interim rule:** PrePushPermitGate still slug-matches Work Order *files*, which are no longer filed. Until ADR-0028 is amended (tracked as BIO-0012), an above-threshold push uses the sanctioned `--no-verify` escape hatch with an open board issue standing in as the permit.
 - **Don't conflate instances:** `kendo-script` also has a project id 3 ("HardwareInsight") — a different tenant that happens to share the number. BIO binds `kendo-goosterhof` id 3 only.
 
 ## Wing Manuals

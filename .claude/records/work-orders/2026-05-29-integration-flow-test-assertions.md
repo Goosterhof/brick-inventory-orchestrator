@@ -41,4 +41,4 @@ Sweep finding **G-test-1** (medium): each of 13 families integration page specs 
 
 ---
 
-**Status:** Open
+**Status:** Migrated to Kendo — BIO-0009 (2026-07-16). File frozen as archive; live tracking on the board.

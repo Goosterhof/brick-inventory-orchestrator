@@ -61,5 +61,5 @@ Third in the 6-WO sibling sequence. HomePage carries the largest import set in t
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filled when filed_
+**Status:** Migrated to Kendo — BIO-0003 (2026-07-16). File frozen as archive; live tracking on the board.
+**Build Record:** _superseded — closure is recorded on the Kendo issue_

@@ -65,5 +65,5 @@ Sub-threshold push; close in post-merge commit per ADR-0028 uniform-rule.
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filled when filed_
+**Status:** Migrated to Kendo — BIO-0004 (2026-07-16). File frozen as archive; live tracking on the board.
+**Build Record:** _superseded — closure is recorded on the Kendo issue_

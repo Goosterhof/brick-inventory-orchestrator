@@ -63,5 +63,5 @@ Second in the 6-WO sibling sequence. `FormValidationWorkbench` carries the most 
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filled when filed_
+**Status:** Migrated to Kendo — BIO-0002 (2026-07-16). File frozen as archive; live tracking on the board.
+**Build Record:** _superseded — closure is recorded on the Kendo issue_
