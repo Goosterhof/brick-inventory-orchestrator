@@ -218,6 +218,7 @@ describe('FormValidationWorkbench', () => {
         await nextTick();
 
         // Piece Count — native number input driven through onPieceCountInput
+        await wrapper.get('input[type="number"]').setValue(''); // NaN → null branch
         await wrapper.get('input[type="number"]').setValue('7541');
 
         // Theme — SingleSelect emits the option id

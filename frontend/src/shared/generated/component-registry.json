@@ -1,5 +1,5 @@
 {
-    "meta": {"componentCount": 51, "churnWindowDays": 30},
+    "meta": {"componentCount": 43, "churnWindowDays": 30},
     "components": {
         "BackButton": {
             "path": "src/shared/components/BackButton.vue",
@@ -170,38 +170,6 @@
             "churn": {"commits": 0, "linesChanged": 0},
             "dependencyDepth": 0
         },
-        "DateInput": {
-            "path": "src/shared/components/forms/inputs/DateInput.vue",
-            "category": "forms/inputs",
-            "consumers": {
-                "families": {
-                    "sets": [
-                        "src/apps/families/domains/sets/pages/AddSetPage.vue",
-                        "src/apps/families/domains/sets/pages/EditSetPage.vue"
-                    ]
-                },
-                "showcase": {
-                    "_root": [
-                        "src/apps/showcase/components/ComponentGallery.vue",
-                        "src/apps/showcase/components/FormValidationWorkbench.vue"
-                    ]
-                }
-            },
-            "adoption": {"apps": 2, "domains": 1},
-            "apiSurface": {
-                "props": [
-                    {"name": "label", "required": true},
-                    {"name": "disabled", "required": false},
-                    {"name": "optional", "required": false},
-                    {"name": "error", "required": false}
-                ],
-                "emits": [],
-                "slots": [],
-                "models": [{"name": "modelValue", "required": true}]
-            },
-            "churn": {"commits": 0, "linesChanged": 0},
-            "dependencyDepth": 1
-        },
         "DetailRow": {
             "path": "src/shared/components/DetailRow.vue",
             "category": null,
@@ -271,82 +239,6 @@
             "apiSurface": {
                 "props": [{"name": "active", "required": false}],
                 "emits": [{"name": "click"}],
-                "slots": [{"name": "default"}],
-                "models": []
-            },
-            "churn": {"commits": 0, "linesChanged": 0},
-            "dependencyDepth": 0
-        },
-        "FormError": {
-            "path": "src/shared/components/forms/FormError.vue",
-            "category": "forms",
-            "consumers": {
-                "showcase": {"_root": ["src/apps/showcase/components/ComponentGallery.vue"]},
-                "shared": {
-                    "_root": [
-                        "src/shared/components/forms/inputs/DateInput.vue",
-                        "src/shared/components/forms/inputs/NumberInput.vue",
-                        "src/shared/components/forms/inputs/SelectInput.vue",
-                        "src/shared/components/forms/inputs/TextInput.vue",
-                        "src/shared/components/forms/inputs/TextareaInput.vue"
-                    ]
-                }
-            },
-            "adoption": {"apps": 1, "domains": 0},
-            "apiSurface": {
-                "props": [
-                    {"name": "id", "required": true},
-                    {"name": "message", "required": true}
-                ],
-                "emits": [],
-                "slots": [],
-                "models": []
-            },
-            "churn": {"commits": 0, "linesChanged": 0},
-            "dependencyDepth": 0
-        },
-        "FormField": {
-            "path": "src/shared/components/forms/FormField.vue",
-            "category": "forms",
-            "consumers": {
-                "showcase": {"_root": ["src/apps/showcase/components/ComponentGallery.vue"]},
-                "shared": {
-                    "_root": [
-                        "src/shared/components/forms/inputs/DateInput.vue",
-                        "src/shared/components/forms/inputs/NumberInput.vue",
-                        "src/shared/components/forms/inputs/SelectInput.vue",
-                        "src/shared/components/forms/inputs/TextInput.vue",
-                        "src/shared/components/forms/inputs/TextareaInput.vue"
-                    ]
-                }
-            },
-            "adoption": {"apps": 1, "domains": 0},
-            "apiSurface": {"props": [], "emits": [], "slots": [{"name": "default"}], "models": []},
-            "churn": {"commits": 0, "linesChanged": 0},
-            "dependencyDepth": 0
-        },
-        "FormLabel": {
-            "path": "src/shared/components/forms/FormLabel.vue",
-            "category": "forms",
-            "consumers": {
-                "showcase": {"_root": ["src/apps/showcase/components/ComponentGallery.vue"]},
-                "shared": {
-                    "_root": [
-                        "src/shared/components/forms/inputs/DateInput.vue",
-                        "src/shared/components/forms/inputs/NumberInput.vue",
-                        "src/shared/components/forms/inputs/SelectInput.vue",
-                        "src/shared/components/forms/inputs/TextInput.vue",
-                        "src/shared/components/forms/inputs/TextareaInput.vue"
-                    ]
-                }
-            },
-            "adoption": {"apps": 1, "domains": 0},
-            "apiSurface": {
-                "props": [
-                    {"name": "for", "required": true},
-                    {"name": "optional", "required": true}
-                ],
-                "emits": [],
                 "slots": [{"name": "default"}],
                 "models": []
             },
@@ -911,48 +803,6 @@
             "churn": {"commits": 0, "linesChanged": 0},
             "dependencyDepth": 0
         },
-        "NumberInput": {
-            "path": "src/shared/components/forms/inputs/NumberInput.vue",
-            "category": "forms/inputs",
-            "consumers": {
-                "families": {
-                    "sets": [
-                        "src/apps/families/domains/sets/pages/AddSetPage.vue",
-                        "src/apps/families/domains/sets/pages/EditSetPage.vue"
-                    ],
-                    "storage": [
-                        "src/apps/families/domains/storage/pages/AddStoragePage.vue",
-                        "src/apps/families/domains/storage/pages/EditStoragePage.vue"
-                    ],
-                    "_root": ["src/apps/families/modals/PlacePartModal.vue"]
-                },
-                "showcase": {
-                    "_root": [
-                        "src/apps/showcase/components/ComponentGallery.vue",
-                        "src/apps/showcase/components/FormValidationWorkbench.vue",
-                        "src/apps/showcase/components/ResourceAdapterPlayground.vue"
-                    ]
-                }
-            },
-            "adoption": {"apps": 2, "domains": 2},
-            "apiSurface": {
-                "props": [
-                    {"name": "label", "required": true},
-                    {"name": "placeholder", "required": false},
-                    {"name": "disabled", "required": false},
-                    {"name": "optional", "required": false},
-                    {"name": "error", "required": false},
-                    {"name": "min", "required": false},
-                    {"name": "max", "required": false},
-                    {"name": "step", "required": false}
-                ],
-                "emits": [],
-                "slots": [],
-                "models": [{"name": "modelValue", "required": true}]
-            },
-            "churn": {"commits": 0, "linesChanged": 0},
-            "dependencyDepth": 1
-        },
         "PageHeader": {
             "path": "src/shared/components/PageHeader.vue",
             "category": null,
@@ -1112,39 +962,6 @@
             "churn": {"commits": 0, "linesChanged": 0},
             "dependencyDepth": 0
         },
-        "SelectInput": {
-            "path": "src/shared/components/forms/inputs/SelectInput.vue",
-            "category": "forms/inputs",
-            "consumers": {
-                "families": {
-                    "sets": [
-                        "src/apps/families/domains/sets/pages/AddSetPage.vue",
-                        "src/apps/families/domains/sets/pages/EditSetPage.vue"
-                    ],
-                    "_root": ["src/apps/families/modals/PlacePartModal.vue"]
-                },
-                "showcase": {
-                    "_root": [
-                        "src/apps/showcase/components/ComponentGallery.vue",
-                        "src/apps/showcase/components/FormValidationWorkbench.vue"
-                    ]
-                }
-            },
-            "adoption": {"apps": 2, "domains": 1},
-            "apiSurface": {
-                "props": [
-                    {"name": "label", "required": true},
-                    {"name": "disabled", "required": false},
-                    {"name": "optional", "required": false},
-                    {"name": "error", "required": false}
-                ],
-                "emits": [],
-                "slots": [{"name": "default"}],
-                "models": [{"name": "modelValue", "required": true}]
-            },
-            "churn": {"commits": 0, "linesChanged": 0},
-            "dependencyDepth": 1
-        },
         "StatCard": {
             "path": "src/shared/components/StatCard.vue",
             "category": null,
@@ -1167,95 +984,6 @@
             },
             "churn": {"commits": 0, "linesChanged": 0},
             "dependencyDepth": 0
-        },
-        "TextareaInput": {
-            "path": "src/shared/components/forms/inputs/TextareaInput.vue",
-            "category": "forms/inputs",
-            "consumers": {
-                "families": {
-                    "sets": [
-                        "src/apps/families/domains/sets/pages/AddSetPage.vue",
-                        "src/apps/families/domains/sets/pages/EditSetPage.vue"
-                    ],
-                    "storage": [
-                        "src/apps/families/domains/storage/pages/AddStoragePage.vue",
-                        "src/apps/families/domains/storage/pages/EditStoragePage.vue"
-                    ],
-                    "_root": ["src/apps/families/modals/FeedbackModal.vue"]
-                },
-                "showcase": {
-                    "_root": [
-                        "src/apps/showcase/components/ComponentGallery.vue",
-                        "src/apps/showcase/components/FormValidationWorkbench.vue"
-                    ]
-                }
-            },
-            "adoption": {"apps": 2, "domains": 2},
-            "apiSurface": {
-                "props": [
-                    {"name": "label", "required": true},
-                    {"name": "rows", "required": false},
-                    {"name": "disabled", "required": false},
-                    {"name": "optional", "required": false},
-                    {"name": "error", "required": false}
-                ],
-                "emits": [],
-                "slots": [],
-                "models": [{"name": "modelValue", "required": true}]
-            },
-            "churn": {"commits": 0, "linesChanged": 0},
-            "dependencyDepth": 1
-        },
-        "TextInput": {
-            "path": "src/shared/components/forms/inputs/TextInput.vue",
-            "category": "forms/inputs",
-            "consumers": {
-                "families": {
-                    "auth": [
-                        "src/apps/families/domains/auth/pages/LoginPage.vue",
-                        "src/apps/families/domains/auth/pages/RegisterPage.vue"
-                    ],
-                    "parts": [
-                        "src/apps/families/domains/parts/pages/PartsMissingPage.vue",
-                        "src/apps/families/domains/parts/pages/PartsPage.vue",
-                        "src/apps/families/domains/parts/pages/PartsUnsortedPage.vue"
-                    ],
-                    "sets": [
-                        "src/apps/families/domains/sets/pages/AddSetPage.vue",
-                        "src/apps/families/domains/sets/pages/SetsOverviewPage.vue"
-                    ],
-                    "settings": ["src/apps/families/domains/settings/pages/SettingsPage.vue"],
-                    "storage": [
-                        "src/apps/families/domains/storage/pages/AddStoragePage.vue",
-                        "src/apps/families/domains/storage/pages/EditStoragePage.vue",
-                        "src/apps/families/domains/storage/pages/StorageOverviewPage.vue"
-                    ],
-                    "_root": ["src/apps/families/modals/FeedbackModal.vue"]
-                },
-                "showcase": {
-                    "_root": [
-                        "src/apps/showcase/components/ComponentGallery.vue",
-                        "src/apps/showcase/components/FormValidationWorkbench.vue",
-                        "src/apps/showcase/components/ResourceAdapterPlayground.vue"
-                    ]
-                }
-            },
-            "adoption": {"apps": 2, "domains": 5},
-            "apiSurface": {
-                "props": [
-                    {"name": "label", "required": true},
-                    {"name": "type", "required": false},
-                    {"name": "placeholder", "required": false},
-                    {"name": "disabled", "required": false},
-                    {"name": "optional", "required": false},
-                    {"name": "error", "required": false}
-                ],
-                "emits": [],
-                "slots": [],
-                "models": [{"name": "modelValue", "required": true}]
-            },
-            "churn": {"commits": 0, "linesChanged": 0},
-            "dependencyDepth": 1
         },
         "ToastMessage": {
             "path": "src/shared/components/ToastMessage.vue",

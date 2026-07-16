@@ -181,7 +181,7 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
                                 :min="1"
                                 placeholder="e.g. 7541"
                                 :value="pieceCount"
-                                :aria-required="required || undefined"
+                                :aria-required="required"
                                 :aria-invalid="invalid || undefined"
                                 :aria-describedby="describedby"
                                 @input="onPieceCountInput"
@@ -211,7 +211,7 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
                                 class="ui-control ui-input"
                                 :class="{'is-invalid': invalid}"
                                 type="date"
-                                :aria-required="required || undefined"
+                                :aria-required="required"
                                 :aria-invalid="invalid || undefined"
                                 :aria-describedby="describedby"
                             />

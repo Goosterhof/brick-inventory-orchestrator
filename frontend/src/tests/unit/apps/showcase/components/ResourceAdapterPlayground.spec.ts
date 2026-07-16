@@ -472,6 +472,7 @@ describe('ResourceAdapterPlayground', () => {
     it('should update part count via number input', async () => {
         const wrapper = shallowMount(ResourceAdapterPlayground, {global: {stubs}});
 
+        await wrapper.get('input[type="number"]').setValue(''); // NaN → skip branch (partCount unchanged)
         await wrapper.get('input[type="number"]').setValue('10');
         await nextTick();
 

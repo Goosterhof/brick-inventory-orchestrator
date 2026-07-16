@@ -117,7 +117,7 @@ const onSubmit = () =>
                         class="ui-control"
                         :class="{'is-invalid': invalid}"
                         rows="5"
-                        :aria-required="required || undefined"
+                        :aria-required="required"
                         :aria-invalid="invalid || undefined"
                         :aria-describedby="describedby"
                     />

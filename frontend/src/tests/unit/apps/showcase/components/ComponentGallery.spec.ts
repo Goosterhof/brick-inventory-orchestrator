@@ -349,6 +349,7 @@ describe('ComponentGallery', () => {
         await fieldInput('Description')?.setValue('Updated description');
 
         // Native number/date + the SingleSelect + the textarea
+        await wrapper.get('input[type="number"]').setValue(''); // NaN → null branch
         await wrapper.get('input[type="number"]').setValue('99');
         await wrapper.get('input[type="date"]').setValue('2025-06-15');
         (wrapper.findComponent({name: 'SingleSelect'}).vm as ComponentPublicInstance).$emit(
