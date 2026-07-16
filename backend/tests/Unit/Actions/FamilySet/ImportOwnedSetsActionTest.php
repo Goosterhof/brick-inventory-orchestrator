@@ -198,6 +198,81 @@ describe('ImportOwnedSetsAction', function(): void {
         expect($existingSavedValues['quantity'])->toBe(3);
     });
 
+    it('should create one family set and take the update path when the same set appears twice in one page', function(): void {
+        // arrange — regression for BIO-0019: the per-page in-memory map must absorb the
+        // freshly created row, so a repeated set_num within the same page updates the
+        // existing row instead of double-inserting a duplicate FamilySet.
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+
+        $legoSetData = new LegoSetData(
+            setNum: '75192-1',
+            name: 'Millennium Falcon',
+            year: 2_017,
+            themeId: 158,
+            numParts: 7_541,
+            imageUrl: null,
+        );
+        $userSetDataFirst = new RebrickableUserSetData(set: $legoSetData, quantity: 1);
+        $userSetDataSecond = new RebrickableUserSetData(set: $legoSetData, quantity: 5);
+
+        $set = \Mockery::mock(Set::class);
+        $set->allows('getAttribute')->with('id')->andReturn(42);
+
+        $legoDataService = \Mockery::mock(LegoDataServiceInterface::class);
+        $legoDataService->shouldReceive('fetchUserSets')
+            ->andReturnUsing(function() use ($userSetDataFirst, $userSetDataSecond): \Generator {
+                yield [$userSetDataFirst, $userSetDataSecond];
+            });
+
+        $upsertSetAction = \Mockery::mock(UpsertSetAction::class);
+        $upsertSetAction->shouldReceive('execute')
+            ->with($legoSetData)
+            ->twice()
+            ->andReturn($set);
+
+        $familySetSavedValues = [];
+        $familySet = \Mockery::mock(FamilySet::class);
+        $familySet->allows('setAttribute')->andReturnUsing(function($key, $value) use (&$familySetSavedValues): void {
+            $familySetSavedValues[$key] = $value;
+        });
+        $familySet->allows('getAttribute')->andReturnUsing(function($key) use (&$familySetSavedValues): mixed {
+            return $familySetSavedValues[$key] ?? null;
+        });
+        // Saved twice: once on create (quantity 1), once on the update path (quantity 5)
+        $familySet->shouldReceive('save')->twice();
+
+        // No pre-existing family sets in the database for this page
+        $queryBuilder = \Mockery::mock(Builder::class);
+        $queryBuilder->shouldReceive('where')->with('family_id', 1)->andReturnSelf();
+        $queryBuilder->shouldReceive('whereIn')->with('set_id', [42])->andReturnSelf();
+        $queryBuilder->shouldReceive('get')->andReturn(new Collection([]));
+
+        $familySetModel = \Mockery::mock(FamilySet::class);
+        $familySetModel->shouldReceive('newQuery')->once()->andReturn($queryBuilder);
+        // The critical assertion: exactly ONE row is instantiated for the duplicated set_num
+        $familySetModel->shouldReceive('newInstance')->once()->andReturn($familySet);
+
+        $family = \Mockery::mock(Family::class);
+        $family->allows('getAttribute')->with('id')->andReturn(1);
+        $family->allows('getAttribute')->with('rebrickable_user_token')->andReturn('user-token-123');
+
+        $action = new ImportOwnedSetsAction($legoDataService, $upsertSetAction, $familySetModel, $this->db);
+
+        // act
+        $result = $action->execute($family);
+
+        // assert — one create, one update, no skip; the single row ends at the second quantity
+        expect($result->created)->toBe(1);
+        expect($result->updated)->toBe(1);
+        expect($result->skipped)->toBe(0);
+        expect($result->total)->toBe(2);
+        expect($result->complete)->toBeTrue();
+        expect($familySetSavedValues['family_id'])->toBe(1);
+        expect($familySetSavedValues['set_id'])->toBe(42);
+        expect($familySetSavedValues['quantity'])->toBe(5);
+        expect($familySetSavedValues['status'])->toBe(FamilySetStatus::Sealed);
+    });
+
     it('should return correct counts for created and updated sets', function(): void {
         // arrange
         $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
