@@ -1,4 +1,4 @@
-import type {FamilySetStatus} from './familySet';
+import type {FamilySetStatus, Theme} from './familySet';
 
 export interface Part {
     id: number;
@@ -29,7 +29,7 @@ export interface SetWithParts {
     setNum: string;
     name: string;
     year: number | null;
-    theme: string | null;
+    theme: Theme | null;
     numParts: number;
     imageUrl: string | null;
     parts: SetPart[];

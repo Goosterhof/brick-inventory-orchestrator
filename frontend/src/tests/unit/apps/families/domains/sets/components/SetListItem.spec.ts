@@ -35,7 +35,7 @@ const baseSet = {
         setNum: '75192-1',
         name: 'Millennium Falcon',
         year: 2017,
-        theme: 'Star Wars',
+        theme: {id: 158, name: 'Star Wars', parentId: null},
         numParts: 7541,
         imageUrl: 'https://example.com/75192.jpg',
     },

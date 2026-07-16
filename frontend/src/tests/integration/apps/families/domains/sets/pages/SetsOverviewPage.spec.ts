@@ -22,6 +22,8 @@ vi.mock('@shared/helpers/csv', () => ({downloadCsv: vi.fn<() => void>(), toCsv: 
  * Snake_case fixtures — matching real API response format.
  * The HTTP response middleware converts snake_case to camelCase before data reaches the store.
  */
+const themeIds: Record<string, number> = {City: 52, Technic: 1};
+
 const makeSet = (id: number, theme: string, status = 'sealed') => ({
     id,
     set_num: `${id}-1`,
@@ -29,7 +31,14 @@ const makeSet = (id: number, theme: string, status = 'sealed') => ({
     status,
     purchase_date: null,
     notes: null,
-    set: {name: `Set ${id}`, set_num: `${id}-1`, year: 2024, theme, num_parts: 100, image_url: null},
+    set: {
+        name: `Set ${id}`,
+        set_num: `${id}-1`,
+        year: 2024,
+        theme: {id: themeIds[theme] ?? 0, name: theme, parent_id: null},
+        num_parts: 100,
+        image_url: null,
+    },
 });
 
 describe('SetsOverviewPage — integration', () => {

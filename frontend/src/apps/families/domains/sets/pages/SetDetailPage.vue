@@ -277,7 +277,7 @@ const toPartIdentity = (part: SetPart): PartIdentity => ({
                         </div>
                         <div flex gap="2">
                             <span font="bold">{{ t('sets.theme').value }}:</span>
-                            <span>{{ adapted.set?.theme ?? t('sets.unknown').value }}</span>
+                            <span>{{ adapted.set?.theme?.name ?? t('sets.unknown').value }}</span>
                         </div>
                         <div flex gap="2">
                             <span font="bold">{{ t('sets.numParts').value }}:</span>

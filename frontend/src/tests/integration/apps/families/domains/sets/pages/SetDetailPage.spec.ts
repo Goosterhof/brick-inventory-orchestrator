@@ -53,7 +53,7 @@ const makeAdapted = (overrides: Record<string, unknown> = {}) =>
             name: 'Millennium Falcon',
             setNum: '75192-1',
             year: 2017,
-            theme: 'Star Wars',
+            theme: {id: 158, name: 'Star Wars', parentId: null},
             numParts: 7541,
             imageUrl: null,
         },
