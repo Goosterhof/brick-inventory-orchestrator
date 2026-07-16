@@ -32,7 +32,7 @@ BypassFinals::enable();
 
 pest()->extend(TestCase::class)
  // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
-    ->in('Feature', 'Unit', 'Tools');
+    ->in('Feature', 'Unit');
 
 /*
 |--------------------------------------------------------------------------
@@ -99,7 +99,7 @@ function getTestFiles(): array
     $testsDir = \dirname(__DIR__) . '/tests';
     $testFiles = [];
 
-    foreach (['Feature', 'Unit', 'Tools'] as $dir) {
+    foreach (['Feature', 'Unit'] as $dir) {
         $path = $testsDir . '/' . $dir;
         if (!is_dir($path)) {
             continue;

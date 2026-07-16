@@ -3,9 +3,9 @@
 #
 # Inspect the pushed range and run each surface's pre-push gauntlet only
 # when that surface has files in the range:
-#   - backend/  → CaptainHook (PrePushPermitGate → composer test). The
-#     gate reads stdin per git's pre-push protocol, so we pipe our
-#     buffered stdin through unchanged.
+#   - backend/  → CaptainHook (composer test). Actions read stdin per
+#     git's pre-push protocol, so we pipe our buffered stdin through
+#     unchanged.
 #   - frontend/ → Husky's pre-push script (type-check → knip → test:coverage → build).
 
 set -euo pipefail
