@@ -1,4 +1,5 @@
 import ScanSetPage from '@app/domains/sets/pages/ScanSetPage.vue';
+import {familyRouterService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
 import BackButton from '@shared/components/BackButton.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
@@ -108,11 +109,13 @@ describe('ScanSetPage — integration', () => {
 
     it('navigates back via BackButton click', async () => {
         const wrapper = await mountPage();
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
 
         const backButton = wrapper.findComponent(BackButton);
         await backButton.find('button').trigger('click');
         await flushPromises();
 
-        // No assertion on navigation — integration tests verify composition, not side effects.
+        // The BackButton click delegates to goToRoute("sets") on the real router service.
+        expect(goToRoute).toHaveBeenCalledWith('sets');
     });
 });

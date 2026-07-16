@@ -1,4 +1,5 @@
 import AddSetPage from '@app/domains/sets/pages/AddSetPage.vue';
+import {familyRouterService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
 import DateInput from '@shared/components/forms/inputs/DateInput.vue';
 import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
@@ -66,13 +67,21 @@ describe('AddSetPage — integration', () => {
 
     it('submits form through real component tree', async () => {
         const wrapper = await mountPage();
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
+
+        await wrapper.findComponent(TextInput).find('input').setValue('75192-1');
 
         mockServer.onPost('family-sets', {id: 42});
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
-        // No assertion on navigation — integration tests verify composition, not side effects.
-        // The create() call posts to family-sets; goToRoute navigates to detail.
+        // The create() call posts to family-sets with a snake_case wire body (ADR-0029);
+        // goToRoute navigates to the detail page of the created set.
+        const createCalls = mockServer.callsTo('POST', 'family-sets');
+        expect(createCalls).toHaveLength(1);
+        expect(createCalls[0]?.body).toMatchObject({set_num: '75192-1', quantity: 1, status: 'sealed'});
+        expect(createCalls[0]?.body).not.toHaveProperty('setNum');
+        expect(goToRoute).toHaveBeenCalledWith('sets-detail', 42);
     });
 
     it('does not show duplicate warning when setNum is empty', async () => {

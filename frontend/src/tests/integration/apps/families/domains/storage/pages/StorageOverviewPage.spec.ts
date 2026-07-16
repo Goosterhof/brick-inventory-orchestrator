@@ -1,4 +1,5 @@
 import StorageOverviewPage from '@app/domains/storage/pages/StorageOverviewPage.vue';
+import {familyRouterService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
 import EmptyState from '@shared/components/EmptyState.vue';
 import TextInput from '@shared/components/forms/inputs/TextInput.vue';
@@ -80,13 +81,14 @@ describe('StorageOverviewPage — integration', () => {
 
     it('navigates to detail on ListItemButton click', async () => {
         const wrapper = await mountPage([makeStorage(1, 'Shelf A')]);
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
 
         const listItem = wrapper.findComponent(ListItemButton);
         await listItem.find('button').trigger('click');
         await flushPromises();
 
-        // No assertion on navigation — integration tests verify composition, not side effects.
-        // The click handler fires goToRoute() on the real router service; we verify the button is clickable.
+        // The click handler fires goToRoute() on the real router service with the storage option's id.
+        expect(goToRoute).toHaveBeenCalledWith('storage-detail', 1);
     });
 
     it('filters storage options via search input', async () => {

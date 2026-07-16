@@ -1,4 +1,5 @@
 import LoginPage from '@app/domains/auth/pages/LoginPage.vue';
+import {familyRouterService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
 import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
@@ -57,6 +58,7 @@ describe('LoginPage — integration', () => {
     it('flows form submission through real components to the service layer', async () => {
         mockServer.onPost('/login', {id: 1, name: 'John', email: 'john@example.com'});
         const wrapper = mountPage();
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
 
         // Type into real input elements
         const htmlInputs = wrapper.findAll('input');
@@ -69,8 +71,11 @@ describe('LoginPage — integration', () => {
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
-        // No assertion on navigation — integration tests verify composition, not side effects.
         // The form submission fires login() on the real auth service, then goToRoute("home") on the real router.
+        const loginCalls = mockServer.callsTo('POST', '/login');
+        expect(loginCalls).toHaveLength(1);
+        expect(loginCalls[0]?.body).toStrictEqual({email: 'john@example.com', password: 'secret'});
+        expect(goToRoute).toHaveBeenCalledWith('home');
     });
 
     it('renders the register link via real FamilyRouterLink', () => {

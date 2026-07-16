@@ -1,4 +1,5 @@
 import SetsOverviewPage from '@app/domains/sets/pages/SetsOverviewPage.vue';
+import {familyRouterService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
 import CollapsibleSection from '@shared/components/CollapsibleSection.vue';
 import EmptyState from '@shared/components/EmptyState.vue';
@@ -112,6 +113,7 @@ describe('SetsOverviewPage — integration', () => {
 
     it('navigates to detail on ListItemButton click', async () => {
         const wrapper = await mountPage([makeSet(1, 'City')]);
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
 
         const section = wrapper.findComponent(CollapsibleSection);
         await section.find('button').trigger('click');
@@ -120,7 +122,7 @@ describe('SetsOverviewPage — integration', () => {
         await listItem.find('button').trigger('click');
         await flushPromises();
 
-        // No assertion on navigation — integration tests verify composition, not side effects.
-        // The click handler fires goToRoute() on the real router service; we verify the button is clickable.
+        // The click handler fires goToRoute() on the real router service with the set's id.
+        expect(goToRoute).toHaveBeenCalledWith('sets-detail', 1);
     });
 });
