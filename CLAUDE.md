@@ -228,7 +228,7 @@ The Plate uses cookie-based auth (`withCredentials: true`), NOT token-based. Key
 
 The Brick uses the database queue driver. Async work — emails (e.g. `InviteCodeMail`), Rebrickable imports — is enqueued into the `jobs` table and drained by a worker process:
 
-- **Local dev:** `make queue` in a second terminal alongside `make up`. The worker runs `php artisan queue:work` inside the backend container with `--tries=3 --backoff=10 --timeout=60 --max-time=3600` (recycles hourly to bound memory).
+- **Local dev:** `make queue` in a second terminal alongside `make up`. The worker runs `php artisan queue:work` inside the backend container with `--tries=3 --backoff=10 --timeout=60 --max-time=3600` (recycles hourly to bound memory). Note: a per-job `#[Timeout]` attribute overrides `--timeout` — the import/sync jobs (`ImportOwnedSetsJob`, `SyncSetPartsJob`) declare `#[Timeout(600)]` and may run up to 10 minutes, so `--timeout=60` effectively governs only jobs without the attribute (queued mail). The queue's `retry_after` must strictly exceed the largest per-job `#[Timeout]`, or a long job's reservation expires mid-run and it gets re-dispatched.
 - **E2E tests:** the e2e profile uses **fakes** (`Mail::fake()`, `Queue::fake()`) inside the test process — no worker container required. The choice keeps e2e deterministic; running a real worker in e2e is a future call if/when we have email-flow assertions that need the round-trip.
 - **Production:** the Brick provisions a Railway `worker` service running the same `queue:work` command. See `backend/CLAUDE.md` → "Queue Worker" for the production command and verification procedure.
 
