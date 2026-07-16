@@ -114,7 +114,7 @@ The Brickworks' issue board lives on Kendo:
 - **Gather → act.** `project_id 3` is the only durable fact — everything else on the board (lane ids, sprint ids, member ids, `current_user`) churns. Call `prepare-project-context` with `project_id: 3` to resolve lanes / active sprint / members at use; never hardcode or cache them here. Then `create-issue` / `update-issue` / `start-work-on-issue` against project 3. If a call 404s on the project, the id drifted — re-confirm via `kendo://projects` and correct this line.
 - **The board is the primary work-tracking system** (CEO decision 2026-07-16, reversing the additive-only scope of 2026-06-09). Work Orders are filed as issues (key `BIO-xxxx`), branches are linked via `start-work-on-issue` / `link-branch`, and the Build Record is filed as a closing comment on the issue before it moves to Done. Narrative records (Audits, Standups, Retrospectives, Minutes) remain file-based in `.claude/records/`; the work-orders and build-records folders are frozen archives.
 - **Write tools are allowlisted** in `.claude/settings.json` (create/update issue, comments, epics, labels, sprints, branch links). `delete-*` tools and `complete-sprint` intentionally still prompt — destructive board ops stay gated.
-- **ADR-0028 interim rule:** PrePushPermitGate still slug-matches Work Order *files*, which are no longer filed. Until ADR-0028 is amended (tracked as BIO-0012), an above-threshold push uses the sanctioned `--no-verify` escape hatch with an open board issue standing in as the permit.
+- **ADR-0028 retired (2026-07-16):** the PrePushPermitGate is removed (Devil's Court ruling: Cracked at root — BIO-0012). The permit-before-work guarantee lives on the board: open issue before work, `link-branch`, review label before merge. No push-time permit check exists; the interim `--no-verify` rule is gone with the gate.
 - **Don't conflate instances:** `kendo-script` also has a project id 3 ("HardwareInsight") — a different tenant that happens to share the number. BIO binds `kendo-goosterhof` id 3 only.
 
 ## Wing Manuals
@@ -247,7 +247,7 @@ Pre-commit and pre-push hooks are dispatched from `.githooks/` at the repo root 
 
 **Pre-push** mirrors the same split:
 
-- Push range touches `backend/` → backend's `PrePushPermitGate → composer test` runs from `backend/` cwd, with git's pushed-ref stdin replayed through unchanged.
+- Push range touches `backend/` → backend's `composer test` runs from `backend/` cwd, with git's pushed-ref stdin replayed through unchanged. (The PrePushPermitGate that preceded it was retired 2026-07-16 — ADR-0028 § Amendment 2026-07-16.)
 - Push range touches `frontend/` → frontend's `.husky/pre-push` runs from `frontend/` cwd (`type-check → knip → test:coverage → test:integration → build`).
 
 **Commit-msg** runs repo-wide (not path-routed): `.githooks/commit-msg` lints the message with commitlint (frontend workspace binary + `.commitlintrc.json`) so Conventional Commits violations fail at write time instead of 20 minutes later in CI — which only checks PRs touching `frontend/**` anyway. Skips with a notice if `frontend/node_modules` is absent (fresh clone); CI remains the backstop.
