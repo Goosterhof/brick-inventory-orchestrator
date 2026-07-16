@@ -19,10 +19,13 @@ use Illuminate\Container\Attributes\Config;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 
 use function array_key_exists;
+use function ctype_digit;
 use function is_array;
+use function min;
 use function sprintf;
 
 final readonly class RebrickableService implements LegoDataServiceInterface
@@ -38,6 +41,14 @@ final readonly class RebrickableService implements LegoDataServiceInterface
     private const array USER_SET_REQUIRED_FIELDS = ['set', 'quantity'];
 
     private const array THEME_REQUIRED_FIELDS = ['id', 'name'];
+
+    private const int RETRY_TIMES = 3;
+
+    private const int RETRY_DELAY_MS = 100;
+
+    private const int RATE_LIMIT_DEFAULT_DELAY_SECONDS = 1;
+
+    private const int RATE_LIMIT_MAX_DELAY_SECONDS = 60;
 
     public function __construct(
         private HttpFactory $httpFactory,
@@ -353,7 +364,32 @@ final readonly class RebrickableService implements LegoDataServiceInterface
             ->withHeaders(['Authorization' => 'key ' . $this->apiKey])
             ->acceptJson()
             ->timeout(30)
-            ->retry(3, 100, throw: false);
+            ->retry(
+                self::RETRY_TIMES,
+                fn(int $attempt, mixed $exception): int => $this->retryDelayInMilliseconds($exception),
+                throw: false,
+            );
+    }
+
+    /**
+     * Compute the backoff before the next retry attempt. A 429 honours the upstream
+     * Retry-After header (seconds form, capped at RATE_LIMIT_MAX_DELAY_SECONDS); a missing
+     * or non-numeric header (e.g. HTTP-date form) falls back to a bounded default.
+     * Every other failure keeps the fixed RETRY_DELAY_MS backoff.
+     */
+    private function retryDelayInMilliseconds(mixed $exception): int
+    {
+        if (!$exception instanceof RequestException || $exception->response->status() !== 429) {
+            return self::RETRY_DELAY_MS;
+        }
+
+        $retryAfter = $exception->response->header('Retry-After');
+
+        if (!ctype_digit($retryAfter)) {
+            return self::RATE_LIMIT_DEFAULT_DELAY_SECONDS * 1_000;
+        }
+
+        return min((int) $retryAfter, self::RATE_LIMIT_MAX_DELAY_SECONDS) * 1_000;
     }
 
     /**
