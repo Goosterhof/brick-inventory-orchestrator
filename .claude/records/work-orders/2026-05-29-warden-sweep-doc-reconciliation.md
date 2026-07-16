@@ -47,4 +47,4 @@ The sweep surfaced a cluster of doc-vs-reality drifts that are corrections, not 
 
 ---
 
-**Status:** Open
+**Status:** Migrated to Kendo — BIO-0010 (2026-07-16). File frozen as archive; live tracking on the board.

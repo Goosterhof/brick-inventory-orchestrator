@@ -5,7 +5,21 @@
             "Edit(.claude/records/**)",
             "Write(.claude/docs/**)",
             "Edit(.claude/docs/**)",
-            "Edit(.claude/agents/*-graduation.md)"
+            "Edit(.claude/agents/*-graduation.md)",
+            "mcp__kendo-goosterhof__create-issue-tool",
+            "mcp__kendo-goosterhof__update-issue-tool",
+            "mcp__kendo-goosterhof__add-comment-tool",
+            "mcp__kendo-goosterhof__update-comment-tool",
+            "mcp__kendo-goosterhof__create-epic-tool",
+            "mcp__kendo-goosterhof__update-epic-tool",
+            "mcp__kendo-goosterhof__create-label-tool",
+            "mcp__kendo-goosterhof__sync-issue-labels-tool",
+            "mcp__kendo-goosterhof__start-work-on-issue-tool",
+            "mcp__kendo-goosterhof__link-branch-tool",
+            "mcp__kendo-goosterhof__unlink-branch-tool",
+            "mcp__kendo-goosterhof__create-sprint-tool",
+            "mcp__kendo-goosterhof__update-sprint-tool",
+            "mcp__kendo-goosterhof__assign-issues-to-sprint-tool"
         ]
     },
     "hooks": {
