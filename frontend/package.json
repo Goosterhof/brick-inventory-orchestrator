@@ -57,7 +57,7 @@
         "@script-development/fs-helpers": "^0.1.2",
         "@script-development/fs-http": "^0.6.0",
         "@script-development/fs-loading": "^0.1.6",
-        "@script-development/fs-router": "^0.1.1",
+        "@script-development/fs-router": "^0.2.0",
         "@script-development/fs-storage": "^0.1.0",
         "@script-development/fs-theme": "^0.1.1",
         "@script-development/fs-toast": "^0.2.0",
