@@ -49,4 +49,4 @@ This WO is written for **(a)** with (b) flagged as a follow-up. CEO may instead 
 
 ---
 
-**Status:** Open — pending Issuer decision (a)/(b)
+**Status:** Migrated to Kendo — BIO-0007 (2026-07-16), Issuer decision (a)/(b) carried onto the issue. File frozen as archive; live tracking on the board.

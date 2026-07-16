@@ -75,5 +75,5 @@ Per-WO Build Records are **not** filed for the siblings — the umbrella BR carr
 
 ---
 
-**Status:** Open
-**Build Record:** _to be filled when filed_
+**Status:** Migrated to Kendo — Epic #1 "Arch cleanup sweep" (2026-07-16). File frozen as archive; live tracking on the board.
+**Build Record:** _superseded — closure is recorded on the Kendo epic_
