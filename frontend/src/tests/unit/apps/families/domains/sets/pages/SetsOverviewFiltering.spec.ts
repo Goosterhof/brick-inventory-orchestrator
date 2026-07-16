@@ -59,7 +59,11 @@ vi.mock('@shared/components/PrimaryButton.vue', () => ({
     },
 }));
 
-vi.mock('@shared/helpers/csv', () => ({downloadCsv: vi.fn<() => void>(), toCsv: vi.fn<() => string>()}));
+vi.mock('@shared/helpers/csv', () => ({
+    downloadCsv: vi.fn<() => void>(),
+    toCsv: vi.fn<() => string>(),
+    exportCsv: vi.fn<() => void>(),
+}));
 
 vi.mock('@app/domains/sets/components/SetListItem.vue', () => ({
     default: {

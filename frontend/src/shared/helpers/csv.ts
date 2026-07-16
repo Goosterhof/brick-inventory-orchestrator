@@ -26,3 +26,10 @@ export const downloadCsv = (csv: string, filename: string): void => {
     link.click();
     URL.revokeObjectURL(url);
 };
+
+/**
+ * Build a CSV from headers + rows and trigger its download in one step.
+ */
+export const exportCsv = (headers: string[], rows: string[][], filename: string): void => {
+    downloadCsv(toCsv(headers, rows), filename);
+};

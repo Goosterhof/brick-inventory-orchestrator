@@ -80,7 +80,11 @@ vi.mock('@app/domains/parts/modals/PartUsageModal.vue', () => ({
     default: {name: 'PartUsageModal', template: '<div />', props: ['open', 'partNum', 'colorId'], emits: ['close']},
 }));
 
-vi.mock('@shared/helpers/csv', () => ({downloadCsv: vi.fn<() => void>(), toCsv: vi.fn<() => string>()}));
+vi.mock('@shared/helpers/csv', () => ({
+    downloadCsv: vi.fn<() => void>(),
+    toCsv: vi.fn<() => string>(),
+    exportCsv: vi.fn<() => void>(),
+}));
 
 vi.mock('@app/services', () =>
     createMockFamilyServices({
