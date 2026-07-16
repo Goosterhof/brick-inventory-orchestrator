@@ -1,6 +1,6 @@
 import RegisterPage from '@app/domains/auth/pages/RegisterPage.vue';
 import {mockServer} from '@integration/helpers/mock-server';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -19,7 +19,7 @@ describe('RegisterPage — integration', () => {
 
     const mountPage = () => mount(RegisterPage);
 
-    it('renders six real TextInput components for all registration fields', () => {
+    it('renders six real TextInput atoms for all registration fields', () => {
         const wrapper = mountPage();
 
         const inputs = wrapper.findAllComponents(TextInput);
@@ -29,11 +29,10 @@ describe('RegisterPage — integration', () => {
         expect(htmlInputs).toHaveLength(6);
     });
 
-    it('passes correct labels to each TextInput', () => {
+    it('labels each field', () => {
         const wrapper = mountPage();
 
-        const inputs = wrapper.findAllComponents(TextInput);
-        const labels = inputs.map((i) => i.props('label'));
+        const labels = wrapper.findAll('.ui-label').map((label) => label.text().replace(/\*$/, ''));
         expect(labels).toStrictEqual([
             'Invite Code',
             'Family Name',
@@ -47,16 +46,16 @@ describe('RegisterPage — integration', () => {
     it('marks invite code as optional, all others as required', () => {
         const wrapper = mountPage();
 
-        const inputs = wrapper.findAllComponents(TextInput);
-        const optionals = inputs.map((i) => i.props('optional'));
-        expect(optionals).toStrictEqual([true, false, false, false, false, false]);
+        const fields = wrapper.findAllComponents(FormField);
+        expect(fields.map((f) => f.props('required') ?? false)).toStrictEqual([false, true, true, true, true, true]);
     });
 
-    it('renders password fields with password type', () => {
+    it('renders email and password fields with the right types', () => {
         const wrapper = mountPage();
 
         const inputs = wrapper.findAllComponents(TextInput);
         const types = inputs.map((i) => i.props('type'));
+        // the package TextInput defaults `type` to 'text' when omitted
         expect(types).toStrictEqual(['text', 'text', 'text', 'email', 'password', 'password']);
     });
 
