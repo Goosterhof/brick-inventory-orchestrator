@@ -8,7 +8,7 @@ description: Close the doors — stop the autonomous /enter loop. Cancels the sc
 The counterpart to `/enter`. The CEO wants the floor quiet.
 
 1. **Cancel the loop.** `ScheduleWakeup` with `stop: true`. If no loop is active, say so — nothing to cancel is a fine outcome, not an error.
-2. **Settle the ledger.** Set `status: idle` in `.claude/records/shifts/LEDGER.md`. Leave counters intact — the next `/enter` continues the shift numbering and rotation.
+2. **Settle the ledger.** In `.claude/records/shifts/LEDGER.md`: set `status: idle`, and reset `consecutive_dry` and `consecutive_failures` to 0 — those are stuck-loop tripwires, and a CEO-initiated stop is not a stuck loop; carrying them over would let the next run auto-stop on stale history. Leave `shift` and `rotation` alone — they are monotonic identifiers, and the next `/enter` continues the numbering.
 3. **Mid-flight work:** if a build agent or hunt workflow is still running, let it finish its current unit if it is close to landing a PR; otherwise stop it (`TaskStop`) and note on the board issue that the shift was ended by the CEO, moving the issue back to To Do so no work is silently stranded.
 4. **Closing summary to the CEO** — the state of the run since the doors opened: shifts run, issues filed (keys), PRs opened and still awaiting review (numbers), anything returned to To Do, and the single most useful next action.
 
