@@ -351,8 +351,7 @@ const stageTextColor = (status: StageSnapshot['status']): string => {
                                 overflow="x-auto"
                                 white-space="pre-wrap"
                                 :data-testid="`stage-${index}-before`"
-                                >{{ stage.before }}</pre
-                            >
+                                >{{ stage.before }}</pre>
                         </div>
                         <div>
                             <p text="xs" font="mono bold" m="b-2" text-color="gray-400">AFTER</p>
@@ -363,8 +362,7 @@ const stageTextColor = (status: StageSnapshot['status']): string => {
                                 overflow="x-auto"
                                 white-space="pre-wrap"
                                 :data-testid="`stage-${index}-after`"
-                                >{{ stage.after }}</pre
-                            >
+                                >{{ stage.after }}</pre>
                         </div>
                     </div>
                 </div>

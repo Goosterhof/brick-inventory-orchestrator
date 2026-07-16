@@ -123,8 +123,7 @@ const clearLog = () => {
                     must be mounted for toasts to render. It manages the toast queue and FIFO eviction internally.
                 </p>
                 <pre m="t-3" p="3" bg="gray-100" class="brick-border" text="xs" font="mono" overflow="x-auto">
-&lt;component :is="toastService.ToastContainerComponent" /&gt;</pre
-                >
+&lt;component :is="toastService.ToastContainerComponent" /&gt;</pre>
             </div>
         </div>
 

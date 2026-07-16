@@ -211,8 +211,7 @@ watch(
                         overflow="x-auto"
                         m="b-4"
                         data-testid="camel-case-view"
-                        >{{ JSON.stringify(newAdapted.mutable.value, null, 2) }}</pre
-                    >
+                        >{{ JSON.stringify(newAdapted.mutable.value, null, 2) }}</pre>
                     <p text="xs" font="mono" text-color="gray-500" m="b-3">
                         snake_case (API payload via deepSnakeKeys)
                     </p>
@@ -336,8 +335,7 @@ watch(
                     m="b-4"
                     max-h="48"
                     data-testid="storage-json"
-                    >{{ storageJson }}</pre
-                >
+                    >{{ storageJson }}</pre>
                 <DangerButton data-testid="clear-storage-btn" @click="clearStorage">Clear Storage</DangerButton>
             </div>
         </div>

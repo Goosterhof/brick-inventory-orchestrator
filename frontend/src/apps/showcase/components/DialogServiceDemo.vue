@@ -153,8 +153,7 @@ const closeAllDialogs = () => {
                     boundaries internally.
                 </p>
                 <pre m="t-3" p="3" bg="gray-100" class="brick-border" text="xs" font="mono" overflow="x-auto">
-&lt;component :is="dialogService.DialogContainerComponent" /&gt;</pre
-                >
+&lt;component :is="dialogService.DialogContainerComponent" /&gt;</pre>
             </div>
         </div>
 
