@@ -184,6 +184,8 @@ The Foundry writes async work; a `queue:work` worker reads it. **Production need
   php artisan queue:work --queue=default --tries=3 --backoff=10 --timeout=60 --max-time=3600
   ```
   `--max-time=3600` recycles the process hourly to bound memory leaks.
+- **Timeout precedence:** a per-job `#[Timeout]` attribute overrides the worker's `--timeout` flag (`Worker::timeoutForJob()` prefers the job's value). Both real jobs — `ImportOwnedSetsJob` and `SyncSetPartsJob` — declare `#[Timeout(600)]` + `#[FailOnTimeout]` and may run up to 10 minutes; `--timeout=60` effectively governs only attribute-less jobs (currently queued mail such as `InviteCodeMail`).
+- **Reservation invariant:** the database queue's `retry_after` must strictly exceed the largest per-job `#[Timeout]` in `app/Jobs` — otherwise a long job's reservation expires mid-run and the worker re-dispatches it while the first attempt is still on the conveyor belt.
 - **Local dev:** orchestrator-side `make queue` runs the same command inside the backend container. Run it in a second terminal alongside `make up`.
 - **Tests:** unit/feature tests use `Mail::fake()` / `Bus::fake()`. E2E uses fakes by the same default.
 - **Verifying alive:** `php artisan queue:monitor default --max=100` or query the `failed_jobs` table.
