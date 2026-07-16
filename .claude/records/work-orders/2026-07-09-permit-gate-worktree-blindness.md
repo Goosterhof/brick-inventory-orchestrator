@@ -6,7 +6,7 @@
 **Assigned To:** Brickwright (Foundry Wing)
 **Wing:** Foundry (tooling — `backend/tools/CaptainHook/PrePushPermitGate.php`)
 **Priority:** Standard
-**Status:** Open
+**Status:** Migrated to Kendo — BIO-0011 (2026-07-16). File frozen as archive; live tracking on the board.
 **Branch slug (for PrePushPermitGate):** `permit-gate-worktree-blindness`
 
 ---

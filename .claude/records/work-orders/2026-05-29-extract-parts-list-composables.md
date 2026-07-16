@@ -41,4 +41,4 @@ Sweep finding **G-debt-1** (medium): all three Parts pages (`PartsPage.vue`, `Pa
 
 ---
 
-**Status:** Open
+**Status:** Migrated to Kendo — BIO-0008 (2026-07-16). File frozen as archive; live tracking on the board.
