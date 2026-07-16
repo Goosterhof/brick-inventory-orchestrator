@@ -156,7 +156,7 @@ describe('RegisterController', function(): void {
         $response = $this->postJson('/api/register', []);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['family_name', 'name', 'email', 'password']);
+            ->assertJsonValidationErrors(['family_name', 'name', 'email', 'password', 'password_confirmation']);
     });
 
     it('should require a valid email', function(): void {
@@ -197,7 +197,8 @@ describe('RegisterController', function(): void {
         ]);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['password']);
+            ->assertJsonValidationErrors(['password_confirmation'])
+            ->assertJsonMissingValidationErrors(['password']);
     });
 
     it('should require minimum password length', function(): void {

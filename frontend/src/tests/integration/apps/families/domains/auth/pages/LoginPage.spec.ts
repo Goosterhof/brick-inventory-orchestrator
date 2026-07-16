@@ -76,6 +76,10 @@ describe('LoginPage — integration', () => {
         expect(loginCalls).toHaveLength(1);
         expect(loginCalls[0]?.body).toStrictEqual({email: 'john@example.com', password: 'secret'});
         expect(goToRoute).toHaveBeenCalledWith('home');
+
+        // The real navigation lazy-imports the home route component; await it so the
+        // import chain cannot race environment teardown (EnvironmentTeardownError flake).
+        await goToRoute.mock.results[0]?.value;
     });
 
     it('renders the register link via real FamilyRouterLink', () => {
