@@ -208,8 +208,7 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
                     attempt.
                 </p>
                 <pre m="t-3" p="3" bg="gray-100" class="brick-border" text="xs" font="mono" overflow="x-auto">
-const {errors, clearErrors, handleSubmit, submitting} = useForm&lt;SetFormField&gt;(httpService);</pre
-                >
+const {errors, clearErrors, handleSubmit, submitting} = useForm&lt;SetFormField&gt;(httpService);</pre>
             </div>
         </div>
     </section>
