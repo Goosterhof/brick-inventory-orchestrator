@@ -10,16 +10,16 @@ import {
     familyToastService,
     familyTranslationService,
 } from '@app/services';
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import BackButton from '@shared/components/BackButton.vue';
 import EmptyState from '@shared/components/EmptyState.vue';
 import FilterChip from '@shared/components/FilterChip.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import ListItemButton from '@shared/components/ListItemButton.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PartListItem from '@shared/components/PartListItem.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {downloadCsv, toCsv} from '@shared/helpers/csv';
-import {computed, onMounted, ref} from 'vue';
+import {computed, onMounted, ref, useId} from 'vue';
 
 type SortField = 'shortfall' | 'name' | 'color';
 
@@ -29,6 +29,7 @@ const unknownFamilySetIds = ref<string[]>([]);
 const loading = ref(true);
 const loadError = ref(false);
 const searchQuery = ref('');
+const searchId = useId();
 const activeSortField = ref<SortField>('shortfall');
 const selectedEntry = ref<MasterShoppingListEntry | null>(null);
 const showPlaceModal = ref(false);
@@ -244,13 +245,19 @@ const allSortFields: SortField[] = ['shortfall', 'name', 'color'];
 
                 <template v-if="entries.length > 0">
                     <div flex="~ col" gap="4" m="b-4">
-                        <TextInput
-                            v-model="searchQuery"
-                            :label="t('common.search').value"
-                            type="search"
-                            :placeholder="t('parts.unsortedSearchPlaceholder').value"
-                            optional
-                        />
+                        <FormField :id="searchId" :label="t('common.search').value">
+                            <template #default="{controlId, required, invalid, describedby}">
+                                <TextInput
+                                    :id="controlId"
+                                    v-model="searchQuery"
+                                    type="search"
+                                    :placeholder="t('parts.unsortedSearchPlaceholder').value"
+                                    :required="required"
+                                    :invalid="invalid"
+                                    :describedby="describedby"
+                                />
+                            </template>
+                        </FormField>
 
                         <div flex gap="2" flex-wrap="wrap">
                             <FilterChip

@@ -14,15 +14,8 @@ const emit = (wrapper: VueWrapper | undefined, event: string): void => {
     wrapper?.vm.$emit(event);
 };
 
-const {
-    createMockAxios,
-    createMockFsHelpers,
-    createMockStringTs,
-    createMockFamilyServices,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
-} = await vi.hoisted(() => import('../../../../../../helpers'));
+const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices, createMockUiInputs} =
+    await vi.hoisted(() => import('../../../../../../helpers'));
 
 const {mockGetRequest, mockGoToRoute} = vi.hoisted(() => ({
     mockGetRequest: vi.fn<() => Promise<unknown>>(),
@@ -33,9 +26,7 @@ vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
 
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@shared/components/EmptyState.vue', () => ({
     default: {name: 'EmptyState', template: '<span><slot /></span>', props: ['message']},
@@ -43,14 +34,6 @@ vi.mock('@shared/components/EmptyState.vue', () => ({
 
 vi.mock('@shared/components/FilterChip.vue', () => ({
     default: {name: 'FilterChip', template: '<button @click=\'$emit("click")\'><slot /></button>', props: ['active']},
-}));
-
-vi.mock('@shared/components/forms/inputs/TextInput.vue', () => ({
-    default: {
-        name: 'TextInput',
-        template: '<input @input=\'$emit("update:modelValue", $event.target.value)\' />',
-        props: ['modelValue'],
-    },
 }));
 
 vi.mock('@shared/components/PageHeader.vue', () => ({
@@ -151,7 +134,7 @@ describe('PartsPage', () => {
         mockGetRequest.mockResolvedValue({data: makeEnvelope([])});
 
         // Act
-        const wrapper = shallowMount(PartsPage);
+        const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -163,7 +146,7 @@ describe('PartsPage', () => {
         mockGetRequest.mockResolvedValue({data: makeEnvelope([])});
 
         // Act
-        shallowMount(PartsPage);
+        shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -175,7 +158,7 @@ describe('PartsPage', () => {
         mockGetRequest.mockReturnValue(new Promise(() => {}));
 
         // Act
-        const wrapper = shallowMount(PartsPage);
+        const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
         expect(wrapper.text()).toContain('common.loading');
@@ -186,7 +169,7 @@ describe('PartsPage', () => {
         mockGetRequest.mockResolvedValue({data: makeEnvelope([])});
 
         // Act
-        const wrapper = shallowMount(PartsPage);
+        const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -198,7 +181,7 @@ describe('PartsPage', () => {
         mockGetRequest.mockResolvedValue({data: makeEnvelope()});
 
         // Act
-        const wrapper = shallowMount(PartsPage);
+        const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -219,7 +202,7 @@ describe('PartsPage', () => {
         mockGetRequest.mockResolvedValue({data: makeEnvelope()});
 
         // Act
-        const wrapper = shallowMount(PartsPage);
+        const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -232,7 +215,7 @@ describe('PartsPage', () => {
         mockGetRequest.mockRejectedValue(new Error('Network error'));
 
         // Act
-        const wrapper = shallowMount(PartsPage);
+        const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -243,11 +226,11 @@ describe('PartsPage', () => {
         it('should filter parts by name', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('Brick 2 x 3');
+            await wrapper.get('input[type="search"]').setValue('Brick 2 x 3');
             await flushPromises();
 
             // Assert
@@ -259,11 +242,11 @@ describe('PartsPage', () => {
         it('should filter parts by part number', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('3001');
+            await wrapper.get('input[type="search"]').setValue('3001');
             await flushPromises();
 
             // Assert
@@ -275,11 +258,11 @@ describe('PartsPage', () => {
         it('should be case-insensitive', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('brick 2 x 3');
+            await wrapper.get('input[type="search"]').setValue('brick 2 x 3');
             await flushPromises();
 
             // Assert
@@ -289,11 +272,11 @@ describe('PartsPage', () => {
         it('should show no results when search matches nothing', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('nonexistent');
+            await wrapper.get('input[type="search"]').setValue('nonexistent');
             await flushPromises();
 
             // Assert
@@ -309,7 +292,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -324,7 +307,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -337,7 +320,7 @@ describe('PartsPage', () => {
         it('should filter parts by color when a color chip is clicked', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -354,7 +337,7 @@ describe('PartsPage', () => {
         it('should toggle color filter off when clicked again', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -370,7 +353,7 @@ describe('PartsPage', () => {
         it('should clear color filter when all-colors chip is clicked', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Apply a color filter first
@@ -395,7 +378,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -411,7 +394,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -422,7 +405,7 @@ describe('PartsPage', () => {
         it('should sort by quantity descending when quantity chip is clicked', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -442,7 +425,7 @@ describe('PartsPage', () => {
         it('should sort by color name when color sort chip is clicked', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -462,7 +445,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert — name is active by default
@@ -477,7 +460,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert — Brick 2 x 3 has familySetId: null so it's an orphan
@@ -487,7 +470,7 @@ describe('PartsPage', () => {
         it('should filter to only orphan parts when orphan chip is clicked', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -506,7 +489,7 @@ describe('PartsPage', () => {
         it('should toggle orphan filter off when clicked again', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -526,7 +509,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert — the orphan badge text appears for Brick 2 x 3
@@ -539,11 +522,11 @@ describe('PartsPage', () => {
         it('should apply search and color filter together', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act — search for "Brick" and filter by Red
-            await wrapper.findComponent({name: 'TextInput'}).setValue('Brick');
+            await wrapper.get('input[type="search"]').setValue('Brick');
             const redChip = wrapper.findAllComponents({name: 'FilterChip'}).find((c) => c.text() === 'Red');
             emit(redChip, 'click');
             await flushPromises();
@@ -557,11 +540,11 @@ describe('PartsPage', () => {
         it('should apply search and orphan filter together', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act — search for "Brick" and filter orphans only
-            await wrapper.findComponent({name: 'TextInput'}).setValue('Brick');
+            await wrapper.get('input[type="search"]').setValue('Brick');
             const orphanChip = wrapper
                 .findAllComponents({name: 'FilterChip'})
                 .find((c) => c.text() === 'parts.orphanParts');
@@ -581,7 +564,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope(mockPartsData, null)});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -593,7 +576,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope(mockPartsData, 'cursor-abc')});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -606,7 +589,7 @@ describe('PartsPage', () => {
             // Arrange — first page with cursor
             mockGetRequest.mockResolvedValueOnce({data: makeEnvelope(mockPartsData, 'cursor-page-2')});
 
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(2);
@@ -646,7 +629,7 @@ describe('PartsPage', () => {
             // Arrange
             mockGetRequest.mockResolvedValueOnce({data: makeEnvelope(mockPartsData, 'cursor-page-2')});
 
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             expect(wrapper.find("[data-testid='load-more-button']").exists()).toBe(true);
@@ -666,7 +649,7 @@ describe('PartsPage', () => {
             // Arrange
             mockGetRequest.mockResolvedValueOnce({data: makeEnvelope(mockPartsData, 'cursor-page-2')});
 
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Arrange — next page hangs
@@ -685,7 +668,7 @@ describe('PartsPage', () => {
             // Arrange — no cursor
             mockGetRequest.mockResolvedValue({data: makeEnvelope(mockPartsData, null)});
 
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert — no button, and only 1 call was made (the initial fetch)
@@ -700,7 +683,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -715,7 +698,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope([])});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -732,7 +715,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope([])});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -744,7 +727,7 @@ describe('PartsPage', () => {
         it('navigates to the parts-missing route when the CTA is clicked', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -762,7 +745,7 @@ describe('PartsPage', () => {
             mockGetRequest.mockResolvedValue({data: makeEnvelope([])});
 
             // Act
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -774,7 +757,7 @@ describe('PartsPage', () => {
         it('navigates to the parts-unsorted route when the CTA is clicked', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -787,7 +770,7 @@ describe('PartsPage', () => {
         it('coexists with the missing-parts CTA — both are rendered, neither replaces the other', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert — both doors into the same data are visible side by side
@@ -800,7 +783,7 @@ describe('PartsPage', () => {
         it('opens PartUsageModal with the row partNum and colorId when a row is clicked', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // No modal until a row is clicked (gated by usageColorId !== null)
@@ -820,7 +803,7 @@ describe('PartsPage', () => {
         it('closes the modal when it emits close', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
             await wrapper.find("[data-testid='part-row-10_1']").trigger('click');
 
@@ -835,7 +818,7 @@ describe('PartsPage', () => {
         it('includes the part name in the aria-label for each row button', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({data: makeEnvelope()});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert — generic label alone is insufficient; the part name must be appended
@@ -862,7 +845,7 @@ describe('PartsPage', () => {
                 },
             ];
             mockGetRequest.mockResolvedValue({data: makeEnvelope(orphanData)});
-            const wrapper = shallowMount(PartsPage);
+            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
