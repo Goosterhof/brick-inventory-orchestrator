@@ -12,14 +12,10 @@ const {
     createMockFsHelpers,
     createMockStringTs,
     createMockFamilyServices,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
@@ -86,7 +82,7 @@ describe('SettingsPage — members', () => {
 
     it('should fetch and display family members', async () => {
         // Arrange & Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -97,7 +93,7 @@ describe('SettingsPage — members', () => {
 
     it('should show head badge for family head', async () => {
         // Arrange & Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -110,7 +106,7 @@ describe('SettingsPage — members', () => {
     describe('invite code', () => {
         it('should fetch invite code on mount', async () => {
             // Arrange & Act
-            shallowMount(SettingsPage);
+            shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -122,7 +118,7 @@ describe('SettingsPage — members', () => {
             mockMembersAndNoInviteCode();
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -136,7 +132,7 @@ describe('SettingsPage — members', () => {
             mockMembersAndInviteCode();
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -149,7 +145,7 @@ describe('SettingsPage — members', () => {
             mockUserId.mockReturnValue(2);
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -161,7 +157,7 @@ describe('SettingsPage — members', () => {
             mockMembersAndInviteCode();
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -172,7 +168,7 @@ describe('SettingsPage — members', () => {
         it('should copy code to clipboard', async () => {
             // Arrange
             mockMembersAndInviteCode();
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -191,7 +187,7 @@ describe('SettingsPage — members', () => {
         it('should not copy when no invite code is active', async () => {
             // Arrange
             mockMembersAndNoInviteCode();
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert — no copy button visible when no code exists
@@ -205,7 +201,7 @@ describe('SettingsPage — members', () => {
             // Arrange
             mockMembersAndNoInviteCode();
             mockPostRequest.mockResolvedValue({data: inviteCodeData});
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -224,7 +220,7 @@ describe('SettingsPage — members', () => {
             // Arrange
             mockMembersAndNoInviteCode();
             mockPostRequest.mockRejectedValue(new Error('Network error'));
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -242,7 +238,7 @@ describe('SettingsPage — members', () => {
             // Arrange
             mockMembersAndInviteCode();
             mockDeleteRequest.mockResolvedValue({});
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -261,7 +257,7 @@ describe('SettingsPage — members', () => {
             // Arrange
             mockMembersAndInviteCode();
             mockDeleteRequest.mockRejectedValue(new Error('Network error'));
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -296,7 +292,7 @@ describe('SettingsPage — members', () => {
             });
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -316,7 +312,7 @@ describe('SettingsPage — members', () => {
             });
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -328,7 +324,7 @@ describe('SettingsPage — members', () => {
             mockMembersAndNoInviteCode();
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -343,7 +339,7 @@ describe('SettingsPage — members', () => {
             mockMembersAndInviteCode();
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -358,7 +354,7 @@ describe('SettingsPage — members', () => {
             mockMembersAndInviteCode();
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -373,7 +369,7 @@ describe('SettingsPage — members', () => {
             mockMembersAndInviteCode();
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -388,7 +384,7 @@ describe('SettingsPage — members', () => {
             mockUserId.mockReturnValue(1);
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -413,7 +409,7 @@ describe('SettingsPage — members', () => {
             });
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -427,7 +423,7 @@ describe('SettingsPage — members', () => {
             mockUserId.mockReturnValue(2);
 
             // Act
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -439,7 +435,7 @@ describe('SettingsPage — members', () => {
         it('should open confirm dialog when remove button is clicked', async () => {
             // Arrange
             mockUserId.mockReturnValue(1);
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -458,7 +454,7 @@ describe('SettingsPage — members', () => {
         it('should close confirm dialog on cancel', async () => {
             // Arrange
             mockUserId.mockReturnValue(1);
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             const removeButton = wrapper
@@ -479,7 +475,7 @@ describe('SettingsPage — members', () => {
             // Arrange
             mockUserId.mockReturnValue(1);
             mockDeleteRequest.mockResolvedValue({});
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -510,7 +506,7 @@ describe('SettingsPage — members', () => {
                 config: {},
             };
             mockDeleteRequest.mockRejectedValue(axiosError);
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -531,7 +527,7 @@ describe('SettingsPage — members', () => {
             const axiosError = new MockAxiosError('Not Found');
             axiosError.response = {status: 404, data: null, statusText: 'Not Found', headers: {}, config: {}};
             mockDeleteRequest.mockRejectedValue(axiosError);
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -551,7 +547,7 @@ describe('SettingsPage — members', () => {
             // Arrange
             mockUserId.mockReturnValue(1);
             mockDeleteRequest.mockRejectedValue(new Error('Network error'));
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -569,7 +565,7 @@ describe('SettingsPage — members', () => {
         it('should not call delete when memberToRemove is null', async () => {
             // Arrange
             mockUserId.mockReturnValue(1);
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act — emit confirm without clicking remove first
@@ -586,7 +582,7 @@ describe('SettingsPage — members', () => {
             const axiosError = new MockAxiosError('Forbidden');
             axiosError.response = {status: 403, data: null, statusText: 'Forbidden', headers: {}, config: {}};
             mockDeleteRequest.mockRejectedValue(axiosError);
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -605,7 +601,7 @@ describe('SettingsPage — members', () => {
             // Arrange
             mockUserId.mockReturnValue(1);
             mockDeleteRequest.mockResolvedValue({});
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // First removal — success
@@ -636,7 +632,7 @@ describe('SettingsPage — members', () => {
             });
 
             // Remount to get the new member list
-            const wrapper2 = shallowMount(SettingsPage);
+            const wrapper2 = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act — click remove on new member

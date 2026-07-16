@@ -11,15 +11,15 @@ import {
     familyTranslationService,
 } from '@app/services';
 import {useForm} from '@script-development/fs-form';
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import BadgeLabel from '@shared/components/BadgeLabel.vue';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
 import {isAxiosError} from 'axios';
-import {computed, onMounted, onUnmounted, ref} from 'vue';
+import {computed, onMounted, onUnmounted, ref, useId} from 'vue';
 
 const {t} = familyTranslationService;
 
@@ -142,6 +142,10 @@ const recipientEmail = ref('');
 const recipientName = ref('');
 const inviteEmailSent = ref(false);
 const inviteEmailError = ref('');
+
+const recipientEmailId = useId();
+const recipientNameId = useId();
+const rebrickableTokenId = useId();
 
 const {
     errors: inviteEmailErrors,
@@ -353,18 +357,38 @@ onUnmounted(() => {
                 </PrimaryButton>
 
                 <form flex="~ col" gap="3" @submit.prevent="sendInviteByEmail">
-                    <TextInput
-                        v-model="recipientEmail"
-                        type="email"
+                    <FormField
+                        :id="recipientEmailId"
                         :label="t('settings.recipientEmail').value"
+                        required
                         :error="inviteEmailErrors.recipientEmail"
-                    />
-                    <TextInput
-                        v-model="recipientName"
+                    >
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <TextInput
+                                :id="controlId"
+                                v-model="recipientEmail"
+                                type="email"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
+                    <FormField
+                        :id="recipientNameId"
                         :label="t('settings.recipientName').value"
                         :error="inviteEmailErrors.recipientName"
-                        :optional="true"
-                    />
+                    >
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <TextInput
+                                :id="controlId"
+                                v-model="recipientName"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
 
                     <p v-if="inviteEmailSent" text="baseplate-green" font="bold">
                         {{ t('settings.inviteEmailSent').value }}
@@ -384,11 +408,22 @@ onUnmounted(() => {
                 <p text="[var(--brick-muted-text)]">{{ t('settings.rebrickableDescription').value }}</p>
 
                 <form flex="~ col" gap="4" @submit.prevent="saveToken">
-                    <TextInput
-                        v-model="rebrickableToken"
+                    <FormField
+                        :id="rebrickableTokenId"
                         :label="t('settings.rebrickableToken').value"
+                        required
                         :error="tokenError"
-                    />
+                    >
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <TextInput
+                                :id="controlId"
+                                v-model="rebrickableToken"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
 
                     <p v-if="tokenSaved" text="baseplate-green" font="bold">{{ t('settings.tokenSaved').value }}</p>
 

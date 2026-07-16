@@ -1,5 +1,5 @@
 import SettingsPage from '@app/domains/settings/pages/SettingsPage.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -10,14 +10,10 @@ const {
     createMockFsHelpers,
     createMockStringTs,
     createMockFamilyServices,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
@@ -53,11 +49,16 @@ const mockMembersAndInviteCode = (code = inviteCodeOld) => {
     });
 };
 
+// Inputs are composed inside FormField scoped slots and no longer carry a `label`
+// prop; locate a field by its FormField label, then reach its package TextInput.
+const findField = (wrapper: ReturnType<typeof shallowMount>, label: string) =>
+    wrapper.findAllComponents(FormField).find((field) => field.props('label') === label);
+
 const findEmailInput = (wrapper: ReturnType<typeof shallowMount>) =>
-    wrapper.findAllComponents(TextInput).find((i) => i.props('label') === 'settings.recipientEmail');
+    findField(wrapper, 'settings.recipientEmail')?.findComponent(TextInput);
 
 const findNameInput = (wrapper: ReturnType<typeof shallowMount>) =>
-    wrapper.findAllComponents(TextInput).find((i) => i.props('label') === 'settings.recipientName');
+    findField(wrapper, 'settings.recipientName')?.findComponent(TextInput);
 
 const findSendButton = (wrapper: ReturnType<typeof shallowMount>) =>
     wrapper.findAllComponents(PrimaryButton).find((b) => b.text() === 'settings.sendInviteByEmail');
@@ -72,14 +73,15 @@ describe('SettingsPage — invite by email', () => {
 
     it('should render send-by-email form for the family head', async () => {
         // Arrange & Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
         expect(findEmailInput(wrapper)?.exists()).toBe(true);
         expect(findEmailInput(wrapper)?.props('type')).toBe('email');
         expect(findNameInput(wrapper)?.exists()).toBe(true);
-        expect(findNameInput(wrapper)?.props('optional')).toBe(true);
+        // required polarity flipped from the old `optional` prop; name is optional
+        expect(findField(wrapper, 'settings.recipientName')?.props('required')).toBe(false);
         expect(findSendButton(wrapper)?.exists()).toBe(true);
     });
 
@@ -88,7 +90,7 @@ describe('SettingsPage — invite by email', () => {
         mockUserId.mockReturnValue(2);
 
         // Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -109,7 +111,7 @@ describe('SettingsPage — invite by email', () => {
         });
 
         // Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -120,7 +122,7 @@ describe('SettingsPage — invite by email', () => {
     it('should POST to /family/invite-code/email with email and name on submit', async () => {
         // Arrange
         mockPostRequest.mockResolvedValue({data: inviteCodeNew});
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         await findEmailInput(wrapper)?.setValue('friend@example.com');
@@ -141,7 +143,7 @@ describe('SettingsPage — invite by email', () => {
     it('should POST without recipientName when the name field is empty', async () => {
         // Arrange
         mockPostRequest.mockResolvedValue({data: inviteCodeNew});
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         await findEmailInput(wrapper)?.setValue('friend@example.com');
@@ -160,7 +162,7 @@ describe('SettingsPage — invite by email', () => {
     it('should rotate the displayed code and show success line on happy path', async () => {
         // Arrange
         mockPostRequest.mockResolvedValue({data: inviteCodeNew});
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
         // Sanity — old code is on the page first
         expect(wrapper.text()).toContain('OLD-CODE');
@@ -185,7 +187,7 @@ describe('SettingsPage — invite by email', () => {
         const axiosError = new MockAxiosError('Too Many Requests');
         axiosError.response = {status: 429, data: null, statusText: 'Too Many Requests', headers: {}, config: {}};
         mockPostRequest.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
         await findEmailInput(wrapper)?.setValue('friend@example.com');
 
@@ -202,7 +204,7 @@ describe('SettingsPage — invite by email', () => {
     it('should show the generic error line on 500 / network failure', async () => {
         // Arrange
         mockPostRequest.mockRejectedValue(new Error('Network error'));
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
         await findEmailInput(wrapper)?.setValue('friend@example.com');
 
@@ -223,7 +225,7 @@ describe('SettingsPage — invite by email', () => {
         const axiosError = new MockAxiosError('Unprocessable Entity');
         axiosError.response = {status: 422, data: null, statusText: 'Unprocessable Entity', headers: {}, config: {}};
         mockPostRequest.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
         await findEmailInput(wrapper)?.setValue('not-an-email');
 
@@ -240,7 +242,7 @@ describe('SettingsPage — invite by email', () => {
 
     it("should register a response-error middleware so 422 field errors flow through fs-form's useForm", () => {
         // Arrange & Act
-        shallowMount(SettingsPage);
+        shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert — the page subscribes; the 422 → field-error handling itself lives in
         // @script-development/fs-form's useForm and is covered by that package's own tests.
