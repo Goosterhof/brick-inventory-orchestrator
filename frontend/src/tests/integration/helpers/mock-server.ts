@@ -13,9 +13,14 @@
  * that asserts on the snake_case shape sent to the wire will see faithful
  * conversion. This is the regression safety net for ADR-0029.
  *
- * Note: error-response middleware (`registerResponseErrorMiddleware`) is
- * recorded but not invoked here — `resolveRoute` only models the success path
- * for now. If a test ever needs to simulate a 4xx/5xx, this helper grows then.
+ * Error responses: `mockServer.onPostError(endpoint, status, data)` registers
+ * a rejecting route. Resolution builds an axios-shaped error (`isAxiosError`
+ * flag + `response.{status,data}`), runs the registered error-response
+ * middleware against it (e.g. fs-form's 422 field-error binder), then rejects
+ * with it — the same order as fs-http's real error interceptor chain. Error
+ * data intentionally bypasses the success response middleware, mirroring real
+ * axios where interceptor success handlers never see rejected responses (which
+ * is why fs-form consumers pass a `keyMapper` for snake_case error keys).
  *
  * Usage in test files:
  *
@@ -63,6 +68,23 @@ const recordedCalls: RecordedCall[] = [];
 
 const makeResponse = <T>(data: T): MockResponse<T> => ({data, status: 200, statusText: 'OK', headers: {}, config: {}});
 
+/** Marker wrapper: a route registered with this handler rejects instead of resolving. */
+class MockErrorRoute {
+    constructor(
+        readonly status: number,
+        readonly data: unknown,
+    ) {}
+}
+
+type AxiosShapedError = Error & {isAxiosError: boolean; response: MockResponse<unknown>};
+
+const makeAxiosError = (status: number, data: unknown): AxiosShapedError => {
+    const error = new Error(`Request failed with status code ${status}`) as AxiosShapedError;
+    error.isAxiosError = true;
+    error.response = {data, status, statusText: '', headers: {}, config: {}};
+    return error;
+};
+
 /**
  * Runs registered request middleware against a config-like object and returns
  * the resulting body — the wire shape (e.g. snake_case after the ADR-0029
@@ -86,6 +108,11 @@ const resolveRoute = <T>(method: keyof typeof routes, endpoint: string, data?: u
     }
     const body = applyRequestMiddleware(data);
     recordedCalls.push({method, endpoint, body});
+    if (handler instanceof MockErrorRoute) {
+        const error = makeAxiosError(handler.status, handler.data);
+        for (const middleware of responseErrorMiddleware) middleware(error);
+        return Promise.reject(error);
+    }
     return Promise.resolve(applyResponseMiddleware(makeResponse(handler as T)));
 };
 
@@ -104,6 +131,16 @@ const unregister = <T>(array: T[], item: T) => {
  * so the wholesale fs-http mock keeps the real fs-http/axios modules out of
  * the integration import chain (ADR-0012 test isolation).
  */
+/**
+ * Faithful stand-in for fs-http's re-exported axios `isAxiosError`: real axios
+ * checks `payload.isAxiosError === true`, and errors built by `makeAxiosError`
+ * carry that flag. fs-form's `handleSubmit` calls this to decide whether a
+ * rejection is a swallowable 422 — spec files whose fs-http mock factory omits
+ * it would throw `isAxiosError is not a function` on the first error response.
+ */
+export const isAxiosError = (error: unknown): boolean =>
+    typeof error === 'object' && error !== null && (error as {isAxiosError?: unknown}).isAxiosError === true;
+
 export const guarded = <T>(fn: (arg: T) => void, onError?: (error: unknown) => void): ((arg: T) => void) => {
     return (arg: T) => {
         try {
@@ -164,6 +201,17 @@ export const mockServer = {
     /** Register a POST route. */
     onPost: (endpoint: string, responseData: unknown): void => {
         routes.POST.set(endpoint, responseData);
+    },
+
+    /**
+     * Register a POST route that rejects with an axios-shaped error carrying
+     * `response.{status,data}`. Registered error-response middleware runs
+     * against the error before the rejection reaches the caller — so e.g. a
+     * 422 with `{errors: {field: ['message']}}` exercises fs-form's real
+     * validation-error binding.
+     */
+    onPostError: (endpoint: string, status: number, data: unknown): void => {
+        routes.POST.set(endpoint, new MockErrorRoute(status, data));
     },
 
     /** Register a PUT route. */

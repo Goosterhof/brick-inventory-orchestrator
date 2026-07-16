@@ -17,6 +17,8 @@ final class RegisterRequest extends FormRequest
 
     private const string PASSWORD = 'password';
 
+    private const string PASSWORD_CONFIRMATION = 'password_confirmation';
+
     private const string INVITE_CODE = 'invite_code';
 
     /**
@@ -28,7 +30,8 @@ final class RegisterRequest extends FormRequest
             self::FAMILY_NAME => ['required_without:invite_code', 'nullable', 'string', 'max:255'],
             self::NAME => ['required', 'string', 'max:255'],
             self::EMAIL => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            self::PASSWORD => ['required', 'string', 'min:8', 'confirmed'],
+            self::PASSWORD => ['required', 'string', 'min:8'],
+            self::PASSWORD_CONFIRMATION => ['required', 'same:password'],
             self::INVITE_CODE => ['sometimes', 'nullable', 'string', 'max:10'],
         ];
     }

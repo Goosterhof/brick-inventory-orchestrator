@@ -7,8 +7,8 @@ import {flushPromises, mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 vi.mock('@script-development/fs-http', async () => {
-    const {guarded, mockHttpService} = await import('@integration/helpers/mock-server');
-    return {createHttpService: () => mockHttpService, guarded};
+    const {guarded, isAxiosError, mockHttpService} = await import('@integration/helpers/mock-server');
+    return {createHttpService: () => mockHttpService, guarded, isAxiosError};
 });
 
 describe('RegisterPage — integration', () => {
@@ -89,6 +89,40 @@ describe('RegisterPage — integration', () => {
             password_confirmation: 'secret',
         });
         expect(goToRoute).toHaveBeenCalledWith('home');
+
+        // The real navigation lazy-imports the home route component; await it so the
+        // import chain cannot race environment teardown (EnvironmentTeardownError flake).
+        await goToRoute.mock.results[0]?.value;
+    });
+
+    it('renders a confirmation-mismatch 422 error under the password confirmation input', async () => {
+        const mismatchMessage = 'The password confirmation field must match password.';
+        mockServer.onPostError('/register', 422, {
+            message: mismatchMessage,
+            errors: {password_confirmation: [mismatchMessage]},
+        });
+        const wrapper = mountPage();
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
+
+        // Inputs in template order: invite code, family name, name, email, password, password confirmation
+        const htmlInputs = wrapper.findAll('input');
+        const values = ['', 'Bricksons', 'Jane', 'jane@example.com', 'secret123', 'secret124'];
+        for (const [index, value] of values.entries()) {
+            await htmlInputs.at(index)?.setValue(value);
+        }
+
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        // The backend keys the mismatch to password_confirmation (same:password rule); the camelKey
+        // keyMapper lands it on errors.passwordConfirmation — under the confirmation field, not Password.
+        const inputs = wrapper.findAllComponents(TextInput);
+        const confirmationInput = inputs.find((input) => input.props('label') === 'Password Confirmation');
+        expect(confirmationInput?.props('error')).toBe(mismatchMessage);
+        const passwordInput = inputs.find((input) => input.props('label') === 'Password');
+        expect(passwordInput?.props('error')).toBe(''); // TextInput's no-error default — nothing under Password
+
+        expect(goToRoute).not.toHaveBeenCalled();
     });
 
     it('renders a real PrimaryButton for submission', () => {
