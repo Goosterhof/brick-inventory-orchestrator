@@ -48,3 +48,45 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - Autonomous-session permissions: does the CEO pre-allow Kendo creates / `gh pr create` for unattended shifts, or accept degraded "Unfiled Findings" mode?
 
 ---
+
+## 2026-07-16 — PR #277 Review Cycle, Merge, and PR #273 CI Repair
+
+### Decisions
+
+- **Review findings applied same-session**: General's Major (shift-reentry TOCTOU) fixed with a `shift_started_at` liveness gate (60-min staleness threshold, fresher = HALT), act-time re-verify before `start-work-on-issue`, and a distinct `waiting` ledger status; Minor fixed by `/exit` resetting `consecutive_dry`/`consecutive_failures` while keeping `shift`/`rotation` monotonic.
+- **Lockfile conflict resolved by taking main wholesale**: the branch's `libc`-churn commit was netted out of PR #277 rather than shipping a half-churned merge — churn was never substantive.
+- **PR #273 fixed on the Dependabot branch, not rebased**: oxfmt 0.58 reformats 5 showcase components (`</pre>` closing-`>` no longer wrapped); formatter re-run and committed onto the branch. `@dependabot rebase` explicitly ruled out — it would force-push away the fix.
+
+### False Starts
+
+- **General's branch-protection hypothesis inverted**: review suspected required check `"gate"` never matches `town-crier/gate`; live config showed `gate` (Actions, app 15368) exists, matches, and was green — the actual red check was `town-crier/gate` ("Held — 2 open findings"), which tracks finding threads, not code, so fix commits alone don't flip it.
+
+### Friction Signals
+
+- PR #277 gained merge conflicts mid-review-handling (PR #276 Kendo migration rewrote the Paper Trail table on main); resolved in one pass, CEO surfaced it mid-turn.
+- PR #277 stayed `BLOCKED` after all fixes landed; unblocking required CEO thread resolution at merge time, consistent with the standing classifier constraint.
+
+### Dynamics
+
+- CEO drove the cadence with terse mid-turn directives ("commit and push and PR everything", "we got merge conflicts", "it's merged", "let's apply it"); Steward executed without further decision menus.
+- For #273 the Steward reported diagnosis first and offered the fix; CEO approved before application.
+
+### Process Meta
+
+- `/minutes` fired twice this session (this entry appends to the first file).
+- No subagents dispatched; review fixes, conflict resolution, and the #273 repair were all direct.
+- Frontend pre-push gauntlet ran green three times (PR #277 initial push, review-fix push, #273 branch push); no ceremony bypasses.
+- Memory updated: `feedback_classifier_external_writes` gained the `town-crier/gate` check-run mechanics (app `town-crier-announce`, fails with "Held — N open findings" until threads resolve).
+
+### Notes
+
+- PR #277 squash-merged as `f32e8e2`; `/enter`, `/exit`, `shift-patrol`, and the shift ledger are live on `main`. No shift has run yet.
+- Paper Trail table conflict resolution seated the Shift Report row in the post-Kendo column format (`Artifact | Lives | Filed When | Filed By`).
+- Formatter-bump failure mode recorded: Dependabot bumps a formatter but cannot re-run it, so any output drift fails `format:check`; fix is checkout → format → commit onto the bot branch.
+
+### Action Items
+
+- CEO: merge #273 once checks report green — without commenting `@dependabot rebase`.
+- Steward: maiden `/enter once` run still pending from the first entry's action items.
+
+---
