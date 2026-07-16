@@ -40,10 +40,15 @@ The Brickworks is a single firm with two named production wings and a central at
 | **Standup Note** | `.claude/records/standups/` | At cross-wing sync points | The Steward (via `/standup`) |
 | **Retrospective** | `.claude/records/retrospectives/` | When the CEO calls `/retro` to learn across sessions | The Steward (fresh context) |
 | **Minutes** | `.claude/records/minutes/` | During/after a session (via `/minutes`) | Meeting Minutes Secretary |
+| **Shift Report** | `.claude/records/shifts/` | At the end of each autonomous shift (via `/enter`) | The Steward |
 
 `.claude/records/work-orders/` and `.claude/records/build-records/` are **frozen archives** (through 2026-07-16). The ~150 completed records stay read-only history; the 12 then-open Work Orders were recreated on the board (Epic #1 + BIO-0001…BIO-0011) and their files stamped `Migrated to Kendo`. Do not file new Work Order or Build Record files.
 
 Session-level texture is captured as per-session minutes files in `.claude/records/minutes/` (`YYYY-MM-DD-<slug>.md`) via the `/minutes` skill — one file per session so parallel-dispatch branches never collide on a shared ledger. The repo-root `MINUTES.md` is the frozen archive of minutes through 2026-05-28. Minutes feed the Retrospective — the `/retro` skill mines minutes (plus Build Records, Audits, Standups) for what reversed, what repeated, what surprised.
+
+### Autonomous Operation (`/enter` / `/exit`)
+
+The CEO can open the doors with `/enter`: the Steward runs the firm in a loop of **shifts** — roll-call, bug/inconsistency hunt (light `shift-patrol` workflow; full `warden-cross-wing-sweep` every Nth shift), verified findings filed as board issues, up to 2 ready issues (bugs or fleshed-out features) built by Brickwrights and opened as PRs with `Agent Review Requested`. **The CEO stays the merge authority** — shifts never touch `main` and stop building when 6 agent PRs await review. State between shifts lives in `.claude/records/shifts/LEDGER.md` (sweep cadence and stop counters are the CEO's dials). `/exit` — or any CEO "stop" — closes the doors. Locked by CEO decision 2026-07-16: Branch + PR autonomy, continuous loop, patrol + periodic sweep.
 
 ### Pull-Request Review Signal
 
