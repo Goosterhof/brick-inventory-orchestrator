@@ -1,3 +1,4 @@
+import type {FamilySet} from '@app/types/familySet';
 import type {ComponentPublicInstance} from 'vue';
 
 import ScanSetPage from '@app/domains/sets/pages/ScanSetPage.vue';
@@ -13,7 +14,20 @@ const {mockGetRequest, mockPostRequest, mockGoToRoute} = vi.hoisted(() => ({
     mockGoToRoute: vi.fn<() => Promise<void>>(),
 }));
 
-const mockStoreGetAll = vi.hoisted(() => ({value: [] as {setNum: string; quantity: number; status: string}[]}));
+const mockStoreGetAll = vi.hoisted(() => ({value: [] as FamilySet[]}));
+
+// Mirrors the real GET /family-sets wire shape after camelization (ADR-0029):
+// no top-level setNum — the set number lives nested at set.setNum.
+const fetchedFamilySet = (setNum: string, overrides?: Partial<FamilySet>): FamilySet => ({
+    id: 1,
+    setId: 10,
+    quantity: 2,
+    status: 'built',
+    purchaseDate: null,
+    notes: null,
+    set: {id: 10, setNum, name: 'Millennium Falcon', year: 2017, theme: null, numParts: 7541, imageUrl: null},
+    ...overrides,
+});
 
 vi.mock('barcode-detector', () => ({BarcodeDetector: vi.fn<() => void>()}));
 
@@ -494,9 +508,9 @@ describe('ScanSetPage', () => {
     });
 
     describe('duplicate detection', () => {
-        it('should show duplicate warning when scanned set already exists in store', async () => {
-            // Arrange
-            mockStoreGetAll.value = [{setNum: '75192-1', quantity: 2, status: 'built'}];
+        it('should show duplicate warning when scanned set already exists in store (nested set.setNum)', async () => {
+            // Arrange — real resource shape: the set number lives at set.setNum, not top-level
+            mockStoreGetAll.value = [fetchedFamilySet('75192-1')];
             mockGetRequest.mockResolvedValue({data: mockSetResponse});
             const wrapper = shallowMount(ScanSetPage);
 
@@ -513,9 +527,26 @@ describe('ScanSetPage', () => {
             expect(warning.text()).toContain('sets.duplicateWarning');
         });
 
+        it('should fall back to top-level setNum when an entry has no nested set', async () => {
+            // Arrange — draft-shaped entry without a nested set
+            mockStoreGetAll.value = [fetchedFamilySet('75192-1', {setNum: '75192-1', set: undefined})];
+            mockGetRequest.mockResolvedValue({data: mockSetResponse});
+            const wrapper = shallowMount(ScanSetPage);
+
+            // Act
+            (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
+                'detect',
+                '5702015357197',
+            );
+            await flushPromises();
+
+            // Assert
+            expect(wrapper.find("[data-testid='duplicate-warning']").exists()).toBe(true);
+        });
+
         it('should not show duplicate warning when scanned set is not in store', async () => {
             // Arrange
-            mockStoreGetAll.value = [{setNum: '10179-1', quantity: 1, status: 'sealed'}];
+            mockStoreGetAll.value = [fetchedFamilySet('10179-1', {quantity: 1, status: 'sealed'})];
             mockGetRequest.mockResolvedValue({data: mockSetResponse});
             const wrapper = shallowMount(ScanSetPage);
 
@@ -532,7 +563,7 @@ describe('ScanSetPage', () => {
 
         it('should dismiss duplicate warning when dismiss button is clicked', async () => {
             // Arrange
-            mockStoreGetAll.value = [{setNum: '75192-1', quantity: 2, status: 'built'}];
+            mockStoreGetAll.value = [fetchedFamilySet('75192-1')];
             mockGetRequest.mockResolvedValue({data: mockSetResponse});
             const wrapper = shallowMount(ScanSetPage);
             (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
@@ -551,7 +582,7 @@ describe('ScanSetPage', () => {
 
         it('should reset duplicate dismissed state on new scan', async () => {
             // Arrange
-            mockStoreGetAll.value = [{setNum: '75192-1', quantity: 2, status: 'built'}];
+            mockStoreGetAll.value = [fetchedFamilySet('75192-1')];
             mockGetRequest.mockResolvedValue({data: mockSetResponse});
             const wrapper = shallowMount(ScanSetPage);
             (wrapper.findComponent({name: 'BarcodeScanner'}).vm as ComponentPublicInstance).$emit(
@@ -578,7 +609,7 @@ describe('ScanSetPage', () => {
 
         it('should not show duplicate warning when no set is found', async () => {
             // Arrange
-            mockStoreGetAll.value = [{setNum: '75192-1', quantity: 1, status: 'sealed'}];
+            mockStoreGetAll.value = [fetchedFamilySet('75192-1', {quantity: 1, status: 'sealed'})];
             mockGetRequest.mockRejectedValue(new Error('Not found'));
             const wrapper = shallowMount(ScanSetPage);
 

@@ -216,7 +216,7 @@ const handleAssigned = () => {
     showAssignModal.value = false;
     selectedPart.value = null;
     if (adapted.value) {
-        loadParts(adapted.value.set?.setNum ?? adapted.value.setNum);
+        loadParts(adapted.value.set?.setNum ?? adapted.value.setNum ?? '');
     }
 };
 
@@ -335,7 +335,7 @@ const toPartIdentity = (part: SetPart): PartIdentity => ({
                         <PrimaryButton
                             v-if="!setWithParts && adapted.status !== 'wishlist'"
                             :disabled="partsLoading"
-                            @click="loadParts(adapted.set?.setNum ?? adapted.setNum)"
+                            @click="loadParts(adapted.set?.setNum ?? adapted.setNum ?? '')"
                         >
                             {{ t('sets.loadParts').value }}
                         </PrimaryButton>
