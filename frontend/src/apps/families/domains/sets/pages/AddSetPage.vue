@@ -4,15 +4,11 @@ import type {FamilySetStatus} from '@app/types/familySet';
 import {familyHttpService, familyRouterService, familyTranslationService} from '@app/services';
 import {familySetStoreModule} from '@app/stores';
 import {useForm} from '@script-development/fs-form';
-import DateInput from '@shared/components/forms/inputs/DateInput.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {FormField, SingleSelect, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
 import {isAxiosError} from 'axios';
-import {computed, ref, watch} from 'vue';
+import {computed, ref, useId, watch} from 'vue';
 
 const {t} = familyTranslationService;
 const adapted = familySetStoreModule.generateNew();
@@ -42,17 +38,30 @@ const dismissDuplicate = () => {
 type AddSetField = 'setNum' | 'quantity' | 'status' | 'purchaseDate' | 'notes';
 const {errors, handleSubmit, submitting} = useForm<AddSetField>(familyHttpService, {keyMapper: camelKey});
 
-const statusOptions: {
-    value: FamilySetStatus;
-    key: 'sets.sealed' | 'sets.built' | 'sets.inProgress' | 'sets.inStorage' | 'sets.incomplete' | 'sets.wishlist';
-}[] = [
-    {value: 'sealed', key: 'sets.sealed'},
-    {value: 'built', key: 'sets.built'},
-    {value: 'in_progress', key: 'sets.inProgress'},
-    {value: 'in_storage', key: 'sets.inStorage'},
-    {value: 'incomplete', key: 'sets.incomplete'},
-    {value: 'wishlist', key: 'sets.wishlist'},
-];
+const setNumId = useId();
+const quantityId = useId();
+const statusId = useId();
+const purchaseDateId = useId();
+const notesId = useId();
+
+const statusOptions = computed<{id: FamilySetStatus; label: string}[]>(() => [
+    {id: 'sealed', label: t('sets.sealed').value},
+    {id: 'built', label: t('sets.built').value},
+    {id: 'in_progress', label: t('sets.inProgress').value},
+    {id: 'in_storage', label: t('sets.inStorage').value},
+    {id: 'incomplete', label: t('sets.incomplete').value},
+    {id: 'wishlist', label: t('sets.wishlist').value},
+]);
+
+const onQuantityInput = (event: Event) => {
+    const value = (event.target as HTMLInputElement).valueAsNumber;
+    // quantity is a non-nullable number (defaults to 1); ignore empty/NaN input
+    // rather than write null. The old NumberInput molecule wrote null here via
+    // v-model indirection — a latent unsoundness the atom conversion surfaces.
+    if (!Number.isNaN(value)) {
+        adapted.mutable.value.quantity = value;
+    }
+};
 
 const onSubmit = () => {
     notFoundError.value = '';
@@ -76,11 +85,17 @@ const onSubmit = () => {
         <h1 text="2xl" font="bold" uppercase tracking="wide" m="b-6">{{ t('sets.addSet').value }}</h1>
 
         <form flex="~ col" gap="4" @submit.prevent="onSubmit">
-            <TextInput
-                v-model="adapted.mutable.value.setNum"
-                :label="t('sets.setNumber').value"
-                :error="errors.setNum"
-            />
+            <FormField :id="setNumId" :label="t('sets.setNumber').value" required :error="errors.setNum">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <TextInput
+                        :id="controlId"
+                        v-model="adapted.mutable.value.setNum"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
             <div
                 v-if="notFoundError"
@@ -124,23 +139,67 @@ const onSubmit = () => {
                 </button>
             </div>
 
-            <NumberInput
-                v-model="adapted.mutable.value.quantity"
-                :label="t('sets.quantity').value"
-                :error="errors.quantity"
-                :min="1"
-                optional
-            />
+            <FormField :id="quantityId" :label="t('sets.quantity').value" :error="errors.quantity">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <input
+                        :id="controlId"
+                        class="ui-control ui-input"
+                        :class="{'is-invalid': invalid}"
+                        type="number"
+                        :min="1"
+                        :value="adapted.mutable.value.quantity"
+                        :aria-required="required || undefined"
+                        :aria-invalid="invalid || undefined"
+                        :aria-describedby="describedby"
+                        @input="onQuantityInput"
+                    />
+                </template>
+            </FormField>
 
-            <SelectInput v-model="adapted.mutable.value.status" :label="t('sets.status').value" :error="errors.status">
-                <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-                    {{ t(option.key).value }}
-                </option>
-            </SelectInput>
+            <FormField :id="statusId" :label="t('sets.status').value" required :error="errors.status">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <SingleSelect
+                        :id="controlId"
+                        v-model="adapted.mutable.value.status"
+                        :options="statusOptions"
+                        label="label"
+                        :options-label="t('sets.status').value"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
-            <DateInput v-model="adapted.mutable.value.purchaseDate" :label="t('sets.purchaseDate').value" optional />
+            <FormField :id="purchaseDateId" :label="t('sets.purchaseDate').value">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <input
+                        :id="controlId"
+                        class="ui-control ui-input"
+                        :class="{'is-invalid': invalid}"
+                        type="date"
+                        v-model="adapted.mutable.value.purchaseDate"
+                        :aria-required="required || undefined"
+                        :aria-invalid="invalid || undefined"
+                        :aria-describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
-            <TextareaInput v-model="adapted.mutable.value.notes" :label="t('sets.notes').value" optional />
+            <FormField :id="notesId" :label="t('sets.notes').value">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <textarea
+                        :id="controlId"
+                        class="ui-control"
+                        :class="{'is-invalid': invalid}"
+                        rows="3"
+                        v-model="adapted.mutable.value.notes"
+                        :aria-required="required || undefined"
+                        :aria-invalid="invalid || undefined"
+                        :aria-describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
             <PrimaryButton type="submit" :disabled="submitting">{{ t('sets.add').value }}</PrimaryButton>
         </form>

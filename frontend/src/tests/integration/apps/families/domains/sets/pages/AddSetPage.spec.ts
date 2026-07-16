@@ -1,10 +1,6 @@
 import AddSetPage from '@app/domains/sets/pages/AddSetPage.vue';
 import {mockServer} from '@integration/helpers/mock-server';
-import DateInput from '@shared/components/forms/inputs/DateInput.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {SingleSelect, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -29,31 +25,36 @@ describe('AddSetPage — integration', () => {
         return wrapper;
     };
 
-    it('renders all form input components as real children', async () => {
+    it('renders the ui-inputs atoms as real children', async () => {
         const wrapper = await mountPage();
 
+        // package atoms for the two controls that have them
         expect(wrapper.findComponent(TextInput).exists()).toBe(true);
-        expect(wrapper.findComponent(NumberInput).exists()).toBe(true);
-        expect(wrapper.findComponent(SelectInput).exists()).toBe(true);
-        expect(wrapper.findComponent(DateInput).exists()).toBe(true);
-        expect(wrapper.findComponent(TextareaInput).exists()).toBe(true);
+        expect(wrapper.findComponent(SingleSelect).exists()).toBe(true);
+        // native controls composed in FormField for the three the package doesn't ship
+        expect(wrapper.find('input[type="number"]').exists()).toBe(true);
+        expect(wrapper.find('input[type="date"]').exists()).toBe(true);
+        expect(wrapper.find('textarea').exists()).toBe(true);
     });
 
-    it('renders real TextInput with label for set number', async () => {
+    it('renders a real text input labelled for the set number', async () => {
         const wrapper = await mountPage();
 
-        const textInput = wrapper.findComponent(TextInput);
-        expect(textInput.props('label')).toBe('Set number');
-        expect(textInput.find('input').exists()).toBe(true);
+        const labels = wrapper.findAll('.ui-label').map((label) => label.text());
+        expect(labels.some((text) => text.includes('Set number'))).toBe(true);
+        expect(wrapper.findComponent(TextInput).find('input').exists()).toBe(true);
     });
 
-    it('renders real SelectInput with status options', async () => {
+    it('renders the status select with its six options once opened', async () => {
         const wrapper = await mountPage();
 
-        const selectInput = wrapper.findComponent(SelectInput);
-        expect(selectInput.props('label')).toBe('Status');
-        const options = selectInput.findAll('option');
-        expect(options).toHaveLength(6);
+        const labels = wrapper.findAll('.ui-label').map((label) => label.text());
+        expect(labels.some((text) => text.includes('Status'))).toBe(true);
+
+        // options are a listbox rendered only while open — open the combobox first
+        await wrapper.get('[role="combobox"]').trigger('click');
+        await flushPromises();
+        expect(wrapper.findAll('[role="option"]')).toHaveLength(6);
     });
 
     it('renders a real PrimaryButton for form submission', async () => {

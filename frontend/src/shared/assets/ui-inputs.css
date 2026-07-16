@@ -1,0 +1,94 @@
+/*
+ * Brick theme map for @script-development/ui-inputs (WR-0431 — ADR-0043 pilot).
+ *
+ * The package ships headless components styled ENTIRELY through --ui-* custom
+ * properties (see `@script-development/ui-inputs/style.css`, imported alongside
+ * this file in each app's main.ts). This file is BIO's one-time map: it points
+ * every --ui-* onto the brick token surface (--brick-* vars + the brutalist
+ * brand constants) so the package renders in full neo-brutalist LEGO identity.
+ *
+ * Because every value references a --brick-* custom property (which themselves
+ * flip on `:root[data-theme='light']`), a SINGLE :root block themes both the
+ * dark default and the light theme — the --ui-* layer inherits the flip for
+ * free. Only the theme-invariant brand constants (red #C41A16, yellow #F5C518,
+ * ink #000) are hard-coded.
+ *
+ * Normal :root specificity intentionally beats the package's zero-specificity
+ * `:where(:root)` defaults.
+ */
+
+:root {
+    /* field / label — the form parent spaces fields (flex gap), so the field
+       carries NO self-margin; brick labels are uppercase-bold-tracked. */
+    --ui-field-gap: 0.5rem;
+    --ui-field-margin: 0;
+    --ui-label-color: var(--brick-page-text);
+    --ui-label-size: 0.875rem;
+    --ui-label-weight: 700;
+    --ui-label-transform: uppercase;
+    --ui-label-tracking: 0.025em;
+
+    /* control (text input + select trigger) — 3px hard border, square, 4px
+       offset block shadow growing to 6px on hover: the brick signature. */
+    --ui-control-bg: var(--brick-card-bg);
+    --ui-control-bg-disabled: var(--brick-surface-subtle);
+    --ui-control-text: var(--brick-page-text);
+    --ui-control-text-muted: var(--brick-muted-text);
+    --ui-control-border-width: 3px;
+    --ui-control-border-color: var(--brick-border-color);
+    --ui-control-border-open: var(--brick-border-color);
+    --ui-control-radius: 0;
+    --ui-control-pad-x: 1rem;
+    --ui-control-pad-y: 0.75rem;
+    --ui-control-shadow: 4px 4px 0 0 var(--brick-shadow-color);
+    --ui-control-shadow-hover: 6px 6px 0 0 var(--brick-shadow-color);
+    /* focus keeps the grown drop-shadow AND stacks a 3px ink ring (brick's
+       outline-brick-ink). See the class-override note below for the yellow fill. */
+    --ui-focus-ring: 6px 6px 0 0 var(--brick-shadow-color), 0 0 0 3px #000;
+
+    /* listbox menu — same hard border + block shadow as the control. */
+    --ui-menu-bg: var(--brick-card-bg);
+    --ui-menu-border-width: 3px;
+    --ui-menu-border-color: var(--brick-border-color);
+    --ui-menu-radius: 0;
+    --ui-menu-pad: 0.25rem;
+    --ui-menu-shadow: 4px 4px 0 0 var(--brick-shadow-color);
+    --ui-menu-max-height: 15rem;
+
+    /* option — square rows; the active (keyboard/hover) row takes the warm
+       highlight surface. */
+    --ui-option-radius: 0;
+    --ui-option-pad: 0.5rem 0.75rem;
+    --ui-option-bg-active: var(--brick-surface-highlight);
+
+    /* error / danger — the message text follows the themed danger token; the
+       invalid border + shadow use the constant brick red (brick-shadow-error). */
+    --ui-danger-text: var(--brick-danger-text);
+    --ui-danger-border: #c41a16;
+    --ui-danger-shadow: 4px 4px 0 0 #c41a16;
+    --ui-error-size: 0.875rem;
+    --ui-error-weight: 700;
+}
+
+/*
+ * --- Pilot findings: brick identity the --ui-* contract cannot express ---
+ *
+ * The token surface covers palette AND structure (border-width, radius, shadow
+ * shape, label transform) — which is what the ADR-0043 spike proved. But two
+ * brick behaviours have NO --ui-* hook, so they live here as class overrides on
+ * the package's public classes:
+ *
+ *   1. Focus fills the control yellow (brick `focus:bg-brick-yellow`).
+ *   2. The invalid control fills red-light (brick `bg-brick-red-light`).
+ *
+ * Both are background-on-state changes; the contract exposes border/shadow/text
+ * per state but no `*-bg-focus` / `*-bg-invalid`. Candidate new vars for the
+ * ADR-0043 write-up: --ui-control-bg-focus / --ui-control-bg-invalid.
+ */
+.ui-control:focus-visible {
+    background: #f5c518;
+    color: #000;
+}
+.ui-control.is-invalid {
+    background: #f8d0cf;
+}

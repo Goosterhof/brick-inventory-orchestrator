@@ -4,6 +4,8 @@ import '@shared/assets/icons.css';
 import '@shared/assets/accessibility.css';
 import '@shared/assets/dialog.css';
 import '@shared/assets/theme.css';
+import '@script-development/ui-inputs/style.css';
+import '@shared/assets/ui-inputs.css';
 import {registerFromQueryMiddleware} from '@shared/middleware/fromQuery';
 import {registerAuthGuard} from '@shared/services/auth/guards';
 import {createApp} from 'vue';
