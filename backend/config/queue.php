@@ -41,7 +41,12 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            // INVARIANT: retry_after must strictly exceed the largest #[Timeout] in
+            // app/Jobs (currently 600s). If a job outlives retry_after, its reservation
+            // is released and a second worker runs the same job concurrently — for the
+            // Rebrickable imports that means duplicate FamilySet rows. Guarded by
+            // tests/Architecture/QueueRetryAfterArchitectureTest.php.
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 700),
             'after_commit' => false,
         ],
 

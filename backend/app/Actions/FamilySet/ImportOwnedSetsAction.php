@@ -120,26 +120,26 @@ final readonly class ImportOwnedSetsAction
 
         foreach ($pageUserSets as $pageUserSet) {
             $set = $setsByNum[$pageUserSet->set->setNum];
-            $existingForSet = $familySetsBySetId[$set->id] ?? [];
 
-            $this->syncFamilySet($family, $set, $existingForSet, $pageUserSet, $created, $updated, $skipped, $skippedSetNums);
+            $this->syncFamilySet($family, $set, $familySetsBySetId, $pageUserSet, $created, $updated, $skipped, $skippedSetNums);
         }
     }
 
     /**
-     * @param list<FamilySet> $existingForSet
-     * @param list<string>    $skippedSetNums
+     * @param array<int, list<FamilySet>> $familySetsBySetId
+     * @param list<string>                $skippedSetNums
      */
     private function syncFamilySet(
         Family $family,
         Set $set,
-        array $existingForSet,
+        array &$familySetsBySetId,
         RebrickableUserSetData $rebrickableUserSetData,
         int &$created,
         int &$updated,
         int &$skipped,
         array &$skippedSetNums,
     ): void {
+        $existingForSet = $familySetsBySetId[$set->id] ?? [];
         $existingCount = count($existingForSet);
 
         if ($existingCount > 1) {
@@ -149,7 +149,9 @@ final readonly class ImportOwnedSetsAction
             $this->updateExistingFamilySet($existingForSet[0], $rebrickableUserSetData->quantity);
             $updated++;
         } else {
-            $this->createFamilySet($family, $set, $rebrickableUserSetData->quantity);
+            // Append the created row to the in-memory map so a repeated set_num within
+            // the same page takes the update path instead of double-inserting (BIO-0019).
+            $familySetsBySetId[$set->id] = [$this->createFamilySet($family, $set, $rebrickableUserSetData->quantity)];
             $created++;
         }
     }
@@ -199,7 +201,7 @@ final readonly class ImportOwnedSetsAction
         $familySet->save();
     }
 
-    private function createFamilySet(Family $family, Set $set, int $quantity): void
+    private function createFamilySet(Family $family, Set $set, int $quantity): FamilySet
     {
         /** @var FamilySet $familySet */
         $familySet = $this->familySet->newInstance();
@@ -208,5 +210,7 @@ final readonly class ImportOwnedSetsAction
         $familySet->quantity = $quantity;
         $familySet->status = FamilySetStatus::Sealed;
         $familySet->save();
+
+        return $familySet;
     }
 }
