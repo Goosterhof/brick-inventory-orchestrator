@@ -163,9 +163,9 @@ export const guarded = <T>(fn: (arg: T) => void, onError?: (error: unknown) => v
  * Middleware registration retains the registered functions and applies them
  * on each route resolution — request middleware runs against a config-like
  * object before the route lookup; response middleware runs against the
- * response object before it is resolved to the caller. Error-response
- * middleware is retained for future use but is not invoked because the
- * mock currently only models the success path.
+ * response object before it is resolved to the caller; error-response
+ * middleware runs against the axios-shaped error of routes registered via
+ * `on*Error` before the rejection reaches the caller.
  */
 export const mockHttpService = {
     getRequest: <T = unknown>(endpoint: string) => resolveRoute<T>('GET', endpoint),
@@ -196,6 +196,17 @@ export const mockServer = {
     /** Register a GET route. Call before mounting the component. */
     onGet: (endpoint: string, responseData: unknown): void => {
         routes.GET.set(endpoint, responseData);
+    },
+
+    /**
+     * Register a GET route that rejects with an axios-shaped error carrying
+     * `response.{status,data}` (see `onPostError`). Lets flow tests simulate
+     * mid-session auth loss (401) or an unreachable endpoint (5xx / boot-time
+     * `/me` failure) on read paths, exercising registered error-response
+     * middleware such as the auth 401 recovery.
+     */
+    onGetError: (endpoint: string, status: number, data: unknown): void => {
+        routes.GET.set(endpoint, new MockErrorRoute(status, data));
     },
 
     /** Register a POST route. */

@@ -53,6 +53,7 @@ export const createMockFamilyServices = (overrides?: FamilyServicesOverrides): F
             register: vi.fn<() => Promise<void>>(),
             login: vi.fn<() => Promise<void>>(),
             logout: vi.fn<() => Promise<void>>(),
+            clearUser: vi.fn<() => void>(),
             checkIfLoggedIn: vi.fn<() => Promise<void>>(),
         },
         familyRouterService: {

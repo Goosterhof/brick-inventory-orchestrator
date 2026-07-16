@@ -4,7 +4,7 @@ import {deepCamelKeys, deepSnakeKeys} from '@shared/helpers/string';
 import {createAuthService} from '@shared/services/auth';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import {describe, expect, it} from 'vitest';
+import {describe, expect, it, vi} from 'vitest';
 
 interface TestProfile {
     id: number;
@@ -44,6 +44,7 @@ describe('auth service', () => {
             expect(authService).toHaveProperty('userId');
             expect(authService).toHaveProperty('login');
             expect(authService).toHaveProperty('logout');
+            expect(authService).toHaveProperty('clearUser');
             expect(authService).toHaveProperty('checkIfLoggedIn');
         });
 
@@ -166,6 +167,87 @@ describe('auth service', () => {
 
             mock.restore();
         });
+
+        it('should clear user and resolve when the logout request is rejected by the server', async () => {
+            // Arrange — an expired session rejects the logout POST (e.g. 419)
+            const mock = new MockAdapter(axios);
+            const httpService = createWiredHttpService(baseURL);
+            const authService = createAuthService<TestProfile>(httpService);
+            const credentials = {email: 'test@example.com', password: 'password123'};
+            const responseData = {id: 1, email: 'test@example.com', created_at: '2024-01-01T00:00:00Z'};
+            mock.onPost(`${baseURL}/login`, credentials).reply(200, responseData);
+            mock.onPost(`${baseURL}/logout`, {}).reply(419);
+            await authService.login(credentials);
+
+            // Act & Assert — local logout still completes and the call resolves
+            await expect(authService.logout()).resolves.toBeUndefined();
+            expect(authService.user.value).toBeNull();
+            expect(authService.isLoggedIn.value).toBe(false);
+
+            mock.restore();
+        });
+
+        it('should clear user and resolve when the logout request fails with a network error', async () => {
+            // Arrange
+            const mock = new MockAdapter(axios);
+            const httpService = createWiredHttpService(baseURL);
+            const authService = createAuthService<TestProfile>(httpService);
+            const credentials = {email: 'test@example.com', password: 'password123'};
+            const responseData = {id: 1, email: 'test@example.com', created_at: '2024-01-01T00:00:00Z'};
+            mock.onPost(`${baseURL}/login`, credentials).reply(200, responseData);
+            mock.onPost(`${baseURL}/logout`, {}).networkError();
+            await authService.login(credentials);
+
+            // Act & Assert
+            await expect(authService.logout()).resolves.toBeUndefined();
+            expect(authService.user.value).toBeNull();
+            expect(authService.isLoggedIn.value).toBe(false);
+
+            mock.restore();
+        });
+
+        it('should rethrow a non-axios error and still clear user', async () => {
+            // Arrange — a programming error in the transport layer stays loud
+            const mock = new MockAdapter(axios);
+            const httpService = createWiredHttpService(baseURL);
+            const authService = createAuthService<TestProfile>(httpService);
+            const credentials = {email: 'test@example.com', password: 'password123'};
+            const responseData = {id: 1, email: 'test@example.com', created_at: '2024-01-01T00:00:00Z'};
+            mock.onPost(`${baseURL}/login`, credentials).reply(200, responseData);
+            await authService.login(credentials);
+            vi.spyOn(httpService, 'postRequest').mockRejectedValueOnce(new TypeError('broken transport'));
+
+            // Act & Assert
+            await expect(authService.logout()).rejects.toThrow(TypeError);
+            expect(authService.user.value).toBeNull();
+
+            vi.restoreAllMocks();
+            mock.restore();
+        });
+    });
+
+    describe('clearUser', () => {
+        it('should drop the local user state without any http call', async () => {
+            // Arrange
+            const mock = new MockAdapter(axios);
+            const httpService = createWiredHttpService(baseURL);
+            const authService = createAuthService<TestProfile>(httpService);
+            const credentials = {email: 'test@example.com', password: 'password123'};
+            const responseData = {id: 1, email: 'test@example.com', created_at: '2024-01-01T00:00:00Z'};
+            mock.onPost(`${baseURL}/login`, credentials).reply(200, responseData);
+            await authService.login(credentials);
+            const requestCountAfterLogin = mock.history.post.length;
+
+            // Act
+            authService.clearUser();
+
+            // Assert
+            expect(authService.user.value).toBeNull();
+            expect(authService.isLoggedIn.value).toBe(false);
+            expect(mock.history.post).toHaveLength(requestCountAfterLogin);
+
+            mock.restore();
+        });
     });
 
     describe('userId', () => {
@@ -278,17 +360,66 @@ describe('auth service', () => {
             mock.restore();
         });
 
-        it('should throw error when /me returns non-401 error', async () => {
-            // Arrange
+        it('should treat a non-401 /me error as logged out instead of throwing', async () => {
+            // Arrange — an unreachable /me must never block boot (blank-page bug)
             const mock = new MockAdapter(axios);
             const httpService = createWiredHttpService(baseURL);
             const authService = createAuthService<TestProfile>(httpService);
             mock.onGet(`${baseURL}/me`).reply(500);
 
             // Act & Assert
-            await expect(authService.checkIfLoggedIn()).rejects.toThrow(Error);
+            await expect(authService.checkIfLoggedIn()).resolves.toBeUndefined();
+            expect(authService.user.value).toBeNull();
+            expect(authService.isLoggedIn.value).toBe(false);
 
             mock.restore();
+        });
+
+        it('should treat a /me network error as logged out', async () => {
+            // Arrange
+            const mock = new MockAdapter(axios);
+            const httpService = createWiredHttpService(baseURL);
+            const authService = createAuthService<TestProfile>(httpService);
+            mock.onGet(`${baseURL}/me`).networkError();
+
+            // Act & Assert
+            await expect(authService.checkIfLoggedIn()).resolves.toBeUndefined();
+            expect(authService.isLoggedIn.value).toBe(false);
+
+            mock.restore();
+        });
+
+        it('should clear a previously-set user when /me fails with a non-401 error', async () => {
+            // Arrange — stale state must not survive a failed re-probe
+            const mock = new MockAdapter(axios);
+            const httpService = createWiredHttpService(baseURL);
+            const authService = createAuthService<TestProfile>(httpService);
+            const credentials = {email: 'test@example.com', password: 'password123'};
+            const responseData = {id: 1, email: 'test@example.com', created_at: '2024-01-01T00:00:00Z'};
+            mock.onPost(`${baseURL}/login`, credentials).reply(200, responseData);
+            await authService.login(credentials);
+            mock.onGet(`${baseURL}/me`).reply(503);
+
+            // Act
+            await authService.checkIfLoggedIn();
+
+            // Assert
+            expect(authService.user.value).toBeNull();
+            expect(authService.isLoggedIn.value).toBe(false);
+
+            mock.restore();
+        });
+
+        it('should rethrow a non-axios error', async () => {
+            // Arrange — a programming error in the transport layer stays loud
+            const httpService = createWiredHttpService(baseURL);
+            const authService = createAuthService<TestProfile>(httpService);
+            vi.spyOn(httpService, 'getRequest').mockRejectedValueOnce(new TypeError('broken transport'));
+
+            // Act & Assert
+            await expect(authService.checkIfLoggedIn()).rejects.toThrow(TypeError);
+
+            vi.restoreAllMocks();
         });
     });
 });
