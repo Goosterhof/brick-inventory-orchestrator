@@ -58,9 +58,7 @@ vi.mock('@app/stores', () =>
 // trio (kept light by the vi.mock above — no floating-ui) so the slot + controls
 // render; everything else stays shallow (ADR-0012: unit tests use shallowMount).
 const renderPage = () =>
-    shallowMount(AddSetPage, {
-        global: {stubs: {FormField: false, TextInput: false, SingleSelect: false}},
-    });
+    shallowMount(AddSetPage, {global: {stubs: {FormField: false, TextInput: false, SingleSelect: false}}});
 
 // The set-number field is the only text input on the page; v-model wires through
 // the package TextInput, so we drive the DOM control rather than a molecule.

@@ -2,7 +2,6 @@ import SetsOverviewPage from '@app/domains/sets/pages/SetsOverviewPage.vue';
 import CollapsibleSection from '@shared/components/CollapsibleSection.vue';
 import EmptyState from '@shared/components/EmptyState.vue';
 import FilterChip from '@shared/components/FilterChip.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -12,18 +11,13 @@ const {
     createMockStringTs,
     createMockFamilyServices,
     createMockFamilyStores,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
 vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
-
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@phosphor-icons/vue', () => ({PhCaretRight: {template: '<i />', props: ['size', 'weight']}}));
 
@@ -45,14 +39,6 @@ vi.mock('@shared/components/EmptyState.vue', () => ({
 
 vi.mock('@shared/components/FilterChip.vue', () => ({
     default: {name: 'FilterChip', template: '<button @click=\'$emit("click")\'><slot /></button>', props: ['active']},
-}));
-
-vi.mock('@shared/components/forms/inputs/TextInput.vue', () => ({
-    default: {
-        name: 'TextInput',
-        template: '<input @input=\'$emit("update:modelValue", $event.target.value)\' />',
-        props: ['modelValue'],
-    },
 }));
 
 vi.mock('@shared/components/ListItemButton.vue', () => ({
@@ -182,7 +168,7 @@ describe('SetsOverviewPage — theme grouping', () => {
     it('should group sets by theme in collapsible sections with correct counts', async () => {
         // Arrange
         mockAllItems.value = [mockStarWarsSet, mockStarWarsSet2, mockTechnicSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert — grouping
@@ -202,7 +188,7 @@ describe('SetsOverviewPage — theme grouping', () => {
     it('should sort theme groups alphabetically', async () => {
         // Arrange
         mockAllItems.value = [mockTechnicSet, mockStarWarsSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -213,7 +199,7 @@ describe('SetsOverviewPage — theme grouping', () => {
     it('should start collapsed and toggle on emit', async () => {
         // Arrange
         mockAllItems.value = [mockStarWarsSet, mockTechnicSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert — start collapsed
@@ -245,7 +231,7 @@ describe('SetsOverviewPage — theme grouping', () => {
         // Arrange
         const noThemeSet = {...mockStarWarsSet, id: 5, set: {...mockStarWarsSet.set, theme: null}};
         mockAllItems.value = [noThemeSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -256,11 +242,11 @@ describe('SetsOverviewPage — theme grouping', () => {
     it('should maintain grouping when search is active', async () => {
         // Arrange
         mockAllItems.value = [mockStarWarsSet, mockStarWarsSet2, mockTechnicSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act
-        await wrapper.findComponent(TextInput).setValue('Imperial');
+        await wrapper.get('input[type="search"]').setValue('Imperial');
         await flushPromises();
 
         // Assert — only Star Wars group remains
@@ -273,7 +259,7 @@ describe('SetsOverviewPage — theme grouping', () => {
     it('should hide empty theme groups when filtering by status', async () => {
         // Arrange
         mockAllItems.value = [mockStarWarsSet, mockTechnicSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act — filter by "built" status
@@ -289,11 +275,11 @@ describe('SetsOverviewPage — theme grouping', () => {
     it('should show no results when all groups are filtered out', async () => {
         // Arrange
         mockAllItems.value = [mockStarWarsSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act — search for nonexistent
-        await wrapper.findComponent(TextInput).setValue('nonexistent');
+        await wrapper.get('input[type="search"]').setValue('nonexistent');
         await flushPromises();
 
         // Assert
@@ -314,7 +300,7 @@ describe('SetsOverviewPage — theme filter chips', () => {
     it('should show theme filter chips when multiple themes exist', async () => {
         // Arrange
         mockAllItems.value = [mockStarWarsSet, mockTechnicSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -326,7 +312,7 @@ describe('SetsOverviewPage — theme filter chips', () => {
     it('should not show theme filter chips when only one theme exists', async () => {
         // Arrange
         mockAllItems.value = [mockStarWarsSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -338,7 +324,7 @@ describe('SetsOverviewPage — theme filter chips', () => {
     it('should filter by theme, mark active chips, and deselect on re-click', async () => {
         // Arrange
         mockAllItems.value = [mockStarWarsSet, mockTechnicSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act — select Technic
@@ -391,7 +377,7 @@ describe('SetsOverviewPage — theme filter chips', () => {
             },
         };
         mockAllItems.value = [mockStarWarsSet, mockTechnicSet, mockCitySet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act — select both Star Wars and Technic
@@ -414,7 +400,7 @@ describe('SetsOverviewPage — theme filter chips', () => {
         // Arrange
         const sealedStarWarsSet = {...mockStarWarsSet, id: 6, status: 'sealed' as const};
         mockAllItems.value = [mockStarWarsSet, sealedStarWarsSet, mockTechnicSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act — filter by Star Wars theme AND built status
@@ -437,7 +423,7 @@ describe('SetsOverviewPage — theme filter chips', () => {
         // Arrange
         const noThemeSet = {...mockStarWarsSet, id: 7, set: {...mockStarWarsSet.set, theme: null}};
         mockAllItems.value = [mockStarWarsSet, noThemeSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert

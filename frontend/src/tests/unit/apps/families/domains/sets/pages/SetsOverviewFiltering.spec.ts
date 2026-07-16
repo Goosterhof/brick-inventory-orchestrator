@@ -8,18 +8,13 @@ const {
     createMockStringTs,
     createMockFamilyServices,
     createMockFamilyStores,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
 vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
-
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@phosphor-icons/vue', () => ({PhCaretRight: {template: '<i />', props: ['size', 'weight']}}));
 
@@ -37,14 +32,6 @@ vi.mock('@shared/components/EmptyState.vue', () => ({
 
 vi.mock('@shared/components/FilterChip.vue', () => ({
     default: {name: 'FilterChip', template: '<button @click=\'$emit("click")\'><slot /></button>', props: ['active']},
-}));
-
-vi.mock('@shared/components/forms/inputs/TextInput.vue', () => ({
-    default: {
-        name: 'TextInput',
-        template: '<input @input=\'$emit("update:modelValue", $event.target.value)\' />',
-        props: ['modelValue'],
-    },
 }));
 
 vi.mock('@shared/components/PageHeader.vue', () => ({
@@ -168,11 +155,11 @@ describe('SetsOverviewPage — filtering and view modes', () => {
         it('should filter sets by search query', async () => {
             // Arrange
             mockAllItems.value = [mockAdaptedSet, mockSealedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('Titanic');
+            await wrapper.get('input[type="search"]').setValue('Titanic');
             await flushPromises();
 
             // Assert
@@ -182,11 +169,11 @@ describe('SetsOverviewPage — filtering and view modes', () => {
         it('should filter sets by set number', async () => {
             // Arrange
             mockAllItems.value = [mockAdaptedSet, mockSealedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('75192');
+            await wrapper.get('input[type="search"]').setValue('75192');
             await flushPromises();
 
             // Assert
@@ -205,11 +192,11 @@ describe('SetsOverviewPage — filtering and view modes', () => {
                 notes: null,
             };
             mockAllItems.value = [mockAdaptedSet, wishlistSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('40000');
+            await wrapper.get('input[type="search"]').setValue('40000');
             await flushPromises();
 
             // Assert
@@ -219,7 +206,7 @@ describe('SetsOverviewPage — filtering and view modes', () => {
         it('should filter sets by status', async () => {
             // Arrange
             mockAllItems.value = [mockAdaptedSet, mockSealedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act — click "sealed" status filter
@@ -236,7 +223,7 @@ describe('SetsOverviewPage — filtering and view modes', () => {
         it('should toggle status filter off when clicked again', async () => {
             // Arrange
             mockAllItems.value = [mockAdaptedSet, mockSealedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act — click sealed, then click sealed again
@@ -256,7 +243,7 @@ describe('SetsOverviewPage — filtering and view modes', () => {
         it('should filter sets by theme chip', async () => {
             // Arrange
             mockAllItems.value = [mockAdaptedSet, mockSealedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -273,7 +260,7 @@ describe('SetsOverviewPage — filtering and view modes', () => {
         it('should toggle theme filter off when clicked again', async () => {
             // Arrange
             mockAllItems.value = [mockAdaptedSet, mockSealedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -293,11 +280,11 @@ describe('SetsOverviewPage — filtering and view modes', () => {
         it('should show no results when search matches nothing', async () => {
             // Arrange
             mockAllItems.value = [mockAdaptedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('nonexistent');
+            await wrapper.get('input[type="search"]').setValue('nonexistent');
             await flushPromises();
 
             // Assert
@@ -313,7 +300,7 @@ describe('SetsOverviewPage — filtering and view modes', () => {
             mockAllItems.value = [mockAdaptedSet, mockSealedSet];
 
             // Act
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -327,7 +314,7 @@ describe('SetsOverviewPage — filtering and view modes', () => {
         it('should switch to flat view when "All sets" chip is clicked', async () => {
             // Arrange
             mockAllItems.value = [mockAdaptedSet, mockSealedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -346,7 +333,7 @@ describe('SetsOverviewPage — filtering and view modes', () => {
         it('should sort flat view alphabetically by set name', async () => {
             // Arrange
             mockAllItems.value = [mockAdaptedSet, mockSealedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act — switch to flat
@@ -364,7 +351,7 @@ describe('SetsOverviewPage — filtering and view modes', () => {
         it('should switch back to grouped view when "By theme" chip is clicked', async () => {
             // Arrange
             mockAllItems.value = [mockAdaptedSet, mockSealedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act — flip to flat then back to grouped
@@ -387,7 +374,7 @@ describe('SetsOverviewPage — filtering and view modes', () => {
         it('should mark the active view mode chip as active', async () => {
             // Arrange
             mockAllItems.value = [mockAdaptedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert default
@@ -415,7 +402,7 @@ describe('SetsOverviewPage — filtering and view modes', () => {
                 data: [{familySetId: 1, setNum: '75192-1', totalParts: 100, storedParts: 78, percentage: 78}],
             });
             mockAllItems.value = [mockAdaptedSet];
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act

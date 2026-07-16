@@ -5,10 +5,9 @@ import EditSetPage from '@app/domains/sets/pages/EditSetPage.vue';
 import {familyRouterService} from '@app/services';
 import {familySetStoreModule} from '@app/stores';
 import {mockServer} from '@integration/helpers/mock-server';
+import {SingleSelect} from '@script-development/ui-inputs';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, mount} from '@vue/test-utils';
@@ -61,8 +60,8 @@ describe('EditSetPage — integration', () => {
         const wrapper = mount(EditSetPage);
         await flushPromises();
 
-        expect(wrapper.findComponent(NumberInput).exists()).toBe(true);
-        expect(wrapper.findComponent(SelectInput).exists()).toBe(true);
+        expect(wrapper.find('input[type="number"]').exists()).toBe(true);
+        expect(wrapper.findComponent(SingleSelect).exists()).toBe(true);
     });
 
     it('renders real PrimaryButton and DangerButton for actions', async () => {

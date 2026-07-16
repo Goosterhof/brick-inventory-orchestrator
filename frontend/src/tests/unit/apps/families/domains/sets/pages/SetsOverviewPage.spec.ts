@@ -10,18 +10,13 @@ const {
     createMockStringTs,
     createMockFamilyServices,
     createMockFamilyStores,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
 vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
-
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@phosphor-icons/vue', () => ({PhCaretRight: {template: '<i />', props: ['size', 'weight']}}));
 
@@ -39,14 +34,6 @@ vi.mock('@shared/components/EmptyState.vue', () => ({
 
 vi.mock('@shared/components/FilterChip.vue', () => ({
     default: {name: 'FilterChip', template: '<button @click=\'$emit("click")\'><slot /></button>', props: ['active']},
-}));
-
-vi.mock('@shared/components/forms/inputs/TextInput.vue', () => ({
-    default: {
-        name: 'TextInput',
-        template: '<input @input=\'$emit("update:modelValue", $event.target.value)\' />',
-        props: ['modelValue'],
-    },
 }));
 
 vi.mock('@shared/components/PageHeader.vue', () => ({
@@ -149,7 +136,7 @@ describe('SetsOverviewPage', () => {
 
     it('should render page title', async () => {
         // Arrange & Act
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -158,7 +145,7 @@ describe('SetsOverviewPage', () => {
 
     it('should call retrieveAll on mount', async () => {
         // Arrange & Act
-        shallowMount(SetsOverviewPage);
+        shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -170,7 +157,7 @@ describe('SetsOverviewPage', () => {
         mockAllItems.value = [mockAdaptedSet];
 
         // Act
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -183,7 +170,7 @@ describe('SetsOverviewPage', () => {
         mockAllItems.value = [];
 
         // Act
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -195,7 +182,7 @@ describe('SetsOverviewPage', () => {
         mockIsLoading.value = true;
 
         // Act
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
         expect(wrapper.text()).toContain('common.loading');
@@ -204,7 +191,7 @@ describe('SetsOverviewPage', () => {
     it('should navigate to scan page when scan button is clicked', async () => {
         // Arrange
         mockAllItems.value = [];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act
@@ -221,7 +208,7 @@ describe('SetsOverviewPage', () => {
     it('should navigate to add page when add button is clicked', async () => {
         // Arrange
         mockAllItems.value = [];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act
@@ -238,7 +225,7 @@ describe('SetsOverviewPage', () => {
     it('should navigate to detail page when a set list item is clicked', async () => {
         // Arrange
         mockAllItems.value = [mockAdaptedSet];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act
@@ -254,7 +241,7 @@ describe('SetsOverviewPage', () => {
         mockAllItems.value = [mockAdaptedSet];
 
         // Act
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -269,7 +256,7 @@ describe('SetsOverviewPage', () => {
         mockAllItems.value = [];
 
         // Act
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -291,7 +278,7 @@ describe('SetsOverviewPage', () => {
             notes: null,
         };
         mockAllItems.value = [setWithoutSummary];
-        const wrapper = shallowMount(SetsOverviewPage);
+        const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -301,7 +288,7 @@ describe('SetsOverviewPage', () => {
     describe('completion data fetching', () => {
         it('should fetch completion data on mount', async () => {
             // Arrange & Act
-            shallowMount(SetsOverviewPage);
+            shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -314,7 +301,7 @@ describe('SetsOverviewPage', () => {
             mockAllItems.value = [mockAdaptedSet];
 
             // Act
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Assert
             const item = wrapper.findComponent({name: 'SetListItem'});
@@ -329,7 +316,7 @@ describe('SetsOverviewPage', () => {
             mockAllItems.value = [mockAdaptedSet];
 
             // Act
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -344,7 +331,7 @@ describe('SetsOverviewPage', () => {
             mockAllItems.value = [mockAdaptedSet];
 
             // Act
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -358,7 +345,7 @@ describe('SetsOverviewPage', () => {
             mockAllItems.value = [mockAdaptedSet];
 
             // Act
-            const wrapper = shallowMount(SetsOverviewPage);
+            const wrapper = shallowMount(SetsOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
