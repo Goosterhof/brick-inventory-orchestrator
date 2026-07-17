@@ -497,6 +497,52 @@ describe('FamilySetController', function(): void {
             $response->assertStatus(409);
         });
 
+        it('should reclaim a stale active import and start a new one, keeping a single active row', function(): void {
+            Queue::fake();
+
+            $user = User::factory()->create();
+
+            // A stranded in-progress job whose worker never ran: created well beyond
+            // the 1200s stale threshold. Without reclamation this locks the family out.
+            $staleJob = ImportJob::factory()->forFamily($user->family)->inProgress()->create([
+                'created_at' => now()->subSeconds(1_300),
+            ]);
+
+            $response = $this->actingAs($user)->postJson('/api/family-sets/import-from-rebrickable');
+
+            $response->assertStatus(202)->assertJsonPath('status', 'pending');
+            Queue::assertPushed(ImportOwnedSetsJob::class, fn(ImportOwnedSetsJob $importOwnedSetsJob): bool => $importOwnedSetsJob->familyId === $user->family_id);
+
+            // The stranded job is retired via a status flip — never deleted.
+            expect($staleJob->fresh()?->status)->toBe(ImportJobStatus::Failed);
+
+            // Partial-unique-index invariant: exactly one active (pending/in_progress)
+            // row exists for the family after reclamation.
+            expect(
+                ImportJob::query()
+                    ->where('family_id', $user->family_id)
+                    ->whereIn('status', [ImportJobStatus::Pending, ImportJobStatus::InProgress])
+                    ->count(),
+            )->toBe(1);
+        });
+
+        it('should still return 409 for a fresh active import below the stale threshold', function(): void {
+            Queue::fake();
+
+            $user = User::factory()->create();
+
+            // Active job created just 60s ago — genuinely in flight, must NOT be reclaimed.
+            ImportJob::factory()->forFamily($user->family)->inProgress()->create([
+                'created_at' => now()->subSeconds(60),
+            ]);
+
+            $response = $this->actingAs($user)->postJson('/api/family-sets/import-from-rebrickable');
+
+            $response->assertStatus(409)
+                ->assertJson(['error' => 'An import is already in progress for this family']);
+            Queue::assertNothingPushed();
+        });
+
         it('should allow new import after previous one completed', function(): void {
             Queue::fake();
 
