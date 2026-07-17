@@ -1,9 +1,7 @@
 {
     "permissions": {
         "allow": [
-            "Write(.claude/records/**)",
             "Edit(.claude/records/**)",
-            "Write(.claude/docs/**)",
             "Edit(.claude/docs/**)",
             "Edit(.claude/agents/*-graduation.md)",
             "mcp__kendo-goosterhof__create-issue-tool",
