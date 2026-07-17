@@ -96,7 +96,13 @@ vi.mock('@shared/components/PrimaryButton.vue', () => ({
     },
 }));
 
-vi.mock('@shared/helpers/csv', () => ({downloadCsv: mockDownloadCsv, toCsv: mockToCsv}));
+vi.mock('@shared/helpers/csv', () => ({
+    downloadCsv: mockDownloadCsv,
+    toCsv: mockToCsv,
+    // Passthrough mirrors the real exportCsv so the toCsv/downloadCsv assertions stay unchanged.
+    exportCsv: (headers: string[], rows: string[][], filename: string) =>
+        mockDownloadCsv(mockToCsv(headers, rows), filename),
+}));
 
 vi.mock('@app/services', () =>
     createMockFamilyServices({
