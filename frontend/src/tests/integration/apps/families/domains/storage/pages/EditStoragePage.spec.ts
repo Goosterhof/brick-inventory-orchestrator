@@ -91,12 +91,14 @@ describe('EditStoragePage — integration', () => {
         vi.spyOn(storageOptionStoreModule, 'getOrFailById').mockResolvedValue(makeAdapted());
         const wrapper = mount(EditStoragePage);
         await flushPromises();
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
 
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
         expect(mockPatch).toHaveBeenCalled();
-        // No assertion on navigation — integration tests verify composition, not side effects.
+        // After a successful patch the page navigates back to the storage option's detail route.
+        expect(goToRoute).toHaveBeenCalledWith('storage-detail', 1);
     });
 
     it('renders storage name in subtitle', async () => {

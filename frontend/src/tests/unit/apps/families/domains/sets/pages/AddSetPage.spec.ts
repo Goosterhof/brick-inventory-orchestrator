@@ -1,3 +1,5 @@
+import type {FamilySet} from '@app/types/familySet';
+
 import AddSetPage from '@app/domains/sets/pages/AddSetPage.vue';
 import {FormField} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
@@ -19,7 +21,20 @@ const {mockCreate, mockGoToRoute} = vi.hoisted(() => ({
     mockCreate: vi.fn<() => Promise<unknown>>(),
     mockGoToRoute: vi.fn<() => Promise<void>>(),
 }));
-const mockStoreGetAll = vi.hoisted(() => ({value: [] as {setNum: string; quantity: number; status: string}[]}));
+const mockStoreGetAll = vi.hoisted(() => ({value: [] as FamilySet[]}));
+
+// Mirrors the real GET /family-sets wire shape after camelization (ADR-0029):
+// no top-level setNum — the set number lives nested at set.setNum.
+const fetchedFamilySet = (setNum: string, overrides?: Partial<FamilySet>): FamilySet => ({
+    id: 1,
+    setId: 10,
+    quantity: 2,
+    status: 'built',
+    purchaseDate: null,
+    notes: null,
+    set: {id: 10, setNum, name: 'Millennium Falcon', year: 2017, theme: null, numParts: 7541, imageUrl: null},
+    ...overrides,
+});
 
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
@@ -239,9 +254,9 @@ describe('AddSetPage', () => {
     });
 
     describe('duplicate detection', () => {
-        it('should show duplicate warning when entered set number matches store', async () => {
-            // Arrange
-            mockStoreGetAll.value = [{setNum: '75192-1', quantity: 2, status: 'built'}];
+        it('should show duplicate warning when entered set number matches a fetched set (nested set.setNum)', async () => {
+            // Arrange — real resource shape: the set number lives at set.setNum, not top-level
+            mockStoreGetAll.value = [fetchedFamilySet('75192-1')];
             const wrapper = renderPage();
 
             // Act
@@ -254,9 +269,22 @@ describe('AddSetPage', () => {
             expect(warning.text()).toContain('sets.duplicateWarning');
         });
 
+        it('should fall back to top-level setNum when an entry has no nested set', async () => {
+            // Arrange — draft-shaped entry without a nested set
+            mockStoreGetAll.value = [fetchedFamilySet('75192-1', {setNum: '75192-1', set: undefined})];
+            const wrapper = renderPage();
+
+            // Act
+            await setNumberInput(wrapper).setValue('75192-1');
+            await flushPromises();
+
+            // Assert
+            expect(wrapper.find("[data-testid='duplicate-warning']").exists()).toBe(true);
+        });
+
         it('should not show duplicate warning when set number does not match', async () => {
             // Arrange
-            mockStoreGetAll.value = [{setNum: '10179-1', quantity: 1, status: 'sealed'}];
+            mockStoreGetAll.value = [fetchedFamilySet('10179-1', {quantity: 1, status: 'sealed'})];
             const wrapper = renderPage();
 
             // Act
@@ -269,7 +297,7 @@ describe('AddSetPage', () => {
 
         it('should not show duplicate warning when set number is empty', () => {
             // Arrange
-            mockStoreGetAll.value = [{setNum: '75192-1', quantity: 1, status: 'sealed'}];
+            mockStoreGetAll.value = [fetchedFamilySet('75192-1', {quantity: 1, status: 'sealed'})];
 
             // Act
             const wrapper = renderPage();
@@ -280,7 +308,7 @@ describe('AddSetPage', () => {
 
         it('should dismiss duplicate warning when dismiss button is clicked', async () => {
             // Arrange
-            mockStoreGetAll.value = [{setNum: '75192-1', quantity: 2, status: 'built'}];
+            mockStoreGetAll.value = [fetchedFamilySet('75192-1')];
             const wrapper = renderPage();
             await setNumberInput(wrapper).setValue('75192-1');
             await flushPromises();
@@ -295,7 +323,7 @@ describe('AddSetPage', () => {
 
         it('should reset dismissed state when set number changes', async () => {
             // Arrange
-            mockStoreGetAll.value = [{setNum: '75192-1', quantity: 2, status: 'built'}];
+            mockStoreGetAll.value = [fetchedFamilySet('75192-1')];
             const wrapper = renderPage();
             await setNumberInput(wrapper).setValue('75192-1');
             await flushPromises();

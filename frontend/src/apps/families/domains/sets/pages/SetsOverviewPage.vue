@@ -51,6 +51,8 @@ const allStatuses: FamilySetStatus[] = ['sealed', 'in_progress', 'built', 'in_st
 
 const UNKNOWN_THEME = 'Unknown';
 
+const orEmpty = (value: string | number | null | undefined): string => String(value ?? '');
+
 const filteredSets = computed(() => {
     let result = getAll.value;
 
@@ -59,14 +61,14 @@ const filteredSets = computed(() => {
     }
 
     if (activeThemeFilters.value.size > 0) {
-        result = result.filter((s) => activeThemeFilters.value.has(s.set?.theme ?? UNKNOWN_THEME));
+        result = result.filter((s) => activeThemeFilters.value.has(s.set?.theme?.name ?? UNKNOWN_THEME));
     }
 
     const query = searchQuery.value.toLowerCase().trim();
     if (query) {
         result = result.filter((s) => {
             const name = (s.set?.name ?? '').toLowerCase();
-            const setNum = (s.set?.setNum ?? s.setNum).toLowerCase();
+            const setNum = orEmpty(s.set?.setNum ?? s.setNum).toLowerCase();
             return name.includes(query) || setNum.includes(query);
         });
     }
@@ -77,7 +79,7 @@ const filteredSets = computed(() => {
 const allThemes = computed(() => {
     const themes = new Set<string>();
     for (const s of getAll.value) {
-        themes.add(s.set?.theme ?? UNKNOWN_THEME);
+        themes.add(s.set?.theme?.name ?? UNKNOWN_THEME);
     }
     return [...themes].sort();
 });
@@ -87,7 +89,7 @@ const groupedSets = computed(() => {
     const map = new Map<string, typeof filteredSets.value>();
 
     for (const s of filteredSets.value) {
-        const theme = s.set?.theme ?? UNKNOWN_THEME;
+        const theme = s.set?.theme?.name ?? UNKNOWN_THEME;
         const existing = map.get(theme);
         if (existing) {
             existing.push(s);
@@ -105,7 +107,9 @@ const groupedSets = computed(() => {
 });
 
 const flatSets = computed(() =>
-    [...filteredSets.value].sort((a, b) => (a.set?.name ?? a.setNum).localeCompare(b.set?.name ?? b.setNum)),
+    [...filteredSets.value].sort((a, b) =>
+        orEmpty(a.set?.name ?? a.setNum).localeCompare(orEmpty(b.set?.name ?? b.setNum)),
+    ),
 );
 
 const toggleStatusFilter = (status: FamilySetStatus) => {
@@ -170,15 +174,13 @@ const goToDetail = async (id: number) => {
 
 type AdaptedSet = (typeof getAll)['value'][number];
 
-const orEmpty = (value: string | number | null | undefined): string => String(value ?? '');
-
 const toCsvRow = (s: AdaptedSet): string[] => {
     const set = s.set;
     return [
-        set?.setNum ?? s.setNum,
+        orEmpty(set?.setNum ?? s.setNum),
         orEmpty(set?.name),
         orEmpty(set?.year),
-        orEmpty(set?.theme),
+        orEmpty(set?.theme?.name),
         orEmpty(set?.numParts),
         String(s.quantity),
         s.status,

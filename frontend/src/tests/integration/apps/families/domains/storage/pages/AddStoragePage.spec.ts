@@ -1,4 +1,5 @@
 import AddStoragePage from '@app/domains/storage/pages/AddStoragePage.vue';
+import {familyRouterService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
 import {TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
@@ -54,11 +55,20 @@ describe('AddStoragePage — integration', () => {
             child_ids: [],
         });
         const wrapper = mountPage();
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
+
+        await wrapper.findComponent(TextInput).find('input').setValue('Shelf A');
 
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
-        // No assertion on navigation — integration tests verify composition, not side effects.
+        // The create() call posts to storage-options with a snake_case wire body (ADR-0029);
+        // goToRoute navigates to the detail page of the created storage option.
+        const createCalls = mockServer.callsTo('POST', 'storage-options');
+        expect(createCalls).toHaveLength(1);
+        expect(createCalls[0]?.body).toMatchObject({name: 'Shelf A', parent_id: null, row: null, column: null});
+        expect(createCalls[0]?.body).not.toHaveProperty('parentId');
+        expect(goToRoute).toHaveBeenCalledWith('storage-detail', 7);
     });
 
     it('renders page title', () => {

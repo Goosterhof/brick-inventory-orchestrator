@@ -22,7 +22,9 @@ const setsAddedCount = ref(0);
 
 const duplicateMatch = computed(() => {
     if (!foundSet.value) return null;
-    return familySetStoreModule.getAll.value.find((s) => s.setNum === foundSet.value?.setNum) ?? null;
+    return (
+        familySetStoreModule.getAll.value.find((s) => (s.set?.setNum ?? s.setNum) === foundSet.value?.setNum) ?? null
+    );
 });
 
 const showDuplicateWarning = computed(() => duplicateMatch.value !== null && !duplicateDismissed.value);

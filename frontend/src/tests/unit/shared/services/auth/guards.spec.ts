@@ -28,6 +28,7 @@ const createMockAuthService = (isLoggedInValue: boolean) => {
         register: vi.fn<() => Promise<void>>(),
         login: vi.fn<() => Promise<void>>(),
         logout: vi.fn<() => Promise<void>>(),
+        clearUser: vi.fn<() => void>(),
         checkIfLoggedIn: vi.fn<() => Promise<void>>(),
         _setLoggedIn: (value: boolean) => {
             isLoggedInRef.value = value;

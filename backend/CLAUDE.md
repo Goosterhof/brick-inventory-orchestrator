@@ -184,6 +184,8 @@ The Foundry writes async work; a `queue:work` worker reads it. **Production need
   php artisan queue:work --queue=default --tries=3 --backoff=10 --timeout=60 --max-time=3600
   ```
   `--max-time=3600` recycles the process hourly to bound memory leaks.
+- **Timeout precedence:** a per-job `#[Timeout]` attribute overrides the worker's `--timeout` flag (`Worker::timeoutForJob()` prefers the job's value). Both real jobs — `ImportOwnedSetsJob` and `SyncSetPartsJob` — declare `#[Timeout(600)]` + `#[FailOnTimeout]` and may run up to 10 minutes; `--timeout=60` effectively governs only attribute-less jobs (currently queued mail such as `InviteCodeMail`).
+- **Reservation invariant:** the database queue's `retry_after` must strictly exceed the largest per-job `#[Timeout]` in `app/Jobs` — otherwise a long job's reservation expires mid-run and the worker re-dispatches it while the first attempt is still on the conveyor belt.
 - **Local dev:** orchestrator-side `make queue` runs the same command inside the backend container. Run it in a second terminal alongside `make up`.
 - **Tests:** unit/feature tests use `Mail::fake()` / `Bus::fake()`. E2E uses fakes by the same default.
 - **Verifying alive:** `php artisan queue:monitor default --max=100` or query the `failed_jobs` table.
@@ -234,10 +236,9 @@ CaptainHook enforces on every commit (PHP files only): **lint:test → phpstan �
 
 ### Pre-Push Gauntlet
 
-**PrePushPermitGate → composer test**, dispatched from `.githooks/pre-push` only when the pushed range touches `backend/**`.
+**composer test** (the full quality inspection rig), dispatched from `.githooks/pre-push` only when the pushed range touches `backend/**`.
 
-- **PrePushPermitGate** (ADR-0028) — verifies that any non-trivial branch has a corresponding open Work Order on file. Threshold: more than 20 files OR more than 500 lines changed against `origin/main`. Slug match: strict equality between the branch slug (portion after the last `/`, lowercased) and the Work Order slug (filename minus the `YYYY-MM-DD-` prefix and `.md` suffix, lowercased). Branches under the threshold and pushes from `main` skip the check entirely. The `--no-verify` escape hatch remains available with no logging obligation — the bypass-log clause was retired in ADR-0028 § Amendment 2026-05-28 (II); the gate's mechanical refusal is the enforcement, not an after-the-fact record.
-- **composer test** — full quality inspection rig.
+The PrePushPermitGate that used to precede it was retired 2026-07-16 (ADR-0028 § Amendment 2026-07-16 — Devil's Court ruling: Cracked at root). The permit-before-work guarantee lives upstream on the Kendo board: an open `BIO-xxxx` issue precedes work, `link-branch` binds the branch to it, and the `Agent Review Requested` label precedes merge.
 
 ### Coverage Policy
 

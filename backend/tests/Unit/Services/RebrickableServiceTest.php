@@ -11,8 +11,10 @@ use App\Exceptions\RebrickableApiException;
 use App\Exceptions\SetNotFoundException;
 use App\Services\RebrickableService;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 
 covers(RebrickableService::class);
 
@@ -20,6 +22,21 @@ const TEST_API_KEY = 'test-api-key';
 const TEST_BASE_URL = 'https://rebrickable.com/api/v3';
 const TEST_CACHE_TTL = 86_400;
 const TEST_USER_CACHE_TTL = 3_600;
+
+/**
+ * @return array<string, mixed>
+ */
+function validRebrickableSetBody(): array
+{
+    return [
+        'set_num' => '75192-1',
+        'name' => 'Millennium Falcon',
+        'year' => 2_017,
+        'theme_id' => 158,
+        'num_parts' => 7_541,
+        'set_img_url' => null,
+    ];
+}
 
 function createRebrickableService(?CacheRepository $cacheRepository = null): RebrickableService
 {
@@ -1335,6 +1352,149 @@ describe('RebrickableService', function(): void {
             Http::assertSentCount(2);
             expect($result1->setNum)->toBe('75192-1');
             expect($result2->setNum)->toBe('10281-1');
+        });
+    });
+
+    describe('retry policy', function(): void {
+        it('should honour the Retry-After header in seconds when the API rate limits', function(): void {
+            // arrange
+            Sleep::fake();
+
+            Http::fake([
+                'https://rebrickable.com/api/v3/lego/sets/75192-1/' => Http::sequence()
+                    ->push([], 429, ['Retry-After' => '2'])
+                    ->push(validRebrickableSetBody()),
+            ]);
+
+            $service = createRebrickableService();
+
+            // act
+            $result = $service->fetchSet('75192-1');
+
+            // assert — one retry that waited exactly the advertised 2 seconds
+            expect($result->setNum)->toBe('75192-1');
+            Http::assertSentCount(2);
+            Sleep::assertSequence([Sleep::for(2)->seconds()]);
+        });
+
+        it('should clamp an excessive Retry-After to the 60 second cap', function(): void {
+            // arrange
+            Sleep::fake();
+
+            Http::fake([
+                'https://rebrickable.com/api/v3/lego/sets/75192-1/' => Http::sequence()
+                    ->push([], 429, ['Retry-After' => '120'])
+                    ->push(validRebrickableSetBody()),
+            ]);
+
+            $service = createRebrickableService();
+
+            // act
+            $result = $service->fetchSet('75192-1');
+
+            // assert — the 120s the API asked for is bounded to 60s
+            expect($result->setNum)->toBe('75192-1');
+            Sleep::assertSequence([Sleep::for(60)->seconds()]);
+        });
+
+        it('should fall back to a bounded default when Retry-After is missing on a 429', function(): void {
+            // arrange
+            Sleep::fake();
+
+            Http::fake([
+                'https://rebrickable.com/api/v3/lego/sets/75192-1/' => Http::sequence()
+                    ->push([], 429)
+                    ->push(validRebrickableSetBody()),
+            ]);
+
+            $service = createRebrickableService();
+
+            // act
+            $result = $service->fetchSet('75192-1');
+
+            // assert
+            expect($result->setNum)->toBe('75192-1');
+            Sleep::assertSequence([Sleep::for(1)->second()]);
+        });
+
+        it('should fall back to a bounded default when Retry-After is not in seconds form', function(): void {
+            // arrange
+            Sleep::fake();
+
+            Http::fake([
+                'https://rebrickable.com/api/v3/lego/sets/75192-1/' => Http::sequence()
+                    ->push([], 429, ['Retry-After' => 'Wed, 21 Oct 2026 07:28:00 GMT'])
+                    ->push(validRebrickableSetBody()),
+            ]);
+
+            $service = createRebrickableService();
+
+            // act
+            $result = $service->fetchSet('75192-1');
+
+            // assert — HTTP-date form is not parsed; bounded default applies
+            expect($result->setNum)->toBe('75192-1');
+            Sleep::assertSequence([Sleep::for(1)->second()]);
+        });
+
+        it('should keep the fixed 100ms backoff for non-429 failures', function(): void {
+            // arrange
+            Sleep::fake();
+
+            Http::fake([
+                'https://rebrickable.com/api/v3/lego/sets/75192-1/' => Http::sequence()
+                    ->push([], 500)
+                    ->push(validRebrickableSetBody()),
+            ]);
+
+            $service = createRebrickableService();
+
+            // act
+            $result = $service->fetchSet('75192-1');
+
+            // assert — pre-existing behavior unchanged
+            expect($result->setNum)->toBe('75192-1');
+            Sleep::assertSequence([Sleep::for(100)->milliseconds()]);
+        });
+
+        it('should keep the fixed 100ms backoff when the connection fails', function(): void {
+            // arrange
+            Sleep::fake();
+
+            Http::fake([
+                'https://rebrickable.com/api/v3/lego/sets/75192-1/' => Http::failedConnection(),
+            ]);
+
+            $service = createRebrickableService();
+
+            // act & assert — no response to read a Retry-After from; fixed backoff applies
+            expect(fn(): LegoSetData => $service->fetchSet('75192-1'))->toThrow(ConnectionException::class);
+            Sleep::assertSequence([
+                Sleep::for(100)->milliseconds(),
+                Sleep::for(100)->milliseconds(),
+            ]);
+        });
+
+        it('should throw RebrickableApiException when 429 retries are exhausted', function(): void {
+            // arrange
+            Sleep::fake();
+
+            Http::fake([
+                'https://rebrickable.com/api/v3/lego/sets/75192-1/' => Http::sequence()
+                    ->push([], 429, ['Retry-After' => '1'])
+                    ->push([], 429, ['Retry-After' => '1'])
+                    ->push([], 429, ['Retry-After' => '1']),
+            ]);
+
+            $service = createRebrickableService();
+
+            // act & assert — bounded attempts; the typed 502-path exception still surfaces
+            expect(fn(): LegoSetData => $service->fetchSet('75192-1'))->toThrow(RebrickableApiException::class);
+            Http::assertSentCount(3);
+            Sleep::assertSequence([
+                Sleep::for(1)->second(),
+                Sleep::for(1)->second(),
+            ]);
         });
     });
 });

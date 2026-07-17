@@ -26,7 +26,7 @@ watch(
 const duplicateMatch = computed(() => {
     const enteredSetNum = adapted.mutable.value.setNum.trim();
     if (!enteredSetNum) return null;
-    return familySetStoreModule.getAll.value.find((s) => s.setNum === enteredSetNum) ?? null;
+    return familySetStoreModule.getAll.value.find((s) => (s.set?.setNum ?? s.setNum) === enteredSetNum) ?? null;
 });
 
 const showDuplicateWarning = computed(() => duplicateMatch.value !== null && !duplicateDismissed.value);

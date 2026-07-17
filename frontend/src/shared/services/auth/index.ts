@@ -30,9 +30,23 @@ export const createAuthService = <Profile extends {id: number}>(httpService: Htt
         userRef.value = data;
     };
 
-    const logout = async (): Promise<void> => {
-        await httpService.postRequest('/logout', {});
+    const clearUser = (): void => {
         userRef.value = null;
+    };
+
+    const logout = async (): Promise<void> => {
+        try {
+            await httpService.postRequest('/logout', {});
+        } catch (error) {
+            // A rejected logout (expired session -> 401/419, network failure)
+            // must still log the user out locally — keeping logged-in chrome
+            // over a dead session strands the user. Transport errors are
+            // swallowed so callers can proceed to the login redirect;
+            // non-axios errors are programming errors and stay loud.
+            if (!isAxiosError(error)) throw error;
+        } finally {
+            clearUser();
+        }
     };
 
     const checkIfLoggedIn = async (): Promise<void> => {
@@ -40,15 +54,15 @@ export const createAuthService = <Profile extends {id: number}>(httpService: Htt
             const {data} = await httpService.getRequest<Profile>('/me');
             userRef.value = data;
         } catch (error) {
-            if (isAxiosError(error) && error.response?.status === 401) {
-                userRef.value = null;
+            // Boot must never be blocked by the /me probe: any transport-level
+            // failure (401, 5xx, network down, timeout) degrades to "not
+            // logged in" — the auth guard keeps protecting authOnly routes.
+            // Non-axios errors are programming errors and stay loud.
+            if (!isAxiosError(error)) throw error;
 
-                return;
-            }
-
-            throw error;
+            clearUser();
         }
     };
 
-    return {isLoggedIn, user, userId, register, login, logout, checkIfLoggedIn};
+    return {isLoggedIn, user, userId, register, login, logout, clearUser, checkIfLoggedIn};
 };

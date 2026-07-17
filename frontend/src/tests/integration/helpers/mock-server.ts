@@ -13,9 +13,14 @@
  * that asserts on the snake_case shape sent to the wire will see faithful
  * conversion. This is the regression safety net for ADR-0029.
  *
- * Note: error-response middleware (`registerResponseErrorMiddleware`) is
- * recorded but not invoked here — `resolveRoute` only models the success path
- * for now. If a test ever needs to simulate a 4xx/5xx, this helper grows then.
+ * Error responses: `mockServer.onPostError(endpoint, status, data)` registers
+ * a rejecting route. Resolution builds an axios-shaped error (`isAxiosError`
+ * flag + `response.{status,data}`), runs the registered error-response
+ * middleware against it (e.g. fs-form's 422 field-error binder), then rejects
+ * with it — the same order as fs-http's real error interceptor chain. Error
+ * data intentionally bypasses the success response middleware, mirroring real
+ * axios where interceptor success handlers never see rejected responses (which
+ * is why fs-form consumers pass a `keyMapper` for snake_case error keys).
  *
  * Usage in test files:
  *
@@ -28,9 +33,17 @@
  *
  *   beforeEach(() => mockServer.reset());
  *   mockServer.onGet("storage-options", [...]); // register before mount
+ *
+ * Every handled request is recorded — method, endpoint, and the body AFTER
+ * request middleware ran (i.e. the wire shape: snake_case per ADR-0029).
+ * Flow tests assert side effects via `mockServer.callsTo("POST", "/login")`.
  */
 
 type RouteHandler = unknown;
+
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+type RecordedCall = {method: HttpMethod; endpoint: string; body: unknown};
 
 type MockResponse<T> = {data: T; status: number; statusText: string; headers: object; config: object};
 type MockRequestConfig = {data: unknown};
@@ -51,12 +64,36 @@ const requestMiddleware: RequestMiddleware[] = [];
 const responseMiddleware: ResponseMiddleware[] = [];
 const responseErrorMiddleware: ResponseErrorMiddleware[] = [];
 
+const recordedCalls: RecordedCall[] = [];
+
 const makeResponse = <T>(data: T): MockResponse<T> => ({data, status: 200, statusText: 'OK', headers: {}, config: {}});
 
-const applyRequestMiddleware = (data: unknown): void => {
-    if (requestMiddleware.length === 0) return;
+/** Marker wrapper: a route registered with this handler rejects instead of resolving. */
+class MockErrorRoute {
+    constructor(
+        readonly status: number,
+        readonly data: unknown,
+    ) {}
+}
+
+type AxiosShapedError = Error & {isAxiosError: boolean; response: MockResponse<unknown>};
+
+const makeAxiosError = (status: number, data: unknown): AxiosShapedError => {
+    const error = new Error(`Request failed with status code ${status}`) as AxiosShapedError;
+    error.isAxiosError = true;
+    error.response = {data, status, statusText: '', headers: {}, config: {}};
+    return error;
+};
+
+/**
+ * Runs registered request middleware against a config-like object and returns
+ * the resulting body — the wire shape (e.g. snake_case after the ADR-0029
+ * conversion middleware wired by `familyHttpService`).
+ */
+const applyRequestMiddleware = (data: unknown): unknown => {
     const config: MockRequestConfig = {data};
     for (const middleware of requestMiddleware) middleware(config);
+    return config.data;
 };
 
 const applyResponseMiddleware = <T>(response: MockResponse<T>): MockResponse<T> => {
@@ -69,7 +106,13 @@ const resolveRoute = <T>(method: keyof typeof routes, endpoint: string, data?: u
     if (handler === undefined) {
         return Promise.reject(new Error(`[mock-server] No ${method} handler registered for "${endpoint}"`));
     }
-    applyRequestMiddleware(data);
+    const body = applyRequestMiddleware(data);
+    recordedCalls.push({method, endpoint, body});
+    if (handler instanceof MockErrorRoute) {
+        const error = makeAxiosError(handler.status, handler.data);
+        for (const middleware of responseErrorMiddleware) middleware(error);
+        return Promise.reject(error);
+    }
     return Promise.resolve(applyResponseMiddleware(makeResponse(handler as T)));
 };
 
@@ -88,6 +131,16 @@ const unregister = <T>(array: T[], item: T) => {
  * so the wholesale fs-http mock keeps the real fs-http/axios modules out of
  * the integration import chain (ADR-0012 test isolation).
  */
+/**
+ * Faithful stand-in for fs-http's re-exported axios `isAxiosError`: real axios
+ * checks `payload.isAxiosError === true`, and errors built by `makeAxiosError`
+ * carry that flag. fs-form's `handleSubmit` calls this to decide whether a
+ * rejection is a swallowable 422 — spec files whose fs-http mock factory omits
+ * it would throw `isAxiosError is not a function` on the first error response.
+ */
+export const isAxiosError = (error: unknown): boolean =>
+    typeof error === 'object' && error !== null && (error as {isAxiosError?: unknown}).isAxiosError === true;
+
 export const guarded = <T>(fn: (arg: T) => void, onError?: (error: unknown) => void): ((arg: T) => void) => {
     return (arg: T) => {
         try {
@@ -110,9 +163,9 @@ export const guarded = <T>(fn: (arg: T) => void, onError?: (error: unknown) => v
  * Middleware registration retains the registered functions and applies them
  * on each route resolution — request middleware runs against a config-like
  * object before the route lookup; response middleware runs against the
- * response object before it is resolved to the caller. Error-response
- * middleware is retained for future use but is not invoked because the
- * mock currently only models the success path.
+ * response object before it is resolved to the caller; error-response
+ * middleware runs against the axios-shaped error of routes registered via
+ * `on*Error` before the rejection reaches the caller.
  */
 export const mockHttpService = {
     getRequest: <T = unknown>(endpoint: string) => resolveRoute<T>('GET', endpoint),
@@ -145,9 +198,31 @@ export const mockServer = {
         routes.GET.set(endpoint, responseData);
     },
 
+    /**
+     * Register a GET route that rejects with an axios-shaped error carrying
+     * `response.{status,data}` (see `onPostError`). Lets flow tests simulate
+     * mid-session auth loss (401) or an unreachable endpoint (5xx / boot-time
+     * `/me` failure) on read paths, exercising registered error-response
+     * middleware such as the auth 401 recovery.
+     */
+    onGetError: (endpoint: string, status: number, data: unknown): void => {
+        routes.GET.set(endpoint, new MockErrorRoute(status, data));
+    },
+
     /** Register a POST route. */
     onPost: (endpoint: string, responseData: unknown): void => {
         routes.POST.set(endpoint, responseData);
+    },
+
+    /**
+     * Register a POST route that rejects with an axios-shaped error carrying
+     * `response.{status,data}`. Registered error-response middleware runs
+     * against the error before the rejection reaches the caller — so e.g. a
+     * 422 with `{errors: {field: ['message']}}` exercises fs-form's real
+     * validation-error binding.
+     */
+    onPostError: (endpoint: string, status: number, data: unknown): void => {
+        routes.POST.set(endpoint, new MockErrorRoute(status, data));
     },
 
     /** Register a PUT route. */
@@ -166,7 +241,23 @@ export const mockServer = {
     },
 
     /**
-     * Clear all registered routes. Call in beforeEach.
+     * All handled requests recorded so far, in order — method, endpoint, and
+     * the body as it would hit the wire (after request middleware, so
+     * snake_case per ADR-0029). Returns a snapshot copy.
+     */
+    calls: (): readonly RecordedCall[] => [...recordedCalls],
+
+    /**
+     * The recorded requests matching a method + endpoint. The primary
+     * side-effect assertion hook for flow tests:
+     *
+     *   expect(mockServer.callsTo('POST', '/login')).toHaveLength(1);
+     */
+    callsTo: (method: HttpMethod, endpoint: string): readonly RecordedCall[] =>
+        recordedCalls.filter((call) => call.method === method && call.endpoint === endpoint),
+
+    /**
+     * Clear all registered routes and recorded calls. Call in beforeEach.
      *
      * Registered middleware is intentionally NOT cleared here — in production,
      * `familyHttpService` registers its snake↔camel middleware once at module
@@ -180,6 +271,7 @@ export const mockServer = {
         for (const map of Object.values(routes)) {
             map.clear();
         }
+        recordedCalls.length = 0;
     },
 
     /**

@@ -216,7 +216,7 @@ const handleAssigned = () => {
     showAssignModal.value = false;
     selectedPart.value = null;
     if (adapted.value) {
-        loadParts(adapted.value.set?.setNum ?? adapted.value.setNum);
+        loadParts(adapted.value.set?.setNum ?? adapted.value.setNum ?? '');
     }
 };
 
@@ -277,7 +277,7 @@ const toPartIdentity = (part: SetPart): PartIdentity => ({
                         </div>
                         <div flex gap="2">
                             <span font="bold">{{ t('sets.theme').value }}:</span>
-                            <span>{{ adapted.set?.theme ?? t('sets.unknown').value }}</span>
+                            <span>{{ adapted.set?.theme?.name ?? t('sets.unknown').value }}</span>
                         </div>
                         <div flex gap="2">
                             <span font="bold">{{ t('sets.numParts').value }}:</span>
@@ -335,7 +335,7 @@ const toPartIdentity = (part: SetPart): PartIdentity => ({
                         <PrimaryButton
                             v-if="!setWithParts && adapted.status !== 'wishlist'"
                             :disabled="partsLoading"
-                            @click="loadParts(adapted.set?.setNum ?? adapted.setNum)"
+                            @click="loadParts(adapted.set?.setNum ?? adapted.setNum ?? '')"
                         >
                             {{ t('sets.loadParts').value }}
                         </PrimaryButton>

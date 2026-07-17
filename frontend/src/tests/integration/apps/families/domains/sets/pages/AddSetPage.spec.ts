@@ -1,4 +1,6 @@
 import AddSetPage from '@app/domains/sets/pages/AddSetPage.vue';
+import {familyRouterService} from '@app/services';
+import {familySetStoreModule} from '@app/stores';
 import {mockServer} from '@integration/helpers/mock-server';
 import {SingleSelect, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
@@ -17,9 +19,31 @@ describe('AddSetPage — integration', () => {
         localStorage.clear();
     });
 
-    const mountPage = async () => {
-        // Store needs to be hydrated for duplicate detection (getAll reads from store)
-        mockServer.onGet('family-sets', []);
+    // The GET /family-sets wire shape (snake_case per ADR-0029, camelized by the
+    // real response middleware): no top-level set_num — it lives nested at set.set_num.
+    const wireFamilySet = {
+        id: 1,
+        set_id: 10,
+        quantity: 2,
+        status: 'built',
+        purchase_date: null,
+        notes: null,
+        set: {
+            id: 10,
+            set_num: '75192-1',
+            name: 'Millennium Falcon',
+            year: 2017,
+            theme: {id: 158, name: 'Star Wars', parent_id: null},
+            num_parts: 7541,
+            image_url: null,
+        },
+    };
+
+    const mountPage = async (familySets: unknown[] = []) => {
+        // Store needs to be hydrated for duplicate detection (getAll reads from store).
+        // retrieveAll replaces store state wholesale, so each mount starts deterministic.
+        mockServer.onGet('family-sets', familySets);
+        await familySetStoreModule.retrieveAll();
         const wrapper = mount(AddSetPage);
         await flushPromises();
         return wrapper;
@@ -67,17 +91,45 @@ describe('AddSetPage — integration', () => {
 
     it('submits form through real component tree', async () => {
         const wrapper = await mountPage();
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
+
+        await wrapper.findComponent(TextInput).find('input').setValue('75192-1');
 
         mockServer.onPost('family-sets', {id: 42});
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
-        // No assertion on navigation — integration tests verify composition, not side effects.
-        // The create() call posts to family-sets; goToRoute navigates to detail.
+        // The create() call posts to family-sets with a snake_case wire body (ADR-0029);
+        // goToRoute navigates to the detail page of the created set.
+        const createCalls = mockServer.callsTo('POST', 'family-sets');
+        expect(createCalls).toHaveLength(1);
+        expect(createCalls[0]?.body).toMatchObject({set_num: '75192-1', quantity: 1, status: 'sealed'});
+        expect(createCalls[0]?.body).not.toHaveProperty('setNum');
+        expect(goToRoute).toHaveBeenCalledWith('sets-detail', 42);
     });
 
     it('does not show duplicate warning when setNum is empty', async () => {
         const wrapper = await mountPage();
+
+        expect(wrapper.find("[data-testid='duplicate-warning']").exists()).toBe(false);
+    });
+
+    it('shows duplicate warning when the entered set number matches a fetched family set', async () => {
+        const wrapper = await mountPage([wireFamilySet]);
+
+        await wrapper.findComponent(TextInput).find('input').setValue('75192-1');
+
+        // The fetched resource carries the set number nested at set.setNum —
+        // duplicate detection must match it through the real store + middleware chain.
+        const warning = wrapper.find("[data-testid='duplicate-warning']");
+        expect(warning.exists()).toBe(true);
+        expect(warning.text()).toContain('quantity: 2');
+    });
+
+    it('does not show duplicate warning when the entered set number matches no fetched family set', async () => {
+        const wrapper = await mountPage([wireFamilySet]);
+
+        await wrapper.findComponent(TextInput).find('input').setValue('10179-1');
 
         expect(wrapper.find("[data-testid='duplicate-warning']").exists()).toBe(false);
     });

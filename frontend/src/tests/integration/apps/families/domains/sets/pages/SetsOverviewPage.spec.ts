@@ -1,4 +1,5 @@
 import SetsOverviewPage from '@app/domains/sets/pages/SetsOverviewPage.vue';
+import {familyRouterService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
 import {TextInput} from '@script-development/ui-inputs';
 import CollapsibleSection from '@shared/components/CollapsibleSection.vue';
@@ -22,6 +23,8 @@ vi.mock('@shared/helpers/csv', () => ({downloadCsv: vi.fn<() => void>(), toCsv: 
  * Snake_case fixtures — matching real API response format.
  * The HTTP response middleware converts snake_case to camelCase before data reaches the store.
  */
+const themeIds: Record<string, number> = {City: 52, Technic: 1};
+
 const makeSet = (id: number, theme: string, status = 'sealed') => ({
     id,
     set_num: `${id}-1`,
@@ -29,7 +32,14 @@ const makeSet = (id: number, theme: string, status = 'sealed') => ({
     status,
     purchase_date: null,
     notes: null,
-    set: {name: `Set ${id}`, set_num: `${id}-1`, year: 2024, theme, num_parts: 100, image_url: null},
+    set: {
+        name: `Set ${id}`,
+        set_num: `${id}-1`,
+        year: 2024,
+        theme: {id: themeIds[theme] ?? 0, name: theme, parent_id: null},
+        num_parts: 100,
+        image_url: null,
+    },
 });
 
 describe('SetsOverviewPage — integration', () => {
@@ -103,6 +113,7 @@ describe('SetsOverviewPage — integration', () => {
 
     it('navigates to detail on ListItemButton click', async () => {
         const wrapper = await mountPage([makeSet(1, 'City')]);
+        const goToRoute = vi.spyOn(familyRouterService, 'goToRoute');
 
         const section = wrapper.findComponent(CollapsibleSection);
         await section.find('button').trigger('click');
@@ -111,7 +122,7 @@ describe('SetsOverviewPage — integration', () => {
         await listItem.find('button').trigger('click');
         await flushPromises();
 
-        // No assertion on navigation — integration tests verify composition, not side effects.
-        // The click handler fires goToRoute() on the real router service; we verify the button is clickable.
+        // The click handler fires goToRoute() on the real router service with the set's id.
+        expect(goToRoute).toHaveBeenCalledWith('sets-detail', 1);
     });
 });

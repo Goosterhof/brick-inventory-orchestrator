@@ -8,10 +8,11 @@ import '@script-development/ui-inputs/style.css';
 import '@shared/assets/ui-inputs.css';
 import {registerFromQueryMiddleware} from '@shared/middleware/fromQuery';
 import {registerAuthGuard} from '@shared/services/auth/guards';
+import {registerAuthErrorMiddleware} from '@shared/services/auth/middleware';
 import {createApp} from 'vue';
 
 import App from './App.vue';
-import {familyAuthService, familyRouterService, familyTranslationService} from './services';
+import {familyAuthService, familyHttpService, familyRouterService, familyTranslationService} from './services';
 
 const app = createApp(App);
 
@@ -21,6 +22,12 @@ app.provide('color', 'currentColor');
 
 registerFromQueryMiddleware(familyRouterService);
 registerAuthGuard(familyAuthService, familyRouterService, 'login', 'home');
+
+// Mid-session expiry recovery: any 401 while logged in clears the user state
+// and redirects authOnly pages to login. Registering before the /me probe
+// below is safe — the middleware no-ops while logged out, so the boot probe's
+// own 401 never triggers a redirect.
+registerAuthErrorMiddleware(familyAuthService, familyHttpService, familyRouterService, 'login');
 
 // Restore the session before kicking off the initial navigation. install() pushes the
 // current URL into the router, which fires the auth guard's beforeEach. If we install
