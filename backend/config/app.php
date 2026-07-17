@@ -139,6 +139,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Import Settings
+    |--------------------------------------------------------------------------
+    |
+    | Rebrickable imports are guarded by a partial unique index that permits
+    | only one active (pending/in_progress) ImportJob per family. If the queue
+    | worker was down when an import was triggered, that active row can strand
+    | forever and lock the family out with a permanent 409. This threshold, in
+    | seconds, is the age past which an active ImportJob is considered stale
+    | and reclaimable: the next import attempt flips it to failed and proceeds.
+    | The default (1200s = 20 min) sits comfortably beyond both the 600s job
+    | timeout and the 700s queue retry_after, so a genuinely in-flight import
+    | is never reclaimed out from under itself.
+    |
+     */
+
+    'import_stale_active_job_threshold' => (int) env('IMPORT_STALE_ACTIVE_JOB_THRESHOLD', 1_200),
+
+    /*
+    |--------------------------------------------------------------------------
     | Frontend URL
     |--------------------------------------------------------------------------
     |
