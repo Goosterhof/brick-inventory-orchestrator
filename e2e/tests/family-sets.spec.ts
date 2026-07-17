@@ -29,7 +29,10 @@ test.describe("Family Sets", () => {
 
     await page.getByLabel("Set number").fill("75192-1");
     await page.getByLabel("Quantity").fill("1");
-    await page.getByLabel("Status").selectOption("sealed");
+    // Status is a ui-inputs SingleSelect (role="combobox" trigger + role="option"
+    // listbox), not a native <select> — drive it by opening and picking the option.
+    await page.getByLabel("Status").click();
+    await page.getByRole("option", { name: "Sealed", exact: true }).click();
     await page.getByRole("button", { name: "Add" }).click();
 
     // Should redirect to set detail page after successful add
@@ -85,7 +88,10 @@ test.describe("Family Sets", () => {
     await page.goto(`/sets/${response.id}/edit`);
 
     await expect(page.getByRole("heading", { name: "Edit set" })).toBeVisible();
-    await page.getByLabel("Status").selectOption("built");
+    // Status is a ui-inputs SingleSelect (role="combobox" trigger + role="option"
+    // listbox), not a native <select> — drive it by opening and picking the option.
+    await page.getByLabel("Status").click();
+    await page.getByRole("option", { name: "Built", exact: true }).click();
     await page.getByRole("button", { name: "Save" }).click();
 
     // Should redirect to detail page

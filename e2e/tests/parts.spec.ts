@@ -114,9 +114,12 @@ test.describe("Parts", () => {
 
     // The PlacePartModal label "Storage location" comes from the
     // sets.selectStorage translation key (line 133).
+    // Storage location is a ui-inputs SingleSelect (role="combobox" trigger +
+    // role="option" listbox), not a native <select> — open it and pick the option.
     const storageSelect = page.getByLabel("Storage location");
     await expect(storageSelect).toBeVisible();
-    await storageSelect.selectOption({ label: "Drawer A" });
+    await storageSelect.click();
+    await page.getByRole("option", { name: "Drawer A", exact: true }).click();
 
     // Wait for the POST so the modal's @assigned event has fired before we
     // query the API. waitForResponse is more reliable than a fixed delay.
