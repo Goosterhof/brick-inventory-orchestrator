@@ -21,5 +21,11 @@ export interface AuthService<Profile> {
     register: (data: RegistrationData) => Promise<void>;
     login: (loginData: Credentials) => Promise<void>;
     logout: () => Promise<void>;
+    /**
+     * Drop the local user state without touching the server session. Used by
+     * the 401 response-error middleware when the session has already expired
+     * server-side and there is nothing left to revoke.
+     */
+    clearUser: () => void;
     checkIfLoggedIn: () => Promise<void>;
 }
