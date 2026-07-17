@@ -1,10 +1,10 @@
 import SettingsPage from '@app/domains/settings/pages/SettingsPage.vue';
 import {familyAuthService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
+import {FormField} from '@script-development/ui-inputs';
 import BadgeLabel from '@shared/components/BadgeLabel.vue';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, mount} from '@vue/test-utils';
@@ -81,10 +81,11 @@ describe('SettingsPage — integration', () => {
     it('renders real TextInput for rebrickable token', async () => {
         const wrapper = await mountWithMembers();
 
-        const inputs = wrapper.findAllComponents(TextInput);
-        const tokenInput = inputs.find((i) => i.props('label') === 'Rebrickable user token');
-        expect(tokenInput).toBeDefined();
-        expect(tokenInput?.find('input').exists()).toBe(true);
+        const tokenField = wrapper
+            .findAllComponents(FormField)
+            .find((field) => field.props('label') === 'Rebrickable user token');
+        expect(tokenField).toBeDefined();
+        expect(tokenField?.find('input').exists()).toBe(true);
     });
 
     it('renders invite code section with PrimaryButton when user is head', async () => {

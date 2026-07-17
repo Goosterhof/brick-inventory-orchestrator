@@ -7,10 +7,10 @@ import {
     familyTranslationService,
 } from '@app/services';
 import {useForm} from '@script-development/fs-form';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
-import {ref} from 'vue';
+import {ref, useId} from 'vue';
 
 const {t} = familyTranslationService;
 const inviteQuery = familyRouterService.currentRouteRef.value.query.invite;
@@ -24,6 +24,13 @@ const passwordConfirmation = ref('');
 
 type RegistrationField = 'inviteCode' | 'familyName' | 'name' | 'email' | 'password' | 'passwordConfirmation';
 const {errors, handleSubmit, submitting} = useForm<RegistrationField>(familyHttpService, {keyMapper: camelKey});
+
+const inviteCodeId = useId();
+const familyNameId = useId();
+const nameId = useId();
+const emailId = useId();
+const passwordId = useId();
+const passwordConfirmationId = useId();
 
 const onSubmit = () =>
     handleSubmit(async () => {
@@ -44,27 +51,85 @@ const onSubmit = () =>
         <h1 text="2xl" font="bold" uppercase tracking="wide" m="b-6">{{ t('auth.createAccount').value }}</h1>
 
         <form flex="~ col" gap="4" @submit.prevent="onSubmit">
-            <TextInput
-                v-model="inviteCode"
-                :label="t('auth.inviteCode').value"
-                :error="errors.inviteCode"
-                :optional="true"
-            />
+            <FormField :id="inviteCodeId" :label="t('auth.inviteCode').value" :error="errors.inviteCode">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <TextInput
+                        :id="controlId"
+                        v-model="inviteCode"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
-            <TextInput v-model="familyName" :label="t('auth.familyName').value" :error="errors.familyName" />
+            <FormField :id="familyNameId" :label="t('auth.familyName').value" required :error="errors.familyName">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <TextInput
+                        :id="controlId"
+                        v-model="familyName"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
-            <TextInput v-model="name" :label="t('auth.name').value" :error="errors.name" />
+            <FormField :id="nameId" :label="t('auth.name').value" required :error="errors.name">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <TextInput
+                        :id="controlId"
+                        v-model="name"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
-            <TextInput v-model="email" :label="t('auth.email').value" type="email" :error="errors.email" />
+            <FormField :id="emailId" :label="t('auth.email').value" required :error="errors.email">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <TextInput
+                        :id="controlId"
+                        v-model="email"
+                        type="email"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
-            <TextInput v-model="password" :label="t('auth.password').value" type="password" :error="errors.password" />
+            <FormField :id="passwordId" :label="t('auth.password').value" required :error="errors.password">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <TextInput
+                        :id="controlId"
+                        v-model="password"
+                        type="password"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
-            <TextInput
-                v-model="passwordConfirmation"
+            <FormField
+                :id="passwordConfirmationId"
                 :label="t('auth.passwordConfirmation').value"
-                type="password"
+                required
                 :error="errors.passwordConfirmation"
-            />
+            >
+                <template #default="{controlId, required, invalid, describedby}">
+                    <TextInput
+                        :id="controlId"
+                        v-model="passwordConfirmation"
+                        type="password"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
+                    />
+                </template>
+            </FormField>
 
             <PrimaryButton type="submit" :disabled="submitting">{{ t('auth.register').value }}</PrimaryButton>
         </form>

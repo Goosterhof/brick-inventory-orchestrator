@@ -3,15 +3,11 @@ import type {HttpService} from '@script-development/fs-http';
 import type {AxiosError} from 'axios';
 
 import {useForm} from '@script-development/fs-form';
-import DateInput from '@shared/components/forms/inputs/DateInput.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {FormField, SingleSelect, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
 import {AxiosError as AxiosErrorClass} from 'axios';
-import {computed, ref, watch} from 'vue';
+import {computed, ref, useId, watch} from 'vue';
 
 import SectionHeading from './SectionHeading.vue';
 
@@ -39,6 +35,26 @@ const notes = ref<string | null>(null);
 
 const successMessage = ref(false);
 const serverError = ref('');
+
+const nameId = useId();
+const setNumberId = useId();
+const pieceCountId = useId();
+const themeId = useId();
+const purchaseDateId = useId();
+const notesId = useId();
+
+const themeOptions = [
+    {id: 'star-wars', label: 'Star Wars'},
+    {id: 'technic', label: 'Technic'},
+    {id: 'city', label: 'City'},
+    {id: 'creator', label: 'Creator'},
+];
+
+// pieceCount is a nullable number; clear-to-null on empty/NaN input.
+const onPieceCountInput = (event: Event) => {
+    const value = (event.target as HTMLInputElement).valueAsNumber;
+    pieceCount.value = Number.isNaN(value) ? null : value;
+};
 
 const inspectorJson = computed(() => JSON.stringify(errors.value, null, 2));
 
@@ -131,34 +147,90 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
                     useForm(httpService) = useValidationErrors + useFormSubmit
                 </p>
                 <div grid="~ cols-1 md:cols-2" gap="4" m="b-6">
-                    <TextInput
-                        v-model="name"
-                        label="Set Name"
-                        placeholder="e.g. Millennium Falcon"
-                        :error="errors.name"
-                    />
-                    <TextInput
-                        v-model="setNumber"
-                        label="Set Number"
-                        placeholder="e.g. 75192"
-                        :error="errors.setNumber"
-                    />
-                    <NumberInput
-                        v-model="pieceCount"
-                        label="Piece Count"
-                        :min="1"
-                        placeholder="e.g. 7541"
-                        :error="errors.pieceCount"
-                    />
-                    <SelectInput v-model="theme" label="Theme" :error="errors.theme">
-                        <option value="" disabled>Select a theme</option>
-                        <option value="star-wars">Star Wars</option>
-                        <option value="technic">Technic</option>
-                        <option value="city">City</option>
-                        <option value="creator">Creator</option>
-                    </SelectInput>
-                    <DateInput v-model="purchaseDate" label="Purchase Date" :error="errors.purchaseDate" />
-                    <TextareaInput v-model="notes" label="Notes" :rows="3" optional :error="errors.notes" />
+                    <FormField :id="nameId" label="Set Name" required :error="errors.name">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <TextInput
+                                :id="controlId"
+                                v-model="name"
+                                placeholder="e.g. Millennium Falcon"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
+                    <FormField :id="setNumberId" label="Set Number" required :error="errors.setNumber">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <TextInput
+                                :id="controlId"
+                                v-model="setNumber"
+                                placeholder="e.g. 75192"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
+                    <FormField :id="pieceCountId" label="Piece Count" required :error="errors.pieceCount">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <input
+                                :id="controlId"
+                                class="ui-control ui-input"
+                                :class="{'is-invalid': invalid}"
+                                type="number"
+                                :min="1"
+                                placeholder="e.g. 7541"
+                                :value="pieceCount"
+                                :aria-required="required"
+                                :aria-invalid="invalid || undefined"
+                                :aria-describedby="describedby"
+                                @input="onPieceCountInput"
+                            />
+                        </template>
+                    </FormField>
+                    <FormField :id="themeId" label="Theme" required :error="errors.theme">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <SingleSelect
+                                :id="controlId"
+                                v-model="theme"
+                                :options="themeOptions"
+                                label="label"
+                                options-label="Theme"
+                                placeholder="Select a theme"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
+                    <FormField :id="purchaseDateId" label="Purchase Date" required :error="errors.purchaseDate">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <input
+                                :id="controlId"
+                                v-model="purchaseDate"
+                                class="ui-control ui-input"
+                                :class="{'is-invalid': invalid}"
+                                type="date"
+                                :aria-required="required"
+                                :aria-invalid="invalid || undefined"
+                                :aria-describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
+                    <FormField :id="notesId" label="Notes" :error="errors.notes">
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <textarea
+                                :id="controlId"
+                                v-model="notes"
+                                class="ui-control"
+                                :class="{'is-invalid': invalid}"
+                                rows="3"
+                                :aria-required="required"
+                                :aria-invalid="invalid || undefined"
+                                :aria-describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
                 </div>
 
                 <div flex="~ wrap" gap="3" items="center">

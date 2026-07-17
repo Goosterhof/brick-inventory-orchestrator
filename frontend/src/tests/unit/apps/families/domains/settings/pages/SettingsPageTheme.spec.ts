@@ -8,14 +8,10 @@ const {
     createMockFsHelpers,
     createMockStringTs,
     createMockFamilyServices,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
@@ -63,7 +59,7 @@ describe('SettingsPage — theme', () => {
 
     it('should render theme section title', () => {
         // Arrange & Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
         expect(wrapper.text()).toContain('settings.themeTitle');
@@ -71,7 +67,7 @@ describe('SettingsPage — theme', () => {
 
     it('should render theme section description', () => {
         // Arrange & Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
         expect(wrapper.text()).toContain('settings.themeDescription');
@@ -82,7 +78,7 @@ describe('SettingsPage — theme', () => {
         mockIsDark.value = false;
 
         // Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
         expect(wrapper.text()).toContain('settings.themeLight');
@@ -93,7 +89,7 @@ describe('SettingsPage — theme', () => {
         mockIsDark.value = true;
 
         // Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
         expect(wrapper.text()).toContain('settings.themeDark');
@@ -101,7 +97,7 @@ describe('SettingsPage — theme', () => {
 
     it('should call toggleTheme when toggle button is clicked', async () => {
         // Arrange
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Act
         const buttons = wrapper.findAll('button');
@@ -117,7 +113,7 @@ describe('SettingsPage — theme', () => {
     it('should reactively update label when isDark changes', async () => {
         // Arrange
         mockIsDark.value = false;
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
         expect(wrapper.text()).toContain('settings.themeLight');
 
         // Act

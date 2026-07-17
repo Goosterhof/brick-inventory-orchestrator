@@ -6,12 +6,11 @@ import type {StorageService} from '@script-development/fs-storage';
 import type {Item} from '@shared/types/item';
 
 import {createAdapterStoreModule, resourceAdapter} from '@script-development/fs-adapter-store';
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import DangerButton from '@shared/components/DangerButton.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {deepSnakeKeys} from '@shared/helpers/string';
-import {computed, ref, shallowRef, watch} from 'vue';
+import {computed, ref, shallowRef, useId, watch} from 'vue';
 
 import SectionHeading from './SectionHeading.vue';
 
@@ -83,6 +82,22 @@ const selectedId = ref<number | null>(null);
 const selectedItem = computed(() =>
     selectedId.value !== null ? storeModule.getById(selectedId.value).value : undefined,
 );
+
+const newDisplayNameId = useId();
+const newPartCountId = useId();
+const newThemeGroupId = useId();
+const editDisplayNameId = useId();
+const editPartCountId = useId();
+const editThemeGroupId = useId();
+
+// partCount is a non-nullable number; ignore empty/NaN rather than write null. The
+// mutable object is passed from the template (edit form is narrowed by v-if).
+const onPartCountInput = (event: Event, mutable: {partCount: number}) => {
+    const value = (event.target as HTMLInputElement).valueAsNumber;
+    if (!Number.isNaN(value)) {
+        mutable.partCount = value;
+    }
+};
 
 const handleCreate = async () => {
     const created = await newAdapted.value.create();
@@ -174,22 +189,47 @@ watch(
                     </p>
 
                     <div flex="~ col" gap="4" m="b-4">
-                        <TextInput
-                            v-model="newAdapted.mutable.value.displayName"
-                            label="Display Name"
-                            placeholder="e.g. Police Officer"
-                        />
-                        <NumberInput
-                            v-model="newAdapted.mutable.value.partCount"
-                            label="Part Count"
-                            :min="1"
-                            placeholder="e.g. 4"
-                        />
-                        <TextInput
-                            v-model="newAdapted.mutable.value.themeGroup"
-                            label="Theme Group"
-                            placeholder="e.g. City"
-                        />
+                        <FormField :id="newDisplayNameId" label="Display Name" required>
+                            <template #default="{controlId, required, invalid, describedby}">
+                                <TextInput
+                                    :id="controlId"
+                                    v-model="newAdapted.mutable.value.displayName"
+                                    placeholder="e.g. Police Officer"
+                                    :required="required"
+                                    :invalid="invalid"
+                                    :describedby="describedby"
+                                />
+                            </template>
+                        </FormField>
+                        <FormField :id="newPartCountId" label="Part Count" required>
+                            <template #default="{controlId, required, invalid, describedby}">
+                                <input
+                                    :id="controlId"
+                                    class="ui-control ui-input"
+                                    :class="{'is-invalid': invalid}"
+                                    type="number"
+                                    :min="1"
+                                    placeholder="e.g. 4"
+                                    :value="newAdapted.mutable.value.partCount"
+                                    :aria-required="required"
+                                    :aria-invalid="invalid || undefined"
+                                    :aria-describedby="describedby"
+                                    @input="onPartCountInput($event, newAdapted.mutable.value)"
+                                />
+                            </template>
+                        </FormField>
+                        <FormField :id="newThemeGroupId" label="Theme Group" required>
+                            <template #default="{controlId, required, invalid, describedby}">
+                                <TextInput
+                                    :id="controlId"
+                                    v-model="newAdapted.mutable.value.themeGroup"
+                                    placeholder="e.g. City"
+                                    :required="required"
+                                    :invalid="invalid"
+                                    :describedby="describedby"
+                                />
+                            </template>
+                        </FormField>
                     </div>
 
                     <div flex="~ wrap" gap="3">
@@ -268,22 +308,47 @@ watch(
                     </p>
 
                     <div flex="~ col" gap="4" m="b-4">
-                        <TextInput
-                            v-model="selectedItem.mutable.value.displayName"
-                            label="Display Name"
-                            placeholder="e.g. Firefighter"
-                        />
-                        <NumberInput
-                            v-model="selectedItem.mutable.value.partCount"
-                            label="Part Count"
-                            :min="1"
-                            placeholder="e.g. 5"
-                        />
-                        <TextInput
-                            v-model="selectedItem.mutable.value.themeGroup"
-                            label="Theme Group"
-                            placeholder="e.g. Space"
-                        />
+                        <FormField :id="editDisplayNameId" label="Display Name" required>
+                            <template #default="{controlId, required, invalid, describedby}">
+                                <TextInput
+                                    :id="controlId"
+                                    v-model="selectedItem.mutable.value.displayName"
+                                    placeholder="e.g. Firefighter"
+                                    :required="required"
+                                    :invalid="invalid"
+                                    :describedby="describedby"
+                                />
+                            </template>
+                        </FormField>
+                        <FormField :id="editPartCountId" label="Part Count" required>
+                            <template #default="{controlId, required, invalid, describedby}">
+                                <input
+                                    :id="controlId"
+                                    class="ui-control ui-input"
+                                    :class="{'is-invalid': invalid}"
+                                    type="number"
+                                    :min="1"
+                                    placeholder="e.g. 5"
+                                    :value="selectedItem.mutable.value.partCount"
+                                    :aria-required="required"
+                                    :aria-invalid="invalid || undefined"
+                                    :aria-describedby="describedby"
+                                    @input="onPartCountInput($event, selectedItem.mutable.value)"
+                                />
+                            </template>
+                        </FormField>
+                        <FormField :id="editThemeGroupId" label="Theme Group" required>
+                            <template #default="{controlId, required, invalid, describedby}">
+                                <TextInput
+                                    :id="controlId"
+                                    v-model="selectedItem.mutable.value.themeGroup"
+                                    placeholder="e.g. Space"
+                                    :required="required"
+                                    :invalid="invalid"
+                                    :describedby="describedby"
+                                />
+                            </template>
+                        </FormField>
                     </div>
 
                     <div flex="~ wrap" gap="3">

@@ -1,9 +1,18 @@
 import SettingsPage from '@app/domains/settings/pages/SettingsPage.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {FormField} from '@script-development/ui-inputs';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+
+// Inputs are composed inside FormField scoped slots and no longer carry a `label`
+// prop; locate a field by its FormField label — the field owns the error, the DOM
+// input owns the value.
+const findField = (wrapper: ReturnType<typeof shallowMount>, label: string) =>
+    wrapper.findAllComponents(FormField).find((field) => field.props('label') === label);
+
+const findFieldInput = (wrapper: ReturnType<typeof shallowMount>, label: string) =>
+    findField(wrapper, label)?.find('input');
 
 const {
     createMockAxiosWithError,
@@ -11,14 +20,10 @@ const {
     createMockFsHelpers,
     createMockStringTs,
     createMockFamilyServices,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
@@ -61,7 +66,7 @@ describe('SettingsPage — config', () => {
 
     it('should render page header with title', () => {
         // Arrange & Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
         expect(wrapper.findComponent(PageHeader).props('title')).toBe('settings.title');
@@ -69,17 +74,16 @@ describe('SettingsPage — config', () => {
 
     it('should render rebrickable token input', () => {
         // Arrange & Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
-        const input = wrapper.findComponent(TextInput);
-        expect(input.exists()).toBe(true);
-        expect(input.props('label')).toBe('settings.rebrickableToken');
+        const input = findFieldInput(wrapper, 'settings.rebrickableToken');
+        expect(input?.exists()).toBe(true);
     });
 
     it('should render save token button', () => {
         // Arrange & Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
         const saveButton = wrapper.findAllComponents(PrimaryButton).find((btn) => btn.text() === 'settings.saveToken');
@@ -88,7 +92,7 @@ describe('SettingsPage — config', () => {
 
     it('should render import button', () => {
         // Arrange & Act
-        const wrapper = shallowMount(SettingsPage);
+        const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
         const importButton = wrapper
@@ -99,12 +103,12 @@ describe('SettingsPage — config', () => {
 
     describe('save token', () => {
         const findTokenInput = (wrapper: ReturnType<typeof shallowMount>) =>
-            wrapper.findAllComponents(TextInput).find((i) => i.props('label') === 'settings.rebrickableToken');
+            findFieldInput(wrapper, 'settings.rebrickableToken');
 
         it('should save token via PUT request', async () => {
             // Arrange
             mockPutRequest.mockResolvedValue({});
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
             await findTokenInput(wrapper)?.setValue('my-secret-token');
 
@@ -123,7 +127,7 @@ describe('SettingsPage — config', () => {
         it('should show success message after saving', async () => {
             // Arrange
             mockPutRequest.mockResolvedValue({});
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
             await findTokenInput(wrapper)?.setValue('my-secret-token');
 
@@ -140,7 +144,7 @@ describe('SettingsPage — config', () => {
         it('should clear token input after saving', async () => {
             // Arrange
             mockPutRequest.mockResolvedValue({});
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
             await findTokenInput(wrapper)?.setValue('my-secret-token');
 
@@ -150,8 +154,8 @@ describe('SettingsPage — config', () => {
             await tokenForm?.trigger('submit');
             await flushPromises();
 
-            // Assert
-            expect(findTokenInput(wrapper)?.props('modelValue')).toBe('');
+            // Assert — the DOM input is cleared after a successful save
+            expect(findTokenInput(wrapper)?.element.value).toBe('');
         });
 
         it('should show error when not family head (403)', async () => {
@@ -159,7 +163,7 @@ describe('SettingsPage — config', () => {
             const axiosError = new MockAxiosError('Forbidden');
             axiosError.response = {status: 403, data: null, statusText: 'Forbidden', headers: {}, config: {}};
             mockPutRequest.mockRejectedValue(axiosError);
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
             await findTokenInput(wrapper)?.setValue('my-secret-token');
 
@@ -170,13 +174,13 @@ describe('SettingsPage — config', () => {
             await flushPromises();
 
             // Assert
-            expect(findTokenInput(wrapper)?.props('error')).toBe('settings.notFamilyHead');
+            expect(findField(wrapper, 'settings.rebrickableToken')?.props('error')).toBe('settings.notFamilyHead');
         });
 
         it('should show generic error on failure', async () => {
             // Arrange
             mockPutRequest.mockRejectedValue(new Error('Network error'));
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
             await findTokenInput(wrapper)?.setValue('my-secret-token');
 
@@ -187,7 +191,7 @@ describe('SettingsPage — config', () => {
             await flushPromises();
 
             // Assert
-            expect(findTokenInput(wrapper)?.props('error')).toBe('settings.tokenSaveError');
+            expect(findField(wrapper, 'settings.rebrickableToken')?.props('error')).toBe('settings.tokenSaveError');
         });
     });
 
@@ -234,7 +238,7 @@ describe('SettingsPage — config', () => {
         it('should call import endpoint', async () => {
             // Arrange
             mockPostRequest.mockResolvedValue({data: pendingJob});
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Act
             const importButton = wrapper
@@ -264,7 +268,7 @@ describe('SettingsPage — config', () => {
                 }
                 return Promise.reject(new Error(`Unexpected GET: ${url}`));
             });
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Act — start import
             const importButton = wrapper
@@ -298,7 +302,7 @@ describe('SettingsPage — config', () => {
                 }
                 return Promise.reject(new Error(`Unexpected GET: ${url}`));
             });
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Act
             const importButton = wrapper
@@ -331,7 +335,7 @@ describe('SettingsPage — config', () => {
                 }
                 return Promise.reject(new Error(`Unexpected GET: ${url}`));
             });
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Act
             const importButton = wrapper
@@ -354,7 +358,7 @@ describe('SettingsPage — config', () => {
             const axiosError = new MockAxiosError('Forbidden');
             axiosError.response = {status: 403, data: null, statusText: 'Forbidden', headers: {}, config: {}};
             mockPostRequest.mockRejectedValue(axiosError);
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Act
             const importButton = wrapper
@@ -378,7 +382,7 @@ describe('SettingsPage — config', () => {
                 config: {},
             };
             mockPostRequest.mockRejectedValue(axiosError);
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Act
             const importButton = wrapper
@@ -394,7 +398,7 @@ describe('SettingsPage — config', () => {
         it('should show generic error on failure', async () => {
             // Arrange
             mockPostRequest.mockRejectedValue(new Error('Network error'));
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Act
             const importButton = wrapper
@@ -410,7 +414,7 @@ describe('SettingsPage — config', () => {
         it('should show importing state while polling', async () => {
             // Arrange
             mockPostRequest.mockResolvedValue({data: pendingJob});
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Act
             const importButton = wrapper
@@ -444,7 +448,7 @@ describe('SettingsPage — config', () => {
                 }
                 return Promise.reject(new Error(`Unexpected GET: ${url}`));
             });
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Act
             const importButton = wrapper
@@ -479,7 +483,7 @@ describe('SettingsPage — config', () => {
                 }
                 return Promise.reject(new Error(`Unexpected GET: ${url}`));
             });
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Act
             const importButton = wrapper
@@ -520,7 +524,7 @@ describe('SettingsPage — config', () => {
                 }
                 return Promise.reject(new Error(`Unexpected GET: ${url}`));
             });
-            const wrapper = shallowMount(SettingsPage);
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
             // Act
             const importButton = wrapper

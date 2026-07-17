@@ -2,8 +2,6 @@ import EditSetPage from '@app/domains/sets/pages/EditSetPage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
@@ -17,20 +15,15 @@ const {
     createMockStringTs,
     createMockFamilyServices,
     createMockFamilyStores,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
-
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
 
 const {mockGetOrFailById, mockGoToRoute, mockCurrentRouteId, mockPatch, mockDelete, mockRetrieveAll} = vi.hoisted(
     () => ({
@@ -93,6 +86,10 @@ const createMockAdapted = () => ({
     delete: mockDelete,
 });
 
+// atom-at-call-site: the page composes FormField + SingleSelect (status) + native
+// number/date/textarea controls; unstub the package pair so the slots render.
+const renderPage = () => shallowMount(EditSetPage, {global: {stubs: {FormField: false, SingleSelect: false}}});
+
 describe('EditSetPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -104,7 +101,7 @@ describe('EditSetPage', () => {
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
 
         // Act
-        shallowMount(EditSetPage);
+        renderPage();
         await flushPromises();
 
         // Assert
@@ -116,7 +113,7 @@ describe('EditSetPage', () => {
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
 
         // Act
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Assert
@@ -130,15 +127,13 @@ describe('EditSetPage', () => {
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
 
         // Act
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
         await flushPromises();
 
-        // Assert
-        const numberInput = wrapper.findComponent(NumberInput);
-        expect(numberInput.props('modelValue')).toBe(2);
-
-        const selectInput = wrapper.findComponent(SelectInput);
-        expect(selectInput.props('modelValue')).toBe('built');
+        // Assert — quantity is a native number input; the status SingleSelect
+        // renders its current value in the combobox trigger.
+        expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('2');
+        expect(wrapper.get('[role="combobox"]').text()).toBe('built');
     });
 
     it('should show loading state initially', () => {
@@ -146,7 +141,7 @@ describe('EditSetPage', () => {
         mockGetOrFailById.mockReturnValue(new Promise(() => {}));
 
         // Act
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
 
         // Assert
         expect(wrapper.findComponent(LoadingState).exists()).toBe(true);
@@ -156,7 +151,7 @@ describe('EditSetPage', () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
         mockPatch.mockResolvedValue({});
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -172,11 +167,43 @@ describe('EditSetPage', () => {
         });
     });
 
+    it('should update quantity on valid numeric input', async () => {
+        // Arrange
+        mockGetOrFailById.mockResolvedValue(createMockAdapted());
+        mockPatch.mockResolvedValue({});
+        const wrapper = renderPage();
+        await flushPromises();
+
+        // Act — a valid number flows through onQuantityInput's assigning branch
+        await wrapper.get('input[type="number"]').setValue('5');
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        // Assert
+        expect(mockPatch).toHaveBeenCalledWith(expect.objectContaining({quantity: 5}));
+    });
+
+    it('should ignore non-numeric quantity input', async () => {
+        // Arrange
+        mockGetOrFailById.mockResolvedValue(createMockAdapted());
+        mockPatch.mockResolvedValue({});
+        const wrapper = renderPage();
+        await flushPromises();
+
+        // Act — clearing the number input yields NaN; the guard skips the write
+        await wrapper.get('input[type="number"]').setValue('');
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        // Assert — quantity stays at the loaded value
+        expect(mockPatch).toHaveBeenCalledWith(expect.objectContaining({quantity: 2}));
+    });
+
     it('should navigate to detail page on successful update', async () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
         mockPatch.mockResolvedValue({});
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -193,7 +220,7 @@ describe('EditSetPage', () => {
         const axiosError = new AxiosError('Validation failed');
         axiosError.response = {status: 422, data: {}, statusText: '', headers: {}, config: {} as never};
         mockPatch.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -210,7 +237,7 @@ describe('EditSetPage', () => {
         const axiosError = new AxiosError('Server error');
         axiosError.response = {status: 500, data: {}, statusText: '', headers: {}, config: {} as never};
         mockPatch.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -228,7 +255,7 @@ describe('EditSetPage', () => {
     it('should open confirm dialog when delete button is clicked', async () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -243,7 +270,7 @@ describe('EditSetPage', () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
         mockDelete.mockResolvedValue(undefined);
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -260,7 +287,7 @@ describe('EditSetPage', () => {
     it('should close dialog when user cancels confirmation', async () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Act
@@ -279,7 +306,7 @@ describe('EditSetPage', () => {
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
 
         // Act
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
         await flushPromises();
 
         // Assert
@@ -298,7 +325,7 @@ describe('EditSetPage', () => {
         mockRetrieveAll.mockResolvedValue(undefined);
 
         // Act
-        shallowMount(EditSetPage);
+        renderPage();
         await flushPromises();
 
         // Assert
@@ -313,7 +340,7 @@ describe('EditSetPage', () => {
 
         // Act
         const errorHandler = vi.fn<(err: unknown, instance: unknown, info: string) => void>();
-        const wrapper = shallowMount(EditSetPage);
+        const wrapper = renderPage();
         wrapper.vm.$.appContext.config.errorHandler = errorHandler;
         await flushPromises();
 

@@ -2,25 +2,15 @@ import BrickDnaPage from '@app/domains/brick-dna/pages/BrickDnaPage.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-const {
-    createMockAxios,
-    createMockFsHelpers,
-    createMockStringTs,
-    createMockFamilyServices,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
-} = await vi.hoisted(() => import('../../../../../../helpers'));
+const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices} = await vi.hoisted(
+    () => import('../../../../../../helpers'),
+);
 
 const {mockGetRequest} = vi.hoisted(() => ({mockGetRequest: vi.fn<() => Promise<unknown>>()}));
 
 vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
-
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
 
 vi.mock('@shared/components/EmptyState.vue', () => ({
     default: {name: 'EmptyState', template: '<span><slot /></span>', props: ['message']},

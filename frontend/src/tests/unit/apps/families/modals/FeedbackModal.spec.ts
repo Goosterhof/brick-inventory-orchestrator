@@ -1,6 +1,7 @@
 import type {VueWrapper} from '@vue/test-utils';
 
 import FeedbackModal from '@app/modals/FeedbackModal.vue';
+import {FormField} from '@script-development/ui-inputs';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -14,33 +15,24 @@ const emitFrom = (wrapper: VueWrapper | undefined, event: string): void => {
 // for the stub. Dropping the static imports keeps the collect-phase dependency
 // graph shallow (ADR-0012).
 
-const {createMockAxiosWithError, createMockFsHelpers, createMockStringTs, createMockFamilyServices, MockAxiosError} =
-    await vi.hoisted(() => import('../../../../helpers'));
+const {
+    createMockAxiosWithError,
+    createMockFsHelpers,
+    createMockStringTs,
+    createMockFamilyServices,
+    createMockUiInputs,
+    MockAxiosError,
+} = await vi.hoisted(() => import('../../../../helpers'));
 
 vi.mock('@phosphor-icons/vue', () => ({PhPaperclip: {template: '<i />'}, PhX: {template: '<i />'}}));
 
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@shared/components/ModalDialog.vue', () => ({
     default: {name: 'ModalDialog', props: ['open'], template: '<div><slot name="title" /><slot /></div>'},
-}));
-
-vi.mock('@shared/components/forms/inputs/TextInput.vue', () => ({
-    default: {
-        name: 'TextInput',
-        template: '<input @input=\'$emit("update:modelValue", $event.target.value)\' />',
-        props: ['modelValue', 'label', 'error'],
-    },
-}));
-
-vi.mock('@shared/components/forms/inputs/TextareaInput.vue', () => ({
-    default: {
-        name: 'TextareaInput',
-        template: '<textarea @input=\'$emit("update:modelValue", $event.target.value)\' />',
-        props: ['modelValue', 'label', 'rows', 'error'],
-    },
 }));
 
 vi.mock('@shared/components/PrimaryButton.vue', () => ({
@@ -89,7 +81,7 @@ const makeFile = (name: string) => new File(['screenshot-bytes'], name, {type: '
 const mountModal = () =>
     shallowMount(FeedbackModal, {
         props: {open: true},
-        global: {stubs: {ModalDialog: false, TextInput: false, TextareaInput: false, PrimaryButton: false}},
+        global: {stubs: {ModalDialog: false, FormField: false, TextInput: false, PrimaryButton: false}},
     });
 
 type ModalWrapper = ReturnType<typeof mountModal>;
@@ -102,7 +94,7 @@ const selectFiles = async (wrapper: ModalWrapper, files: File[] | null) => {
 
 const fillRequiredFields = async (wrapper: ModalWrapper) => {
     await wrapper.findComponent({name: 'TextInput'}).setValue('Broken drawer');
-    await wrapper.findComponent({name: 'TextareaInput'}).setValue('The drawer view crashes');
+    await wrapper.get('textarea').setValue('The drawer view crashes');
 };
 
 const submitForm = async (wrapper: ModalWrapper) => {
@@ -248,7 +240,7 @@ describe('FeedbackModal', () => {
         expect(mockToastShow).toHaveBeenCalledWith({message: 'feedback.success', variant: 'success'});
         expect(wrapper.emitted('close')).toHaveLength(1);
         expect(wrapper.findComponent({name: 'TextInput'}).props('modelValue')).toBe('');
-        expect(wrapper.findComponent({name: 'TextareaInput'}).props('modelValue')).toBe('');
+        expect(wrapper.get('textarea').element.value).toBe('');
         expect(wrapper.find('[data-testid="feedback-screenshot-list"]').exists()).toBe(false);
     });
 
@@ -310,10 +302,10 @@ describe('FeedbackModal', () => {
         // Assert
         expect(mockToastShow).not.toHaveBeenCalled();
         expect(wrapper.emitted('close')).toBeUndefined();
-        expect(wrapper.findComponent({name: 'TextInput'}).props('error')).toBe('The title field is required.');
-        expect(wrapper.findComponent({name: 'TextareaInput'}).props('error')).toBe(
-            'The description field is required.',
-        );
+        // FormField owns the error now — title is field 0, description field 1
+        const fields = wrapper.findAllComponents(FormField);
+        expect(fields[0]?.props('error')).toBe('The title field is required.');
+        expect(fields[1]?.props('error')).toBe('The description field is required.');
     });
 
     it('should surface a per-file 422 error on the screenshots input', async () => {

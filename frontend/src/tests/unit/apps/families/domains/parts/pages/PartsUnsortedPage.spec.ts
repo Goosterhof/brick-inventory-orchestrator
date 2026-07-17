@@ -10,15 +10,8 @@ const emit = (wrapper: VueWrapper | undefined, event: string): void => {
     wrapper?.vm.$emit(event);
 };
 
-const {
-    createMockAxios,
-    createMockFsHelpers,
-    createMockStringTs,
-    createMockFamilyServices,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
-} = await vi.hoisted(() => import('../../../../../../helpers'));
+const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices, createMockUiInputs} =
+    await vi.hoisted(() => import('../../../../../../helpers'));
 
 const {mockGetRequest, mockGoToRoute, mockDownloadCsv, mockToCsv, mockToastShow} = vi.hoisted(() => ({
     mockGetRequest: vi.fn<() => Promise<unknown>>(),
@@ -32,9 +25,7 @@ vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
 
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@shared/components/BackButton.vue', () => ({
     default: {name: 'BackButton', template: '<button @click=\'$emit("click")\'><slot /></button>'},
@@ -46,14 +37,6 @@ vi.mock('@shared/components/EmptyState.vue', () => ({
 
 vi.mock('@shared/components/FilterChip.vue', () => ({
     default: {name: 'FilterChip', template: '<button @click=\'$emit("click")\'><slot /></button>', props: ['active']},
-}));
-
-vi.mock('@shared/components/forms/inputs/TextInput.vue', () => ({
-    default: {
-        name: 'TextInput',
-        template: '<input @input=\'$emit("update:modelValue", $event.target.value)\' />',
-        props: ['modelValue'],
-    },
 }));
 
 vi.mock('@shared/components/PageHeader.vue', () => ({
@@ -147,7 +130,7 @@ describe('PartsUnsortedPage', () => {
         mockGetRequest.mockResolvedValue(makePayload([]));
 
         // Act
-        const wrapper = shallowMount(PartsUnsortedPage);
+        const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -159,7 +142,7 @@ describe('PartsUnsortedPage', () => {
         mockGetRequest.mockResolvedValue(makePayload([]));
 
         // Act
-        shallowMount(PartsUnsortedPage);
+        shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -171,7 +154,7 @@ describe('PartsUnsortedPage', () => {
         mockGetRequest.mockReturnValue(new Promise(() => {}));
 
         // Act
-        const wrapper = shallowMount(PartsUnsortedPage);
+        const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
         expect(wrapper.find("[data-testid='unsorted-loading']").exists()).toBe(true);
@@ -182,7 +165,7 @@ describe('PartsUnsortedPage', () => {
         mockGetRequest.mockResolvedValue(makePayload([]));
 
         // Act
-        const wrapper = shallowMount(PartsUnsortedPage);
+        const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -194,7 +177,7 @@ describe('PartsUnsortedPage', () => {
         mockGetRequest.mockRejectedValue(new Error('Network error'));
 
         // Act
-        const wrapper = shallowMount(PartsUnsortedPage);
+        const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -211,7 +194,7 @@ describe('PartsUnsortedPage', () => {
         );
 
         // Act
-        const wrapper = shallowMount(PartsUnsortedPage);
+        const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -231,7 +214,7 @@ describe('PartsUnsortedPage', () => {
         );
 
         // Act
-        const wrapper = shallowMount(PartsUnsortedPage);
+        const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -245,7 +228,7 @@ describe('PartsUnsortedPage', () => {
         mockGetRequest.mockResolvedValue(makePayload([makeEntry()], ['42', '43']));
 
         // Act
-        const wrapper = shallowMount(PartsUnsortedPage);
+        const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -259,7 +242,7 @@ describe('PartsUnsortedPage', () => {
         mockGetRequest.mockResolvedValue(makePayload([makeEntry()]));
 
         // Act
-        const wrapper = shallowMount(PartsUnsortedPage);
+        const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -271,7 +254,7 @@ describe('PartsUnsortedPage', () => {
         mockGetRequest.mockResolvedValue(makePayload([], ['11', '12']));
 
         // Act
-        const wrapper = shallowMount(PartsUnsortedPage);
+        const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -282,7 +265,7 @@ describe('PartsUnsortedPage', () => {
     it('navigates back to the parts inventory when the back button is clicked', async () => {
         // Arrange
         mockGetRequest.mockResolvedValue(makePayload([makeEntry()]));
-        const wrapper = shallowMount(PartsUnsortedPage);
+        const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act
@@ -295,7 +278,7 @@ describe('PartsUnsortedPage', () => {
     it('navigates to settings when the unknown-sets sync link is clicked', async () => {
         // Arrange
         mockGetRequest.mockResolvedValue(makePayload([makeEntry()], ['7']));
-        const wrapper = shallowMount(PartsUnsortedPage);
+        const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act
@@ -314,11 +297,11 @@ describe('PartsUnsortedPage', () => {
                     makeEntry({partNum: '3002', partName: 'Brick'}),
                 ]),
             );
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('brick');
+            await wrapper.get('input[type="search"]').setValue('brick');
             await flushPromises();
 
             // Assert
@@ -330,11 +313,11 @@ describe('PartsUnsortedPage', () => {
         it('filters by part number', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue(makePayload([makeEntry({partNum: '3001'}), makeEntry({partNum: '3002'})]));
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('3001');
+            await wrapper.get('input[type="search"]').setValue('3001');
             await flushPromises();
 
             // Assert
@@ -344,11 +327,11 @@ describe('PartsUnsortedPage', () => {
         it("shows a 'no results' empty state when the search matches nothing", async () => {
             // Arrange
             mockGetRequest.mockResolvedValue(makePayload([makeEntry()]));
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('zzzzzz');
+            await wrapper.get('input[type="search"]').setValue('zzzzzz');
             await flushPromises();
 
             // Assert
@@ -369,7 +352,7 @@ describe('PartsUnsortedPage', () => {
             );
 
             // Act
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -388,7 +371,7 @@ describe('PartsUnsortedPage', () => {
                     makeEntry({partNum: '3003', partName: 'Bravo'}),
                 ]),
             );
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -412,7 +395,7 @@ describe('PartsUnsortedPage', () => {
                     makeEntry({partNum: '3003', colorName: 'Blue'}),
                 ]),
             );
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -432,7 +415,7 @@ describe('PartsUnsortedPage', () => {
             mockGetRequest.mockResolvedValue(makePayload([makeEntry()]));
 
             // Act
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert — shortfall is active by default
@@ -449,7 +432,7 @@ describe('PartsUnsortedPage', () => {
             mockGetRequest.mockResolvedValue(makePayload([makeEntry()]));
 
             // Act
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -462,7 +445,7 @@ describe('PartsUnsortedPage', () => {
             mockGetRequest.mockResolvedValue(makePayload([makeEntry()]));
 
             // Act
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -475,7 +458,7 @@ describe('PartsUnsortedPage', () => {
             mockGetRequest.mockResolvedValue(makePayload([], ['1']));
 
             // Act
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -498,7 +481,7 @@ describe('PartsUnsortedPage', () => {
                     }),
                 ]),
             );
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -521,11 +504,11 @@ describe('PartsUnsortedPage', () => {
             mockGetRequest.mockResolvedValue(
                 makePayload([makeEntry({partNum: '3001', shortfall: 3}), makeEntry({partNum: '3002', shortfall: 7})]),
             );
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act — narrow to one entry, then export
-            await wrapper.findComponent({name: 'TextInput'}).setValue('3002');
+            await wrapper.get('input[type="search"]').setValue('3002');
             await flushPromises();
             const exportBtn = wrapper
                 .findAllComponents({name: 'PrimaryButton'})
@@ -553,7 +536,7 @@ describe('PartsUnsortedPage', () => {
                     }),
                 ]),
             );
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
@@ -575,7 +558,7 @@ describe('PartsUnsortedPage', () => {
             mockGetRequest.mockResolvedValue(makePayload([makeEntry()]));
 
             // Act
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -599,7 +582,7 @@ describe('PartsUnsortedPage', () => {
                     }),
                 ]),
             );
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act — clicking the wrapper button is what triggers openPlaceModal.
@@ -627,7 +610,7 @@ describe('PartsUnsortedPage', () => {
         it('closes the modal without refetching or toasting when close fires', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue(makePayload([makeEntry()]));
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
             await wrapper.findAllComponents({name: 'ListItemButton'})[0]?.trigger('click');
             await flushPromises();
@@ -646,7 +629,7 @@ describe('PartsUnsortedPage', () => {
         it('refetches the master shopping list, fires a success toast, and closes when assigned fires', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue(makePayload([makeEntry({partName: 'Brick 2x4', shortfall: 7})]));
-            const wrapper = shallowMount(PartsUnsortedPage);
+            const wrapper = shallowMount(PartsUnsortedPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
             await wrapper.findAllComponents({name: 'ListItemButton'})[0]?.trigger('click');
             await flushPromises();

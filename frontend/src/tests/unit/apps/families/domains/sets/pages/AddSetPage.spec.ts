@@ -1,11 +1,7 @@
 import type {FamilySet} from '@app/types/familySet';
 
 import AddSetPage from '@app/domains/sets/pages/AddSetPage.vue';
-import DateInput from '@shared/components/forms/inputs/DateInput.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {FormField} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {AxiosError} from 'axios';
@@ -18,6 +14,7 @@ const {
     createMockStringTs,
     createMockFamilyServices,
     createMockFamilyStores,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
 const {mockCreate, mockGoToRoute} = vi.hoisted(() => ({
@@ -42,6 +39,7 @@ const fetchedFamilySet = (setNum: string, overrides?: Partial<FamilySet>): Famil
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 vi.mock('@app/services', () =>
     createMockFamilyServices({
         familyAuthService: {isLoggedIn: {value: true}},
@@ -70,6 +68,17 @@ vi.mock('@app/stores', () =>
     }),
 );
 
+// atom-at-call-site puts each control inside FormField's scoped slot, which a
+// bare shallowMount won't render while FormField is stubbed. Unstub the package
+// trio (kept light by the vi.mock above — no floating-ui) so the slot + controls
+// render; everything else stays shallow (ADR-0012: unit tests use shallowMount).
+const renderPage = () =>
+    shallowMount(AddSetPage, {global: {stubs: {FormField: false, TextInput: false, SingleSelect: false}}});
+
+// The set-number field is the only text input on the page; v-model wires through
+// the package TextInput, so we drive the DOM control rather than a molecule.
+const setNumberInput = (wrapper: ReturnType<typeof renderPage>) => wrapper.get('input[type="text"]');
+
 describe('AddSetPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -78,33 +87,29 @@ describe('AddSetPage', () => {
 
     it('should render page title', () => {
         // Arrange & Act
-        const wrapper = shallowMount(AddSetPage);
+        const wrapper = renderPage();
 
         // Assert
         expect(wrapper.find('h1').text()).toBe('sets.addSet');
     });
 
-    it('should render form fields', () => {
+    it('should render a labelled field per input', () => {
         // Arrange & Act
-        const wrapper = shallowMount(AddSetPage);
+        const wrapper = renderPage();
 
-        // Assert
-        const textInputs = wrapper.findAllComponents(TextInput);
-        expect(textInputs).toHaveLength(1);
-        expect(textInputs[0]?.props('label')).toBe('sets.setNumber');
-
-        const numberInputs = wrapper.findAllComponents(NumberInput);
-        expect(numberInputs).toHaveLength(1);
-        expect(numberInputs[0]?.props('label')).toBe('sets.quantity');
-
-        expect(wrapper.findComponent(SelectInput).exists()).toBe(true);
-        expect(wrapper.findComponent(DateInput).exists()).toBe(true);
-        expect(wrapper.findComponent(TextareaInput).exists()).toBe(true);
+        // Assert — five FormFields (setNum, quantity, status, purchaseDate, notes), each labelled
+        expect(wrapper.findAllComponents(FormField)).toHaveLength(5);
+        expect(wrapper.findAll('.ui-label')).toHaveLength(5);
+        expect(wrapper.find('input[type="text"]').exists()).toBe(true);
+        expect(wrapper.find('input[type="number"]').exists()).toBe(true);
+        expect(wrapper.find('input[type="date"]').exists()).toBe(true);
+        expect(wrapper.find('textarea').exists()).toBe(true);
+        expect(wrapper.find('[role="combobox"]').exists()).toBe(true);
     });
 
     it('should render submit button', () => {
         // Arrange & Act
-        const wrapper = shallowMount(AddSetPage);
+        const wrapper = renderPage();
 
         // Assert
         const button = wrapper.findComponent(PrimaryButton);
@@ -116,10 +121,9 @@ describe('AddSetPage', () => {
     it('should call create on form submit', async () => {
         // Arrange
         mockCreate.mockResolvedValue({id: 1, setNum: '75192-1', quantity: 1, status: 'sealed'});
-        const wrapper = shallowMount(AddSetPage);
+        const wrapper = renderPage();
 
-        const textInput = wrapper.findComponent(TextInput);
-        textInput.vm.$emit('update:modelValue', '75192-1');
+        await setNumberInput(wrapper).setValue('75192-1');
         await flushPromises();
 
         // Act
@@ -130,10 +134,38 @@ describe('AddSetPage', () => {
         expect(mockCreate).toHaveBeenCalled();
     });
 
+    it('should update quantity on valid numeric input and still submit', async () => {
+        // Arrange
+        mockCreate.mockResolvedValue({id: 1, setNum: '75192-1', quantity: 5, status: 'sealed'});
+        const wrapper = renderPage();
+
+        // Act — a valid number flows through onQuantityInput's assigning branch
+        await wrapper.get('input[type="number"]').setValue('5');
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        // Assert
+        expect(mockCreate).toHaveBeenCalled();
+    });
+
+    it('should ignore non-numeric quantity input and still submit', async () => {
+        // Arrange
+        mockCreate.mockResolvedValue({id: 1, setNum: '75192-1', quantity: 1, status: 'sealed'});
+        const wrapper = renderPage();
+
+        // Act — clearing the number input yields NaN; onQuantityInput's guard skips the write
+        await wrapper.get('input[type="number"]').setValue('');
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        // Assert
+        expect(mockCreate).toHaveBeenCalled();
+    });
+
     it('should navigate to detail page on successful create', async () => {
         // Arrange
         mockCreate.mockResolvedValue({id: 42, setNum: '75192-1', quantity: 1, status: 'sealed'});
-        const wrapper = shallowMount(AddSetPage);
+        const wrapper = renderPage();
 
         // Act
         await wrapper.find('form').trigger('submit');
@@ -148,7 +180,7 @@ describe('AddSetPage', () => {
         const axiosError = new AxiosError('Validation failed');
         axiosError.response = {status: 422, data: {}, statusText: '', headers: {}, config: {} as never};
         mockCreate.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(AddSetPage);
+        const wrapper = renderPage();
 
         // Act
         await wrapper.find('form').trigger('submit');
@@ -163,7 +195,7 @@ describe('AddSetPage', () => {
         const axiosError = new AxiosError('Not found');
         axiosError.response = {status: 404, data: {}, statusText: '', headers: {}, config: {} as never};
         mockCreate.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(AddSetPage);
+        const wrapper = renderPage();
 
         // Act
         await wrapper.find('form').trigger('submit');
@@ -181,14 +213,13 @@ describe('AddSetPage', () => {
         const axiosError = new AxiosError('Not found');
         axiosError.response = {status: 404, data: {}, statusText: '', headers: {}, config: {} as never};
         mockCreate.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(AddSetPage);
+        const wrapper = renderPage();
         await wrapper.find('form').trigger('submit');
         await flushPromises();
         expect(wrapper.find("[data-testid='not-found-error']").exists()).toBe(true);
 
         // Act
-        const textInput = wrapper.findComponent(TextInput);
-        textInput.vm.$emit('update:modelValue', '10179-1');
+        await setNumberInput(wrapper).setValue('10179-1');
         await flushPromises();
 
         // Assert
@@ -200,7 +231,7 @@ describe('AddSetPage', () => {
         const axiosError = new AxiosError('Server error');
         axiosError.response = {status: 500, data: {}, statusText: '', headers: {}, config: {} as never};
         mockCreate.mockRejectedValue(axiosError);
-        const wrapper = shallowMount(AddSetPage);
+        const wrapper = renderPage();
 
         // Act
         const errorHandler = vi.fn<(err: unknown, instance: unknown, info: string) => void>();
@@ -214,24 +245,22 @@ describe('AddSetPage', () => {
         expect(mockGoToRoute).not.toHaveBeenCalled();
     });
 
-    it('should have setnummer required by default', () => {
+    it('should mark the set-number field required for assistive tech', () => {
         // Arrange & Act
-        const wrapper = shallowMount(AddSetPage);
+        const wrapper = renderPage();
 
-        // Assert
-        const textInput = wrapper.findComponent(TextInput);
-        expect(textInput.props('optional')).toBe(false);
+        // Assert — the atom conveys required state via aria-required (error-as-prop lib)
+        expect(setNumberInput(wrapper).attributes('aria-required')).toBe('true');
     });
 
     describe('duplicate detection', () => {
         it('should show duplicate warning when entered set number matches a fetched set (nested set.setNum)', async () => {
             // Arrange — real resource shape: the set number lives at set.setNum, not top-level
             mockStoreGetAll.value = [fetchedFamilySet('75192-1')];
-            const wrapper = shallowMount(AddSetPage);
+            const wrapper = renderPage();
 
             // Act
-            const textInput = wrapper.findComponent(TextInput);
-            textInput.vm.$emit('update:modelValue', '75192-1');
+            await setNumberInput(wrapper).setValue('75192-1');
             await flushPromises();
 
             // Assert
@@ -243,11 +272,10 @@ describe('AddSetPage', () => {
         it('should fall back to top-level setNum when an entry has no nested set', async () => {
             // Arrange — draft-shaped entry without a nested set
             mockStoreGetAll.value = [fetchedFamilySet('75192-1', {setNum: '75192-1', set: undefined})];
-            const wrapper = shallowMount(AddSetPage);
+            const wrapper = renderPage();
 
             // Act
-            const textInput = wrapper.findComponent(TextInput);
-            textInput.vm.$emit('update:modelValue', '75192-1');
+            await setNumberInput(wrapper).setValue('75192-1');
             await flushPromises();
 
             // Assert
@@ -257,11 +285,10 @@ describe('AddSetPage', () => {
         it('should not show duplicate warning when set number does not match', async () => {
             // Arrange
             mockStoreGetAll.value = [fetchedFamilySet('10179-1', {quantity: 1, status: 'sealed'})];
-            const wrapper = shallowMount(AddSetPage);
+            const wrapper = renderPage();
 
             // Act
-            const textInput = wrapper.findComponent(TextInput);
-            textInput.vm.$emit('update:modelValue', '75192-1');
+            await setNumberInput(wrapper).setValue('75192-1');
             await flushPromises();
 
             // Assert
@@ -273,7 +300,7 @@ describe('AddSetPage', () => {
             mockStoreGetAll.value = [fetchedFamilySet('75192-1', {quantity: 1, status: 'sealed'})];
 
             // Act
-            const wrapper = shallowMount(AddSetPage);
+            const wrapper = renderPage();
 
             // Assert
             expect(wrapper.find("[data-testid='duplicate-warning']").exists()).toBe(false);
@@ -282,9 +309,8 @@ describe('AddSetPage', () => {
         it('should dismiss duplicate warning when dismiss button is clicked', async () => {
             // Arrange
             mockStoreGetAll.value = [fetchedFamilySet('75192-1')];
-            const wrapper = shallowMount(AddSetPage);
-            const textInput = wrapper.findComponent(TextInput);
-            textInput.vm.$emit('update:modelValue', '75192-1');
+            const wrapper = renderPage();
+            await setNumberInput(wrapper).setValue('75192-1');
             await flushPromises();
 
             // Act
@@ -298,9 +324,8 @@ describe('AddSetPage', () => {
         it('should reset dismissed state when set number changes', async () => {
             // Arrange
             mockStoreGetAll.value = [fetchedFamilySet('75192-1')];
-            const wrapper = shallowMount(AddSetPage);
-            const textInput = wrapper.findComponent(TextInput);
-            textInput.vm.$emit('update:modelValue', '75192-1');
+            const wrapper = renderPage();
+            await setNumberInput(wrapper).setValue('75192-1');
             await flushPromises();
 
             // Dismiss the warning
@@ -309,9 +334,9 @@ describe('AddSetPage', () => {
             expect(wrapper.find("[data-testid='duplicate-warning']").exists()).toBe(false);
 
             // Act — change set number to something else and back
-            textInput.vm.$emit('update:modelValue', '10179-1');
+            await setNumberInput(wrapper).setValue('10179-1');
             await flushPromises();
-            textInput.vm.$emit('update:modelValue', '75192-1');
+            await setNumberInput(wrapper).setValue('75192-1');
             await flushPromises();
 
             // Assert — warning reappears
@@ -321,11 +346,10 @@ describe('AddSetPage', () => {
         it('should not show duplicate warning when store is empty', async () => {
             // Arrange
             mockStoreGetAll.value = [];
-            const wrapper = shallowMount(AddSetPage);
+            const wrapper = renderPage();
 
             // Act
-            const textInput = wrapper.findComponent(TextInput);
-            textInput.vm.$emit('update:modelValue', '75192-1');
+            await setNumberInput(wrapper).setValue('75192-1');
             await flushPromises();
 
             // Assert

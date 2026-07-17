@@ -10,29 +10,16 @@ const {
     createMockStringTs,
     createMockFamilyServices,
     createMockFamilyStores,
-    createMockFormField,
-    createMockFormLabel,
-    createMockFormError,
+    createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
 
 vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
-
-vi.mock('@shared/components/forms/FormError.vue', () => createMockFormError());
-vi.mock('@shared/components/forms/FormField.vue', () => createMockFormField());
-vi.mock('@shared/components/forms/FormLabel.vue', () => createMockFormLabel());
+vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@shared/components/EmptyState.vue', () => ({
     default: {name: 'EmptyState', template: '<span><slot /></span>', props: ['message']},
-}));
-
-vi.mock('@shared/components/forms/inputs/TextInput.vue', () => ({
-    default: {
-        name: 'TextInput',
-        template: '<input @input=\'$emit("update:modelValue", $event.target.value)\' />',
-        props: ['modelValue'],
-    },
 }));
 
 vi.mock('@shared/components/ListItemButton.vue', () => ({
@@ -115,7 +102,7 @@ describe('StorageOverviewPage', () => {
 
     it('should render page title', async () => {
         // Arrange & Act
-        const wrapper = shallowMount(StorageOverviewPage);
+        const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -124,7 +111,7 @@ describe('StorageOverviewPage', () => {
 
     it('should call retrieveAll on mount', async () => {
         // Arrange & Act
-        shallowMount(StorageOverviewPage);
+        shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -136,7 +123,7 @@ describe('StorageOverviewPage', () => {
         mockAllItems.value = [mockStorageOption];
 
         // Act
-        const wrapper = shallowMount(StorageOverviewPage);
+        const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -151,7 +138,7 @@ describe('StorageOverviewPage', () => {
         mockAllItems.value = [];
 
         // Act
-        const wrapper = shallowMount(StorageOverviewPage);
+        const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -163,7 +150,7 @@ describe('StorageOverviewPage', () => {
         mockIsLoading.value = true;
 
         // Act
-        const wrapper = shallowMount(StorageOverviewPage);
+        const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
 
         // Assert
         expect(wrapper.text()).toContain('common.loading');
@@ -172,7 +159,7 @@ describe('StorageOverviewPage', () => {
     it('should navigate to add page when add button is clicked', async () => {
         // Arrange
         mockAllItems.value = [];
-        const wrapper = shallowMount(StorageOverviewPage);
+        const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act
@@ -186,7 +173,7 @@ describe('StorageOverviewPage', () => {
     it('should navigate to detail page when a storage card is clicked', async () => {
         // Arrange
         mockAllItems.value = [mockStorageOption];
-        const wrapper = shallowMount(StorageOverviewPage);
+        const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Act
@@ -203,7 +190,7 @@ describe('StorageOverviewPage', () => {
         mockAllItems.value = [optionWithoutChildren];
 
         // Act
-        const wrapper = shallowMount(StorageOverviewPage);
+        const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -216,7 +203,7 @@ describe('StorageOverviewPage', () => {
         mockAllItems.value = [optionWithoutGrid];
 
         // Act
-        const wrapper = shallowMount(StorageOverviewPage);
+        const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -229,7 +216,7 @@ describe('StorageOverviewPage', () => {
         mockAllItems.value = [optionWithoutDescription];
 
         // Act
-        const wrapper = shallowMount(StorageOverviewPage);
+        const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
         await flushPromises();
 
         // Assert
@@ -242,7 +229,7 @@ describe('StorageOverviewPage', () => {
             mockAllItems.value = [mockStorageOption, mockChildOption];
 
             // Act
-            const wrapper = shallowMount(StorageOverviewPage);
+            const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert
@@ -257,7 +244,7 @@ describe('StorageOverviewPage', () => {
             mockAllItems.value = [mockStorageOption, mockChildOption];
 
             // Act
-            const wrapper = shallowMount(StorageOverviewPage);
+            const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Assert — only 1 top-level group, child is nested
@@ -280,11 +267,11 @@ describe('StorageOverviewPage', () => {
         it('should filter storage by name', async () => {
             // Arrange
             mockAllItems.value = [mockStorageOption, mockStorageOptionB];
-            const wrapper = shallowMount(StorageOverviewPage);
+            const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('Lade B');
+            await wrapper.get('input[type="search"]').setValue('Lade B');
             await flushPromises();
 
             // Assert
@@ -295,11 +282,11 @@ describe('StorageOverviewPage', () => {
         it('should filter storage by description', async () => {
             // Arrange
             mockAllItems.value = [mockStorageOption, mockStorageOptionB];
-            const wrapper = shallowMount(StorageOverviewPage);
+            const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('Rechterla');
+            await wrapper.get('input[type="search"]').setValue('Rechterla');
             await flushPromises();
 
             // Assert
@@ -310,11 +297,11 @@ describe('StorageOverviewPage', () => {
         it('should show no results when search matches nothing', async () => {
             // Arrange
             mockAllItems.value = [mockStorageOption];
-            const wrapper = shallowMount(StorageOverviewPage);
+            const wrapper = shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
             // Act
-            await wrapper.findComponent({name: 'TextInput'}).setValue('nonexistent');
+            await wrapper.get('input[type="search"]').setValue('nonexistent');
             await flushPromises();
 
             // Assert

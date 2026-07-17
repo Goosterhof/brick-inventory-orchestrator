@@ -1,7 +1,7 @@
 import LoginPage from '@app/domains/auth/pages/LoginPage.vue';
 import {familyRouterService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
+import {TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -20,7 +20,7 @@ describe('LoginPage — integration', () => {
 
     const mountPage = () => mount(LoginPage);
 
-    it('renders real TextInput components with label and input elements', () => {
+    it('renders real TextInput atoms with input elements', () => {
         const wrapper = mountPage();
 
         const inputs = wrapper.findAllComponents(TextInput);
@@ -31,7 +31,15 @@ describe('LoginPage — integration', () => {
         expect(htmlInputs).toHaveLength(2);
     });
 
-    it('passes correct props to TextInput children', () => {
+    it('labels the email and password fields', () => {
+        const wrapper = mountPage();
+
+        const labels = wrapper.findAll('.ui-label').map((label) => label.text());
+        expect(labels.some((text) => text.includes('Email'))).toBe(true);
+        expect(labels.some((text) => text.includes('Password'))).toBe(true);
+    });
+
+    it('renders email and password inputs with the right types', () => {
         const wrapper = mountPage();
 
         const inputs = wrapper.findAllComponents(TextInput);
@@ -40,8 +48,6 @@ describe('LoginPage — integration', () => {
 
         expect(emailInput).toBeDefined();
         expect(passwordInput).toBeDefined();
-        expect(emailInput?.props('label')).toBe('Email');
-        expect(passwordInput?.props('label')).toBe('Password');
     });
 
     it('renders a real PrimaryButton with submit type', () => {

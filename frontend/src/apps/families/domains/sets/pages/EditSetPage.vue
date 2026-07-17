@@ -6,16 +6,13 @@ import {familyHttpService, familyRouterService, familySoundService, familyTransl
 import {familySetStoreModule} from '@app/stores';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import {useForm} from '@script-development/fs-form';
+import {FormField, SingleSelect} from '@script-development/ui-inputs';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
-import DateInput from '@shared/components/forms/inputs/DateInput.vue';
-import NumberInput from '@shared/components/forms/inputs/NumberInput.vue';
-import SelectInput from '@shared/components/forms/inputs/SelectInput.vue';
-import TextareaInput from '@shared/components/forms/inputs/TextareaInput.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
-import {onMounted, ref} from 'vue';
+import {computed, onMounted, ref, useId} from 'vue';
 
 const {t} = familyTranslationService;
 const adapted = ref<Adapted<FamilySet> | null>(null);
@@ -25,7 +22,12 @@ const showDeleteConfirm = ref(false);
 type EditSetField = 'quantity' | 'status' | 'purchaseDate' | 'notes';
 const {errors, handleSubmit, submitting} = useForm<EditSetField>(familyHttpService, {keyMapper: camelKey});
 
-const statusOptions: {
+const quantityId = useId();
+const statusId = useId();
+const purchaseDateId = useId();
+const notesId = useId();
+
+const statusChoices: {
     value: FamilySetStatus;
     key: 'sets.sealed' | 'sets.built' | 'sets.inProgress' | 'sets.inStorage' | 'sets.incomplete' | 'sets.wishlist';
 }[] = [
@@ -36,6 +38,22 @@ const statusOptions: {
     {value: 'incomplete', key: 'sets.incomplete'},
     {value: 'wishlist', key: 'sets.wishlist'},
 ];
+
+// SingleSelect wants `{id, label}` options; a computed keeps labels reactive to
+// the translation service.
+const statusOptions = computed<{id: FamilySetStatus; label: string}[]>(() =>
+    statusChoices.map((choice) => ({id: choice.value, label: t(choice.key).value})),
+);
+
+// quantity is a non-nullable number (min 1); ignore empty/NaN rather than write
+// null. The mutable object is passed in from the template (narrowed non-null by
+// v-else-if), so there is no unreachable null branch to leave uncovered.
+const onQuantityInput = (event: Event, mutable: {quantity: number}) => {
+    const value = (event.target as HTMLInputElement).valueAsNumber;
+    if (!Number.isNaN(value)) {
+        mutable.quantity = value;
+    }
+};
 
 onMounted(async () => {
     const id = familyRouterService.currentRouteId.value;
@@ -83,22 +101,67 @@ const handleDelete = async () => {
             </p>
 
             <form flex="~ col" gap="4" @submit.prevent="onSubmit">
-                <NumberInput
-                    v-model="adapted.mutable.quantity"
-                    :label="t('sets.quantity').value"
-                    :error="errors.quantity"
-                    :min="1"
-                />
+                <FormField :id="quantityId" :label="t('sets.quantity').value" required :error="errors.quantity">
+                    <template #default="{controlId, required, invalid, describedby}">
+                        <input
+                            :id="controlId"
+                            class="ui-control ui-input"
+                            :class="{'is-invalid': invalid}"
+                            type="number"
+                            :min="1"
+                            :value="adapted.mutable.quantity"
+                            :aria-required="required"
+                            :aria-invalid="invalid || undefined"
+                            :aria-describedby="describedby"
+                            @input="onQuantityInput($event, adapted.mutable)"
+                        />
+                    </template>
+                </FormField>
 
-                <SelectInput v-model="adapted.mutable.status" :label="t('sets.status').value" :error="errors.status">
-                    <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-                        {{ t(option.key).value }}
-                    </option>
-                </SelectInput>
+                <FormField :id="statusId" :label="t('sets.status').value" required :error="errors.status">
+                    <template #default="{controlId, required, invalid, describedby}">
+                        <SingleSelect
+                            :id="controlId"
+                            v-model="adapted.mutable.status"
+                            :options="statusOptions"
+                            label="label"
+                            :options-label="t('sets.status').value"
+                            :required="required"
+                            :invalid="invalid"
+                            :describedby="describedby"
+                        />
+                    </template>
+                </FormField>
 
-                <DateInput v-model="adapted.mutable.purchaseDate" :label="t('sets.purchaseDate').value" optional />
+                <FormField :id="purchaseDateId" :label="t('sets.purchaseDate').value">
+                    <template #default="{controlId, required, invalid, describedby}">
+                        <input
+                            :id="controlId"
+                            v-model="adapted.mutable.purchaseDate"
+                            class="ui-control ui-input"
+                            :class="{'is-invalid': invalid}"
+                            type="date"
+                            :aria-required="required"
+                            :aria-invalid="invalid || undefined"
+                            :aria-describedby="describedby"
+                        />
+                    </template>
+                </FormField>
 
-                <TextareaInput v-model="adapted.mutable.notes" :label="t('sets.notes').value" optional />
+                <FormField :id="notesId" :label="t('sets.notes').value">
+                    <template #default="{controlId, required, invalid, describedby}">
+                        <textarea
+                            :id="controlId"
+                            v-model="adapted.mutable.notes"
+                            class="ui-control"
+                            :class="{'is-invalid': invalid}"
+                            rows="3"
+                            :aria-required="required"
+                            :aria-invalid="invalid || undefined"
+                            :aria-describedby="describedby"
+                        />
+                    </template>
+                </FormField>
 
                 <div flex gap="4">
                     <PrimaryButton type="submit" :disabled="submitting" :sound-service="familySoundService" silent>{{

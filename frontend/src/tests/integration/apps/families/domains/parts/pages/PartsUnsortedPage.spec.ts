@@ -1,10 +1,10 @@
 import PartsUnsortedPage from '@app/domains/parts/pages/PartsUnsortedPage.vue';
 import PlacePartModal from '@app/modals/PlacePartModal.vue';
 import {mockServer} from '@integration/helpers/mock-server';
+import {TextInput} from '@script-development/ui-inputs';
 import BackButton from '@shared/components/BackButton.vue';
 import EmptyState from '@shared/components/EmptyState.vue';
 import FilterChip from '@shared/components/FilterChip.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import ListItemButton from '@shared/components/ListItemButton.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PartListItem from '@shared/components/PartListItem.vue';
@@ -308,11 +308,12 @@ describe('PartsUnsortedPage — integration', () => {
             await wrapper.findAllComponents(ListItemButton)[0]?.find('button').trigger('click');
             await flushPromises();
 
-            // Drive the real modal: pick the storage option, set the quantity, submit.
+            // Drive the real modal: open the SingleSelect, pick the storage option, submit.
             // The modal renders its own form; submitting it fires the POST and emits assigned + close.
             const modal = wrapper.findComponent(PlacePartModal);
-            const select = modal.find('select');
-            await select.setValue('5');
+            await modal.get('[role="combobox"]').trigger('click');
+            await flushPromises();
+            await modal.get('[role="option"]').trigger('click');
             await flushPromises();
 
             await modal.find('form').trigger('submit.prevent');

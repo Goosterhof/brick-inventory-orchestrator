@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import {familyHttpService, familyRouterService, familySoundService, familyTranslationService} from '@app/services';
+import {FormField, TextInput} from '@script-development/ui-inputs';
 import BackButton from '@shared/components/BackButton.vue';
 import EmptyState from '@shared/components/EmptyState.vue';
 import FilterChip from '@shared/components/FilterChip.vue';
-import TextInput from '@shared/components/forms/inputs/TextInput.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PartListItem from '@shared/components/PartListItem.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {useSortableFilteredList} from '@shared/composables/useSortableFilteredList';
 import {downloadBrickLinkWantedList, toBrickLinkWantedListXml} from '@shared/helpers/bricklinkWantedList';
 import {exportCsv} from '@shared/helpers/csv';
-import {onMounted} from 'vue';
+import {onMounted, useId} from 'vue';
 
 import {
     compareMissingPartsEntries,
@@ -21,6 +21,7 @@ import {
 const {t} = familyTranslationService;
 const {entries, unknownFamilySetIds, loading, loadError, fetchMissingParts, totalShortfall, affectedSetCount} =
     useMissingPartsFeed(familyHttpService);
+const searchId = useId();
 
 onMounted(fetchMissingParts);
 
@@ -182,13 +183,19 @@ const exportCsvFile = () => {
 
                 <template v-if="entries.length > 0">
                     <div flex="~ col" gap="4" m="b-4">
-                        <TextInput
-                            v-model="searchQuery"
-                            :label="t('common.search').value"
-                            type="search"
-                            :placeholder="t('parts.missingSearchPlaceholder').value"
-                            optional
-                        />
+                        <FormField :id="searchId" :label="t('common.search').value">
+                            <template #default="{controlId, required, invalid, describedby}">
+                                <TextInput
+                                    :id="controlId"
+                                    v-model="searchQuery"
+                                    type="search"
+                                    :placeholder="t('parts.missingSearchPlaceholder').value"
+                                    :required="required"
+                                    :invalid="invalid"
+                                    :describedby="describedby"
+                                />
+                            </template>
+                        </FormField>
 
                         <div flex gap="2" flex-wrap="wrap">
                             <FilterChip
