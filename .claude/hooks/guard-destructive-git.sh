@@ -46,10 +46,16 @@ if echo "$CMD" | grep -qE 'git\s+clean\s+.*-f'; then
     exit 2
 fi
 
-# git branch -D (force delete)
+# git branch -D (force delete) — deliberate opt-in via ALLOW_BRANCH_D=1 prefix.
+# Bare `git branch -D` stays blocked (guards against accidental force-delete);
+# an explicit `ALLOW_BRANCH_D=1 git branch -D ...` is the CEO-authorized escape hatch.
 if echo "$CMD" | grep -qE 'git\s+branch\s+.*-D'; then
-    echo "Blocked: git branch -D force-deletes a branch without merge check. The CEO must explicitly authorize this." >&2
-    exit 2
+    if echo "$CMD" | grep -qE '(^|\s)ALLOW_BRANCH_D=1(\s|$)'; then
+        : # explicit authorization present — allow through
+    else
+        echo "Blocked: git branch -D force-deletes a branch without merge check. Prefix with ALLOW_BRANCH_D=1 to authorize a deliberate deletion." >&2
+        exit 2
+    fi
 fi
 
 # git stash drop / git stash clear
