@@ -1,4 +1,4 @@
-import {downloadCsv, toCsv} from '@shared/helpers/csv';
+import {downloadCsv, exportCsv, toCsv} from '@shared/helpers/csv';
 import {describe, expect, it, vi} from 'vitest';
 
 describe('toCsv', () => {
@@ -84,6 +84,41 @@ describe('downloadCsv', () => {
         expect(capturedBlob).not.toBeNull();
         const blob = capturedBlob as unknown as Blob;
         expect(blob.type).toBe('text/csv;charset=utf-8;');
+        expect(await blob.text()).toBe('Name,Qty\nBrick,10');
+
+        mockCreateElement.mockRestore();
+    });
+});
+
+describe('exportCsv', () => {
+    it('should build the CSV from headers and rows and trigger the download', async () => {
+        // Arrange
+        const mockClick = vi.fn<() => void>();
+        let capturedDownload = '';
+        const mockCreateElement = vi.spyOn(document, 'createElement').mockReturnValue({
+            set href(_: string) {},
+            set download(filename: string) {
+                capturedDownload = filename;
+            },
+            click: mockClick,
+        } as unknown as HTMLAnchorElement);
+        let capturedBlob: Blob | null = null;
+        const mockCreateObjectURL = vi.fn<(obj: Blob) => string>().mockImplementation((blob) => {
+            capturedBlob = blob;
+            return 'blob:test';
+        });
+        const mockRevokeObjectURL = vi.fn<(url: string) => void>();
+        globalThis.URL.createObjectURL = mockCreateObjectURL;
+        globalThis.URL.revokeObjectURL = mockRevokeObjectURL;
+
+        // Act
+        exportCsv(['Name', 'Qty'], [['Brick', '10']], 'parts.csv');
+
+        // Assert
+        expect(mockClick).toHaveBeenCalled();
+        expect(capturedDownload).toBe('parts.csv');
+        expect(capturedBlob).not.toBeNull();
+        const blob = capturedBlob as unknown as Blob;
         expect(await blob.text()).toBe('Name,Qty\nBrick,10');
 
         mockCreateElement.mockRestore();

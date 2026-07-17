@@ -376,6 +376,27 @@ describe('SettingsPage — members', () => {
             expect(wrapper.text()).toContain('settings.codeExpires');
             expect(wrapper.text()).toContain('2026-04-01T00:00:00Z');
         });
+
+        it('should show never-expires label for a permanent code with null expiry', async () => {
+            // Arrange
+            mockGetRequest.mockImplementation((url: string) => {
+                if (url === '/family/members') {
+                    return Promise.resolve({data: membersData});
+                }
+                if (url === '/family/invite-code') {
+                    return Promise.resolve({data: {...inviteCodeData, expiresAt: null, createdAt: null}});
+                }
+                return Promise.reject(new Error(`Unexpected GET: ${url}`));
+            });
+
+            // Act
+            const wrapper = shallowMount(SettingsPage);
+            await flushPromises();
+
+            // Assert
+            expect(wrapper.text()).toContain('settings.codeNeverExpires');
+            expect(wrapper.text()).not.toContain('settings.codeExpires:');
+        });
     });
 
     describe('member removal', () => {

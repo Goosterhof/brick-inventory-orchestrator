@@ -15,7 +15,7 @@ import EmptyState from '@shared/components/EmptyState.vue';
 import FilterChip from '@shared/components/FilterChip.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {downloadCsv, toCsv} from '@shared/helpers/csv';
+import {exportCsv} from '@shared/helpers/csv';
 import {computed, onMounted, ref, useId} from 'vue';
 
 import SetListItem from '../components/SetListItem.vue';
@@ -192,9 +192,9 @@ const toCsvRow = (s: AdaptedSet): string[] => {
 const completionFor = (familySetId: number): number | null =>
     completionByFamilySetId.value.get(familySetId)?.percentage ?? null;
 
-const exportCsv = () => {
+const exportCsvFile = () => {
     const headers = ['Set Number', 'Name', 'Year', 'Theme', 'Parts', 'Quantity', 'Status', 'Purchase Date', 'Notes'];
-    downloadCsv(toCsv(headers, filteredSets.value.map(toCsvRow)), 'lego-sets.csv');
+    exportCsv(headers, filteredSets.value.map(toCsvRow), 'lego-sets.csv');
 };
 </script>
 
@@ -208,7 +208,7 @@ const exportCsv = () => {
                 <PrimaryButton :sound-service="familySoundService" @click="goToAdd">{{
                     t('sets.addSet').value
                 }}</PrimaryButton>
-                <PrimaryButton v-if="getAll.length > 0" :sound-service="familySoundService" @click="exportCsv">{{
+                <PrimaryButton v-if="getAll.length > 0" :sound-service="familySoundService" @click="exportCsvFile">{{
                     t('common.export').value
                 }}</PrimaryButton>
             </div>

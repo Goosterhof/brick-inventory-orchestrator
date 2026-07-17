@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type {MasterShoppingListEntry, MasterShoppingListResponse} from '@app/types/part';
-
 import {familyHttpService, familyRouterService, familySoundService, familyTranslationService} from '@app/services';
 import {FormField, TextInput} from '@script-development/ui-inputs';
 import BackButton from '@shared/components/BackButton.vue';
@@ -9,36 +7,21 @@ import FilterChip from '@shared/components/FilterChip.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PartListItem from '@shared/components/PartListItem.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
+import {useSortableFilteredList} from '@shared/composables/useSortableFilteredList';
 import {downloadBrickLinkWantedList, toBrickLinkWantedListXml} from '@shared/helpers/bricklinkWantedList';
-import {downloadCsv, toCsv} from '@shared/helpers/csv';
-import {computed, onMounted, ref, useId} from 'vue';
+import {exportCsv} from '@shared/helpers/csv';
+import {onMounted, useId} from 'vue';
 
-type SortField = 'shortfall' | 'name' | 'color';
+import {
+    compareMissingPartsEntries,
+    MISSING_PARTS_SORT_FIELDS,
+    useMissingPartsFeed,
+} from '../composables/useMissingPartsFeed';
 
 const {t} = familyTranslationService;
-const entries = ref<MasterShoppingListEntry[]>([]);
-const unknownFamilySetIds = ref<string[]>([]);
-const loading = ref(true);
-const loadError = ref(false);
-const searchQuery = ref('');
+const {entries, unknownFamilySetIds, loading, loadError, fetchMissingParts, totalShortfall, affectedSetCount} =
+    useMissingPartsFeed(familyHttpService);
 const searchId = useId();
-const activeSortField = ref<SortField>('shortfall');
-
-const fetchMissingParts = async (): Promise<void> => {
-    loading.value = true;
-    loadError.value = false;
-    try {
-        const response = await familyHttpService.getRequest<MasterShoppingListResponse>('/family-sets/missing-parts');
-        entries.value = response.data.shortfalls;
-        unknownFamilySetIds.value = response.data.unknownFamilySetIds;
-    } catch {
-        entries.value = [];
-        unknownFamilySetIds.value = [];
-        loadError.value = true;
-    } finally {
-        loading.value = false;
-    }
-};
 
 onMounted(fetchMissingParts);
 
@@ -50,43 +33,24 @@ const goToSettings = async () => {
     await familyRouterService.goToRoute('settings');
 };
 
-const totalShortfall = computed(() => entries.value.reduce((sum, entry) => sum + entry.shortfall, 0));
-
-const affectedSetCount = computed(() => {
-    const setNums = new Set<string>();
-    for (const entry of entries.value) {
-        for (const setNum of entry.neededBySetNums) {
-            setNums.add(setNum);
-        }
-    }
-    return setNums.size;
-});
-
-const setSortField = (field: SortField) => {
-    activeSortField.value = field;
-};
-
-const compareEntries = (a: MasterShoppingListEntry, b: MasterShoppingListEntry): number => {
-    if (activeSortField.value === 'shortfall') {
-        return b.shortfall - a.shortfall;
-    }
-    if (activeSortField.value === 'name') {
-        return a.partName.localeCompare(b.partName);
-    }
-    return a.colorName.localeCompare(b.colorName);
-};
-
-const filteredEntries = computed(() => {
-    let result = entries.value;
-
-    const query = searchQuery.value.toLowerCase().trim();
-    if (query) {
-        result = result.filter(
-            (e) => e.partName.toLowerCase().includes(query) || e.partNum.toLowerCase().includes(query),
-        );
-    }
-
-    return [...result].sort(compareEntries);
+const {
+    searchQuery,
+    activeSortField,
+    setSortField,
+    allSortFields,
+    sortLabelKey,
+    filteredItems: filteredEntries,
+} = useSortableFilteredList({
+    items: entries,
+    fields: MISSING_PARTS_SORT_FIELDS,
+    defaultField: 'shortfall',
+    sortLabelKey: {
+        shortfall: 'parts.missingSortShortfall',
+        name: 'parts.missingSortName',
+        color: 'parts.missingSortColor',
+    },
+    compare: compareMissingPartsEntries,
+    searchText: (e) => [e.partName, e.partNum],
 });
 
 const exportBrickLink = () => {
@@ -121,14 +85,8 @@ const exportCsvFile = () => {
         String(e.shortfall),
         String(e.neededBySetNums.length),
     ]);
-    downloadCsv(toCsv(headers, rows), 'master-shopping-list.csv');
+    exportCsv(headers, rows, 'master-shopping-list.csv');
 };
-
-const sortLabelKey: Record<
-    SortField,
-    'parts.missingSortShortfall' | 'parts.missingSortName' | 'parts.missingSortColor'
-> = {shortfall: 'parts.missingSortShortfall', name: 'parts.missingSortName', color: 'parts.missingSortColor'};
-const allSortFields: SortField[] = ['shortfall', 'name', 'color'];
 </script>
 
 <template>

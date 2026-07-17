@@ -8,23 +8,20 @@ import FilterChip from '@shared/components/FilterChip.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PartListItem from '@shared/components/PartListItem.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {downloadCsv, toCsv} from '@shared/helpers/csv';
+import {useSortableFilteredList} from '@shared/composables/useSortableFilteredList';
+import {exportCsv} from '@shared/helpers/csv';
 import {computed, onMounted, ref, useId} from 'vue';
 
 import PartUsageModal from '../modals/PartUsageModal.vue';
-
-type SortField = 'name' | 'quantity' | 'color';
 
 const {t} = familyTranslationService;
 const entries = ref<FamilyPartEntry[]>([]);
 const loading = ref(true);
 const loadingMore = ref(false);
 const nextCursor = ref<string | null>(null);
-const searchQuery = ref('');
 const searchId = useId();
 const activeColorFilter = ref<string | null>(null);
 const showOrphansOnly = ref(false);
-const activeSortField = ref<SortField>('name');
 
 const fetchParts = async (cursor?: string): Promise<CursorPaginatedParts> => {
     const params = new URLSearchParams({per_page: '100'});
@@ -121,42 +118,33 @@ const toggleOrphanFilter = () => {
     showOrphansOnly.value = !showOrphansOnly.value;
 };
 
-const setSortField = (field: SortField) => {
-    activeSortField.value = field;
-};
-
-const compareParts = (a: GroupedFamilyPart, b: GroupedFamilyPart): number => {
-    if (activeSortField.value === 'name') {
-        return a.partName.localeCompare(b.partName);
-    }
-    if (activeSortField.value === 'quantity') {
-        return b.totalQuantity - a.totalQuantity;
-    }
-    return (a.colorName ?? '').localeCompare(b.colorName ?? '');
-};
-
-const filteredParts = computed(() => {
-    let result = groupedParts.value;
-
-    const query = searchQuery.value.toLowerCase().trim();
-    if (query) {
-        result = result.filter(
-            (p) => p.partName.toLowerCase().includes(query) || p.partNum.toLowerCase().includes(query),
-        );
-    }
-
-    if (activeColorFilter.value) {
-        result = result.filter((p) => p.colorName === activeColorFilter.value);
-    }
-
-    if (showOrphansOnly.value) {
-        result = result.filter((p) => p.isOrphan);
-    }
-
-    return [...result].sort(compareParts);
+const {
+    searchQuery,
+    activeSortField,
+    setSortField,
+    allSortFields,
+    sortLabelKey,
+    filteredItems: filteredParts,
+} = useSortableFilteredList({
+    items: groupedParts,
+    fields: ['name', 'quantity', 'color'],
+    defaultField: 'name',
+    sortLabelKey: {name: 'parts.sortName', quantity: 'parts.sortQuantity', color: 'parts.sortColor'},
+    compare: (a, b, field) => {
+        if (field === 'name') {
+            return a.partName.localeCompare(b.partName);
+        }
+        if (field === 'quantity') {
+            return b.totalQuantity - a.totalQuantity;
+        }
+        return (a.colorName ?? '').localeCompare(b.colorName ?? '');
+    },
+    searchText: (p) => [p.partName, p.partNum],
+    filter: (p) =>
+        (!activeColorFilter.value || p.colorName === activeColorFilter.value) && (!showOrphansOnly.value || p.isOrphan),
 });
 
-const exportCsv = () => {
+const exportCsvFile = () => {
     const headers = ['Part Number', 'Name', 'Color', 'Total Quantity', 'Storage Locations'];
     const rows = filteredParts.value.map((p) => [
         p.partNum,
@@ -165,15 +153,8 @@ const exportCsv = () => {
         String(p.totalQuantity),
         p.locations.map((l) => `${l.storageOptionName} (${l.quantity}x)`).join('; '),
     ]);
-    downloadCsv(toCsv(headers, rows), 'lego-parts.csv');
+    exportCsv(headers, rows, 'lego-parts.csv');
 };
-
-const sortLabelKey: Record<SortField, 'parts.sortName' | 'parts.sortQuantity' | 'parts.sortColor'> = {
-    name: 'parts.sortName',
-    quantity: 'parts.sortQuantity',
-    color: 'parts.sortColor',
-};
-const allSortFields: SortField[] = ['name', 'quantity', 'color'];
 
 const goToMissing = async () => {
     await familyRouterService.goToRoute('parts-missing');
@@ -218,9 +199,12 @@ const usageButtonLabel = (part: GroupedFamilyPart) =>
                     @click="goToUnsorted"
                     >{{ t('parts.seeUnsortedCta').value }}</PrimaryButton
                 >
-                <PrimaryButton v-if="groupedParts.length > 0" :sound-service="familySoundService" @click="exportCsv">{{
-                    t('common.export').value
-                }}</PrimaryButton>
+                <PrimaryButton
+                    v-if="groupedParts.length > 0"
+                    :sound-service="familySoundService"
+                    @click="exportCsvFile"
+                    >{{ t('common.export').value }}</PrimaryButton
+                >
             </div>
         </PageHeader>
 

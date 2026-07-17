@@ -338,7 +338,11 @@ onUnmounted(() => {
                     </div>
                     <p v-if="codeCopied" text="baseplate-green" font="bold">{{ t('settings.codeCopied').value }}</p>
                     <p text="sm [var(--brick-muted-text)]">
-                        {{ t('settings.codeExpires').value }}: {{ inviteCode.expiresAt }}
+                        {{
+                            inviteCode.expiresAt
+                                ? `${t('settings.codeExpires').value}: ${inviteCode.expiresAt}`
+                                : t('settings.codeNeverExpires').value
+                        }}
                     </p>
                     <DangerButton :disabled="inviteCodeLoading" @click="revokeInviteCode">
                         {{ t('settings.revokeCode').value }}

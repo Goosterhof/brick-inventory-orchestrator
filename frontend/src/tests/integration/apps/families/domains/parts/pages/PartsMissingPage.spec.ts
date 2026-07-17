@@ -16,7 +16,11 @@ vi.mock('@script-development/fs-http', async () => {
 });
 
 /** CSV + XML helpers don't run in happy-dom — mock to prevent file system access. */
-vi.mock('@shared/helpers/csv', () => ({downloadCsv: vi.fn<() => void>(), toCsv: vi.fn<() => string>(() => '')}));
+vi.mock('@shared/helpers/csv', () => ({
+    downloadCsv: vi.fn<() => void>(),
+    toCsv: vi.fn<() => string>(() => ''),
+    exportCsv: vi.fn<() => void>(),
+}));
 vi.mock('@shared/helpers/bricklinkWantedList', () => ({
     toBrickLinkWantedListXml: vi.fn<() => string>(() => '<xml />'),
     downloadBrickLinkWantedList: vi.fn<() => void>(),
