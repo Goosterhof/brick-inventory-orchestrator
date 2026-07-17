@@ -591,6 +591,41 @@ describe('StorageOptionController', function(): void {
                 ->count())->toBe(1);
         });
 
+        it('should update the existing null-color assignment instead of creating a duplicate row', function(): void {
+            $user = User::factory()->create();
+            $storageOption = StorageOption::factory()->create([
+                'family_id' => $user->family_id,
+            ]);
+            $part = Part::factory()->create();
+            StorageOptionPart::factory()->create([
+                'storage_option_id' => $storageOption->id,
+                'part_id' => $part->id,
+                'color_id' => null,
+                'quantity' => 50,
+            ]);
+
+            $response = $this->actingAs($user)->postJson(\sprintf('/api/storage-options/%s/parts', $storageOption->id), [
+                'part_id' => $part->id,
+                'color_id' => null,
+                'quantity' => 150,
+            ]);
+
+            $response->assertStatus(200)
+                ->assertJsonPath('quantity', 150);
+
+            expect(StorageOptionPart::query()->where('storage_option_id', $storageOption->id)
+                ->where('part_id', $part->id)
+                ->whereNull('color_id')
+                ->count())->toBe(1);
+
+            $this->assertDatabaseHas('storage_option_parts', [
+                'storage_option_id' => $storageOption->id,
+                'part_id' => $part->id,
+                'color_id' => null,
+                'quantity' => 150,
+            ]);
+        });
+
         it('should return 404 for storage option from another family', function(): void {
             $user = User::factory()->create();
             $storageOption = StorageOption::factory()->create();
