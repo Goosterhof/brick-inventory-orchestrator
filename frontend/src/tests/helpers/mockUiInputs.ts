@@ -63,6 +63,80 @@ export const createMockUiInputs = () => ({
             />
         `,
     },
+    NumberInput: {
+        name: 'NumberInput',
+        props: [
+            'id',
+            'modelValue',
+            'min',
+            'max',
+            'step',
+            'placeholder',
+            'disabled',
+            'required',
+            'invalid',
+            'describedby',
+        ],
+        emits: ['update:modelValue'],
+        // Mirrors the real atom's honest-number contract: empty/NaN emits null,
+        // otherwise the parsed number — so `v-model` round-trips number | null.
+        template: `
+            <input
+                :id="id"
+                type="number"
+                class="ui-control ui-input"
+                :value="modelValue"
+                :min="min"
+                :max="max"
+                :step="step"
+                :placeholder="placeholder"
+                :disabled="disabled"
+                :aria-required="required || undefined"
+                :aria-invalid="invalid || undefined"
+                :aria-describedby="describedby"
+                @input="$emit('update:modelValue', Number.isNaN($event.target.valueAsNumber) ? null : $event.target.valueAsNumber)"
+            />
+        `,
+    },
+    DateInput: {
+        name: 'DateInput',
+        props: ['id', 'modelValue', 'min', 'max', 'disabled', 'required', 'invalid', 'describedby'],
+        emits: ['update:modelValue'],
+        template: `
+            <input
+                :id="id"
+                type="date"
+                class="ui-control ui-input"
+                :value="modelValue"
+                :min="min"
+                :max="max"
+                :disabled="disabled"
+                :aria-required="required || undefined"
+                :aria-invalid="invalid || undefined"
+                :aria-describedby="describedby"
+                @input="$emit('update:modelValue', $event.target.value)"
+            />
+        `,
+    },
+    Textarea: {
+        name: 'Textarea',
+        props: ['id', 'modelValue', 'rows', 'placeholder', 'disabled', 'required', 'invalid', 'describedby'],
+        emits: ['update:modelValue'],
+        template: `
+            <textarea
+                :id="id"
+                class="ui-control"
+                :value="modelValue"
+                :rows="rows"
+                :placeholder="placeholder"
+                :disabled="disabled"
+                :aria-required="required || undefined"
+                :aria-invalid="invalid || undefined"
+                :aria-describedby="describedby"
+                @input="$emit('update:modelValue', $event.target.value)"
+            />
+        `,
+    },
     SingleSelect: {
         name: 'SingleSelect',
         props: [

@@ -26,9 +26,13 @@ vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
 
-// atom-at-call-site: the page composes FormField + a package TextInput (name) and
-// native textarea/number controls; unstub the package pair so the slots render.
-const renderPage = () => shallowMount(EditStoragePage, {global: {stubs: {FormField: false, TextInput: false}}});
+// atom-at-call-site: the page composes FormField + the TextInput (name),
+// Textarea (description) and NumberInput (row/column) atoms; unstub them so the
+// slots render.
+const renderPage = () =>
+    shallowMount(EditStoragePage, {
+        global: {stubs: {FormField: false, TextInput: false, NumberInput: false, Textarea: false}},
+    });
 
 const {mockGetOrFailById, mockGoToRoute, mockCurrentRouteId, mockPatch, mockDelete, mockRetrieveAll} = vi.hoisted(
     () => ({
@@ -121,7 +125,7 @@ describe('EditStoragePage', () => {
         const wrapper = renderPage();
         await flushPromises();
 
-        // Assert — name via package TextInput; row/column native numbers; description textarea
+        // Assert — name via TextInput; row/column via NumberInput; description via Textarea
         expect(wrapper.findComponent(TextInput).props('modelValue')).toBe('Lade A');
 
         const numberValues = wrapper
@@ -139,7 +143,7 @@ describe('EditStoragePage', () => {
         const wrapper = renderPage();
         await flushPromises();
 
-        // Act — a valid number flows through onNumberInput's value branch
+        // Act — a valid number flows through the NumberInput v-model into row
         await wrapper.findAll('input[type="number"]')[0]?.setValue('9');
         await wrapper.find('form').trigger('submit');
         await flushPromises();
@@ -155,7 +159,7 @@ describe('EditStoragePage', () => {
         const wrapper = renderPage();
         await flushPromises();
 
-        // Act — clearing the number input yields NaN; onNumberInput's null branch fires
+        // Act — clearing the NumberInput emits null into row
         await wrapper.findAll('input[type="number"]')[0]?.setValue('');
         await wrapper.find('form').trigger('submit');
         await flushPromises();

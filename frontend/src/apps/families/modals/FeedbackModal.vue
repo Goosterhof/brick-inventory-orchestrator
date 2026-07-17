@@ -2,7 +2,7 @@
 import {familyHttpService, familyToastService, familyTranslationService} from '@app/services';
 import {PhPaperclip, PhX} from '@phosphor-icons/vue';
 import {useForm} from '@script-development/fs-form';
-import {FormField, TextInput} from '@script-development/ui-inputs';
+import {FormField, Textarea, TextInput} from '@script-development/ui-inputs';
 import ModalDialog from '@shared/components/ModalDialog.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
@@ -111,15 +111,13 @@ const onSubmit = () =>
                 :error="errors.description"
             >
                 <template #default="{controlId, required, invalid, describedby}">
-                    <textarea
+                    <Textarea
                         :id="controlId"
                         v-model="description"
-                        class="ui-control"
-                        :class="{'is-invalid': invalid}"
-                        rows="5"
-                        :aria-required="required"
-                        :aria-invalid="invalid || undefined"
-                        :aria-describedby="describedby"
+                        :rows="5"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
                     />
                 </template>
             </FormField>

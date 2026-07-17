@@ -53,8 +53,10 @@ src/
 │   └── showcase/            # Showroom floor
 └── shared/                  # The supply warehouse — shared across all buildings
     ├── components/          # Prefab wall sections
-    │   ├── forms/inputs/    # Standard window/door units (Text, Select, Date, Number, Textarea)
     │   └── scanner/         # Barcode scanning module
+    │                        # Form controls (Text, Number, Date, Textarea, Select) come from
+    │                        # @script-development/ui-inputs (ADR-0043) — composed at the call site
+    │                        # inside FormField scoped slots; no local input molecules remain.
     ├── services/            # Locally-owned factories (auth/, sound.ts) — http/router/loading/toast/translation/storage come from @script-development/fs-* packages
     ├── composables/         # Reusable engineering specs (useBrickPickup; forms use @script-development/fs-form)
     ├── helpers/             # Tools in the toolbox (bricklinkWantedList, csv, string, type-check)

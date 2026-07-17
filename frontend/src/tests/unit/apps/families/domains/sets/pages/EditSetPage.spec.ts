@@ -86,9 +86,12 @@ const createMockAdapted = () => ({
     delete: mockDelete,
 });
 
-// atom-at-call-site: the page composes FormField + SingleSelect (status) + native
-// number/date/textarea controls; unstub the package pair so the slots render.
-const renderPage = () => shallowMount(EditSetPage, {global: {stubs: {FormField: false, SingleSelect: false}}});
+// atom-at-call-site: the page composes FormField + SingleSelect (status) +
+// NumberInput / DateInput / Textarea controls; unstub them so the slots render.
+const renderPage = () =>
+    shallowMount(EditSetPage, {
+        global: {stubs: {FormField: false, SingleSelect: false, NumberInput: false, DateInput: false, Textarea: false}},
+    });
 
 describe('EditSetPage', () => {
     beforeEach(() => {
@@ -130,7 +133,7 @@ describe('EditSetPage', () => {
         const wrapper = renderPage();
         await flushPromises();
 
-        // Assert — quantity is a native number input; the status SingleSelect
+        // Assert — quantity renders in the NumberInput; the status SingleSelect
         // renders its current value in the combobox trigger.
         expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('2');
         expect(wrapper.get('[role="combobox"]').text()).toBe('built');
@@ -174,7 +177,7 @@ describe('EditSetPage', () => {
         const wrapper = renderPage();
         await flushPromises();
 
-        // Act — a valid number flows through onQuantityInput's assigning branch
+        // Act — a valid number flows through the NumberInput v-model into quantity
         await wrapper.get('input[type="number"]').setValue('5');
         await wrapper.find('form').trigger('submit');
         await flushPromises();
@@ -183,20 +186,20 @@ describe('EditSetPage', () => {
         expect(mockPatch).toHaveBeenCalledWith(expect.objectContaining({quantity: 5}));
     });
 
-    it('should ignore non-numeric quantity input', async () => {
+    it('should coerce a cleared quantity back to 1 on submit', async () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
         mockPatch.mockResolvedValue({});
         const wrapper = renderPage();
         await flushPromises();
 
-        // Act — clearing the number input yields NaN; the guard skips the write
+        // Act — clearing the NumberInput emits null; the submit path coerces (?? 1)
         await wrapper.get('input[type="number"]').setValue('');
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
-        // Assert — quantity stays at the loaded value
-        expect(mockPatch).toHaveBeenCalledWith(expect.objectContaining({quantity: 2}));
+        // Assert — null quantity falls back to 1
+        expect(mockPatch).toHaveBeenCalledWith(expect.objectContaining({quantity: 1}));
     });
 
     it('should navigate to detail page on successful update', async () => {

@@ -32,6 +32,11 @@
        offset block shadow growing to 6px on hover: the brick signature. */
     --ui-control-bg: var(--brick-card-bg);
     --ui-control-bg-disabled: var(--brick-surface-subtle);
+    /* focus fills the control brand-yellow, invalid fills red-light — both are
+       theme-invariant brand constants (like the danger hexes below), so they
+       are hard-coded rather than pointed at a --brick-* token that would flip. */
+    --ui-control-bg-focus: #f5c518;
+    --ui-control-bg-invalid: #f8d0cf;
     --ui-control-text: var(--brick-page-text);
     --ui-control-text-muted: var(--brick-muted-text);
     --ui-control-border-width: 3px;
@@ -71,24 +76,16 @@
 }
 
 /*
- * --- Pilot findings: brick identity the --ui-* contract cannot express ---
+ * --- Residual brick identity the 0.3.0 --ui-* contract still cannot express ---
  *
- * The token surface covers palette AND structure (border-width, radius, shadow
- * shape, label transform) — which is what the ADR-0043 spike proved. But two
- * brick behaviours have NO --ui-* hook, so they live here as class overrides on
- * the package's public classes:
- *
- *   1. Focus fills the control yellow (brick `focus:bg-brick-yellow`).
- *   2. The invalid control fills red-light (brick `bg-brick-red-light`).
- *
- * Both are background-on-state changes; the contract exposes border/shadow/text
- * per state but no `*-bg-focus` / `*-bg-invalid`. Candidate new vars for the
- * ADR-0043 write-up: --ui-control-bg-focus / --ui-control-bg-invalid.
+ * The focus + invalid background fills now come from the package via
+ * --ui-control-bg-focus / --ui-control-bg-invalid (added in ui-inputs 0.3.0).
+ * The ONE piece those two vars do not cover: the focus fill is brand-yellow, so
+ * the control text must go black on focus — and there is no --ui-control-text-focus
+ * hook yet. Kept minimal here (hard-coded ink, matching the file's #000 convention;
+ * theme-invariant because the yellow fill is theme-invariant). Candidate future
+ * package var for the ADR-0043 write-up — the General will follow up.
  */
 .ui-control:focus-visible {
-    background: #f5c518;
     color: #000;
-}
-.ui-control.is-invalid {
-    background: #f8d0cf;
 }

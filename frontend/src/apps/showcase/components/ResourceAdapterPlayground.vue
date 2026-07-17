@@ -6,7 +6,7 @@ import type {StorageService} from '@script-development/fs-storage';
 import type {Item} from '@shared/types/item';
 
 import {createAdapterStoreModule, resourceAdapter} from '@script-development/fs-adapter-store';
-import {FormField, TextInput} from '@script-development/ui-inputs';
+import {FormField, NumberInput, TextInput} from '@script-development/ui-inputs';
 import DangerButton from '@shared/components/DangerButton.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {deepSnakeKeys} from '@shared/helpers/string';
@@ -16,7 +16,9 @@ import SectionHeading from './SectionHeading.vue';
 
 interface Minifig extends Item {
     displayName: string;
-    partCount: number;
+    // NumberInput emits null on empty; widened locally so the demo field can go
+    // empty mid-edit. Local to this showcase interface — no shared type touched.
+    partCount: number | null;
     themeGroup: string;
 }
 
@@ -89,15 +91,6 @@ const newThemeGroupId = useId();
 const editDisplayNameId = useId();
 const editPartCountId = useId();
 const editThemeGroupId = useId();
-
-// partCount is a non-nullable number; ignore empty/NaN rather than write null. The
-// mutable object is passed from the template (edit form is narrowed by v-if).
-const onPartCountInput = (event: Event, mutable: {partCount: number}) => {
-    const value = (event.target as HTMLInputElement).valueAsNumber;
-    if (!Number.isNaN(value)) {
-        mutable.partCount = value;
-    }
-};
 
 const handleCreate = async () => {
     const created = await newAdapted.value.create();
@@ -203,18 +196,14 @@ watch(
                         </FormField>
                         <FormField :id="newPartCountId" label="Part Count" required>
                             <template #default="{controlId, required, invalid, describedby}">
-                                <input
+                                <NumberInput
                                     :id="controlId"
-                                    class="ui-control ui-input"
-                                    :class="{'is-invalid': invalid}"
-                                    type="number"
+                                    v-model="newAdapted.mutable.value.partCount"
                                     :min="1"
                                     placeholder="e.g. 4"
-                                    :value="newAdapted.mutable.value.partCount"
-                                    :aria-required="required"
-                                    :aria-invalid="invalid || undefined"
-                                    :aria-describedby="describedby"
-                                    @input="onPartCountInput($event, newAdapted.mutable.value)"
+                                    :required="required"
+                                    :invalid="invalid"
+                                    :describedby="describedby"
                                 />
                             </template>
                         </FormField>
@@ -322,18 +311,14 @@ watch(
                         </FormField>
                         <FormField :id="editPartCountId" label="Part Count" required>
                             <template #default="{controlId, required, invalid, describedby}">
-                                <input
+                                <NumberInput
                                     :id="controlId"
-                                    class="ui-control ui-input"
-                                    :class="{'is-invalid': invalid}"
-                                    type="number"
+                                    v-model="selectedItem.mutable.value.partCount"
                                     :min="1"
                                     placeholder="e.g. 5"
-                                    :value="selectedItem.mutable.value.partCount"
-                                    :aria-required="required"
-                                    :aria-invalid="invalid || undefined"
-                                    :aria-describedby="describedby"
-                                    @input="onPartCountInput($event, selectedItem.mutable.value)"
+                                    :required="required"
+                                    :invalid="invalid"
+                                    :describedby="describedby"
                                 />
                             </template>
                         </FormField>

@@ -3,7 +3,7 @@ import type {StorageMapEntry} from '@app/types/part';
 import type {StorageOption} from '@app/types/storageOption';
 
 import {familyHttpService, familyTranslationService} from '@app/services';
-import {FormField, SingleSelect} from '@script-development/ui-inputs';
+import {FormField, NumberInput, SingleSelect} from '@script-development/ui-inputs';
 import ModalDialog from '@shared/components/ModalDialog.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {computed, onMounted, ref, useId} from 'vue';
@@ -62,13 +62,6 @@ const storageFieldId = useId();
 const quantityId = useId();
 
 const resolvedTitle = computed(() => title ?? t('parts.placeTitle').value);
-
-// quantity is a nullable number; clear-to-null on empty/NaN input (preserving the
-// old NumberInput molecule's behaviour). `handleSubmit` falls back to 1 on null.
-const onQuantityInput = (event: Event) => {
-    const value = (event.target as HTMLInputElement).valueAsNumber;
-    quantity.value = Number.isNaN(value) ? null : value;
-};
 
 const inlineNeededBy = computed(() => neededBySetNums.slice(0, NEEDED_BY_INLINE_LIMIT));
 const overflowNeededByCount = computed(() => Math.max(0, neededBySetNums.length - NEEDED_BY_INLINE_LIMIT));
@@ -214,18 +207,14 @@ const handleSubmit = async () => {
 
                     <FormField :id="quantityId" :label="t('sets.quantity').value">
                         <template #default="{controlId, required, invalid, describedby}">
-                            <input
+                            <NumberInput
                                 :id="controlId"
-                                class="ui-control ui-input"
-                                :class="{'is-invalid': invalid}"
-                                type="number"
+                                v-model="quantity"
                                 :min="1"
                                 :max="maxQuantity"
-                                :value="quantity"
-                                :aria-required="required"
-                                :aria-invalid="invalid || undefined"
-                                :aria-describedby="describedby"
-                                @input="onQuantityInput"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
                             />
                         </template>
                     </FormField>
