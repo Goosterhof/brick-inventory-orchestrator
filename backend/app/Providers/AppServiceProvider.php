@@ -81,5 +81,21 @@ class AppServiceProvider extends ServiceProvider
             ? Limit::perHour(5)->by((string) ($request->user()->id ?? $request->ip()))
             : Limit::none(),
         );
+
+        // Keyed by family, not user: the protected resource is the family's Rebrickable
+        // token and upstream quota, and the endpoint's own concurrency invariant is already
+        // family-scoped (the import_jobs_family_active_unique partial index is on family_id).
+        // Per-user keying would let an n-member family drive n x the real upstream load.
+        //
+        // The limit must stay above 3/hour. A stranded import becomes reclaimable after
+        // app.import_stale_active_job_threshold (1200s, BIO-0029), so a worker-down retry
+        // cadence tops out at 3600/1200 = 3 attempts per hour; a tighter limit would 429 a
+        // legitimate reclamation retry and undo that fix.
+        RateLimiter::for(
+            'rebrickable-import',
+            fn(Request $request): Limit => $enabled
+            ? Limit::perHour(5)->by((string) ($request->user()->family_id ?? $request->ip()))
+            : Limit::none(),
+        );
     }
 }
