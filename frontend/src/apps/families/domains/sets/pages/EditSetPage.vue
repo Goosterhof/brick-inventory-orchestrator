@@ -6,7 +6,7 @@ import {familyHttpService, familyRouterService, familySoundService, familyTransl
 import {familySetStoreModule} from '@app/stores';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import {useForm} from '@script-development/fs-form';
-import {FormField, SingleSelect} from '@script-development/ui-inputs';
+import {DateInput, FormField, NumberInput, SingleSelect, Textarea} from '@script-development/ui-inputs';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
@@ -45,15 +45,10 @@ const statusOptions = computed<{id: FamilySetStatus; label: string}[]>(() =>
     statusChoices.map((choice) => ({id: choice.value, label: t(choice.key).value})),
 );
 
-// quantity is a non-nullable number (min 1); ignore empty/NaN rather than write
-// null. The mutable object is passed in from the template (narrowed non-null by
-// v-else-if), so there is no unreachable null branch to leave uncovered.
-const onQuantityInput = (event: Event, mutable: {quantity: number}) => {
-    const value = (event.target as HTMLInputElement).valueAsNumber;
-    if (!Number.isNaN(value)) {
-        mutable.quantity = value;
-    }
-};
+// NumberInput emits null on empty; the fetched quantity is a non-null number, so
+// hold the editable value in a local nullable ref (seeded on load) and coerce to 1
+// at submit. Keeps the wire type untouched and lets the field go empty mid-edit.
+const quantity = ref<number | null>(null);
 
 onMounted(async () => {
     const id = familyRouterService.currentRouteId.value;
@@ -66,6 +61,7 @@ onMounted(async () => {
         await familySetStoreModule.retrieveAll();
         adapted.value = await familySetStoreModule.getOrFailById(id);
     }
+    if (adapted.value) quantity.value = adapted.value.mutable.quantity;
     loading.value = false;
 });
 
@@ -74,7 +70,7 @@ const onSubmit = () =>
         if (!adapted.value) return;
 
         await adapted.value.patch({
-            quantity: adapted.value.mutable.quantity,
+            quantity: quantity.value ?? 1,
             status: adapted.value.mutable.status,
             purchaseDate: adapted.value.mutable.purchaseDate,
             notes: adapted.value.mutable.notes,
@@ -103,17 +99,13 @@ const handleDelete = async () => {
             <form flex="~ col" gap="4" @submit.prevent="onSubmit">
                 <FormField :id="quantityId" :label="t('sets.quantity').value" required :error="errors.quantity">
                     <template #default="{controlId, required, invalid, describedby}">
-                        <input
+                        <NumberInput
                             :id="controlId"
-                            class="ui-control ui-input"
-                            :class="{'is-invalid': invalid}"
-                            type="number"
+                            v-model="quantity"
                             :min="1"
-                            :value="adapted.mutable.quantity"
-                            :aria-required="required"
-                            :aria-invalid="invalid || undefined"
-                            :aria-describedby="describedby"
-                            @input="onQuantityInput($event, adapted.mutable)"
+                            :required="required"
+                            :invalid="invalid"
+                            :describedby="describedby"
                         />
                     </template>
                 </FormField>
@@ -135,30 +127,25 @@ const handleDelete = async () => {
 
                 <FormField :id="purchaseDateId" :label="t('sets.purchaseDate').value">
                     <template #default="{controlId, required, invalid, describedby}">
-                        <input
+                        <DateInput
                             :id="controlId"
                             v-model="adapted.mutable.purchaseDate"
-                            class="ui-control ui-input"
-                            :class="{'is-invalid': invalid}"
-                            type="date"
-                            :aria-required="required"
-                            :aria-invalid="invalid || undefined"
-                            :aria-describedby="describedby"
+                            :required="required"
+                            :invalid="invalid"
+                            :describedby="describedby"
                         />
                     </template>
                 </FormField>
 
                 <FormField :id="notesId" :label="t('sets.notes').value">
                     <template #default="{controlId, required, invalid, describedby}">
-                        <textarea
+                        <Textarea
                             :id="controlId"
                             v-model="adapted.mutable.notes"
-                            class="ui-control"
-                            :class="{'is-invalid': invalid}"
-                            rows="3"
-                            :aria-required="required"
-                            :aria-invalid="invalid || undefined"
-                            :aria-describedby="describedby"
+                            :rows="3"
+                            :required="required"
+                            :invalid="invalid"
+                            :describedby="describedby"
                         />
                     </template>
                 </FormField>

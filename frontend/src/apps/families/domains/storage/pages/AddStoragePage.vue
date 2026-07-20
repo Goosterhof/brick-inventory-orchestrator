@@ -2,7 +2,7 @@
 import {familyHttpService, familyRouterService, familyTranslationService} from '@app/services';
 import {storageOptionStoreModule} from '@app/stores';
 import {useForm} from '@script-development/fs-form';
-import {FormField, TextInput} from '@script-development/ui-inputs';
+import {FormField, NumberInput, Textarea, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
 import {useId} from 'vue';
@@ -17,13 +17,6 @@ const nameId = useId();
 const descriptionId = useId();
 const rowId = useId();
 const columnId = useId();
-
-// row/column are nullable numbers; clear-to-null on empty/NaN input (preserving
-// the old NumberInput molecule's behaviour) rather than leaving a stale value.
-const onNumberInput = (event: Event, field: 'row' | 'column') => {
-    const value = (event.target as HTMLInputElement).valueAsNumber;
-    adapted.mutable.value[field] = Number.isNaN(value) ? null : value;
-};
 
 const onSubmit = () =>
     handleSubmit(async () => {
@@ -51,15 +44,13 @@ const onSubmit = () =>
 
             <FormField :id="descriptionId" :label="t('storage.description').value">
                 <template #default="{controlId, required, invalid, describedby}">
-                    <textarea
+                    <Textarea
                         :id="controlId"
                         v-model="adapted.mutable.value.description"
-                        class="ui-control"
-                        :class="{'is-invalid': invalid}"
-                        rows="3"
-                        :aria-required="required"
-                        :aria-invalid="invalid || undefined"
-                        :aria-describedby="describedby"
+                        :rows="3"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
                     />
                 </template>
             </FormField>
@@ -68,17 +59,13 @@ const onSubmit = () =>
                 <div flex="1 ~ col" gap="2">
                     <FormField :id="rowId" :label="t('storage.row').value" :error="errors.row">
                         <template #default="{controlId, required, invalid, describedby}">
-                            <input
+                            <NumberInput
                                 :id="controlId"
-                                class="ui-control ui-input"
-                                :class="{'is-invalid': invalid}"
-                                type="number"
+                                v-model="adapted.mutable.value.row"
                                 :min="0"
-                                :value="adapted.mutable.value.row"
-                                :aria-required="required"
-                                :aria-invalid="invalid || undefined"
-                                :aria-describedby="describedby"
-                                @input="onNumberInput($event, 'row')"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
                             />
                         </template>
                     </FormField>
@@ -86,17 +73,13 @@ const onSubmit = () =>
                 <div flex="1 ~ col" gap="2">
                     <FormField :id="columnId" :label="t('storage.column').value" :error="errors.column">
                         <template #default="{controlId, required, invalid, describedby}">
-                            <input
+                            <NumberInput
                                 :id="controlId"
-                                class="ui-control ui-input"
-                                :class="{'is-invalid': invalid}"
-                                type="number"
+                                v-model="adapted.mutable.value.column"
                                 :min="0"
-                                :value="adapted.mutable.value.column"
-                                :aria-required="required"
-                                :aria-invalid="invalid || undefined"
-                                :aria-describedby="describedby"
-                                @input="onNumberInput($event, 'column')"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
                             />
                         </template>
                     </FormField>

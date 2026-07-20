@@ -3,7 +3,7 @@ import type {HttpService} from '@script-development/fs-http';
 import type {AxiosError} from 'axios';
 
 import {useForm} from '@script-development/fs-form';
-import {FormField, SingleSelect, TextInput} from '@script-development/ui-inputs';
+import {DateInput, FormField, NumberInput, SingleSelect, Textarea, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
 import {AxiosError as AxiosErrorClass} from 'axios';
@@ -49,12 +49,6 @@ const themeOptions = [
     {id: 'city', label: 'City'},
     {id: 'creator', label: 'Creator'},
 ];
-
-// pieceCount is a nullable number; clear-to-null on empty/NaN input.
-const onPieceCountInput = (event: Event) => {
-    const value = (event.target as HTMLInputElement).valueAsNumber;
-    pieceCount.value = Number.isNaN(value) ? null : value;
-};
 
 const inspectorJson = computed(() => JSON.stringify(errors.value, null, 2));
 
@@ -173,18 +167,14 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
                     </FormField>
                     <FormField :id="pieceCountId" label="Piece Count" required :error="errors.pieceCount">
                         <template #default="{controlId, required, invalid, describedby}">
-                            <input
+                            <NumberInput
                                 :id="controlId"
-                                class="ui-control ui-input"
-                                :class="{'is-invalid': invalid}"
-                                type="number"
+                                v-model="pieceCount"
                                 :min="1"
                                 placeholder="e.g. 7541"
-                                :value="pieceCount"
-                                :aria-required="required"
-                                :aria-invalid="invalid || undefined"
-                                :aria-describedby="describedby"
-                                @input="onPieceCountInput"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
                             />
                         </template>
                     </FormField>
@@ -205,29 +195,24 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
                     </FormField>
                     <FormField :id="purchaseDateId" label="Purchase Date" required :error="errors.purchaseDate">
                         <template #default="{controlId, required, invalid, describedby}">
-                            <input
+                            <DateInput
                                 :id="controlId"
                                 v-model="purchaseDate"
-                                class="ui-control ui-input"
-                                :class="{'is-invalid': invalid}"
-                                type="date"
-                                :aria-required="required"
-                                :aria-invalid="invalid || undefined"
-                                :aria-describedby="describedby"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
                             />
                         </template>
                     </FormField>
                     <FormField :id="notesId" label="Notes" :error="errors.notes">
                         <template #default="{controlId, required, invalid, describedby}">
-                            <textarea
+                            <Textarea
                                 :id="controlId"
                                 v-model="notes"
-                                class="ui-control"
-                                :class="{'is-invalid': invalid}"
-                                rows="3"
-                                :aria-required="required"
-                                :aria-invalid="invalid || undefined"
-                                :aria-describedby="describedby"
+                                :rows="3"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
                             />
                         </template>
                     </FormField>

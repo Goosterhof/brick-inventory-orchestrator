@@ -4,7 +4,7 @@ import type {FamilySetStatus} from '@app/types/familySet';
 import {familyHttpService, familyRouterService, familyTranslationService} from '@app/services';
 import {familySetStoreModule} from '@app/stores';
 import {useForm} from '@script-development/fs-form';
-import {FormField, SingleSelect, TextInput} from '@script-development/ui-inputs';
+import {DateInput, FormField, NumberInput, SingleSelect, Textarea, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
 import {isAxiosError} from 'axios';
@@ -53,20 +53,16 @@ const statusOptions = computed<{id: FamilySetStatus; label: string}[]>(() => [
     {id: 'wishlist', label: t('sets.wishlist').value},
 ]);
 
-const onQuantityInput = (event: Event) => {
-    const value = (event.target as HTMLInputElement).valueAsNumber;
-    // quantity is a non-nullable number (defaults to 1); ignore empty/NaN input
-    // rather than write null. The old NumberInput molecule wrote null here via
-    // v-model indirection — a latent unsoundness the atom conversion surfaces.
-    if (!Number.isNaN(value)) {
-        adapted.mutable.value.quantity = value;
-    }
-};
+// NumberInput emits null on empty; the draft's quantity is a non-null number, so
+// hold the editable value in a local nullable ref and coerce to 1 at submit. This
+// keeps the wire/draft types untouched while letting the field go empty mid-edit.
+const quantity = ref<number | null>(adapted.mutable.value.quantity);
 
 const onSubmit = () => {
     notFoundError.value = '';
     return handleSubmit(async () => {
         try {
+            adapted.mutable.value.quantity = quantity.value ?? 1;
             const created = await adapted.create();
             await familyRouterService.goToRoute('sets-detail', created.id);
         } catch (error) {
@@ -141,17 +137,13 @@ const onSubmit = () => {
 
             <FormField :id="quantityId" :label="t('sets.quantity').value" :error="errors.quantity">
                 <template #default="{controlId, required, invalid, describedby}">
-                    <input
+                    <NumberInput
                         :id="controlId"
-                        class="ui-control ui-input"
-                        :class="{'is-invalid': invalid}"
-                        type="number"
+                        v-model="quantity"
                         :min="1"
-                        :value="adapted.mutable.value.quantity"
-                        :aria-required="required"
-                        :aria-invalid="invalid || undefined"
-                        :aria-describedby="describedby"
-                        @input="onQuantityInput"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
                     />
                 </template>
             </FormField>
@@ -173,30 +165,25 @@ const onSubmit = () => {
 
             <FormField :id="purchaseDateId" :label="t('sets.purchaseDate').value">
                 <template #default="{controlId, required, invalid, describedby}">
-                    <input
+                    <DateInput
                         :id="controlId"
-                        class="ui-control ui-input"
-                        :class="{'is-invalid': invalid}"
-                        type="date"
                         v-model="adapted.mutable.value.purchaseDate"
-                        :aria-required="required"
-                        :aria-invalid="invalid || undefined"
-                        :aria-describedby="describedby"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
                     />
                 </template>
             </FormField>
 
             <FormField :id="notesId" :label="t('sets.notes').value">
                 <template #default="{controlId, required, invalid, describedby}">
-                    <textarea
+                    <Textarea
                         :id="controlId"
-                        class="ui-control"
-                        :class="{'is-invalid': invalid}"
-                        rows="3"
                         v-model="adapted.mutable.value.notes"
-                        :aria-required="required"
-                        :aria-invalid="invalid || undefined"
-                        :aria-describedby="describedby"
+                        :rows="3"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
                     />
                 </template>
             </FormField>

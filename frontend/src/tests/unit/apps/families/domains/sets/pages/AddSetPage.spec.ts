@@ -73,7 +73,18 @@ vi.mock('@app/stores', () =>
 // trio (kept light by the vi.mock above — no floating-ui) so the slot + controls
 // render; everything else stays shallow (ADR-0012: unit tests use shallowMount).
 const renderPage = () =>
-    shallowMount(AddSetPage, {global: {stubs: {FormField: false, TextInput: false, SingleSelect: false}}});
+    shallowMount(AddSetPage, {
+        global: {
+            stubs: {
+                FormField: false,
+                TextInput: false,
+                NumberInput: false,
+                DateInput: false,
+                Textarea: false,
+                SingleSelect: false,
+            },
+        },
+    });
 
 // The set-number field is the only text input on the page; v-model wires through
 // the package TextInput, so we drive the DOM control rather than a molecule.
@@ -139,7 +150,7 @@ describe('AddSetPage', () => {
         mockCreate.mockResolvedValue({id: 1, setNum: '75192-1', quantity: 5, status: 'sealed'});
         const wrapper = renderPage();
 
-        // Act — a valid number flows through onQuantityInput's assigning branch
+        // Act — a valid number flows through the NumberInput v-model into quantity
         await wrapper.get('input[type="number"]').setValue('5');
         await wrapper.find('form').trigger('submit');
         await flushPromises();
@@ -153,7 +164,7 @@ describe('AddSetPage', () => {
         mockCreate.mockResolvedValue({id: 1, setNum: '75192-1', quantity: 1, status: 'sealed'});
         const wrapper = renderPage();
 
-        // Act — clearing the number input yields NaN; onQuantityInput's guard skips the write
+        // Act — clearing the number input emits null; the submit path coerces quantity back to 1
         await wrapper.get('input[type="number"]').setValue('');
         await wrapper.find('form').trigger('submit');
         await flushPromises();

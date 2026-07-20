@@ -13,8 +13,8 @@ const {createMockUiInputs} = await vi.hoisted(() => import('../../../../helpers'
 
 vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
-// atom-at-call-site: labels/errors live on FormField; name/setNumber use the
-// package TextInput, the other three fields are native controls in the slot.
+// atom-at-call-site: labels/errors live on FormField; every control is a
+// ui-inputs atom (TextInput / NumberInput / DateInput / Textarea / SingleSelect).
 const fieldByLabel = (wrapper: ReturnType<typeof shallowMount>, label: string) =>
     wrapper.findAllComponents(FormField).find((field) => field.props('label') === label);
 
@@ -22,7 +22,16 @@ const textInputByLabel = (wrapper: ReturnType<typeof shallowMount>, label: strin
     fieldByLabel(wrapper, label)?.findComponent(TextInput);
 
 describe('FormValidationWorkbench', () => {
-    const stubs = {SectionHeading, FormField: false, TextInput: false, SingleSelect: false, PrimaryButton};
+    const stubs = {
+        SectionHeading,
+        FormField: false,
+        TextInput: false,
+        NumberInput: false,
+        DateInput: false,
+        Textarea: false,
+        SingleSelect: false,
+        PrimaryButton,
+    };
     const mount = () => shallowMount(FormValidationWorkbench, {global: {stubs}});
 
     beforeEach(() => {
@@ -217,8 +226,8 @@ describe('FormValidationWorkbench', () => {
         textInputByLabel(wrapper, 'Set Number')?.vm.$emit('update:modelValue', '75192');
         await nextTick();
 
-        // Piece Count — native number input driven through onPieceCountInput
-        await wrapper.get('input[type="number"]').setValue(''); // NaN → null branch
+        // Piece Count — NumberInput atom (empty emits null, then a real number)
+        await wrapper.get('input[type="number"]').setValue(''); // empty → null
         await wrapper.get('input[type="number"]').setValue('7541');
 
         // Theme — SingleSelect emits the option id
@@ -228,7 +237,7 @@ describe('FormValidationWorkbench', () => {
         );
         await nextTick();
 
-        // Purchase Date + Notes — native controls
+        // Purchase Date + Notes — DateInput + Textarea atoms
         await wrapper.get('input[type="date"]').setValue('2026-01-15');
         await wrapper.get('textarea').setValue('Great set!');
 

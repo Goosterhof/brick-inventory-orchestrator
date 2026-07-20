@@ -99,6 +99,9 @@ describe('ComponentGallery', () => {
         // ui-inputs atoms — unstub so the FormField scoped slots + controls render.
         'FormField',
         'TextInput',
+        'NumberInput',
+        'DateInput',
+        'Textarea',
         'SingleSelect',
     ] as const;
     const stubs = Object.fromEntries(unstubForSlotRendering.map((name) => [name, false as const]));

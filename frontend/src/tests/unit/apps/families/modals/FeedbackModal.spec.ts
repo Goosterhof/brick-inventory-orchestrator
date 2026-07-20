@@ -81,7 +81,9 @@ const makeFile = (name: string) => new File(['screenshot-bytes'], name, {type: '
 const mountModal = () =>
     shallowMount(FeedbackModal, {
         props: {open: true},
-        global: {stubs: {ModalDialog: false, FormField: false, TextInput: false, PrimaryButton: false}},
+        global: {
+            stubs: {ModalDialog: false, FormField: false, TextInput: false, Textarea: false, PrimaryButton: false},
+        },
     });
 
 type ModalWrapper = ReturnType<typeof mountModal>;

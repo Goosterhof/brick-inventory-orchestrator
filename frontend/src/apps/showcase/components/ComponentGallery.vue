@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {FormField, SingleSelect, TextInput} from '@script-development/ui-inputs';
+import {DateInput, FormField, NumberInput, SingleSelect, Textarea, TextInput} from '@script-development/ui-inputs';
 import BackButton from '@shared/components/BackButton.vue';
 import BadgeLabel from '@shared/components/BadgeLabel.vue';
 import CardContainer from '@shared/components/CardContainer.vue';
@@ -58,12 +58,6 @@ const demoStatusOptions = [
     {id: 'in_storage', label: 'In Storage'},
     {id: 'incomplete', label: 'Incomplete'},
 ];
-
-// demoNumber is a nullable number; clear-to-null on empty/NaN input.
-const onDemoNumberInput = (event: Event) => {
-    const value = (event.target as HTMLInputElement).valueAsNumber;
-    demoNumber.value = Number.isNaN(value) ? null : value;
-};
 
 const resetToasts = () => {
     toastVisible.value = true;
@@ -177,18 +171,14 @@ const noop = () => {};
                     <p text="xs" font="mono" text-color="gray-500" m="b-3">Number field</p>
                     <FormField :id="demoNumberId" label="Quantity">
                         <template #default="{controlId, required, invalid, describedby}">
-                            <input
+                            <NumberInput
                                 :id="controlId"
-                                class="ui-control ui-input"
-                                :class="{'is-invalid': invalid}"
-                                type="number"
+                                v-model="demoNumber"
                                 :min="0"
                                 :max="999"
-                                :value="demoNumber"
-                                :aria-required="required"
-                                :aria-invalid="invalid || undefined"
-                                :aria-describedby="describedby"
-                                @input="onDemoNumberInput"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
                             />
                         </template>
                     </FormField>
@@ -216,15 +206,12 @@ const noop = () => {};
                     <p text="xs" font="mono" text-color="gray-500" m="b-3">Date field</p>
                     <FormField :id="demoDateId" label="Purchase Date">
                         <template #default="{controlId, required, invalid, describedby}">
-                            <input
+                            <DateInput
                                 :id="controlId"
                                 v-model="demoDate"
-                                class="ui-control ui-input"
-                                :class="{'is-invalid': invalid}"
-                                type="date"
-                                :aria-required="required"
-                                :aria-invalid="invalid || undefined"
-                                :aria-describedby="describedby"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
                             />
                         </template>
                     </FormField>
@@ -234,15 +221,13 @@ const noop = () => {};
                     <p text="xs" font="mono" text-color="gray-500" m="b-3">Textarea field</p>
                     <FormField :id="demoTextareaId" label="Notes">
                         <template #default="{controlId, required, invalid, describedby}">
-                            <textarea
+                            <Textarea
                                 :id="controlId"
                                 v-model="demoTextarea"
-                                class="ui-control"
-                                :class="{'is-invalid': invalid}"
-                                rows="3"
-                                :aria-required="required"
-                                :aria-invalid="invalid || undefined"
-                                :aria-describedby="describedby"
+                                :rows="3"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
                             />
                         </template>
                     </FormField>

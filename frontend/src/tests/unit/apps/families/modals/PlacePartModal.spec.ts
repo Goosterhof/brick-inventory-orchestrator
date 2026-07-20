@@ -54,8 +54,9 @@ const mountModal = (props: Record<string, unknown> = {}) =>
                 // Default shallowMount stubs do not render named slots; this surfaces them for testing.
                 // We declare `open` so findComponent(ModalDialog).props('open') still resolves correctly.
                 ModalDialog: {props: ['open'], template: '<div><slot name="title" /><slot /></div>'},
-                // Unstub the package pair so the FormField scoped slots + SingleSelect listbox render.
+                // Unstub the package controls so the FormField scoped slots + NumberInput + SingleSelect listbox render.
                 FormField: false,
+                NumberInput: false,
                 SingleSelect: false,
             },
         },
