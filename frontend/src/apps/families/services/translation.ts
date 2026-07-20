@@ -94,6 +94,8 @@ const translations = {
             actionImport: 'Import collection',
             yearDistribution: 'Sets by year',
             yearDistributionEmpty: 'No year data available',
+            statsError: 'Your build stats came loose — reload the page to try again.',
+            setsError: 'Your sets came loose — reload the page to try again.',
         },
         about: {title: 'About', description: 'This is the about page.', diorama: 'Diorama'},
         sets: {
@@ -421,6 +423,8 @@ const translations = {
             actionImport: 'Collectie importeren',
             yearDistribution: 'Sets per jaar',
             yearDistributionEmpty: 'Geen jaargegevens beschikbaar',
+            statsError: 'Je bouwstatistieken zijn losgeraakt — herlaad de pagina om het opnieuw te proberen.',
+            setsError: 'Je sets zijn losgeraakt — herlaad de pagina om het opnieuw te proberen.',
         },
         about: {title: 'Over', description: 'Dit is de over pagina.', diorama: 'Diorama'},
         sets: {

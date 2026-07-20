@@ -47,6 +47,9 @@ describe('HomePage', () => {
         vi.clearAllMocks();
         mockIsLoggedIn.value = true;
         mockGetAll.value = [];
+        // clearAllMocks() clears calls but preserves implementations, so a rejection
+        // configured by one test would leak into the next. Re-arm the happy path here.
+        mockRetrieveAll.mockResolvedValue(undefined);
     });
 
     describe('when logged out', () => {
@@ -350,6 +353,110 @@ describe('HomePage', () => {
             // Assert
             expect(wrapper.findComponent(YearDistributionChart).exists()).toBe(false);
             expect(wrapper.text()).not.toContain('home.yearDistribution');
+        });
+    });
+
+    describe('when a request fails', () => {
+        it('should clear the loading state when the stats request rejects', async () => {
+            // Arrange
+            mockGetRequest.mockRejectedValue(new Error('network down'));
+
+            // Act
+            const wrapper = shallowMount(HomePage);
+            await flushPromises();
+
+            // Assert — the dashboard must not hang on the loading text forever
+            expect(wrapper.text()).not.toContain('home.loadingStats');
+        });
+
+        it('should surface an error message when the stats request rejects', async () => {
+            // Arrange
+            mockGetRequest.mockRejectedValue(new Error('network down'));
+
+            // Act
+            const wrapper = shallowMount(HomePage);
+            await flushPromises();
+
+            // Assert
+            expect(wrapper.text()).toContain('home.statsError');
+        });
+
+        it('should clear the loading state when the sets request rejects', async () => {
+            // Arrange
+            mockGetRequest.mockResolvedValue({data: mockStatsResponse});
+            mockRetrieveAll.mockRejectedValue(new Error('network down'));
+
+            // Act
+            const wrapper = shallowMount(HomePage);
+            await flushPromises();
+
+            // Assert
+            expect(wrapper.text()).not.toContain('home.loadingStats');
+        });
+
+        it('should surface an error message when the sets request rejects', async () => {
+            // Arrange
+            mockGetRequest.mockResolvedValue({data: mockStatsResponse});
+            mockRetrieveAll.mockRejectedValue(new Error('network down'));
+
+            // Act
+            const wrapper = shallowMount(HomePage);
+            await flushPromises();
+
+            // Assert
+            expect(wrapper.text()).toContain('home.setsError');
+        });
+
+        it('should not claim the year data is empty when the sets request rejects', async () => {
+            // Arrange — an empty-state message would be a lie; the fetch failed, it is not empty
+            mockGetRequest.mockResolvedValue({data: mockStatsResponse});
+            mockRetrieveAll.mockRejectedValue(new Error('network down'));
+
+            // Act
+            const wrapper = shallowMount(HomePage);
+            await flushPromises();
+
+            // Assert
+            expect(wrapper.text()).not.toContain('home.yearDistributionEmpty');
+        });
+
+        it('should still render the sets section when only the stats request rejects', async () => {
+            // Arrange — the two calls are independent; a stats failure must not blank the sets
+            mockGetRequest.mockRejectedValue(new Error('network down'));
+            mockGetAll.value = [{set: {year: 2020}}, {set: {year: 2015}}];
+
+            // Act
+            const wrapper = shallowMount(HomePage);
+            await flushPromises();
+
+            // Assert
+            expect(wrapper.text()).toContain('home.yearDistribution');
+            expect(wrapper.findComponent(YearDistributionChart).exists()).toBe(true);
+        });
+
+        it('should still render quick actions when the stats request rejects', async () => {
+            // Arrange
+            mockGetRequest.mockRejectedValue(new Error('network down'));
+
+            // Act
+            const wrapper = shallowMount(HomePage);
+            await flushPromises();
+
+            // Assert
+            expect(wrapper.text()).toContain('home.quickActions');
+        });
+
+        it('should not surface a stats error when both requests succeed', async () => {
+            // Arrange
+            mockGetRequest.mockResolvedValue({data: mockStatsResponse});
+
+            // Act
+            const wrapper = shallowMount(HomePage);
+            await flushPromises();
+
+            // Assert
+            expect(wrapper.text()).not.toContain('home.statsError');
+            expect(wrapper.text()).not.toContain('home.setsError');
         });
     });
 });
