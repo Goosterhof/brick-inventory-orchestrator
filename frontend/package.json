@@ -92,7 +92,7 @@
         "happy-dom": "^20.10.6",
         "jiti": "^2.6.1",
         "knip": "^6.26.0",
-        "lint-staged": "^17.0.8",
+        "lint-staged": "^17.1.0",
         "npm-run-all2": "^9.0.2",
         "oxfmt": "0.58.0",
         "oxlint": "^1.67.0",
