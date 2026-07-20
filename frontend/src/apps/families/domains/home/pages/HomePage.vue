@@ -24,6 +24,8 @@ const {t} = familyTranslationService;
 const stats = ref<FamilyStats | null>(null);
 const loading = ref(true);
 const setsLoading = ref(true);
+const statsFailed = ref(false);
+const setsFailed = ref(false);
 
 const statusKeys: Record<
     string,
@@ -53,13 +55,23 @@ onMounted(async () => {
         return;
     }
 
-    const [response] = await Promise.all([
+    // allSettled, not all: the two calls are independent, so a failure in one must not
+    // blank the other's section. Every settlement path clears its own loading flag —
+    // under Promise.all a rejection skipped both clears and the dashboard hung on
+    // "loading" forever with no error and no way out.
+    const [statsResult, setsResult] = await Promise.allSettled([
         familyHttpService.getRequest<FamilyStats>('/family/stats'),
         familySetStoreModule.retrieveAll(),
     ]);
 
-    stats.value = response.data;
+    if (statsResult.status === 'fulfilled') {
+        stats.value = statsResult.value.data;
+    } else {
+        statsFailed.value = true;
+    }
     loading.value = false;
+
+    setsFailed.value = setsResult.status === 'rejected';
     setsLoading.value = false;
 });
 
@@ -162,6 +174,10 @@ const goToSettings = async () => await familyRouterService.goToRoute('settings')
 
             <p v-if="loading" text="[var(--brick-muted-text)]">{{ t('home.loadingStats').value }}</p>
 
+            <p v-else-if="statsFailed" text="[var(--brick-danger-text)]" font="bold" m="b-6">
+                {{ t('home.statsError').value }}
+            </p>
+
             <template v-else-if="stats">
                 <!-- Headline stats -->
                 <div grid grid-cols="1 sm:2 lg:3" gap="4" m="b-6">
@@ -197,34 +213,41 @@ const goToSettings = async () => await familyRouterService.goToRoute('settings')
                         />
                     </div>
                 </template>
-
-                <!-- Year distribution -->
-                <template v-if="!setsLoading && yearDistribution.size > 0">
-                    <h2 text="lg" font="bold" uppercase tracking="wide" m="b-4">
-                        {{ t('home.yearDistribution').value }}
-                    </h2>
-                    <CardContainer m="b-6">
-                        <YearDistributionChart :distribution="yearDistribution" />
-                    </CardContainer>
-                </template>
-
-                <p v-else-if="!setsLoading && yearDistribution.size === 0" text="[var(--brick-muted-text)]" m="b-6">
-                    {{ t('home.yearDistributionEmpty').value }}
-                </p>
-
-                <!-- Quick actions -->
-                <h2 text="lg" font="bold" uppercase tracking="wide" m="b-4">
-                    {{ t('home.quickActions').value }}
-                </h2>
-                <div grid grid-cols="2 sm:3" gap="4">
-                    <NavLink to="/sets" @click="goToSets">{{ t('navigation.sets').value }}</NavLink>
-                    <NavLink to="/storage" @click="goToStorage">{{ t('navigation.storage').value }}</NavLink>
-                    <NavLink to="/parts" @click="goToParts">{{ t('navigation.parts').value }}</NavLink>
-                    <NavLink to="/sets/scan" @click="goToScan">{{ t('home.actionScan').value }}</NavLink>
-                    <NavLink to="/sets/identify" @click="goToIdentify">{{ t('home.actionIdentify').value }}</NavLink>
-                    <NavLink to="/settings" @click="goToSettings">{{ t('home.actionImport').value }}</NavLink>
-                </div>
             </template>
+
+            <!-- Year distribution — fed by the set store, independent of the stats call.
+                 Kept outside the stats block so a stats failure does not blank a section
+                 whose own data loaded fine. -->
+            <template v-if="!setsLoading && !setsFailed && yearDistribution.size > 0">
+                <h2 text="lg" font="bold" uppercase tracking="wide" m="b-4">
+                    {{ t('home.yearDistribution').value }}
+                </h2>
+                <CardContainer m="b-6">
+                    <YearDistributionChart :distribution="yearDistribution" />
+                </CardContainer>
+            </template>
+
+            <p v-else-if="!setsLoading && setsFailed" text="[var(--brick-danger-text)]" font="bold" m="b-6">
+                {{ t('home.setsError').value }}
+            </p>
+
+            <p v-else-if="!setsLoading && yearDistribution.size === 0" text="[var(--brick-muted-text)]" m="b-6">
+                {{ t('home.yearDistributionEmpty').value }}
+            </p>
+
+            <!-- Quick actions — pure navigation, no data dependency. Always available so a
+                 failed fetch never strands the user on a dead-end page. -->
+            <h2 text="lg" font="bold" uppercase tracking="wide" m="b-4">
+                {{ t('home.quickActions').value }}
+            </h2>
+            <div grid grid-cols="2 sm:3" gap="4">
+                <NavLink to="/sets" @click="goToSets">{{ t('navigation.sets').value }}</NavLink>
+                <NavLink to="/storage" @click="goToStorage">{{ t('navigation.storage').value }}</NavLink>
+                <NavLink to="/parts" @click="goToParts">{{ t('navigation.parts').value }}</NavLink>
+                <NavLink to="/sets/scan" @click="goToScan">{{ t('home.actionScan').value }}</NavLink>
+                <NavLink to="/sets/identify" @click="goToIdentify">{{ t('home.actionIdentify').value }}</NavLink>
+                <NavLink to="/settings" @click="goToSettings">{{ t('home.actionImport').value }}</NavLink>
+            </div>
         </template>
     </div>
 </template>
