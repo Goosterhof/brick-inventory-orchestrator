@@ -140,5 +140,6 @@ Route::middleware(['auth:sanctum', 'family.ownership'])->group(function(): void 
 
     // Feedback
     Route::post('/feedback', [FeedbackController::class, 'store'])
+        ->middleware('throttle:feedback')
         ->can('submitFeedback', Family::class);
 });

@@ -4,11 +4,15 @@ declare(strict_types = 1);
 
 use App\Http\Controllers\FeedbackController;
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 
 covers(FeedbackController::class);
 
@@ -261,6 +265,66 @@ describe('FeedbackController', function(): void {
             // assert
             $response->assertStatus(502)
                 ->assertJsonPath('error', 'Failed to send feedback');
+        });
+    });
+
+    describe('rate limiting', function(): void {
+        // Wiring assertion. The 'testing' env resolves every named limiter to Limit::none(),
+        // so a naive "fire N+1 requests, expect 429" test passes green while asserting nothing.
+        // This one asserts the fact the route file actually changed: the middleware is attached.
+        it('should attach the feedback throttle middleware to the route', function(): void {
+            // act
+            $middleware = collect(Route::getRoutes()->getRoutes())
+                ->filter(static fn(RoutingRoute $route): bool => $route->uri() === 'api/feedback'
+                    && \in_array('POST', $route->methods(), true))
+                ->flatMap(static fn(RoutingRoute $route): array => $route->gatherMiddleware())
+                ->all();
+
+            // assert
+            expect($middleware)->toContain('throttle:feedback');
+        });
+
+        // Behavioural assertion. Mirrors the invite-email precedent in InviteCodeControllerTest:
+        // the limiter is explicitly re-enabled by forcing the env to 'production' and re-binding
+        // the provider closures, because the default testing env would make this vacuous.
+        it('should rate-limit at 5 requests per hour per user', function(): void {
+            // arrange
+            $this->app['env'] = 'production';
+
+            // Force the AppServiceProvider closures to re-bind under the new env.
+            $this->app->register(AppServiceProvider::class, force: true);
+
+            // Reset any prior counters left over from sibling tests.
+            RateLimiter::clear('feedback');
+
+            Http::fake([
+                'kendo.test/api/projects/3/reports' => Http::response([
+                    'id' => 42,
+                    'title' => 'Broken drawer',
+                    'description' => 'The drawer view crashes',
+                    'author_name' => 'Ada Bricklayer',
+                ], 201),
+            ]);
+
+            $user = User::factory()->create(['name' => 'Ada Bricklayer']);
+
+            // act + assert — 5 calls within the hour are allowed.
+            for ($i = 0; $i < 5; $i++) {
+                $response = $this->actingAs($user)->postJson('/api/feedback', [
+                    'title' => 'Broken drawer ' . $i,
+                    'description' => 'The drawer view crashes',
+                ]);
+
+                $response->assertStatus(201);
+            }
+
+            // 6th call must be throttled.
+            $response = $this->actingAs($user)->postJson('/api/feedback', [
+                'title' => 'Broken drawer 6',
+                'description' => 'The drawer view crashes',
+            ]);
+
+            $response->assertStatus(429);
         });
     });
 });

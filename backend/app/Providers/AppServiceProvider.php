@@ -74,5 +74,12 @@ class AppServiceProvider extends ServiceProvider
             ? Limit::perHour(10)->by((string) ($request->user()->id ?? $request->ip()))
             : Limit::none(),
         );
+
+        RateLimiter::for(
+            'feedback',
+            fn(Request $request): Limit => $enabled
+            ? Limit::perHour(5)->by((string) ($request->user()->id ?? $request->ip()))
+            : Limit::none(),
+        );
     }
 }
