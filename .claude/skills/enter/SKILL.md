@@ -36,7 +36,12 @@ State between shifts lives in `.claude/records/shifts/LEDGER.md`. The board (`ke
 A condensed, board-aware sync — embedded in the Shift Report, **not** a separate Standup Note (a note every 30 minutes is noise; `/standup` remains the CEO-triggered full ritual).
 
 - Board state: issues per lane, what's in progress, what's blocked, what's waiting on the CEO.
-- **Reconcile In Review.** For each issue in the review lane carrying a linked branch, check whether its PR merged (`gh pr view <n> --json state,mergedAt,mergeCommit`). If merged: file the **Build Record** as a closing comment and move the issue to Done. Verify the record's claims against `main` (`git show --stat <sha>`, read the shipped file:lines) rather than copying the PR-open comment — that comment predates review and may describe what was proposed, not what landed. This is the receiving half of the Phase 4 handoff (`:79`): the shift that opens a PR is long gone by merge time, and merging through GitHub writes nothing to the board, so without this step In Review only ever fills. It drains only while the doors are open — merges during a closed-doors stretch sit until the next `/enter`, which is a paper-trail lag, not a correctness problem.
+- **Reconcile In Review.** For each issue in the review lane carrying a linked branch, resolve its PR's state (`gh pr view <n> --json state,mergedAt,mergeCommit`) and handle **all three** outcomes — the lane leaks on any branch left unhandled:
+  - **`MERGED`** → file the **Build Record** as a closing comment and move the issue to Done. Verify the record's claims against `main` (`git show --stat <sha>`, read the shipped file:lines) rather than copying the PR-open comment — that comment predates review and may describe what was proposed, not what landed.
+  - **`CLOSED` (unmerged)** → the CEO rejected or abandoned the approach. Comment what was closed and the reason if the PR states one, and move the issue back to **To Do** so it can be re-picked or rescoped. Do not reopen the PR, and do not silently re-pick it in this shift's Phase 4 — a rejected approach needs a fresh look, not an immediate retry.
+  - **`OPEN`** → leave it. It is awaiting the CEO and correctly parked; it counts toward the Phase 4 backpressure gate.
+
+  This is the receiving half of the Phase 4 handoff (`:79`): the shift that opens a PR is long gone by the time the PR resolves, and GitHub writes nothing to the board either way, so without this step In Review only ever fills. It drains only while the doors are open — a PR resolved during a closed-doors stretch sits until the next `/enter`, which is a paper-trail lag, not a correctness problem.
 - Open agent PRs awaiting review (from Phase 0.5) — the CEO's review queue.
 - Last Shift Report's leftovers: unfiled findings, failed builds, open action items.
 - `.claude/docs/pulse.md` active concerns — flag high-severity ones only.
@@ -107,7 +112,7 @@ The two builds may run concurrently (separate worktrees, one message, two Agent 
 
 ## Roll-Call
 - Board: [N in To Do, N in progress, N awaiting CEO] · Review queue: [N open agent PRs]
-- Reconciled: [BIO-xxxx → Done (PR #NNN merged), ... — or "In Review clean"]
+- Reconciled: [BIO-xxxx → Done (PR #NNN merged) · BIO-xxxx → To Do (PR #NNN closed unmerged) · N left open awaiting CEO — or "In Review clean"]
 - Carried from last shift: [leftovers, or "clean handoff"]
 
 ## Hunt
