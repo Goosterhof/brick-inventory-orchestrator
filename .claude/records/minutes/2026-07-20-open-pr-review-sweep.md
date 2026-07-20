@@ -63,3 +63,63 @@ _Captured by the Meeting Minutes Secretary (1x1 translucent-clear brick, with cl
 - Should reconciliation also run at `/exit`, so a closing shift drains In Review before the doors shut?
 
 ---
+
+## 2026-07-20 — PR #317 Review, Vue 3.6 / Vapor Investigation, Import Throttle
+
+_Continuation of the same session; second entry._
+
+### Decisions
+
+- **#317's Minor fixed rather than deferred**: the review classed the no-op `RateLimiter::clear` as "pre-existing, not introduced here" and recommended ticketing both files. Steward split it — the `FeedbackControllerTest` copy was being *added by that PR*, so removing it is declining to ship known-dead code, not scope creep; only the `InviteCodeControllerTest` instance is genuinely pre-existing (BIO-0032). CEO chose this over ticket-both-and-merge.
+- **Delete the dead line rather than correct it**: a working `RateLimiter::clear(md5('feedback'.$user->id))` would still be dead code, but dead code that looks alive. Replaced with a comment recording why no reset is needed.
+- **Vue 3.6 / Vapor split into two tracked issues, neither actionable now**: BIO-0033 (bump to 3.6 stable for the alien-signals reactivity refactor, no Vapor) and BIO-0034 (Vapor evaluation, `blocked`, `blocked_by` BIO-0033). Rationale: the reactivity win is a zero-source-change dependency bump; Vapor is blocked upstream.
+- **Import throttle: `perHour(5)`, keyed by `family_id`** (BIO-0035). The limit is floored by BIO-0029: reclamation at 1200s means a worker-down retry cadence tops out at 3600/1200 = 3/hour, so any limit ≤3 would 429 a legitimate reclamation retry and undo that fix. Family-keying is a deliberate deviation from every other limiter in `AppServiceProvider` (all key by user id) because the protected resource is the family's Rebrickable token and quota, and the endpoint's concurrency invariant is already family-scoped.
+
+### False Starts
+
+- **Answered "is Vue 3.6 released?" from search results before checking the registry**: the first web searches returned blog posts stating Vapor Mode "was confirmed as stable in Vue 3.6, released in early 2026". `npm view vue dist-tags` showed `latest: 3.5.40`, with 3.6.0-rc.1 on the `rc` tag published two days earlier. Several of those posts appear AI-generated. Corrected before reporting; the registry and vuejs/core release notes were used as the sources of record.
+- **`WebFetch` of `vuejs.org/guide/extras/vapor-mode.html` 404'd**, and a fetch of the GitHub releases page returned 2024 dates for 2026 releases. Both discarded in favour of the GitHub API (`gh api repos/vuejs/core/releases`), which returned verifiable publish timestamps.
+
+### Friction Signals
+
+- Steward raised the unthrottled import endpoint four times across the session before the CEO acted on it; on the third mention Steward stated it would stop asking and merely leave it flagged.
+- Two background-command timeouts: the pre-commit gauntlet exceeded the 2-minute foreground Bash limit (91.96s CaptainHook run plus overhead), requiring re-run under `run_in_background`.
+- CEO batched three instructions in one message ("file it", "do the git pull", "let's take a look at enter"), and later corrected course on #317 by choosing option (a) over the review's own recommendation.
+
+### Dynamics
+
+- Steward disagreed with the #317 review's framing (pre-existing vs newly-introduced) and proposed a sharper split; CEO took the Steward's option over the reviewer's.
+- Steward recommended against adopting Vapor despite the CEO's stated interest, on evidence rather than preference; CEO did not push back and asked for tracking issues instead.
+- Steward flagged the family-vs-user keying decision as "the part most worth a second opinion" in both the issue and the PR rather than presenting it as settled.
+
+### Process Meta
+
+- `/minutes` fired twice this session (this is the second entry, appended to the same per-session file).
+- `resolveReviewThread` succeeded on both #316 and #317 (commit-addressed findings) after being denied on #299 (refuted finding) — three data points now confirm the fixed-vs-refuted distinction recorded in memory.
+- Test-first proof performed on BIO-0035 by sabotage rather than assertion-reading: removing the route middleware failed all 3 new tests; re-keying the limiter to `user_id` failed only the family-sharing test. Files restored from `/tmp` backups and re-verified green.
+- `gh pr diff <n> -- <path>` rejected the pathspec argument ("accepts at most 1 arg"); worked around with `awk` over the full diff.
+- Full Foundry gauntlet ran through the real `.githooks` dispatcher on the Steward's commits — noted in contrast to the war room's checkout, where `core.hooksPath` is unset.
+
+### Notes
+
+- **Vapor readiness scan of `frontend/src/`**: zero occurrences of Options API, `getCurrentInstance()`, `v-memo`, `globalProperties`, custom directives, `@vue:` lifecycle events, and `slots.default()` dry-runs. 96 of 98 SFCs use `<script setup>`. All `$attrs`/`h()` hits are in test files. Production code carries essentially no Vapor migration debt.
+- **Vapor's blockers are ecosystem, not codebase**: `@vue/test-utils` has no Vapor support (no code hits, no commits in last 60, no issues; latest v2.4.11); Vitest #9402 (`defineVaporComponent is not a function`) has been open since 2026-01-07 with zero comments. Against BIO's 100% coverage threshold, converting one component breaks its specs with no supported fix.
+- Vue's own RC guidance recommends Vapor only for partial use in existing apps or small new apps entirely in Vapor, and warns against mixed nesting with VDOM component libraries. BIO's Gallery is mixed-nesting by design (25 files Phosphor, 17 ui-inputs, 104 `@script-development/*`).
+- If Vapor is ever piloted, `showcase` is the target — dev-only, never ships, own build target, 27 SFCs — **not** `families`. Caveat: showcase is not coverage-excluded, so blocker 1 applies there too.
+- A war-room Sapper M9 record claims `/feedback` was "the only external-egress endpoint without one" — false at HEAD, as BIO-0035 documents. Correcting it is war-room territory.
+- `core.hooksPath` is unset in the war room's checkout of this repo, so `.githooks` never fires there; a war-room PR can reach `main` without hooks having run.
+
+### Action Items
+
+- CEO: review and merge the BIO-0035 import-throttle PR; confirm or overrule the `family_id` keying.
+- CEO: decide BIO-0031 (import recovery) — still open from the first entry.
+- CEO: raise the stale Sapper M9 record and the unset `core.hooksPath` with the war room; both are outside BIO's write scope.
+- Steward: BIO-0032 (no-op `RateLimiter::clear` in `InviteCodeControllerTest`) unassigned in To Do.
+- Steward: BIO-0033 must not start until `vue@3.6.0` reaches the `latest` dist-tag.
+
+### Open Questions
+
+- Should BIO-0034's unblock conditions be actively watched (upstream issue polling), or revisited ad hoc at a later sweep?
+- Does the `?? $request->ip()` fallback in the limiter closures serve any purpose inside the `auth:sanctum` group, given `$request->user()->id` would already fatal on a null user? Mirrored for consistency in BIO-0035 without resolving the question.
+
+---

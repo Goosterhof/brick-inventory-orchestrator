@@ -11,11 +11,15 @@ use App\Models\FamilySet;
 use App\Models\ImportJob;
 use App\Models\Set;
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 
 covers(FamilySetController::class);
 
@@ -669,6 +673,87 @@ describe('FamilySetController', function(): void {
                     ->where('status', ImportJobStatus::Pending)
                     ->count(),
             )->toBe(1);
+        });
+    });
+
+    describe('rate limiting', function(): void {
+        // Wiring assertion. The 'testing' env resolves every named limiter to Limit::none(),
+        // so a naive "fire N+1 requests, expect 429" test passes green while asserting nothing.
+        // This one asserts the fact the route file actually changed: the middleware is attached.
+        it('should attach the rebrickable-import throttle middleware to the route', function(): void {
+            // act
+            $middleware = collect(Route::getRoutes()->getRoutes())
+                ->filter(static fn(RoutingRoute $route): bool => $route->uri() === 'api/family-sets/import-from-rebrickable'
+                    && \in_array('POST', $route->methods(), true))
+                ->flatMap(static fn(RoutingRoute $route): array => $route->gatherMiddleware())
+                ->all();
+
+            // assert
+            expect($middleware)->toContain('throttle:rebrickable-import');
+        });
+
+        // Behavioural assertion. The limiter is explicitly re-enabled by forcing the env and
+        // re-binding the provider closures, because the default testing env would make this
+        // vacuous. 5/hour is deliberate: a stranded import becomes reclaimable after 1200s
+        // (BIO-0029), so a worker-down retry cadence tops out at 3600/1200 = 3 attempts per
+        // hour. Allowing 5 keeps the throttle clear of that floor — a limit of 3 or tighter
+        // would 429 a legitimate reclamation retry.
+        it('should rate-limit at 5 imports per hour', function(): void {
+            // arrange
+            Queue::fake();
+
+            $this->app['env'] = 'production';
+            $this->app->register(AppServiceProvider::class, force: true);
+
+            $user = User::factory()->create();
+
+            // act + assert — 5 imports within the hour are allowed.
+            for ($i = 0; $i < 5; $i++) {
+                $this->actingAs($user)
+                    ->postJson('/api/family-sets/import-from-rebrickable')
+                    ->assertStatus(202);
+
+                // Retire the job so the next sequential import is not rejected by the
+                // family-scoped 409 concurrency guard, which is a separate mechanism.
+                ImportJob::query()
+                    ->where('family_id', $user->family_id)
+                    ->update(['status' => ImportJobStatus::Completed]);
+            }
+
+            // assert — the 6th is throttled.
+            $this->actingAs($user)
+                ->postJson('/api/family-sets/import-from-rebrickable')
+                ->assertStatus(429);
+        });
+
+        // Pins the deliberate deviation from every other limiter in AppServiceProvider:
+        // this one keys by family_id, not user_id. The protected resource is the family's
+        // Rebrickable token and upstream quota. If someone "corrects" the key back to
+        // user_id for consistency, this test fails — an n-member family would otherwise
+        // drive n x the intended upstream load.
+        it('should share the import limit across users in the same family', function(): void {
+            // arrange
+            $this->app['env'] = 'production';
+            $this->app->register(AppServiceProvider::class, force: true);
+
+            $family = Family::factory()->create();
+            $headUser = User::factory()->forFamily($family)->create();
+            $memberUser = User::factory()->forFamily($family)->create();
+
+            // Burn the family's full allowance through the first user.
+            RateLimiter::hit(md5('rebrickable-import' . $family->id), 3_600);
+            RateLimiter::hit(md5('rebrickable-import' . $family->id), 3_600);
+            RateLimiter::hit(md5('rebrickable-import' . $family->id), 3_600);
+            RateLimiter::hit(md5('rebrickable-import' . $family->id), 3_600);
+            RateLimiter::hit(md5('rebrickable-import' . $family->id), 3_600);
+
+            // act + assert — a *different* user in the same family is throttled, because the
+            // bucket is the family's, not the individual's.
+            $this->actingAs($memberUser)
+                ->postJson('/api/family-sets/import-from-rebrickable')
+                ->assertStatus(429);
+
+            expect($headUser->family_id)->toBe($memberUser->family_id);
         });
     });
 
