@@ -95,7 +95,7 @@
         "lint-staged": "^17.0.8",
         "npm-run-all2": "^9.0.2",
         "oxfmt": "0.58.0",
-        "oxlint": "^1.67.0",
+        "oxlint": "^1.74.0",
         "oxlint-tsgolint": "^0.24.0",
         "playwright": "^1.61.1",
         "size-limit": "^12.0.0",
