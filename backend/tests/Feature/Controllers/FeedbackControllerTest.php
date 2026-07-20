@@ -11,7 +11,6 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
 covers(FeedbackController::class);
@@ -294,8 +293,9 @@ describe('FeedbackController', function(): void {
             // Force the AppServiceProvider closures to re-bind under the new env.
             $this->app->register(AppServiceProvider::class, force: true);
 
-            // Reset any prior counters left over from sibling tests.
-            RateLimiter::clear('feedback');
+            // No counter reset is needed: ThrottleRequests keys named limiters as
+            // md5($limiterName . $limit->key), and RefreshDatabase mints a fresh user id per
+            // test, so md5('feedback' . $userId) is unique to this test by construction.
 
             Http::fake([
                 'kendo.test/api/projects/3/reports' => Http::response([
