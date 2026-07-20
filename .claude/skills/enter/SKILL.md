@@ -36,6 +36,7 @@ State between shifts lives in `.claude/records/shifts/LEDGER.md`. The board (`ke
 A condensed, board-aware sync — embedded in the Shift Report, **not** a separate Standup Note (a note every 30 minutes is noise; `/standup` remains the CEO-triggered full ritual).
 
 - Board state: issues per lane, what's in progress, what's blocked, what's waiting on the CEO.
+- **Reconcile In Review.** For each issue in the review lane carrying a linked branch, check whether its PR merged (`gh pr view <n> --json state,mergedAt,mergeCommit`). If merged: file the **Build Record** as a closing comment and move the issue to Done. Verify the record's claims against `main` (`git show --stat <sha>`, read the shipped file:lines) rather than copying the PR-open comment — that comment predates review and may describe what was proposed, not what landed. This is the receiving half of the Phase 4 handoff (`:79`): the shift that opens a PR is long gone by merge time, and merging through GitHub writes nothing to the board, so without this step In Review only ever fills. It drains only while the doors are open — merges during a closed-doors stretch sit until the next `/enter`, which is a paper-trail lag, not a correctness problem.
 - Open agent PRs awaiting review (from Phase 0.5) — the CEO's review queue.
 - Last Shift Report's leftovers: unfiled findings, failed builds, open action items.
 - `.claude/docs/pulse.md` active concerns — flag high-severity ones only.
@@ -76,7 +77,7 @@ Low-severity observations are *not* filed as issues — batch them into the Shif
 4. **On green:** push the branch and open the PR — `gh pr create` targeting `main`, body references `BIO-xxxx`, explains what/why/how-verified, ends with the standard Claude Code footer. The `agent-review-label.yml` workflow applies `Agent Review Requested` on open — verify it landed (`gh pr view --json labels`), add it manually if not. Comment the PR link on the board issue and move it to the review-ish lane if one exists.
 5. **On red:** do not push. Comment the failure diagnosis on the issue, move it back to To Do, record in the Shift Report, increment `consecutive_failures` in the ledger. Two failures on the same issue = hands off; it needs the CEO or a hand-run session.
 
-The two builds may run concurrently (separate worktrees, one message, two Agent calls). Build Records: per the 2026-07-16 migration, the Brickwright's closing comment on the issue *is* the Build Record — filed when the PR merges, which is the CEO's moment, so the shift comments the PR link and stops there.
+The two builds may run concurrently (separate worktrees, one message, two Agent calls). Build Records: per the 2026-07-16 migration, the Brickwright's closing comment on the issue *is* the Build Record — filed when the PR merges, which is the CEO's moment, so the shift comments the PR link and stops there. **A later shift's Phase 1 reconciliation files it** — this deferral has a named receiver, and must keep one; without it, issues park in In Review forever (observed 7 times before the reconciliation step was codified 2026-07-20).
 
 ## Phase 5 — Clock Out
 
@@ -106,6 +107,7 @@ The two builds may run concurrently (separate worktrees, one message, two Agent 
 
 ## Roll-Call
 - Board: [N in To Do, N in progress, N awaiting CEO] · Review queue: [N open agent PRs]
+- Reconciled: [BIO-xxxx → Done (PR #NNN merged), ... — or "In Review clean"]
 - Carried from last shift: [leftovers, or "clean handoff"]
 
 ## Hunt
