@@ -13,15 +13,11 @@ export const registerAuthGuard = <Profile, Routes extends RouteRecordRaw[]>(
         const isLoggedIn = authService.isLoggedIn.value;
 
         if (to.meta?.authOnly && !isLoggedIn) {
-            void routerService.goToRoute(loginRouteName);
-
-            return true;
+            return {name: loginRouteName};
         }
 
         if (to.meta?.canSeeWhenLoggedIn === false && isLoggedIn) {
-            void routerService.goToRoute(dashboardRouteName);
-
-            return true;
+            return {name: dashboardRouteName};
         }
 
         return false;

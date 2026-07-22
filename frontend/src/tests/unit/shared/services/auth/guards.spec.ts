@@ -187,7 +187,8 @@ describe('auth guards', () => {
             const authService = createMockAuthService(false);
             registerAuthGuard(authService, routerService, 'login', 'home');
             // A follow-on middleware only runs for navigations the auth guard lets through:
-            // returning `true` from the guard cancels the hop and short-circuits the chain.
+            // returning a redirect object from the guard cancels the hop and short-circuits the
+            // chain (0.2.0 middleware redirect-return; the bounce itself is dispatched by fs-router).
             const observed: string[] = [];
             routerService.registerBeforeRouteMiddleware((to) => {
                 observed.push(String(to.name));
