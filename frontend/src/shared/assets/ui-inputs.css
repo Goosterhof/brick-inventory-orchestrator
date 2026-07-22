@@ -34,9 +34,18 @@
     --ui-control-bg-disabled: var(--brick-surface-subtle);
     /* focus fills the control brand-yellow, invalid fills red-light — both are
        theme-invariant brand constants (like the danger hexes below), so they
-       are hard-coded rather than pointed at a --brick-* token that would flip. */
+       are hard-coded rather than pointed at a --brick-* token that would flip.
+       The yellow focus fill needs a text partner: --ui-control-text-focus
+       (ui-inputs 0.5.0, WR-0512) pins focused control text to ink so it stays
+       readable over the brand-yellow fill — theme-invariant because the fill
+       is. This retires the WR-0479 .ui-control:focus-visible class override
+       that lived below; the var also reaches MultiSelect's :focus-within
+       treatment, which the class override never covered. No invalid-state
+       text partner is set: BIO never carried a hand rule for it, and resting
+       text over the light-red invalid fill needs no override. */
     --ui-control-bg-focus: #f5c518;
     --ui-control-bg-invalid: #f8d0cf;
+    --ui-control-text-focus: #000;
     --ui-control-text: var(--brick-page-text);
     --ui-control-text-muted: var(--brick-muted-text);
     --ui-control-border-width: 3px;
@@ -48,7 +57,8 @@
     --ui-control-shadow: 4px 4px 0 0 var(--brick-shadow-color);
     --ui-control-shadow-hover: 6px 6px 0 0 var(--brick-shadow-color);
     /* focus keeps the grown drop-shadow AND stacks a 3px ink ring (brick's
-       outline-brick-ink). See the class-override note below for the yellow fill. */
+       outline-brick-ink). The yellow fill + ink text pair lives on
+       --ui-control-bg-focus / --ui-control-text-focus above. */
     --ui-focus-ring: 6px 6px 0 0 var(--brick-shadow-color), 0 0 0 3px #000;
 
     /* listbox menu — same hard border + block shadow as the control. */
@@ -73,19 +83,4 @@
     --ui-danger-shadow: 4px 4px 0 0 #c41a16;
     --ui-error-size: 0.875rem;
     --ui-error-weight: 700;
-}
-
-/*
- * --- Residual brick identity the 0.3.0 --ui-* contract still cannot express ---
- *
- * The focus + invalid background fills now come from the package via
- * --ui-control-bg-focus / --ui-control-bg-invalid (added in ui-inputs 0.3.0).
- * The ONE piece those two vars do not cover: the focus fill is brand-yellow, so
- * the control text must go black on focus — and there is no --ui-control-text-focus
- * hook yet. Kept minimal here (hard-coded ink, matching the file's #000 convention;
- * theme-invariant because the yellow fill is theme-invariant). Candidate future
- * package var for the ADR-0043 write-up — the General will follow up.
- */
-.ui-control:focus-visible {
-    color: #000;
 }
