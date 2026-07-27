@@ -159,7 +159,13 @@ final readonly class RebrickableService implements LegoDataServiceInterface
 
             $this->throwOnApiError($response, sprintf("Failed to fetch parts for set '%s'", $setNum));
 
-            /** @var array{results: list<array{part: array{part_num: string, name: string, part_cat_id: int|null, part_img_url: string|null}, color: array{id: int, name: string, rgb: string, is_trans: bool}, quantity: int, is_spare: bool, element_id: string|null}>, next: string|null} $data */
+            // Keys absent from PART_REQUIRED_FIELDS / PART_NESTED_REQUIRED_FIELDS are
+            // declared OPTIONAL (`?:`), not merely nullable: validatePartsResponse()
+            // deliberately does not demand them, so nothing proves Rebrickable sent
+            // them. Declaring them always-present made PHPStan 2.2.6 flag the `?? null`
+            // guards below as unnecessary (nullCoalesce.unnecessary) — removing those
+            // would turn an omitted optional field into an undefined-array-key error.
+            /** @var array{results: list<array{part: array{part_num: string, name: string, part_cat_id?: int|null, part_img_url?: string|null}, color: array{id: int, name: string, rgb: string, is_trans: bool}, quantity: int, is_spare: bool, element_id?: string|null}>, next: string|null} $data */
             $data = $response->json();
 
             $this->validatePartsResponse($data, $setNum);
@@ -231,7 +237,9 @@ final readonly class RebrickableService implements LegoDataServiceInterface
 
             $this->validateUserSetsResponse($data);
 
-            /** @var array{results: list<array{set: array{set_num: string, name: string, year: int, theme_id: int|null, num_parts: int, set_img_url: string|null}, quantity: int}>, next: string|null} $validatedData */
+            // theme_id / set_img_url are absent from SET_REQUIRED_FIELDS — optional, not
+            // just nullable. See the note on the parts shape above.
+            /** @var array{results: list<array{set: array{set_num: string, name: string, year: int, theme_id?: int|null, num_parts: int, set_img_url?: string|null}, quantity: int}>, next: string|null} $validatedData */
             $validatedData = $data;
 
             /** @var list<RebrickableUserSetData> $pageResults */
@@ -299,7 +307,9 @@ final readonly class RebrickableService implements LegoDataServiceInterface
 
             $this->validateThemesResponse($data);
 
-            /** @var array{results: list<array{id: int, parent_id: int|null, name: string}>, next: string|null} $validatedData */
+            // parent_id is absent from THEME_REQUIRED_FIELDS — optional, not just
+            // nullable. See the note on the parts shape above.
+            /** @var array{results: list<array{id: int, parent_id?: int|null, name: string}>, next: string|null} $validatedData */
             $validatedData = $data;
 
             /** @var list<LegoThemeData> $pageResults */
