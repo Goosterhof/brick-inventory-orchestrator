@@ -103,7 +103,7 @@
         "unocss": "^66.7.5",
         "vite": "^8.1.5",
         "vite-plugin-oxlint": "^2.1.2",
-        "vite-plugin-vue-devtools": "^8.1.5",
+        "vite-plugin-vue-devtools": "^8.2.1",
         "vitest": "^4.1.10",
         "vue-tsc": "^3.3.7"
     },
