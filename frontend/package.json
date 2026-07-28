@@ -94,7 +94,7 @@
         "knip": "^6.27.0",
         "lint-staged": "^17.1.0",
         "npm-run-all2": "^9.0.2",
-        "oxfmt": "0.59.0",
+        "oxfmt": "0.61.0",
         "oxlint": "^1.75.0",
         "oxlint-tsgolint": "^7.0.2001",
         "playwright": "^1.62.0",
