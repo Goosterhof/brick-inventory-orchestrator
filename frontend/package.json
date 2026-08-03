@@ -93,7 +93,7 @@
         "jiti": "^2.6.1",
         "knip": "^6.27.0",
         "lint-staged": "^17.1.0",
-        "npm-run-all2": "^9.0.2",
+        "npm-run-all2": "^9.0.3",
         "oxfmt": "0.61.0",
         "oxlint": "^1.75.0",
         "oxlint-tsgolint": "^7.0.2001",
