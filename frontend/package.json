@@ -105,7 +105,7 @@
         "vite-plugin-oxlint": "^2.1.2",
         "vite-plugin-vue-devtools": "^8.2.1",
         "vitest": "^4.1.10",
-        "vue-tsc": "^3.3.7"
+        "vue-tsc": "^3.3.9"
     },
     "overrides": {
         "@stryker-mutator/core": {
