@@ -3548,16 +3548,16 @@
         },
         {
             "name": "resend/resend-php",
-            "version": "v1.7.0",
+            "version": "v1.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/resend/resend-php.git",
-                "reference": "9516207c4f6ff210c64b193e31074e925dd6193a"
+                "reference": "6c48361293493263e9acea53b5d6b66d5173a608"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/resend/resend-php/zipball/9516207c4f6ff210c64b193e31074e925dd6193a",
-                "reference": "9516207c4f6ff210c64b193e31074e925dd6193a",
+                "url": "https://api.github.com/repos/resend/resend-php/zipball/6c48361293493263e9acea53b5d6b66d5173a608",
+                "reference": "6c48361293493263e9acea53b5d6b66d5173a608",
                 "shasum": ""
             },
             "require": {
@@ -3569,7 +3569,7 @@
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.13",
                 "mockery/mockery": "^1.6",
-                "pestphp/pest": "^1.0|^2.0|^3.0|^4.0"
+                "pestphp/pest": "^1.0|^2.0|^3.0|^4.0|^5.0"
             },
             "type": "library",
             "autoload": {
@@ -3601,9 +3601,9 @@
             ],
             "support": {
                 "issues": "https://github.com/resend/resend-php/issues",
-                "source": "https://github.com/resend/resend-php/tree/v1.7.0"
+                "source": "https://github.com/resend/resend-php/tree/v1.8.0"
             },
-            "time": "2026-07-27T21:14:02+00:00"
+            "time": "2026-08-11T19:07:17+00:00"
         },
         {
             "name": "script-development/kendo-error-tracker",
