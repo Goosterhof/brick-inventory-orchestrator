@@ -89,7 +89,7 @@
         "@vue/tsconfig": "^0.9.1",
         "axios-mock-adapter": "^2.1.0",
         "cross-env": "^10.1.0",
-        "happy-dom": "^20.11.0",
+        "happy-dom": "^20.11.2",
         "jiti": "^2.6.1",
         "knip": "^6.32.0",
         "lint-staged": "^17.1.0",
