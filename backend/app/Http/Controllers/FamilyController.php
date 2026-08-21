@@ -26,6 +26,10 @@ class FamilyController extends Controller
         #[CurrentUser]
         User $user,
     ): JsonResponse {
+        // Payload is array<int, FamilyMemberResourceData> — the ADR-0009 collection shape
+        // (ResourceData::collection() returns array<int, static> by design). The rule's
+        // isArray() gate cannot see element types, so a ResourceData list reads as a bare array.
+        // @phpstan-ignore forbidInlineArrayJsonResponseInControllers.arrayPayload
         return new JsonResponse(FamilyMemberResourceData::fromFamily($user->family));
     }
 
@@ -95,6 +99,10 @@ class FamilyController extends Controller
     ): JsonResponse {
         $removeFamilyMemberAction->execute($currentUser->family, $user, $currentUser);
 
+        // Single-key ack, not a domain resource — the noise class the rule's own docblock
+        // tells consumers to separate from the resource-shape class. The sanctioned fix is a
+        // shared MessageResponse subclass; BIO has none, and inventing one is out of WR-0533 scope.
+        // @phpstan-ignore forbidInlineArrayJsonResponseInControllers.arrayPayload
         return new JsonResponse(['message' => 'Member removed from family'], 200);
     }
 }
