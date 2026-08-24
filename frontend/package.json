@@ -82,7 +82,7 @@
         "@typescript/native-preview": "^7.0.0-dev.20260707.2",
         "@unocss/reset": "^66.7.5",
         "@vitejs/plugin-vue": "^6.0.8",
-        "@vitest/browser": "^4.1.7",
+        "@vitest/browser": "^4.1.11",
         "@vitest/browser-playwright": "^4.1.8",
         "@vitest/coverage-istanbul": "^4.1.9",
         "@vue/test-utils": "^2.4.6",
