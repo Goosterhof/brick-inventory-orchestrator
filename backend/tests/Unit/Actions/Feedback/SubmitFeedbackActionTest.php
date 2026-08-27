@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 use App\Actions\Feedback\SubmitFeedbackAction;
 use App\DataTransferObjects\Input\Feedback\SubmitFeedbackData;
+use App\DataTransferObjects\Result\Feedback\SubmitFeedbackResultData;
 use Illuminate\Config\Repository as ConfigRepository;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Http\Client\Request;
@@ -55,8 +56,10 @@ describe('SubmitFeedbackAction', function(): void {
         // act
         $result = $action->execute($submitFeedbackData, 'Ada');
 
-        // assert
-        expect($result)->toBe($reportBody);
+        // assert — the receipt pins only the report id; the rest of the
+        // Kendo 201 body is a third-party shape the app does not re-export
+        expect($result)->toBeInstanceOf(SubmitFeedbackResultData::class)
+            ->and($result->reportId)->toBe(42);
 
         $httpFactory->assertSent(function(Request $request): bool {
             expect($request->url())->toBe('https://kendo.test/api/projects/3/reports')
@@ -96,7 +99,7 @@ describe('SubmitFeedbackAction', function(): void {
         $result = $action->execute($submitFeedbackData, 'Grace');
 
         // assert
-        expect($result)->toBe(['id' => 7]);
+        expect($result->reportId)->toBe(7);
 
         $httpFactory->assertSent(function(Request $request): bool {
             $names = collect($request->data())->pluck('name');
@@ -121,11 +124,32 @@ describe('SubmitFeedbackAction', function(): void {
         $action = makeSubmitFeedbackAction($httpFactory);
 
         // act & assert — no try-catch in the Action; the failure surfaces to the caller
-        expect(fn(): array => $action->execute($submitFeedbackData, 'Ada'))
+        expect(fn(): SubmitFeedbackResultData => $action->execute($submitFeedbackData, 'Ada'))
             ->toThrow(ReportSubmissionException::class);
     });
 
-    it('should normalize a swallowed failure to an empty report body', function(): void {
+    it('should coerce a numeric-string report id to an int', function(): void {
+        // arrange — the id's PHP type is owned by the Kendo API's JSON encoder,
+        // not by us; a quoted id must still arrive as an int on the receipt
+        $httpFactory = new HttpFactory;
+        $httpFactory->fake(['kendo.test/*' => HttpFactory::response(['id' => '42'], 201)]);
+
+        $submitFeedbackData = new SubmitFeedbackData(
+            title: 'Broken drawer',
+            description: 'It broke',
+            screenshots: [],
+        );
+
+        $action = makeSubmitFeedbackAction($httpFactory);
+
+        // act
+        $result = $action->execute($submitFeedbackData, 'Ada');
+
+        // assert
+        expect($result->reportId)->toBe(42);
+    });
+
+    it('should normalize a swallowed failure to a receipt with a null report id', function(): void {
         // arrange — swallow mode is the only path where submit() returns null
         $httpFactory = new HttpFactory;
         $httpFactory->fake(['kendo.test/*' => HttpFactory::response(['message' => 'nope'], 500)]);
@@ -142,6 +166,6 @@ describe('SubmitFeedbackAction', function(): void {
         $result = $action->execute($submitFeedbackData, 'Ada');
 
         // assert
-        expect($result)->toBe([]);
+        expect($result->reportId)->toBeNull();
     });
 });
