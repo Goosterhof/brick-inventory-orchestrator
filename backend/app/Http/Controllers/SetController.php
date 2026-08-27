@@ -9,6 +9,8 @@ use App\Actions\GetSetPartsAction;
 use App\Actions\GetSetStorageMapAction;
 use App\DataTransferObjects\Result\Set\SetPartsResultData;
 use App\Enums\SetSyncStatus;
+use App\Http\Resources\SetPartsSyncFailedResourceData;
+use App\Http\Resources\SetPartsSyncPendingResourceData;
 use App\Http\Resources\SetStorageMapResourceData;
 use App\Http\Resources\SetSummaryResourceData;
 use App\Http\Resources\SetWithPartsResourceData;
@@ -68,16 +70,8 @@ class SetController extends Controller
     {
         return match ($setPartsResultData->status) {
             SetSyncStatus::Completed => $onCompleted(),
-            SetSyncStatus::Failed => response()->json([
-                'set_num' => $setPartsResultData->set->set_num,
-                'status' => $setPartsResultData->status->value,
-                'reason' => $setPartsResultData->failedReason,
-            ], 502),
-            SetSyncStatus::Pending, SetSyncStatus::InProgress => response()->json([
-                'set_num' => $setPartsResultData->set->set_num,
-                'status' => $setPartsResultData->status->value,
-                'message' => 'Set parts are syncing — please retry shortly.',
-            ], 202),
+            SetSyncStatus::Failed => SetPartsSyncFailedResourceData::from($setPartsResultData)->toResponseWithStatus(502),
+            SetSyncStatus::Pending, SetSyncStatus::InProgress => SetPartsSyncPendingResourceData::from($setPartsResultData)->toResponseWithStatus(202),
         };
     }
 }

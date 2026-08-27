@@ -5,7 +5,10 @@ declare(strict_types = 1);
 namespace App\Actions\Feedback;
 
 use App\DataTransferObjects\Input\Feedback\SubmitFeedbackData;
+use App\DataTransferObjects\Result\Feedback\SubmitFeedbackResultData;
 use ScriptDevelopment\KendoReportTool\KendoReports;
+
+use function is_numeric;
 
 final readonly class SubmitFeedbackAction
 {
@@ -24,17 +27,21 @@ final readonly class SubmitFeedbackAction
      * A failed submission throws ReportSubmissionException, which bubbles
      * to the global handler (502). The null branch only exists for the
      * package's swallow mode (report-tool.swallow=true), which this app
-     * does not enable — it is normalized to an empty body.
-     *
-     * @return array<string, mixed> the created report body (id + fields)
+     * does not enable — it yields a receipt with a null reportId.
      */
-    public function execute(SubmitFeedbackData $submitFeedbackData, string $authorName): array
+    public function execute(SubmitFeedbackData $submitFeedbackData, string $authorName): SubmitFeedbackResultData
     {
-        return $this->kendoReports->submit(
+        $reportBody = $this->kendoReports->submit(
             title: $submitFeedbackData->title,
             description: $submitFeedbackData->description,
             authorName: $authorName,
             files: $submitFeedbackData->screenshots,
         ) ?? [];
+
+        $reportId = $reportBody['id'] ?? null;
+
+        return new SubmitFeedbackResultData(
+            reportId: is_numeric($reportId) ? (int) $reportId : null,
+        );
     }
 }

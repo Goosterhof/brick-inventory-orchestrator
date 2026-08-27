@@ -25,7 +25,7 @@ describe('FeedbackController', function(): void {
     });
 
     describe('store', function(): void {
-        it('should relay feedback with screenshots to kendo and return the created report', function(): void {
+        it('should relay feedback with screenshots to kendo and return the created report id', function(): void {
             // arrange
             $user = User::factory()->create(['name' => 'Ada Bricklayer']);
 
@@ -49,10 +49,10 @@ describe('FeedbackController', function(): void {
             ]);
 
             // assert
+            // The 201 pins the report id only — the echoed Kendo fields are a
+            // third-party shape and are deliberately not re-exported (ADR-0020).
             $response->assertStatus(201)
-                ->assertJsonPath('id', 42)
-                ->assertJsonPath('title', 'Broken drawer')
-                ->assertJsonPath('author_name', 'Ada Bricklayer');
+                ->assertExactJson(['id' => 42]);
 
             Http::assertSent(function(Request $request): bool {
                 expect($request->url())->toBe('https://kendo.test/api/projects/3/reports')

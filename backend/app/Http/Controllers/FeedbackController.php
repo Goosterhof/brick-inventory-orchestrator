@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Feedback\SubmitFeedbackAction;
 use App\Http\Requests\Feedback\SubmitFeedbackRequest;
+use App\Http\Resources\SubmitFeedbackResourceData;
 use App\Models\User;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\JsonResponse;
@@ -18,8 +19,8 @@ class FeedbackController extends Controller
         User $user,
         SubmitFeedbackAction $submitFeedbackAction,
     ): JsonResponse {
-        $report = $submitFeedbackAction->execute($submitFeedbackRequest->toDto(), $user->name);
+        $submitFeedbackResultData = $submitFeedbackAction->execute($submitFeedbackRequest->toDto(), $user->name);
 
-        return new JsonResponse($report, 201);
+        return SubmitFeedbackResourceData::from($submitFeedbackResultData)->toResponseWithStatus(201);
     }
 }
