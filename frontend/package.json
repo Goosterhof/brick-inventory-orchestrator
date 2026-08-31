@@ -100,7 +100,7 @@
         "playwright": "^1.62.1",
         "size-limit": "^13.0.3",
         "typescript": "~6.0.3",
-        "unocss": "^66.8.0",
+        "unocss": "^66.8.1",
         "vite": "^8.2.2",
         "vite-plugin-oxlint": "^2.1.2",
         "vite-plugin-vue-devtools": "^8.2.1",
