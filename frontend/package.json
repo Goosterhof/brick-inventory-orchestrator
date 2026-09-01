@@ -80,7 +80,7 @@
         "@types/node": "^26.4.0",
         "@types/three": "^0.185.4",
         "@typescript/native-preview": "^7.0.0-dev.20260707.2",
-        "@unocss/reset": "^66.8.0",
+        "@unocss/reset": "^66.8.1",
         "@vitejs/plugin-vue": "^6.0.8",
         "@vitest/browser": "^4.1.11",
         "@vitest/browser-playwright": "^4.1.8",
