@@ -121,3 +121,45 @@ parameters:
         -
             identifier: booleanAnd.leftNotBoolean
             path: tests/*
+
+        # forbidAdHocDateParsing.stringParsedOutsideBoundary (WR-1316): tracked
+        # conversion debt — a date/time string decoded outside
+        # dateParsingNamespaces (ADR-0020 Amd 1 / ADR-0031). Entries carry exact
+        # counts so reportUnmatchedIgnoredErrors turns a new site into a CI
+        # failure instead of silent absorption.
+        -
+            identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
+            count: 1
+            path: app/Http/Requests/FamilySet/StoreFamilySetRequest.php
+        -
+            identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
+            count: 1
+            path: app/Http/Requests/FamilySet/UpdateFamilySetRequest.php
+        -
+            identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
+            count: 1
+            path: tests/Unit/Actions/FamilySet/CreateFamilySetActionTest.php
+        -
+            identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
+            count: 4
+            path: tests/Unit/Actions/FamilySet/UpdateFamilySetActionTest.php
+        -
+            identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
+            count: 1
+            path: tests/Unit/Resources/ComputedResourceDataTest.php
+        -
+            identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
+            count: 1
+            path: tests/Unit/Resources/FamilySetResourceDataTest.php
+        -
+            identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
+            count: 4
+            path: tests/Unit/Resources/InviteCodeResourceDataTest.php
+        -
+            identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
+            count: 2
+            path: tests/Unit/Resources/ProfileResourceDataTest.php
+        -
+            identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
+            count: 1
+            path: tests/Unit/Resources/ResourceDataTest.php

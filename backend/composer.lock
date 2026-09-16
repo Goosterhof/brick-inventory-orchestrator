@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e1462d9f01606165df98107e3986b7d7",
+    "content-hash": "879d150b80152ada6b80f73688e3eacc",
     "packages": [
         {
             "name": "brick/math",
@@ -9660,25 +9660,25 @@
         },
         {
             "name": "script-development/phpstan-warroom-rules",
-            "version": "v0.8.0",
+            "version": "v0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/script-development/phpstan-warroom-rules.git",
-                "reference": "30c514589b581cee1f46c497038eeebc69fa9d2d"
+                "reference": "d1613405b092bbe579c4ae3bbdff79408e875730"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/script-development/phpstan-warroom-rules/zipball/30c514589b581cee1f46c497038eeebc69fa9d2d",
-                "reference": "30c514589b581cee1f46c497038eeebc69fa9d2d",
+                "url": "https://api.github.com/repos/script-development/phpstan-warroom-rules/zipball/d1613405b092bbe579c4ae3bbdff79408e875730",
+                "reference": "d1613405b092bbe579c4ae3bbdff79408e875730",
                 "shasum": ""
             },
             "require": {
-                "illuminate/cache": "^11.0 || ^12.0 || ^13.0",
-                "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
-                "illuminate/database": "^11.0 || ^12.0 || ^13.0",
-                "illuminate/filesystem": "^11.0 || ^12.0 || ^13.0",
-                "illuminate/log": "^11.0 || ^12.0 || ^13.0",
-                "illuminate/mail": "^11.0 || ^12.0 || ^13.0",
+                "illuminate/cache": "^12.0 || ^13.0",
+                "illuminate/contracts": "^12.0 || ^13.0",
+                "illuminate/database": "^12.0 || ^13.0",
+                "illuminate/filesystem": "^12.0 || ^13.0",
+                "illuminate/log": "^12.0 || ^13.0",
+                "illuminate/mail": "^12.0 || ^13.0",
                 "nikic/php-parser": "^5.0",
                 "php": "^8.4",
                 "phpstan/phpstan": "^2.0",
@@ -9715,9 +9715,9 @@
             ],
             "support": {
                 "issues": "https://github.com/script-development/phpstan-warroom-rules/issues",
-                "source": "https://github.com/script-development/phpstan-warroom-rules/tree/v0.8.0"
+                "source": "https://github.com/script-development/phpstan-warroom-rules/tree/v0.9.0"
             },
-            "time": "2026-07-23T09:23:37+00:00"
+            "time": "2026-09-09T14:00:00+00:00"
         },
         {
             "name": "sebastian/cli-parser",
