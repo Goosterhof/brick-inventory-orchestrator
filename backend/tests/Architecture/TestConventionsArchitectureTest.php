@@ -5,7 +5,7 @@ declare(strict_types = 1);
 it('should use describe blocks in test files', function(): void {
     foreach (getTestFiles() as $file) {
         $content = file_get_contents($file);
-        $relativePath = str_replace(\dirname(__DIR__) . '/', '', $file);
+        $relativePath = str_replace(__DIR__ . '/../', '', $file);
 
         expect(str_contains($content, 'describe('))
             ->toBeTrue(\sprintf('Test file %s should use describe() blocks', $relativePath));
@@ -15,7 +15,7 @@ it('should use describe blocks in test files', function(): void {
 it('should use it should syntax in test files', function(): void {
     foreach (getTestFiles() as $file) {
         $content = file_get_contents($file);
-        $relativePath = str_replace(\dirname(__DIR__) . '/', '', $file);
+        $relativePath = str_replace(__DIR__ . '/../', '', $file);
 
         // Check that test cases use it('should syntax
         if (preg_match_all('/\bit\s*\(\s*[\'"]/', $content)) {
@@ -26,7 +26,7 @@ it('should use it should syntax in test files', function(): void {
 });
 
 it('should use RefreshDatabase in feature tests', function(): void {
-    $featureDir = \dirname(__DIR__) . '/Feature';
+    $featureDir = __DIR__ . '/../Feature';
     if (!is_dir($featureDir)) {
         return;
     }
@@ -45,7 +45,7 @@ it('should use RefreshDatabase in feature tests', function(): void {
         }
 
         $content = file_get_contents($file->getPathname());
-        $relativePath = str_replace(\dirname(__DIR__) . '/', '', $file->getPathname());
+        $relativePath = str_replace(__DIR__ . '/../', '', $file->getPathname());
 
         expect(str_contains($content, 'RefreshDatabase'))
             ->toBeTrue(\sprintf('Feature test %s should use RefreshDatabase trait', $relativePath));
@@ -53,7 +53,7 @@ it('should use RefreshDatabase in feature tests', function(): void {
 });
 
 it('should not use RefreshDatabase in unit tests', function(): void {
-    $unitDir = \dirname(__DIR__) . '/Unit';
+    $unitDir = __DIR__ . '/../Unit';
     if (!is_dir($unitDir)) {
         return;
     }
@@ -72,7 +72,7 @@ it('should not use RefreshDatabase in unit tests', function(): void {
         }
 
         $content = file_get_contents($file->getPathname());
-        $relativePath = str_replace(\dirname(__DIR__) . '/', '', $file->getPathname());
+        $relativePath = str_replace(__DIR__ . '/../', '', $file->getPathname());
 
         expect(str_contains($content, 'RefreshDatabase'))
             ->toBeFalse(\sprintf('Unit test %s should NOT use RefreshDatabase - use mocks instead', $relativePath));
@@ -82,7 +82,7 @@ it('should not use RefreshDatabase in unit tests', function(): void {
 it('should not use placeholder assertions in tests', function(): void {
     foreach (getTestFiles() as $file) {
         $content = file_get_contents($file);
-        $relativePath = str_replace(\dirname(__DIR__) . '/', '', $file);
+        $relativePath = str_replace(__DIR__ . '/../', '', $file);
 
         // Check for expect(true)->toBeTrue() pattern
         expect(preg_match('/expect\s*\(\s*true\s*\)\s*->\s*toBeTrue\s*\(/', $content))
@@ -91,7 +91,7 @@ it('should not use placeholder assertions in tests', function(): void {
 });
 
 it('should use shouldReceive instead of shouldHaveReceived in unit tests', function(): void {
-    $unitDir = \dirname(__DIR__) . '/Unit';
+    $unitDir = __DIR__ . '/../Unit';
     if (!is_dir($unitDir)) {
         return;
     }
@@ -110,7 +110,7 @@ it('should use shouldReceive instead of shouldHaveReceived in unit tests', funct
         }
 
         $content = file_get_contents($file->getPathname());
-        $relativePath = str_replace(\dirname(__DIR__) . '/', '', $file->getPathname());
+        $relativePath = str_replace(__DIR__ . '/../', '', $file->getPathname());
 
         // Check for shouldHaveReceived or shouldNotHaveReceived patterns
         expect(preg_match('/->should(Not)?HaveReceived\s*\(/', $content))
@@ -121,7 +121,7 @@ it('should use shouldReceive instead of shouldHaveReceived in unit tests', funct
 it('should declare covers() in all test files', function(): void {
     foreach (getTestFiles() as $file) {
         $content = file_get_contents($file);
-        $relativePath = str_replace(\dirname(__DIR__) . '/', '', $file);
+        $relativePath = str_replace(__DIR__ . '/../', '', $file);
 
         expect(preg_match('/\bcovers\s*\(/', $content))
             ->toBe(1, \sprintf('Test file %s should declare covers() to bind it to the class(es) it tests', $relativePath));
@@ -149,8 +149,8 @@ it('should pin the transaction boundary with counted expectations in transaction
         }
 
         $relativeAction = str_replace($actionsDir . '/', '', $file->getPathname());
-        $testPath = \dirname(__DIR__) . '/Unit/Actions/' . mb_substr($relativeAction, 0, -4) . 'Test.php';
-        $relativeTest = str_replace(\dirname(__DIR__) . '/', 'tests/', $testPath);
+        $testPath = __DIR__ . '/../Unit/Actions/' . mb_substr($relativeAction, 0, -4) . 'Test.php';
+        $relativeTest = str_replace(__DIR__ . '/../', 'tests/', $testPath);
 
         expect(file_exists($testPath))
             ->toBeTrue(\sprintf('Transactional Action app/Actions/%s must have a unit test at %s', $relativeAction, $relativeTest));
@@ -172,7 +172,7 @@ it('should pin the transaction boundary with counted expectations in transaction
 });
 
 it('should not use makePartial in unit tests', function(): void {
-    $unitDir = \dirname(__DIR__) . '/Unit';
+    $unitDir = __DIR__ . '/../Unit';
     if (!is_dir($unitDir)) {
         return;
     }
@@ -191,7 +191,7 @@ it('should not use makePartial in unit tests', function(): void {
         }
 
         $content = file_get_contents($file->getPathname());
-        $relativePath = str_replace(\dirname(__DIR__) . '/', '', $file->getPathname());
+        $relativePath = str_replace(__DIR__ . '/../', '', $file->getPathname());
 
         // Check for makePartial() which instantiates real Eloquent models with boot logic
         expect(preg_match('/->makePartial\s*\(/', $content))

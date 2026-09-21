@@ -96,7 +96,7 @@ function getClassesInDirectory(string $directory, string $namespace): array
  */
 function getTestFiles(): array
 {
-    $testsDir = \dirname(__DIR__) . '/tests';
+    $testsDir = __DIR__ . '/../tests';
     $testFiles = [];
 
     foreach (['Feature', 'Unit'] as $dir) {
@@ -126,7 +126,7 @@ function getTestFiles(): array
  */
 function getMigrationFiles(): array
 {
-    $migrationsDir = \dirname(__DIR__) . '/database/migrations';
+    $migrationsDir = __DIR__ . '/../database/migrations';
 
     return glob($migrationsDir . '/*.php') ?: [];
 }
