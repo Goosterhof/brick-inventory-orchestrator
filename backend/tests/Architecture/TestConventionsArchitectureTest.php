@@ -5,7 +5,7 @@ declare(strict_types = 1);
 it('should use describe blocks in test files', function(): void {
     foreach (getTestFiles() as $file) {
         $content = file_get_contents($file);
-        $relativePath = str_replace(__DIR__ . '/../', '', $file);
+        $relativePath = relativeTestPath($file);
 
         expect(str_contains($content, 'describe('))
             ->toBeTrue(\sprintf('Test file %s should use describe() blocks', $relativePath));
@@ -15,7 +15,7 @@ it('should use describe blocks in test files', function(): void {
 it('should use it should syntax in test files', function(): void {
     foreach (getTestFiles() as $file) {
         $content = file_get_contents($file);
-        $relativePath = str_replace(__DIR__ . '/../', '', $file);
+        $relativePath = relativeTestPath($file);
 
         // Check that test cases use it('should syntax
         if (preg_match_all('/\bit\s*\(\s*[\'"]/', $content)) {
@@ -82,7 +82,7 @@ it('should not use RefreshDatabase in unit tests', function(): void {
 it('should not use placeholder assertions in tests', function(): void {
     foreach (getTestFiles() as $file) {
         $content = file_get_contents($file);
-        $relativePath = str_replace(__DIR__ . '/../', '', $file);
+        $relativePath = relativeTestPath($file);
 
         // Check for expect(true)->toBeTrue() pattern
         expect(preg_match('/expect\s*\(\s*true\s*\)\s*->\s*toBeTrue\s*\(/', $content))
@@ -121,7 +121,7 @@ it('should use shouldReceive instead of shouldHaveReceived in unit tests', funct
 it('should declare covers() in all test files', function(): void {
     foreach (getTestFiles() as $file) {
         $content = file_get_contents($file);
-        $relativePath = str_replace(__DIR__ . '/../', '', $file);
+        $relativePath = relativeTestPath($file);
 
         expect(preg_match('/\bcovers\s*\(/', $content))
             ->toBe(1, \sprintf('Test file %s should declare covers() to bind it to the class(es) it tests', $relativePath));
