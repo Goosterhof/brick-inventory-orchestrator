@@ -64,9 +64,9 @@ class InviteCode extends Model implements BelongsToFamilyInterface
     /**
      * Scope to active (non-revoked, non-expired) invite codes.
      *
-     * @param Builder<InviteCode> $builder
+     * @param Builder<static> $builder
      *
-     * @return Builder<InviteCode>
+     * @return Builder<static>
      */
     #[Scope]
     protected function active(Builder $builder): Builder

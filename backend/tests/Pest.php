@@ -96,7 +96,7 @@ function getClassesInDirectory(string $directory, string $namespace): array
  */
 function getTestFiles(): array
 {
-    $testsDir = \dirname(__DIR__) . '/tests';
+    $testsDir = __DIR__ . '/../tests';
     $testFiles = [];
 
     foreach (['Feature', 'Unit'] as $dir) {
@@ -120,13 +120,23 @@ function getTestFiles(): array
 }
 
 /**
+ * A test file's path relative to `tests/`, for assertion messages. Paths from
+ * getTestFiles() are built from THIS file's __DIR__, so the strip has to be
+ * anchored here, not in the calling test file (WR-1622).
+ */
+function relativeTestPath(string $file): string
+{
+    return str_replace(realpath(__DIR__) . '/', '', (string) realpath($file));
+}
+
+/**
  * Get all migration files.
  *
  * @return list<string>
  */
 function getMigrationFiles(): array
 {
-    $migrationsDir = \dirname(__DIR__) . '/database/migrations';
+    $migrationsDir = __DIR__ . '/../database/migrations';
 
     return glob($migrationsDir . '/*.php') ?: [];
 }
