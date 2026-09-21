@@ -1,6 +1,5 @@
 import type {SerializedError} from 'vitest';
-import type {TestModule, Vitest} from 'vitest/node';
-import type {Reporter, TestRunEndReason} from 'vitest/reporters';
+import type {Reporter, TestModule, TestRunEndReason, Vitest} from 'vitest/node';
 
 /**
  * A Vitest reporter that enforces collect-duration limits per test file using
