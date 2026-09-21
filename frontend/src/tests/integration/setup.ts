@@ -19,6 +19,20 @@ if (typeof HTMLDialogElement !== 'undefined') {
     };
 }
 
+// happy-dom 20 ships no Popover API. ui-inputs 0.13 promotes the select/combobox menu
+// anchor to the top layer in place (popover="manual") and calls showPopover() unconditionally
+// — the API is Baseline 2024, so the package carries no capability branch. Mirrors the
+// package's own tests/popover-shim.ts; top-layer painting is layout and is not emulated.
+if (typeof HTMLElement !== 'undefined') {
+    const proto = HTMLElement.prototype as unknown as Record<string, unknown>;
+    proto.showPopover ??= function (this: HTMLElement) {
+        this.setAttribute('data-shim-popover-open', '');
+    };
+    proto.hidePopover ??= function (this: HTMLElement) {
+        this.removeAttribute('data-shim-popover-open');
+    };
+}
+
 // happy-dom does not define HTMLMediaElement readyState constants.
 // CameraCapture and BarcodeScanner check video.readyState.
 if (typeof HTMLMediaElement !== 'undefined' && (HTMLMediaElement.HAVE_METADATA as unknown) === undefined) {
