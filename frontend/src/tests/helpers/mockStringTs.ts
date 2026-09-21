@@ -1,4 +1,7 @@
-type CaseConversionMock = {deepCamelKeys: <T>(obj: T) => T; deepSnakeKeys: <T>(obj: T) => T};
+interface CaseConversionMock {
+    deepCamelKeys: <T>(obj: T) => T;
+    deepSnakeKeys: <T>(obj: T) => T;
+}
 
 const createIdentityMock = (): CaseConversionMock => ({
     deepCamelKeys: <T>(obj: T): T => obj,

@@ -24,12 +24,12 @@ vi.mock('@/apps/showcase/components/SectionHeading.vue', () => ({
     },
 }));
 
-async function advanceAllStages(stageCount: number): Promise<void> {
+const advanceAllStages = async (stageCount: number): Promise<void> => {
     for (let i = 0; i < stageCount; i++) {
         await vi.advanceTimersByTimeAsync(600);
         await nextTick();
     }
-}
+};
 
 describe('MiddlewarePipelineVisualizer', () => {
     const stubs = {SectionHeading: false as const, PrimaryButton: false as const, DangerButton: false as const};

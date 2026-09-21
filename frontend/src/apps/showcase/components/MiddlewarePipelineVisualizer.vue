@@ -59,73 +59,73 @@ const validationErrorBody = {
     errors: {display_name: ['The display name field is required.'], part_count: ['The part count must be at least 1.']},
 };
 
-function buildRequestStages(scenario: Scenario): StageSnapshot[] {
-    return [
-        {
-            label: '1. Auth Token Injection',
-            description: 'Request middleware injects the auth token into headers.',
-            before: json({headers: {Accept: 'application/json'}, data: sampleRequestBody}),
-            after: json({
-                headers: {Accept: 'application/json', Authorization: 'Bearer eyJhbGciOi...'},
-                data: sampleRequestBody,
-            }),
-            status: 'pending',
-        },
-        {
-            label: '2. Loading State Start',
-            description: 'Loading middleware increments the active request counter.',
-            before: json({isLoading: false, activeCount: 0}),
-            after: json({isLoading: true, activeCount: 1}),
-            status: 'pending',
-        },
-        {
-            label: '3. Request Transform',
-            description: 'camelCase keys are converted to snake_case before sending to the API.',
-            before: json(sampleRequestBody),
-            after: json(sampleSnakeBody),
-            status: 'pending',
-        },
-        {
-            label: '4. Network Call',
-            description: buildNetworkDescription(scenario),
-            before: json({method: 'POST', url: '/api/minifigs', body: sampleSnakeBody}),
-            after: buildNetworkAfter(scenario),
-            status: 'pending',
-        },
-    ];
-}
-
-function buildResponseStages(scenario: Scenario): StageSnapshot[] {
-    const loadingStop: StageSnapshot = {
-        label: scenario === 'success' ? '6. Loading State Stop' : '5. Loading State Stop',
-        description:
-            scenario === 'success'
-                ? 'Loading middleware decrements the active request counter.'
-                : 'Loading middleware decrements on error responses too.',
-        before: json({isLoading: true, activeCount: 1}),
-        after: json({isLoading: false, activeCount: 0}),
-        status: 'pending',
-    };
-
-    if (scenario === 'success') {
-        return [
-            {
-                label: '5. Response Transform',
-                description: 'snake_case keys from API are converted to camelCase for the app.',
-                before: json(successResponseSnake),
-                after: json(successResponseCamel),
-                status: 'pending',
-            },
-            loadingStop,
-        ];
-    }
-
-    return [loadingStop, buildErrorStage(scenario)];
-}
-
 type ErrorScenario = 'auth-error' | 'validation-error' | 'network-error';
 
-function buildErrorStage(scenario: ErrorScenario): StageSnapshot {
+const json = (data: unknown): string => JSON.stringify(data, null, 2);
+
+const sleep = (ms: number): Promise<void> =>
+    new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+
+const buildNetworkDescription = (scenario: Scenario): string => {
+    const descriptions: Record<Scenario, string> = {
+        success: 'The request reaches the server and returns 200 with the created resource.',
+        'auth-error': 'The server rejects the request with 401 Unauthenticated.',
+        'validation-error': 'The server rejects the request with 422 and field-level validation errors.',
+        'network-error': 'The request fails to reach the server — connection refused or timeout.',
+    };
+    return descriptions[scenario];
+};
+
+const buildNetworkAfter = (scenario: Scenario): string => {
+    if (scenario === 'success') {
+        return json({status: 200, data: successResponseSnake});
+    }
+    if (scenario === 'auth-error') {
+        return json({status: 401, data: {message: 'Unauthenticated.'}});
+    }
+    if (scenario === 'validation-error') {
+        return json({status: 422, data: validationErrorBody});
+    }
+    return json({error: 'ERR_NETWORK', message: 'Network Error', response: null});
+};
+
+const buildRequestStages = (scenario: Scenario): StageSnapshot[] => [
+    {
+        label: '1. Auth Token Injection',
+        description: 'Request middleware injects the auth token into headers.',
+        before: json({headers: {Accept: 'application/json'}, data: sampleRequestBody}),
+        after: json({
+            headers: {Accept: 'application/json', Authorization: 'Bearer eyJhbGciOi...'},
+            data: sampleRequestBody,
+        }),
+        status: 'pending',
+    },
+    {
+        label: '2. Loading State Start',
+        description: 'Loading middleware increments the active request counter.',
+        before: json({isLoading: false, activeCount: 0}),
+        after: json({isLoading: true, activeCount: 1}),
+        status: 'pending',
+    },
+    {
+        label: '3. Request Transform',
+        description: 'camelCase keys are converted to snake_case before sending to the API.',
+        before: json(sampleRequestBody),
+        after: json(sampleSnakeBody),
+        status: 'pending',
+    },
+    {
+        label: '4. Network Call',
+        description: buildNetworkDescription(scenario),
+        before: json({method: 'POST', url: '/api/minifigs', body: sampleSnakeBody}),
+        after: buildNetworkAfter(scenario),
+        status: 'pending',
+    },
+];
+
+const buildErrorStage = (scenario: ErrorScenario): StageSnapshot => {
     const errorStages: Record<ErrorScenario, StageSnapshot> = {
         'auth-error': {
             label: '6. Error Handling (401)',
@@ -155,46 +155,42 @@ function buildErrorStage(scenario: ErrorScenario): StageSnapshot {
         },
     };
     return errorStages[scenario];
-}
+};
 
-function buildStagesForScenario(scenario: Scenario): StageSnapshot[] {
-    return [...buildRequestStages(scenario), ...buildResponseStages(scenario)];
-}
-
-function buildNetworkDescription(scenario: Scenario): string {
-    const descriptions: Record<Scenario, string> = {
-        success: 'The request reaches the server and returns 200 with the created resource.',
-        'auth-error': 'The server rejects the request with 401 Unauthenticated.',
-        'validation-error': 'The server rejects the request with 422 and field-level validation errors.',
-        'network-error': 'The request fails to reach the server — connection refused or timeout.',
+const buildResponseStages = (scenario: Scenario): StageSnapshot[] => {
+    const loadingStop: StageSnapshot = {
+        label: scenario === 'success' ? '6. Loading State Stop' : '5. Loading State Stop',
+        description:
+            scenario === 'success'
+                ? 'Loading middleware decrements the active request counter.'
+                : 'Loading middleware decrements on error responses too.',
+        before: json({isLoading: true, activeCount: 1}),
+        after: json({isLoading: false, activeCount: 0}),
+        status: 'pending',
     };
-    return descriptions[scenario];
-}
 
-function buildNetworkAfter(scenario: Scenario): string {
     if (scenario === 'success') {
-        return json({status: 200, data: successResponseSnake});
+        return [
+            {
+                label: '5. Response Transform',
+                description: 'snake_case keys from API are converted to camelCase for the app.',
+                before: json(successResponseSnake),
+                after: json(successResponseCamel),
+                status: 'pending',
+            },
+            loadingStop,
+        ];
     }
-    if (scenario === 'auth-error') {
-        return json({status: 401, data: {message: 'Unauthenticated.'}});
-    }
-    if (scenario === 'validation-error') {
-        return json({status: 422, data: validationErrorBody});
-    }
-    return json({error: 'ERR_NETWORK', message: 'Network Error', response: null});
-}
 
-function json(data: unknown): string {
-    return JSON.stringify(data, null, 2);
-}
+    return [loadingStop, buildErrorStage(scenario)];
+};
 
-function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
-}
+const buildStagesForScenario = (scenario: Scenario): StageSnapshot[] => [
+    ...buildRequestStages(scenario),
+    ...buildResponseStages(scenario),
+];
 
-async function runScenario(scenario: Scenario): Promise<void> {
+const runScenario = async (scenario: Scenario): Promise<void> => {
     activeScenario.value = scenario;
     stages.value = buildStagesForScenario(scenario);
     currentStageIndex.value = -1;
@@ -210,14 +206,14 @@ async function runScenario(scenario: Scenario): Promise<void> {
     }
 
     isRunning.value = false;
-}
+};
 
-function resetPipeline(): void {
+const resetPipeline = (): void => {
     activeScenario.value = null;
     currentStageIndex.value = -1;
     isRunning.value = false;
     stages.value = [];
-}
+};
 
 const stageColor = (status: StageSnapshot['status']): string => {
     const colors: Record<StageSnapshot['status'], string> = {

@@ -43,10 +43,22 @@ type RouteHandler = unknown;
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-type RecordedCall = {method: HttpMethod; endpoint: string; body: unknown};
+interface RecordedCall {
+    method: HttpMethod;
+    endpoint: string;
+    body: unknown;
+}
 
-type MockResponse<T> = {data: T; status: number; statusText: string; headers: object; config: object};
-type MockRequestConfig = {data: unknown};
+interface MockResponse<T> {
+    data: T;
+    status: number;
+    statusText: string;
+    headers: object;
+    config: object;
+}
+interface MockRequestConfig {
+    data: unknown;
+}
 
 type RequestMiddleware = (config: MockRequestConfig) => void;
 type ResponseMiddleware = (response: MockResponse<unknown>) => void;
@@ -116,12 +128,12 @@ const resolveRoute = <T>(method: keyof typeof routes, endpoint: string, data?: u
     return Promise.resolve(applyResponseMiddleware(makeResponse(handler as T)));
 };
 
-const unregister = <T>(array: T[], item: T) => {
-    return () => {
+const unregister =
+    <T>(array: T[], item: T) =>
+    () => {
         const index = array.indexOf(item);
         if (index > -1) array.splice(index, 1);
     };
-};
 
 /**
  * Faithful stand-in for fs-http's `guarded()` middleware wrapper: the body is
@@ -141,8 +153,9 @@ const unregister = <T>(array: T[], item: T) => {
 export const isAxiosError = (error: unknown): boolean =>
     typeof error === 'object' && error !== null && (error as {isAxiosError?: unknown}).isAxiosError === true;
 
-export const guarded = <T>(fn: (arg: T) => void, onError?: (error: unknown) => void): ((arg: T) => void) => {
-    return (arg: T) => {
+export const guarded =
+    <T>(fn: (arg: T) => void, onError?: (error: unknown) => void): ((arg: T) => void) =>
+    (arg: T) => {
         try {
             fn(arg);
         } catch (error) {
@@ -154,7 +167,6 @@ export const guarded = <T>(fn: (arg: T) => void, onError?: (error: unknown) => v
             console.error('[fs-http] middleware body threw and was swallowed by guarded():', error);
         }
     };
-};
 
 /**
  * The mock HTTP service implementing the HttpService interface from

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SectionHeading from './SectionHeading.vue';
 
-type ColorToken = {
+interface ColorToken {
     name: string;
     variable: string;
     hex: string;
@@ -10,7 +10,7 @@ type ColorToken = {
     contrastOnWhite: string;
     reserved?: boolean;
     usage: string;
-};
+}
 
 const colors: ColorToken[] = [
     {

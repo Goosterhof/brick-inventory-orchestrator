@@ -67,6 +67,9 @@ describe('createSoundService', () => {
 
         vi.stubGlobal(
             'AudioContext',
+            // AudioContext is `new`-ed by the service under test; vitest requires a `function`
+            // implementation for a constructible mock, so this callback cannot be an arrow.
+            // oxlint-disable-next-line prefer-arrow-callback
             vi.fn<() => ReturnType<typeof createMockAudioContext>>().mockImplementation(function () {
                 return createMockAudioContext();
             }),
@@ -229,6 +232,9 @@ describe('createSoundService', () => {
         const mockContext = createMockAudioContext();
         vi.stubGlobal(
             'AudioContext',
+            // AudioContext is `new`-ed by the service under test; vitest requires a `function`
+            // implementation for a constructible mock, so this callback cannot be an arrow.
+            // oxlint-disable-next-line prefer-arrow-callback
             vi.fn<() => ReturnType<typeof createMockAudioContext>>().mockImplementation(function () {
                 return mockContext;
             }),
@@ -261,6 +267,9 @@ describe('createSoundService', () => {
         const mockContext = createMockAudioContext();
         vi.stubGlobal(
             'AudioContext',
+            // AudioContext is `new`-ed by the service under test; vitest requires a `function`
+            // implementation for a constructible mock, so this callback cannot be an arrow.
+            // oxlint-disable-next-line prefer-arrow-callback
             vi.fn<() => ReturnType<typeof createMockAudioContext>>().mockImplementation(function () {
                 return mockContext;
             }),
@@ -282,6 +291,9 @@ describe('createSoundService', () => {
         const mockContext = createMockAudioContext();
         vi.stubGlobal(
             'AudioContext',
+            // AudioContext is `new`-ed by the service under test; vitest requires a `function`
+            // implementation for a constructible mock, so this callback cannot be an arrow.
+            // oxlint-disable-next-line prefer-arrow-callback
             vi.fn<() => ReturnType<typeof createMockAudioContext>>().mockImplementation(function () {
                 return mockContext;
             }),
