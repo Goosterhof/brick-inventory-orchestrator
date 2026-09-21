@@ -8,11 +8,10 @@ const ROOT_DIR = join(SRC_DIR, '..');
 const SHARED_DIR = join(SRC_DIR, 'shared');
 const APPS_DIR = join(SRC_DIR, 'apps');
 
-const getSourceFiles = (dir: string): string[] => {
-    return readdirSync(dir, {recursive: true, encoding: 'utf-8'})
+const getSourceFiles = (dir: string): string[] =>
+    readdirSync(dir, {recursive: true, encoding: 'utf-8'})
         .filter((file) => file.endsWith('.ts') || file.endsWith('.vue'))
         .map((file) => join(dir, file));
-};
 
 const getImportPaths = (filePath: string): string[] => {
     const content = readFileSync(filePath, 'utf-8');
@@ -38,23 +37,20 @@ const getImportPaths = (filePath: string): string[] => {
     return paths;
 };
 
-const getVueFiles = (dir: string): string[] => {
-    return readdirSync(dir, {recursive: true, encoding: 'utf-8'})
+const getVueFiles = (dir: string): string[] =>
+    readdirSync(dir, {recursive: true, encoding: 'utf-8'})
         .filter((file) => file.endsWith('.vue'))
         .map((file) => join(dir, file));
-};
 
-const getTsFiles = (dir: string): string[] => {
-    return readdirSync(dir, {recursive: true, encoding: 'utf-8'})
+const getTsFiles = (dir: string): string[] =>
+    readdirSync(dir, {recursive: true, encoding: 'utf-8'})
         .filter((file) => file.endsWith('.ts'))
         .map((file) => join(dir, file));
-};
 
-const getAppNames = (): string[] => {
-    return readdirSync(APPS_DIR, {withFileTypes: true})
+const getAppNames = (): string[] =>
+    readdirSync(APPS_DIR, {withFileTypes: true})
         .filter((entry) => entry.isDirectory())
         .map((entry) => entry.name);
-};
 
 const dirExists = (dir: string): boolean => {
     try {

@@ -28,6 +28,17 @@
         "no-implied-eval": "error", // 1.66 — security-relevant
         "prefer-regex-literals": "error", // 1.64 — `new RegExp("foo")` → `/foo/`
         "no-useless-assignment": "warn", // 1.59 — flags assignments whose value is never read
+        // Arrow functions ONLY — Commander ruling 2026-09-21. A `function` declaration hoists and binds
+        // its own `this`; both are surprises the codebase does not want. `func-style: expression` bans
+        // declarations; `prefer-arrow-callback` bans `function` expressions as callbacks (an unbound
+        // `this` inside the callback is the one legitimate exception the rule keeps).
+        "func-style": ["error", "expression"],
+        "prefer-arrow-callback": ["error", {"allowNamedFunctions": false, "allowUnboundThis": true}],
+        "arrow-body-style": ["error", "as-needed"],
+        // Same-scope use-before-define only (`variables: false` ignores references from inner scopes,
+        // which are legal — a callback may name a helper declared below it). With `function`
+        // declarations gone this is the guard that a later `const` is never read in its TDZ.
+        "no-use-before-define": ["error", {"functions": false, "classes": true, "variables": false}],
         "no-restricted-imports": [
             "error",
             {
@@ -95,6 +106,7 @@
         "typescript/switch-exhaustiveness-check": "error",
         "typescript/consistent-type-imports": "error",
         "typescript/no-import-type-side-effects": "error",
+        "typescript/consistent-type-definitions": ["error", "interface"], // ruling 2026-09-21 — object shapes are interfaces; `type` stays for unions/aliases
         // Use the type-aware version of require-await; the core rule was removed from the general rules to avoid duplicate configuration.
         "typescript/require-await": "warn",
         "typescript/return-await": "error",
@@ -117,7 +129,7 @@
         "import/no-cycle": "error",
         "import/no-mutable-exports": "error",
         "import/no-named-default": "error",
-        "import/no-default-export": "off", // Vue components use default exports
+        "import/no-default-export": "error", // named exports everywhere; the override below carries the shapes that MUST default-export (ruling 2026-09-21)
         "import/no-named-as-default": "warn",
         "import/no-empty-named-blocks": "error",
 
@@ -224,6 +236,18 @@
     },
     "overrides": [
         {"files": ["*.vue"], "rules": {"no-undef": "off"}},
+        {
+            "files": [
+                "*.vue",
+                "*.config.ts",
+                "*.config.mts",
+                "*.config.mjs",
+                "*.d.ts",
+                "**/.vitepress/config.*",
+                "**/.vitepress/theme/index.*"
+            ],
+            "rules": {"import/no-default-export": "off"}
+        },
         {
             "files": ["src/tests/**"],
             "rules": {
@@ -383,7 +407,6 @@
                 ]
             }
         },
-        {"files": ["src/**/*.ts"], "rules": {"import/no-default-export": "error"}},
         {"files": ["src/tests/**/*-reporter.ts"], "rules": {"import/no-default-export": "off", "no-console": "off"}},
         {"files": ["uno.config.ts"], "rules": {"typescript/no-deprecated": "off"}}
     ]

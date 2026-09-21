@@ -86,6 +86,10 @@ Non-negotiable. The building inspectors (oxlint) will shut you down.
 - Relative imports — only within the same directory.
 - **FORBIDDEN:** `../shared/`, `../apps/`, `@/apps/` — these are load-bearing walls. Do not cut through them.
 
+### Function Style
+
+Arrow functions only — `function` declarations and `function` callbacks are lint errors (`func-style`, `prefer-arrow-callback`; ruling 2026-09-21). A declaration hoists and binds its own `this`; neither is wanted. `no-use-before-define` then guards the same-scope TDZ read the hoisting used to hide. Companions: object shapes are `interface` (`consistent-type-definitions`), named exports only outside `*.vue` / `*.config.*` / `*.d.ts` (`import/no-default-export`), and a single-expression arrow body drops its braces (`arrow-body-style`).
+
 ### Vue Components
 
 Every component uses `<script setup>` with TypeScript. No exceptions.

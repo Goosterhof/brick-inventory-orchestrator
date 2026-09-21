@@ -4,9 +4,12 @@ import {computed, ref} from 'vue';
 
 import SectionHeading from './SectionHeading.vue';
 
-type ApiSurfaceItem = {name: string; required?: boolean};
+interface ApiSurfaceItem {
+    name: string;
+    required?: boolean;
+}
 
-type ComponentEntry = {
+interface ComponentEntry {
     path: string;
     category: string | null;
     consumers: Record<string, Record<string, string[]>>;
@@ -14,7 +17,7 @@ type ComponentEntry = {
     apiSurface: {props: ApiSurfaceItem[]; emits: ApiSurfaceItem[]; slots: ApiSurfaceItem[]; models: ApiSurfaceItem[]};
     churn: {commits: number; linesChanged: number};
     dependencyDepth: number;
-};
+}
 
 const components = registry.components as Record<string, ComponentEntry>;
 const entries = computed(() =>
