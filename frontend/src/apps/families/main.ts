@@ -36,7 +36,10 @@ registerAuthErrorMiddleware(familyAuthService, familyHttpService, familyRouterSe
 // resolves the UI shows logged-in state but the route is stuck on /login.
 await familyAuthService.checkIfLoggedIn();
 
-familyRouterService.install();
+// fs-router 0.3.0 returns vue-router's navigation promise here, which rejects when a guard
+// throws. 0.2.0's install() was `() => void router.push(...)`, so discarding it at the call
+// site is the pre-bump behaviour, not a new swallow. WR-1455.
+void familyRouterService.install();
 
 const {t} = familyTranslationService;
 const APP_TITLE = 'Brick Inventory';
