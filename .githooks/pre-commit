@@ -117,7 +117,22 @@ fi
 # the index onto someone else's entry. The hook keeps the backup itself: `git stash create` makes
 # the commit without touching refs/stash, and refs/worktree/ is private to this worktree. A failed
 # run names that ref, so an unstaged edit lint-staged could not put back is recoverable.
-if [ -n "$(git diff --cached --name-only --diff-filter=ACMR -- frontend/)" ]; then
+#
+# `--no-stash` also implies `--no-hide-partially-staged`: the tasks would write the working-tree
+# file and lint-staged would `git add` all of it, unstaged hunks included. So a partially staged
+# frontend file is refused before lint-staged runs, as pint refuses to write one above.
+staged_frontend=$(git diff --cached --name-only --diff-filter=ACMR -- frontend/)
+partial_frontend=""
+for f in $staged_frontend; do
+    if ! git diff --quiet -- "$f"; then
+        partial_frontend="$partial_frontend $f"
+    fi
+done
+if [ -n "$partial_frontend" ]; then
+    echo "These frontend/ files have unstaged changes, so lint-staged would commit them:$partial_frontend" >&2
+    echo "Stage or stash the rest first, then commit again." >&2
+    failed=1
+elif [ -n "$staged_frontend" ]; then
     if [ ! -x frontend/node_modules/.bin/lint-staged ]; then
         echo "[skip] lint-staged — frontend/node_modules/ is missing; run: npm ci --prefix frontend" >&2
     else
