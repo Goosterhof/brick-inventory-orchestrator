@@ -35,18 +35,53 @@ set -f
 # A file that ALSO has unstaged changes is checked, never written: `git add` after a write would
 # sweep those hunks into the commit. `pint --test` reads the working-tree file, so for such a file
 # it approximates the staged content; CI's `pint:test` checks the committed tree exactly.
+#
+# Pint formats every path it is handed, skipping its own finder: `*.blade.php`, `_ide_helper*.php`,
+# storage/ and every pint.json `exclude` / `notPath` / `notName` would be rewritten. So the hook
+# asks that finder which staged files it formats — the intersection `pint --dirty` makes — and
+# hands Pint only those. An empty finder is a broken probe, never "nothing to format".
+pint_finder='
+    Phar::loadPhar("vendor/laravel/pint/builds/pint", "pint.phar");
+    require "phar://pint.phar/vendor/autoload.php";
+    $app = require "phar://pint.phar/bootstrap/app.php";
+    $app->instance(
+        App\Repositories\ConfigurationJsonRepository::class,
+        new App\Repositories\ConfigurationJsonRepository(getcwd() . "/pint.json", null),
+    );
+    $formatted = [];
+    foreach (App\Factories\ConfigurationFactory::finder()->in(getcwd())->files() as $file) {
+        $formatted[$file->getPathname()] = true;
+    }
+    if ($formatted === []) {
+        fwrite(STDERR, "Pint finder returned no files under " . getcwd() . "\n");
+        exit(1);
+    }
+    foreach (array_slice($argv, 1) as $path) {
+        if (isset($formatted[getcwd() . "/" . $path])) {
+            echo $path, "\n";
+        }
+    }
+'
 staged_php=$(git diff --cached --name-only --diff-filter=ACMR -- 'backend/*.php')
 if [ -n "$staged_php" ]; then
+    staged_rel=""
+    for f in $staged_php; do
+        staged_rel="$staged_rel ${f#backend/}"
+    done
+
     if [ ! -x backend/vendor/bin/pint ]; then
         echo "[skip] pint — backend/vendor/ is missing; run: composer install -d backend" >&2
+    elif ! pint_rel=$(cd backend && php -d display_errors=stderr -r "$pint_finder" $staged_rel); then
+        echo "✗ Could not ask Pint which staged files it formats, so pint did not run." >&2
+        failed=1
     else
         whole=""
         partial=""
-        for f in $staged_php; do
-            if git diff --quiet -- "$f"; then
-                whole="$whole ${f#backend/}"
+        for rel in $pint_rel; do
+            if git diff --quiet -- "backend/$rel"; then
+                whole="$whole $rel"
             else
-                partial="$partial ${f#backend/}"
+                partial="$partial $rel"
             fi
         done
 
