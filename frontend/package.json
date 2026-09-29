@@ -98,7 +98,7 @@
         "oxlint": "^1.85.0",
         "oxlint-tsgolint": "^7.0.2003",
         "playwright": "^1.63.0",
-        "size-limit": "^13.0.3",
+        "size-limit": "^14.0.1",
         "typescript": "~6.0.3",
         "unocss": "^66.8.1",
         "vite": "^8.2.2",
