@@ -88,7 +88,15 @@ if [ -n "$staged_php" ]; then
         if [ -n "$whole" ]; then
             echo "=== pint: staged PHP ==="
             if (cd backend && vendor/bin/pint $whole); then
-                (cd backend && git add -- $whole) || failed=1
+                # Re-add from the root, never from backend/: in a linked worktree git exports
+                # GIT_DIR without GIT_WORK_TREE, so a `git add` run in backend/ takes backend/ as
+                # the top and stages `app/X.php` at the root while the real path keeps its
+                # unformatted blob.
+                whole_root=""
+                for rel in $whole; do
+                    whole_root="$whole_root backend/$rel"
+                done
+                git add -- $whole_root || failed=1
             else
                 failed=1
             fi
