@@ -22,7 +22,7 @@ The departmental layout (Auth Bay, Storage Aisle, Inventory Desk, Receiving Dock
 | Testing | Pest (the quality inspection rig) |
 | Linting | Rector + Pint |
 | Mutation Testing | Infection (76% minimum survival) |
-| Git Hooks | CaptainHook |
+| Git Hooks | Root `.githooks/` (see root `CLAUDE.md` § Git Hooks) |
 | Deployment | Railway (single multi-stage image) |
 
 ### External Suppliers
@@ -230,15 +230,17 @@ ReportSubmissionException         → 502 (vendor — kendo-report-tool)
 | `composer deptrac` | Boundary fence inspection |
 | `composer mutation` | Sabotage drill — 76% minimum survival on Actions & Services |
 
-### Pre-Commit Gauntlet
+### Hooks and CI
 
-CaptainHook enforces on every commit (PHP files only): **lint:test → phpstan → phpstan:types → deptrac → test:arch**. Dispatched from the orchestrator's `.githooks/pre-commit` only when the staged changeset touches `backend/**`.
+Hooks are light (ADR-0028 Amendment 2); the full gauntlet runs in CI (`.github/workflows/backend-ci.yml`) behind the required `gate` check. Root `CLAUDE.md` § Git Hooks has the table.
 
-### Pre-Push Gauntlet
+- **Pre-commit:** Pint writes the staged PHP files and re-stages them; a file that also has unstaged edits gets `pint --test` only.
+- **Pre-push**, when the range touches `backend/**`: `composer phpstan`, `composer phpstan:types`, `composer audit`.
+- **CI only:** `rector:test`, whole-tree `pint:test`, `deptrac`, `test:arch`, `composer test`, both coverage suites, mutation, Semgrep, seed. `phpstan:types` is the one gate CI does not run — the pre-push hook is its only runner.
 
-**composer test** (the full quality inspection rig), dispatched from `.githooks/pre-push` only when the pushed range touches `backend/**`.
+Tool caches live in `storage/` and are git-ignored: `storage/pint.cache` (`pint.json` `cache-file`), `storage/phpstan` and `storage/phpstan-types` (each config's `tmpDir`), `storage/rector` (`rector.php` `withCache`). A cache directory per checkout keeps worktrees from evicting each other's caches through `/tmp`.
 
-The PrePushPermitGate that used to precede it was retired 2026-07-16 (ADR-0028 § Amendment 2026-07-16 — Devil's Court ruling: Cracked at root). The permit-before-work guarantee lives upstream on the Kendo board: an open `BIO-xxxx` issue precedes work, `link-branch` binds the branch to it, and the `Agent Review Requested` label precedes merge.
+The PrePushPermitGate that used to precede the pre-push gauntlet was retired 2026-07-16 (ADR-0028 § Amendment 2026-07-16 — Devil's Court ruling: Cracked at root). The permit-before-work guarantee lives upstream on the Kendo board: an open `BIO-xxxx` issue precedes work, `link-branch` binds the branch to it, and the `Agent Review Requested` label precedes merge.
 
 ### Coverage Policy
 
@@ -275,7 +277,7 @@ The host's PHP must satisfy the project's platform pin:
 
 ## Commit Messages
 
-All commits follow Conventional Commits. CaptainHook keeps the log clean.
+All commits follow Conventional Commits. The root `.githooks/commit-msg` (commitlint) keeps the log clean.
 
 **Format:** `<type>(<scope>): <headline>`
 

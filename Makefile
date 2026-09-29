@@ -86,8 +86,8 @@ type-check-e2e:
 lint: lint-backend lint-frontend
 
 # Wire git hooks to the root dispatcher (.githooks/pre-commit + .githooks/pre-push).
-# Routes staged backend/ paths to backend's CaptainHook gauntlet and staged
-# frontend/ paths to lint-staged, without either side clobbering the other.
+# Pre-commit fixes the staged files (pint / lint-staged); pre-push type-checks each side the
+# push range touches. CLAUDE.md § Git Hooks has the table.
 hooks-install:
 	git config core.hooksPath .githooks
 	@echo "Git hooks routed to .githooks/ (pre-commit + pre-push dispatchers)"

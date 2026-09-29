@@ -28,7 +28,7 @@ Domain layouts live at [`/.claude/docs/domain-map.md`](../.claude/docs/domain-ma
 | Testing      | Vitest + @vue/test-utils (happy-dom)                                  |
 | Linting      | oxlint (type-aware)                                                   |
 | Formatting   | oxfmt                                                                 |
-| Git Hooks    | Husky + lint-staged + commitlint                                      |
+| Git Hooks    | Root `.githooks/` + lint-staged + commitlint                          |
 | Dead Code    | knip                                                                  |
 | Bundle Size  | size-limit                                                            |
 | Node         | 24+ required                                                          |
@@ -159,9 +159,13 @@ HTTP middleware can be registered/unregistered at runtime.
 | `npm run knip`          | Detect unused code/exports (no dead bricks)                 |
 | `npm run size`          | Check bundle size limits                                    |
 
-### Pre-Push Gauntlet
+### Hooks and CI
 
-Husky enforces: **type-check → knip → test:coverage → test:integration → build**. Dispatched from the orchestrator's `.githooks/pre-push` only when the pushed range touches `frontend/**`. The integration step was added 2026-07-09 after a change to a module the integration layer mocks wholesale passed every local gate and failed only in CI (PR #253).
+Hooks are light (ADR-0028 Amendment 2); root `CLAUDE.md` § Git Hooks has the table.
+
+- **Pre-commit:** regenerates the component registry, then lint-staged over the staged files (config in `package.json`).
+- **Pre-push**, when the range touches `frontend/**` outside `*.md`: `npm run type-check` (vue-tsc).
+- **CI only** (`.github/workflows/frontend-ci.yml`): whole-tree oxlint, lint:vue, knip, format:check, test:coverage, Stryker, test:integration, build, size, commitlint. Run `npm run test:integration:run` yourself when you change a module the integration layer mocks wholesale: that class passed every local gate and failed only in CI once (PR #253).
 
 ### Coverage Policy
 

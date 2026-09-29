@@ -89,14 +89,83 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
+      # Each tool keeps its cache in-tree (rector.php, pint.json, phpstan.neon). Every key hashes
+      # the tool's config and composer.lock and falls back only to that same hash, so a config or
+      # version change starts cold. Restore and save are split: a combined actions/cache step saves
+      # only on success, and a dry-run with findings exits non-zero. `continue-on-error`: an
+      # unreachable cache service costs a cold run, never a red lane.
+      #
+      # Rector's cache is not exact: it skips a file whose own hash is unchanged, so a change in
+      # file B that makes a rule fire on untouched file A passes on a warm run. So only a push to
+      # main saves it, cold over the whole tree, and a pull request only restores it; the merge's
+      # own push run catches an untouched dependent.
+      - name: Restore Rector cache
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v6
+        continue-on-error: true
+        with:
+          path: backend/storage/rector
+          key: rector-${{ hashFiles('backend/rector.php', 'backend/composer.lock') }}-${{ github.sha }}
+          restore-keys: |
+            rector-${{ hashFiles('backend/rector.php', 'backend/composer.lock') }}-
+
       - name: Run Rector
+        id: rector
         run: composer rector:test
 
+      - name: Save Rector cache
+        if: always() && github.event_name == 'push' && steps.rector.outcome != 'skipped'
+        uses: actions/cache/save@v6
+        continue-on-error: true
+        with:
+          path: backend/storage/rector
+          key: rector-${{ hashFiles('backend/rector.php', 'backend/composer.lock') }}-${{ github.sha }}
+
+      - name: Restore Pint cache
+        id: pint-cache
+        uses: actions/cache/restore@v6
+        continue-on-error: true
+        with:
+          path: backend/storage/pint.cache
+          key: pint-${{ hashFiles('backend/pint.json', 'backend/composer.lock') }}-${{ github.sha }}
+          restore-keys: |
+            pint-${{ hashFiles('backend/pint.json', 'backend/composer.lock') }}-
+
       - name: Run Pint
+        id: pint
         run: composer pint:test
 
+      - name: Save Pint cache
+        if: always() && steps.pint.outcome != 'skipped' && steps.pint-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        continue-on-error: true
+        with:
+          path: backend/storage/pint.cache
+          key: pint-${{ hashFiles('backend/pint.json', 'backend/composer.lock') }}-${{ github.sha }}
+
+      # PHPStan validates its own result cache (file hashes, dependents, config and version), so a
+      # warm run re-analyses what changed.
+      - name: Restore PHPStan result cache
+        id: phpstan-cache
+        uses: actions/cache/restore@v6
+        continue-on-error: true
+        with:
+          path: backend/storage/phpstan
+          key: phpstan-${{ hashFiles('backend/phpstan.neon', 'backend/composer.lock') }}-${{ github.sha }}
+          restore-keys: |
+            phpstan-${{ hashFiles('backend/phpstan.neon', 'backend/composer.lock') }}-
+
       - name: Run PHPStan
+        id: phpstan
         run: composer phpstan
+
+      - name: Save PHPStan result cache
+        if: always() && steps.phpstan.outcome != 'skipped' && steps.phpstan-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        continue-on-error: true
+        with:
+          path: backend/storage/phpstan
+          key: phpstan-${{ hashFiles('backend/phpstan.neon', 'backend/composer.lock') }}-${{ github.sha }}
 
       - name: Run Deptrac
         run: composer deptrac

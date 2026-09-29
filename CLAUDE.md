@@ -236,25 +236,36 @@ If you hit the API endpoint that triggers a job and nothing happens, the most li
 
 ## Git Hooks (Root Dispatcher)
 
-Pre-commit and pre-push hooks are dispatched from `.githooks/` at the repo root and route by staged/pushed paths.
+The hooks live in `.githooks/` at the repo root (`core.hooksPath`) and are light — ADR-0028 Amendment 2: pre-commit fixes the staged files, pre-push type-checks each side the push touches, and CI's required `gate` check is the floor for everything else. There is no second layer (no CaptainHook, no `frontend/.husky/`): these three files are the whole hook surface.
 
-**Pre-commit:**
+**Pre-commit — the staged files only:**
 
-- Staged `backend/**` → backend's CaptainHook gauntlet (`cd backend && vendor/bin/captainhook hook:pre-commit`) — runs `lint:test → phpstan → phpstan:types → deptrac → test:arch`.
-- Staged `frontend/**` → frontend's pre-commit pipeline — regenerates the component registry, formats the generated file, restages it, then runs `npx lint-staged --relative`. The `--relative` flag is required in monorepo cwd so lint-staged's patterns match the staged-path slice that git emits from `frontend/` cwd.
-- Both staged → both fire.
-- Other paths (root infra, docs) → neither fires.
+| Staged | Runs | Then |
+|---|---|---|
+| `backend/**/*.php` | `pint` (writes, `backend/` cwd) | re-staged |
+| … that also has unstaged edits | `pint --test` | fails when it needs formatting; the unstaged edit is never swept in |
+| any `frontend/**` | component-registry regeneration + oxfmt on the generated file, then `lint-staged --relative --concurrent false --no-stash` | lint-staged re-stages |
 
-**Pre-push** mirrors the same split:
+lint-staged's own backup would live in `refs/stash`, which every worktree of this repo shares; the hook takes the backup itself (`git stash create` → `refs/worktree/lint-staged-backup`) and a failed run prints the command that restores it.
 
-- Push range touches `backend/` → backend's `composer test` runs from `backend/` cwd, with git's pushed-ref stdin replayed through unchanged. (The PrePushPermitGate that preceded it was retired 2026-07-16 — ADR-0028 § Amendment 2026-07-16.)
-- Push range touches `frontend/` → frontend's `.husky/pre-push` runs from `frontend/` cwd (`type-check → knip → test:coverage → test:integration → build`).
+**Pre-push — each side the push range touches** (read from git's pre-push stdin; a new branch diffs against its merge-base with `origin/main`):
 
-**Commit-msg** runs repo-wide (not path-routed): `.githooks/commit-msg` lints the message with commitlint (frontend workspace binary + `.commitlintrc.json`) so Conventional Commits violations fail at write time instead of 20 minutes later in CI — which only checks PRs touching `frontend/**` anyway. Skips with a notice if `frontend/node_modules` is absent (fresh clone); CI remains the backstop.
+| Range touches | Runs |
+|---|---|
+| `backend/` | `composer phpstan`, `composer phpstan:types`, `composer audit` |
+| `frontend/`, `*.md` excluded | `npm run type-check` (vue-tsc) |
 
-**Wire-up:** `make init` runs `make hooks-install`, which sets `git config core.hooksPath .githooks`. Clone-and-bootstrap is a single command.
+A deletion-only or docs-only push runs nothing. **No stdin, or a range that cannot be computed, runs every gate (fail closed).** `phpstan:types` is not a CI step — this hook is its only runner.
 
-**Per-surface autoinstall is neutralized.** `backend/composer.json` no longer carries a `post-install-cmd` block that would auto-install CaptainHook into the parent `.git/hooks/`, and `frontend/package.json`'s `prepare` script is a no-op. The root dispatcher is the only path that fires hooks.
+**CI only:** Rector, whole-tree Pint, Deptrac, the Pest suites (arch, all, both coverage lanes, mutation), Semgrep, the seed run; oxlint, lint:vue, knip, format:check, Vitest (coverage, Stryker, integration), the Vite build, size-limit, commitlint over the PR range.
+
+**Commit-msg** runs repo-wide: `.githooks/commit-msg` lints the message with commitlint (frontend workspace binary + `.commitlintrc.json`). Skips with a notice if `frontend/node_modules` is absent (fresh clone); CI remains the backstop.
+
+**Missing tools:** without `backend/vendor/` or `frontend/node_modules/` a hook prints a `[skip] … run composer install / npm ci` line and goes on — CI still gates the change. Under WSL both hooks prepend the newest `~/.nvm/versions/node/*/bin` when `node`/`npm` is absent or resolves under `/mnt/`.
+
+**Known gap:** a reader that leaves early (`git push … | head`) can SIGPIPE a hook mid-run while the caller reads exit 0. No SIGPIPE relay guards against it.
+
+**Wire-up:** `make init` runs `make hooks-install`, which sets `git config core.hooksPath .githooks`. `frontend/package.json`'s `prepare` script is a no-op.
 
 ## Set Assembly Check (E2E Testing)
 

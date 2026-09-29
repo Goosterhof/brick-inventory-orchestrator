@@ -17,8 +17,6 @@
         "script-development/kendo-report-tool": "^0.1.0"
     },
     "require-dev": {
-        "captainhook/captainhook": "*",
-        "captainhook/hook-installer": "*",
         "dedoc/scramble": "^0.13.17",
         "deptrac/deptrac": "^4.6",
         "dg/bypass-finals": "^1.9",
@@ -79,7 +77,7 @@
         "rector": "./vendor/bin/rector process",
         "rector:test": "./vendor/bin/rector process --dry-run",
         "pint": "./vendor/bin/pint",
-        "pint:test": "./vendor/bin/pint --test",
+        "pint:test": "./vendor/bin/pint --test --parallel",
         "phpstan": "./vendor/bin/phpstan analyse",
         "phpstan:types": "./vendor/bin/phpstan analyse --configuration=phpstan-type-coverage.neon",
         "deptrac": "./vendor/bin/deptrac analyse",
@@ -114,8 +112,7 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true,
-            "captainhook/hook-installer": false
+            "php-http/discovery": true
         },
         "platform": {
             "php": "8.5"

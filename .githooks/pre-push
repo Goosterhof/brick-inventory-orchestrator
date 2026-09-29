@@ -1,67 +1,116 @@
 #!/usr/bin/env bash
-# Monorepo pre-push dispatcher.
+# Pre-push: type-check each side the push touches (ADR-0028 Amendment 2, light hooks).
 #
-# Inspect the pushed range and run each surface's pre-push gauntlet only
-# when that surface has files in the range:
-#   - backend/  → CaptainHook (composer test). Actions read stdin per
-#     git's pre-push protocol, so we pipe our buffered stdin through
-#     unchanged.
-#   - frontend/ → Husky's pre-push script (type-check → knip → test:coverage → build).
+# Range touches backend/ → PHPStan, PHPStan type coverage, composer audit. Range touches frontend/
+# outside *.md → vue-tsc. Pest, Rector, Deptrac, Vitest, knip and the Vite build run in CI only:
+# CLAUDE.md § Git Hooks says where each gate runs.
 
-set -euo pipefail
+set -uo pipefail
 
-repo_root=$(git rev-parse --show-toplevel)
-cd "$repo_root"
+repo_root=$(git rev-parse --show-toplevel) || exit 1
+cd "$repo_root" || exit 1
 
-# git invokes pre-push with one line per pushed ref on stdin:
-#   <local-ref> <local-sha> <remote-ref> <remote-sha>
-# Buffer it so we can both inspect the range AND replay it into the
-# delegated hook.
-stdin_buffer=$(cat || true)
-
-needs_backend=0
-needs_frontend=0
-
-if [ -n "$stdin_buffer" ]; then
-    while IFS=' ' read -r _local_ref local_sha _remote_ref remote_sha; do
-        [ -z "${local_sha:-}" ] && continue
-        # Skip ref deletes (all-zero local sha).
-        [[ "$local_sha" =~ ^0+$ ]] && continue
-
-        if [[ "${remote_sha:-}" =~ ^0+$ ]] || [ -z "${remote_sha:-}" ]; then
-            # New branch on the remote — diff against the merge-base with origin/main.
-            base=$(git merge-base "$local_sha" origin/main 2>/dev/null || true)
-            if [ -n "$base" ]; then
-                range="$base..$local_sha"
-            else
-                range="$local_sha"
+# Under WSL a non-interactive PATH can find the Windows node/npm first, which dies on a CMD.EXE
+# error that reads like a build failure. Prefer the newest nvm node then.
+for tool in node npm; do
+    case "$(command -v "$tool" 2>/dev/null)" in
+        "" | /mnt/*)
+            nvm_bin=$(ls -d "$HOME"/.nvm/versions/node/*/bin 2>/dev/null | sort -V | tail -1)
+            if [ -n "$nvm_bin" ]; then
+                PATH="$nvm_bin:$PATH"
+                export PATH
             fi
-        else
-            range="$remote_sha..$local_sha"
-        fi
+            break
+            ;;
+    esac
+done
 
-        changed=$(git diff --name-only "$range" 2>/dev/null || true)
-        if grep -qE '^backend/' <<< "$changed"; then
-            needs_backend=1
+failed=0
+
+# git's pre-push stdin: one `<local ref> <local sha> <remote ref> <remote sha>` line per pushed ref.
+# The union of changed paths goes to $changed_files. Every gate runs anyway (fail closed) when stdin
+# is empty (a manual run) or a range cannot be computed.
+zero="0000000000000000000000000000000000000000"
+fail_closed=0
+has_input=0
+changed_files=""
+
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+    [ -z "$local_sha" ] && continue
+    has_input=1
+
+    if [ "$local_sha" = "$zero" ]; then
+        # Branch deletion — nothing to check for this ref.
+        continue
+    fi
+
+    if [ "$remote_sha" = "$zero" ]; then
+        # New branch on the remote: diff against its merge-base with origin/main.
+        base=$(git merge-base "$local_sha" origin/main 2>/dev/null) || base=""
+        if [ -z "$base" ]; then
+            fail_closed=1
+            break
         fi
-        if grep -qE '^frontend/' <<< "$changed"; then
-            needs_frontend=1
-        fi
-    done <<< "$stdin_buffer"
+        range_files=$(git diff --name-only "$base" "$local_sha" 2>/dev/null) || {
+            fail_closed=1
+            break
+        }
+    else
+        range_files=$(git diff --name-only "$remote_sha" "$local_sha" 2>/dev/null) || {
+            fail_closed=1
+            break
+        }
+    fi
+
+    if [ -n "$range_files" ]; then
+        changed_files="$changed_files
+$range_files"
+    fi
+done
+
+if [ "$has_input" -eq 0 ]; then
+    fail_closed=1
 fi
 
-if [ "$needs_backend" -eq 1 ]; then
-    echo "→ backend changes in push range; running backend pre-push gauntlet"
-    # CaptainHook takes dirname(--git-directory) as the repository ROOT and
-    # verifies it with `is_dir(root/.git) || is_file(root/.git)`, so the flag
-    # names the `.git` entry AT the repo root (dir, or pointer file in a
-    # worktree/submodule) — never the resolved common dir (see pre-commit).
-    (cd backend && printf '%s\n' "$stdin_buffer" | vendor/bin/captainhook hook:pre-push --git-directory="$repo_root/.git")
+# Backend. `phpstan:types` is not in backend-ci.yml; this hook is the only place it runs.
+if [ "$fail_closed" -eq 1 ] || printf '%s\n' "$changed_files" | grep -Eq '^backend/'; then
+    if [ ! -d backend/vendor ]; then
+        echo "[skip] PHPStan + composer audit — backend/vendor/ is missing; run: composer install -d backend" >&2
+    else
+        echo "=== PHPStan ==="
+        composer --working-dir=backend phpstan || failed=1
+        echo "=== PHPStan type coverage ==="
+        composer --working-dir=backend phpstan:types || failed=1
+        echo "=== composer audit ==="
+        composer --working-dir=backend audit || failed=1
+    fi
+else
+    echo "[skip] PHPStan + composer audit — no backend changes in push range" >&2
 fi
 
-if [ "$needs_frontend" -eq 1 ]; then
-    echo "→ frontend changes in push range; running frontend pre-push gauntlet"
-    (cd frontend && bash .husky/pre-push)
+# Frontend. A tsconfig, Vite config or lockfile change can break the typecheck too, so the trigger
+# is every frontend/ path except *.md.
+if [ "$fail_closed" -eq 1 ] || printf '%s\n' "$changed_files" | grep -E '^frontend/' | grep -Evq '\.md$'; then
+    if [ ! -d frontend/node_modules ]; then
+        echo "[skip] vue-tsc — frontend/node_modules/ is missing; run: npm ci --prefix frontend" >&2
+    else
+        case "$(command -v npm 2>/dev/null)" in
+            "" | /mnt/*)
+                echo "✗ No Linux npm on PATH, so vue-tsc could not run. Install node in WSL (nvm)." >&2
+                failed=1
+                ;;
+            *)
+                echo "=== vue-tsc ==="
+                npm --prefix frontend run type-check || failed=1
+                ;;
+        esac
+    fi
+else
+    echo "[skip] vue-tsc — no frontend changes outside *.md in push range" >&2
 fi
 
-exit 0
+if [ "$failed" -ne 0 ]; then
+    echo "" >&2
+    echo "✗ pre-push failed. Fix the errors above and push again." >&2
+    exit 1
+fi

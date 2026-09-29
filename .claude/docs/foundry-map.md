@@ -68,7 +68,7 @@ A RESTful service where families catalog their sets, track individual parts, org
 | Testing | Pest (`describe()` blocks + `it('should ...')` syntax) |
 | Linting | Rector + Pint |
 | Mutation Testing | Infection (76% minimum survival) |
-| Git Hooks | CaptainHook (pre-commit + pre-push gauntlet) |
+| Git Hooks | Root `.githooks/` dispatcher (see root `CLAUDE.md` § Git Hooks) |
 | Deployment | Railway (single multi-stage image) |
 
 ### External Suppliers

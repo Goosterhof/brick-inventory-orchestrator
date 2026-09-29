@@ -1,49 +1,130 @@
 #!/usr/bin/env bash
-# Monorepo pre-commit dispatcher.
+# Pre-commit: fix the STAGED files, then re-stage them (ADR-0028 Amendment 2, light hooks).
 #
-# Staged paths under backend/ run backend's CaptainHook pre-commit gauntlet
-# (lint:test → phpstan → phpstan:types → deptrac → test:arch).
-# Staged paths under frontend/ run frontend's pre-commit pipeline:
-# regenerate the component registry, format the generated file, restage
-# it, then run lint-staged with --relative so its patterns match the
-# staged-path slice that git emits from frontend/ cwd in a monorepo.
-# Other staged paths bypass both — the orchestrator itself has no hook.
+# Whole-tree checks (Rector, PHPStan, Deptrac, the architecture suite) and the test suites are not
+# here: CI's `gate` is the floor for them, and pre-push runs the type checkers. CLAUDE.md
+# § Git Hooks says where each gate runs.
 
-set -euo pipefail
+set -uo pipefail
 
-repo_root=$(git rev-parse --show-toplevel)
-cd "$repo_root"
+repo_root=$(git rev-parse --show-toplevel) || exit 1
+cd "$repo_root" || exit 1
 
-staged_backend=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^backend/' || true)
-staged_frontend=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^frontend/' || true)
+# Under WSL a non-interactive PATH can find the Windows node/npm first, which dies on a CMD.EXE
+# error that reads like a lint failure. Prefer the newest nvm node then.
+for tool in node npm; do
+    case "$(command -v "$tool" 2>/dev/null)" in
+        "" | /mnt/*)
+            nvm_bin=$(ls -d "$HOME"/.nvm/versions/node/*/bin 2>/dev/null | sort -V | tail -1)
+            if [ -n "$nvm_bin" ]; then
+                PATH="$nvm_bin:$PATH"
+                export PATH
+            fi
+            break
+            ;;
+    esac
+done
 
-if [ -n "$staged_backend" ]; then
-    echo "→ backend changes staged; running backend pre-commit gauntlet"
-    # CaptainHook takes dirname(--git-directory) as the repository ROOT and
-    # verifies it with `is_dir(root/.git) || is_file(root/.git)` — so the
-    # flag must name the `.git` entry AT the repo root (directory in a
-    # standalone clone, `gitdir:` pointer file in a worktree or submodule),
-    # never the resolved common dir. Passing the common dir made the root
-    # `.git/modules/<parent>` and refused every backend commit from a
-    # submodule checkout with "Invalid git repository".
-    (cd backend && vendor/bin/captainhook hook:pre-commit --git-directory="$repo_root/.git")
+failed=0
+
+# Staged paths are split on whitespace below; never glob them.
+set -f
+
+# Backend: pint on the staged PHP, from backend/ so pint.json's in-tree cache-file resolves.
+#
+# A file that ALSO has unstaged changes is checked, never written: `git add` after a write would
+# sweep those hunks into the commit. `pint --test` reads the working-tree file, so for such a file
+# it approximates the staged content; CI's `pint:test` checks the committed tree exactly.
+staged_php=$(git diff --cached --name-only --diff-filter=ACMR -- 'backend/*.php')
+if [ -n "$staged_php" ]; then
+    if [ ! -x backend/vendor/bin/pint ]; then
+        echo "[skip] pint — backend/vendor/ is missing; run: composer install -d backend" >&2
+    else
+        whole=""
+        partial=""
+        for f in $staged_php; do
+            if git diff --quiet -- "$f"; then
+                whole="$whole ${f#backend/}"
+            else
+                partial="$partial ${f#backend/}"
+            fi
+        done
+
+        if [ -n "$whole" ]; then
+            echo "=== pint: staged PHP ==="
+            if (cd backend && vendor/bin/pint $whole); then
+                (cd backend && git add -- $whole) || failed=1
+            else
+                failed=1
+            fi
+        fi
+
+        if [ -n "$partial" ]; then
+            echo "=== pint --test: partially staged PHP ==="
+            if ! (cd backend && vendor/bin/pint --test $partial); then
+                echo "These backend/ files have unstaged changes and need formatting:$partial" >&2
+                echo "Stage or stash the rest first, then commit again." >&2
+                failed=1
+            fi
+        fi
+    fi
 fi
 
-if [ -n "$staged_frontend" ]; then
-    echo "→ frontend changes staged; running frontend pre-commit pipeline"
-    # Anchor cwd and git-add against $repo_root (set above via `git rev-parse
-    # --show-toplevel`). In worktree-mode dispatches a bare `git add
-    # src/shared/generated/component-registry.json` from a `cd frontend` cwd
-    # has been observed to stage a spurious orchestrator-root file
-    # (`src/shared/...` instead of `frontend/src/shared/...`); see the
-    # 2026-05-27 BR `worktree-mode-pre-commit-hook-regression`. The
-    # `git -C "$repo_root" add frontend/src/...` form makes the staged path
-    # explicit and worktree-safe.
-    (cd "$repo_root/frontend" && \
-        node scripts/generate-component-registry.mjs && \
-        npx oxfmt --write src/shared/generated/component-registry.json && \
-        git -C "$repo_root" add frontend/src/shared/generated/component-registry.json && \
-        npx lint-staged --relative)
+# Frontend: regenerate the component registry, then lint-staged on the staged files under frontend/
+# (config in frontend/package.json).
+#
+# `--relative`: lint-staged runs from frontend/, and its globs must match the paths git emits
+# relative to that cwd. `--concurrent false`: `*.{ts,vue}` and `*.vue` both match a .vue file, so
+# its tasks run in order and no two tools touch one file at once.
+#
+# `--no-stash`: lint-staged's own backup lives in refs/stash, which every worktree of this repo
+# shares, and it drops that backup by INDEX — a stash pushed from another worktree in between shifts
+# the index onto someone else's entry. The hook keeps the backup itself: `git stash create` makes
+# the commit without touching refs/stash, and refs/worktree/ is private to this worktree. A failed
+# run names that ref, so an unstaged edit lint-staged could not put back is recoverable.
+if [ -n "$(git diff --cached --name-only --diff-filter=ACMR -- frontend/)" ]; then
+    if [ ! -x frontend/node_modules/.bin/lint-staged ]; then
+        echo "[skip] lint-staged — frontend/node_modules/ is missing; run: npm ci --prefix frontend" >&2
+    else
+        case "$(command -v node 2>/dev/null)" in
+            "" | /mnt/*)
+                echo "✗ No Linux node on PATH, so the frontend checks could not run. Install node in WSL (nvm)." >&2
+                failed=1
+                ;;
+            *)
+                echo "=== component registry ==="
+                # `git -C "$repo_root" add frontend/...` names the path from the root: a bare
+                # `git add src/...` from a frontend/ cwd staged a spurious root file in worktree mode.
+                if ! (cd frontend &&
+                    node scripts/generate-component-registry.mjs &&
+                    ./node_modules/.bin/oxfmt --write src/shared/generated/component-registry.json &&
+                    git -C "$repo_root" add frontend/src/shared/generated/component-registry.json); then
+                    failed=1
+                elif ! backup=$(git stash create); then
+                    echo "✗ Could not back up the working tree, so lint-staged did not run." >&2
+                    failed=1
+                elif [ -n "$backup" ] && ! git update-ref refs/worktree/lint-staged-backup "$backup"; then
+                    echo "✗ Could not save refs/worktree/lint-staged-backup, so lint-staged did not run." >&2
+                    failed=1
+                elif (cd frontend && ./node_modules/.bin/lint-staged --relative --concurrent false --no-stash --quiet); then
+                    if [ -n "$backup" ]; then
+                        git update-ref -d refs/worktree/lint-staged-backup
+                    fi
+                else
+                    failed=1
+                    if [ -n "$backup" ]; then
+                        echo "  The state before lint-staged ran is saved as $backup (refs/worktree/lint-staged-backup)." >&2
+                        echo "  If an unstaged edit did not come back, restore it all with:" >&2
+                        echo "    git reset --hard && git stash apply --index $backup" >&2
+                    fi
+                fi
+                ;;
+        esac
+    fi
 fi
 
-exit 0
+if [ "$failed" -ne 0 ]; then
+    echo "" >&2
+    echo "✗ pre-commit failed. Fix the errors above and commit again." >&2
+    exit 1
+fi
