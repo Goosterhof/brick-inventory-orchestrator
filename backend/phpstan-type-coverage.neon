@@ -7,6 +7,9 @@ parameters:
     # re-run the full analysis (that's phpstan.neon's job).
     level: 0
 
+    # A result cache of its own: phpstan.neon's would be evicted on every alternating run.
+    tmpDir: storage/phpstan-types
+
     paths:
         - app
 

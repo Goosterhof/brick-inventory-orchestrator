@@ -30,3 +30,6 @@ Thumbs.db
 frankenphp
 frankenphp-worker.php
 /storage/rector
+/storage/pint.cache
+/storage/phpstan
+/storage/phpstan-types

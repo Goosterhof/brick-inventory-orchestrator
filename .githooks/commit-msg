@@ -4,8 +4,7 @@
 # Conventional Commits is firm-wide doctrine (both wing manuals), but the
 # only automated check was CI's frontend workflow — which runs solely on
 # PRs touching frontend/**, and 20+ minutes after the message was written.
-# frontend/.husky/commit-msg exists but never fires: hooksPath bypasses
-# Husky entirely. This stage closes the gap at write time, repo-wide.
+# This stage closes the gap at write time, repo-wide.
 #
 # The linter and its config live in the frontend workspace. If the
 # workspace isn't installed yet (fresh clone, pre-`make init`), skip with

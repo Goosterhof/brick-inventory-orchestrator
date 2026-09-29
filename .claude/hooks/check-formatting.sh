@@ -3,8 +3,8 @@
 # Non-blocking — injects a warning as context if formatting is off.
 #
 # Scoped to the Gallery Wing — oxfmt is a frontend tool installed under
-# frontend/node_modules. Backend formatting is enforced by Pint via the
-# pre-commit CaptainHook gauntlet, not by this PostToolUse hook.
+# frontend/node_modules. Backend formatting is enforced by Pint in the root
+# .githooks/pre-commit (staged files) and CI, not by this PostToolUse hook.
 
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
