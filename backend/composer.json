@@ -33,7 +33,7 @@
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
         "rector/rector": "^2.3",
-        "script-development/phpstan-warroom-rules": "^0.10",
+        "script-development/phpstan-warroom-rules": "^0.11",
         "tomasvotruba/type-coverage": "^2.1"
     },
     "autoload": {
