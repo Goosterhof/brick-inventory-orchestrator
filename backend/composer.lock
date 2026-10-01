@@ -3570,16 +3570,16 @@
         },
         {
             "name": "script-development/kendo-error-tracker",
-            "version": "v0.1.1",
+            "version": "v0.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/script-development/kendo-error-tracker.git",
-                "reference": "25327c0010b60700a7e2d0b3c9373810627209d0"
+                "reference": "c00d422fccc16b1e65ba9855be6f410ef0b5b62f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/script-development/kendo-error-tracker/zipball/25327c0010b60700a7e2d0b3c9373810627209d0",
-                "reference": "25327c0010b60700a7e2d0b3c9373810627209d0",
+                "url": "https://api.github.com/repos/script-development/kendo-error-tracker/zipball/c00d422fccc16b1e65ba9855be6f410ef0b5b62f",
+                "reference": "c00d422fccc16b1e65ba9855be6f410ef0b5b62f",
                 "shasum": ""
             },
             "require": {
@@ -3592,8 +3592,8 @@
             },
             "require-dev": {
                 "laravel/pint": "^1.18",
-                "orchestra/testbench": "^9.0 || ^10.0",
-                "pestphp/pest": "^3.0",
+                "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
+                "pestphp/pest": "^3.0 || ^4.0",
                 "phpstan/phpstan": "^2.0"
             },
             "type": "library",
@@ -3622,9 +3622,9 @@
             ],
             "support": {
                 "issues": "https://github.com/script-development/kendo-error-tracker/issues",
-                "source": "https://github.com/script-development/kendo-error-tracker/tree/v0.1.1"
+                "source": "https://github.com/script-development/kendo-error-tracker/tree/v0.1.2"
             },
-            "time": "2026-07-02T11:15:09+00:00"
+            "time": "2026-10-01T11:36:57+00:00"
         },
         {
             "name": "script-development/kendo-report-tool",
