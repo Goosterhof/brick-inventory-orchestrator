@@ -38,6 +38,26 @@ updates:
       fs-packages:
         patterns:
           - "@script-development/fs-*"
+    ignore:
+      # @types/node major tracks the Node runtime major (24, setup-node + engines);
+      # a higher major types APIs the runtime does not have.
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
+
+  - package-ecosystem: npm
+    directory: /e2e
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    ignore:
+      # Same rule as /frontend: e2e runs on setup-node 24 in e2e.yml.
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
 
   - package-ecosystem: github-actions
     directory: /
