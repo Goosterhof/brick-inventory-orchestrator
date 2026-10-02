@@ -15,6 +15,21 @@ set -euo pipefail
 
 repo_root=$(git rev-parse --show-toplevel)
 
+# Under WSL a non-interactive PATH can find the Windows node/npx first, which dies on a CMD.EXE
+# error that reads like a commitlint failure. Prefer the newest nvm node then.
+for tool in node npx; do
+    case "$(command -v "$tool" 2>/dev/null || true)" in
+        "" | /mnt/*)
+            nvm_bin=$(ls -d "$HOME"/.nvm/versions/node/*/bin 2>/dev/null | sort -V | tail -1 || true)
+            if [ -n "$nvm_bin" ]; then
+                PATH="$nvm_bin:$PATH"
+                export PATH
+            fi
+            break
+            ;;
+    esac
+done
+
 # git passes the message file path relative to the repo root; anchor it
 # absolutely before changing directory (worktree-safe).
 msg_file=$1
