@@ -38,6 +38,12 @@ updates:
       fs-packages:
         patterns:
           - "@script-development/fs-*"
+    ignore:
+      # @types/node major tracks the Node runtime major (24, setup-node + engines);
+      # a higher major types APIs the runtime does not have.
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
 
   - package-ecosystem: github-actions
     directory: /
