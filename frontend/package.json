@@ -73,7 +73,7 @@
     "devDependencies": {
         "@commitlint/cli": "^21.2.2",
         "@commitlint/config-conventional": "^21.2.3",
-        "@size-limit/file": "^13.0.3",
+        "@size-limit/file": "^14.1.0",
         "@stryker-mutator/core": "^10",
         "@stryker-mutator/vitest-runner": "^10",
         "@tsconfig/node24": "^24.0.5",
