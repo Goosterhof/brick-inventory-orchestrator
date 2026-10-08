@@ -19,7 +19,7 @@ test.describe("Set detail — load parts", () => {
     email = testEmail();
     password = "password123";
 
-    await createTestUser(email, password);
+    createTestUser(email, password);
     await loginViaUi(page, email, password);
   });
 

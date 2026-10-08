@@ -170,6 +170,7 @@ deptrac:
     # They delegate to Actions and surface Result DTO counts via the CLI.
     Console:
       - Action
+      - InputDTO
       - ResultDTO
 
     # Providers wire interfaces to implementations and configure action dependencies

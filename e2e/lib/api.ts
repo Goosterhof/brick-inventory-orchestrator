@@ -1,4 +1,6 @@
 import type { Page } from "@playwright/test";
+import { execFileSync } from "node:child_process";
+import { resolve } from "node:path";
 
 const API_BASE = "http://localhost:8000/api";
 
@@ -16,50 +18,40 @@ export function testEmail(): string {
   return `test-${uniqueId()}@example.com`;
 }
 
-interface RegisterResponse {
-  user: {
-    id: number;
-    name: string;
-    email: string;
-  };
-}
-
 interface HealthResponse {
   status: string;
   timestamp: string;
 }
 
 /**
- * Create a test user via the API
+ * Create a test user (heading a new family) with the backend's operator command.
+ * BIO has no registration route (WR-2118), so provisioning needs a shell in the
+ * backend container — the same `docker compose exec` the e2e workflow migrates with.
  */
-export async function createTestUser(
+export function createTestUser(
   email: string,
   password: string,
   options: { name?: string; familyName?: string } = {},
-): Promise<RegisterResponse> {
+): void {
   const { name = "Test User", familyName = "Test Family" } = options;
 
-  const response = await fetch(`${API_BASE}/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      family_name: familyName,
-      name,
+  execFileSync(
+    "docker",
+    [
+      "compose",
+      "exec",
+      "-T",
+      "backend",
+      "php",
+      "artisan",
+      "account:create",
       email,
       password,
-      password_confirmation: password,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to create user (${response.status}): ${error}`);
-  }
-
-  return response.json();
+      `--name=${name}`,
+      `--family=${familyName}`,
+    ],
+    { cwd: resolve(__dirname, "..", ".."), stdio: "pipe" },
+  );
 }
 
 /**
