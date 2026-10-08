@@ -894,10 +894,7 @@
             "category": null,
             "consumers": {
                 "families": {
-                    "auth": [
-                        "src/apps/families/domains/auth/pages/LoginPage.vue",
-                        "src/apps/families/domains/auth/pages/RegisterPage.vue"
-                    ],
+                    "auth": ["src/apps/families/domains/auth/pages/LoginPage.vue"],
                     "parts": [
                         "src/apps/families/domains/parts/modals/PartUsageModal.vue",
                         "src/apps/families/domains/parts/pages/PartsMissingPage.vue",

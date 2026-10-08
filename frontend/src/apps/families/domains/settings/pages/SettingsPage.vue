@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type {ImportJob} from '@app/types/importJob';
-import type {EmailInviteCodeRequest, InviteCode} from '@app/types/inviteCode';
 import type {FamilyMember} from '@app/types/profile';
 
 import {
@@ -10,14 +9,12 @@ import {
     familyThemeService,
     familyTranslationService,
 } from '@app/services';
-import {useForm} from '@script-development/fs-form';
 import {FormField, TextInput} from '@script-development/ui-inputs';
 import BadgeLabel from '@shared/components/BadgeLabel.vue';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import {camelKey} from '@shared/helpers/string';
 import {isAxiosError} from 'axios';
 import {computed, onMounted, onUnmounted, ref, useId} from 'vue';
 
@@ -25,11 +22,6 @@ const {t} = familyTranslationService;
 
 const members = ref<FamilyMember[]>([]);
 const membersLoading = ref(true);
-
-const inviteCode = ref<InviteCode | null>(null);
-const inviteCodeLoading = ref(false);
-const inviteCodeError = ref('');
-const codeCopied = ref(false);
 
 const isHead = computed(() => {
     const userId = familyAuthService.userId();
@@ -93,87 +85,9 @@ onMounted(async () => {
     const response = await familyHttpService.getRequest<FamilyMember[]>('/family/members');
     members.value = response.data;
     membersLoading.value = false;
-
-    try {
-        const codeResponse = await familyHttpService.getRequest<InviteCode>('/family/invite-code');
-        inviteCode.value = codeResponse.data;
-    } catch (error: unknown) {
-        if (!isAxiosError(error) || error.response?.status !== 404) {
-            inviteCodeError.value = t('settings.inviteCodeError').value;
-        }
-    }
 });
 
-const generateInviteCode = async () => {
-    inviteCodeLoading.value = true;
-    inviteCodeError.value = '';
-
-    try {
-        const response = await familyHttpService.postRequest<InviteCode>('/family/invite-code', {});
-        inviteCode.value = response.data;
-    } catch {
-        inviteCodeError.value = t('settings.inviteCodeError').value;
-    } finally {
-        inviteCodeLoading.value = false;
-    }
-};
-
-const revokeInviteCode = async () => {
-    inviteCodeLoading.value = true;
-    inviteCodeError.value = '';
-
-    try {
-        await familyHttpService.deleteRequest('/family/invite-code');
-        inviteCode.value = null;
-    } catch {
-        inviteCodeError.value = t('settings.inviteCodeError').value;
-    } finally {
-        inviteCodeLoading.value = false;
-    }
-};
-
-const copyCode = async () => {
-    if (!inviteCode.value) return;
-    await navigator.clipboard.writeText(inviteCode.value.code);
-    codeCopied.value = true;
-};
-
-const recipientEmail = ref('');
-const recipientName = ref('');
-const inviteEmailSent = ref(false);
-const inviteEmailError = ref('');
-
-const recipientEmailId = useId();
-const recipientNameId = useId();
 const rebrickableTokenId = useId();
-
-const {
-    errors: inviteEmailErrors,
-    handleSubmit: handleInviteEmailSubmit,
-    submitting: inviteEmailSubmitting,
-} = useForm<'recipientEmail' | 'recipientName'>(familyHttpService, {keyMapper: camelKey});
-
-const sendInviteByEmail = () =>
-    handleInviteEmailSubmit(async () => {
-        inviteEmailSent.value = false;
-        inviteEmailError.value = '';
-
-        try {
-            const body: EmailInviteCodeRequest = {recipientEmail: recipientEmail.value};
-            if (recipientName.value) body.recipientName = recipientName.value;
-
-            const response = await familyHttpService.postRequest<InviteCode>('/family/invite-code/email', body);
-            inviteCode.value = response.data;
-            inviteEmailSent.value = true;
-            recipientEmail.value = '';
-            recipientName.value = '';
-        } catch (error: unknown) {
-            const status = isAxiosError(error) ? error.response?.status : undefined;
-            if (status === 422) throw error;
-            inviteEmailError.value =
-                status === 429 ? t('settings.inviteEmailRateLimited').value : t('settings.inviteEmailError').value;
-        }
-    });
 
 const saveToken = async () => {
     tokenSaving.value = true;
@@ -324,88 +238,6 @@ onUnmounted(() => {
             </section>
 
             <hr border="t-3 [var(--brick-border-color)]" />
-
-            <section v-if="isHead" flex="~ col" gap="4">
-                <h2 text="xl" font="bold" uppercase tracking="wide">{{ t('settings.inviteCodeTitle').value }}</h2>
-                <p text="[var(--brick-muted-text)]">{{ t('settings.inviteCodeDescription').value }}</p>
-
-                <div v-if="inviteCode" p="4" bg="[var(--brick-card-bg)]" class="brick-border" flex="~ col" gap="3">
-                    <div flex items="center" gap="3">
-                        <p font="mono bold" text="lg">{{ inviteCode.code }}</p>
-                        <PrimaryButton :sound-service="familySoundService" @click="copyCode">
-                            {{ t('settings.copyCode').value }}
-                        </PrimaryButton>
-                    </div>
-                    <p v-if="codeCopied" text="baseplate-green" font="bold">{{ t('settings.codeCopied').value }}</p>
-                    <p text="sm [var(--brick-muted-text)]">
-                        {{
-                            inviteCode.expiresAt
-                                ? `${t('settings.codeExpires').value}: ${inviteCode.expiresAt}`
-                                : t('settings.codeNeverExpires').value
-                        }}
-                    </p>
-                    <DangerButton :disabled="inviteCodeLoading" @click="revokeInviteCode">
-                        {{ t('settings.revokeCode').value }}
-                    </DangerButton>
-                </div>
-
-                <p v-if="inviteCodeError" text="[var(--brick-danger-text)]" font="bold">{{ inviteCodeError }}</p>
-
-                <PrimaryButton
-                    v-if="!inviteCode"
-                    :disabled="inviteCodeLoading"
-                    :sound-service="familySoundService"
-                    @click="generateInviteCode"
-                >
-                    {{ t('settings.generateInviteCode').value }}
-                </PrimaryButton>
-
-                <form flex="~ col" gap="3" @submit.prevent="sendInviteByEmail">
-                    <FormField
-                        :id="recipientEmailId"
-                        :label="t('settings.recipientEmail').value"
-                        required
-                        :error="inviteEmailErrors.recipientEmail"
-                    >
-                        <template #default="{controlId, required, invalid, describedby}">
-                            <TextInput
-                                :id="controlId"
-                                v-model="recipientEmail"
-                                type="email"
-                                :required="required"
-                                :invalid="invalid"
-                                :describedby="describedby"
-                            />
-                        </template>
-                    </FormField>
-                    <FormField
-                        :id="recipientNameId"
-                        :label="t('settings.recipientName').value"
-                        :error="inviteEmailErrors.recipientName"
-                    >
-                        <template #default="{controlId, required, invalid, describedby}">
-                            <TextInput
-                                :id="controlId"
-                                v-model="recipientName"
-                                :required="required"
-                                :invalid="invalid"
-                                :describedby="describedby"
-                            />
-                        </template>
-                    </FormField>
-
-                    <p v-if="inviteEmailSent" text="baseplate-green" font="bold">
-                        {{ t('settings.inviteEmailSent').value }}
-                    </p>
-                    <p v-if="inviteEmailError" text="[var(--brick-danger-text)]" font="bold">{{ inviteEmailError }}</p>
-
-                    <PrimaryButton type="submit" :disabled="inviteEmailSubmitting" :sound-service="familySoundService">
-                        {{ t('settings.sendInviteByEmail').value }}
-                    </PrimaryButton>
-                </form>
-            </section>
-
-            <hr v-if="isHead" border="t-3 [var(--brick-border-color)]" />
 
             <section flex="~ col" gap="4">
                 <h2 text="xl" font="bold" uppercase tracking="wide">{{ t('settings.rebrickableTitle').value }}</h2>

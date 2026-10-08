@@ -786,7 +786,6 @@ describe('Architecture', () => {
             'apps/admin/App.spec.ts': ['NavLink.vue'],
             'apps/families/App.spec.ts': ['NavHeader.vue', 'NavMobileLink.vue'],
             'apps/families/domains/auth/pages/LoginPage.spec.ts': ['PrimaryButton.vue', 'TextInput.vue'],
-            'apps/families/domains/auth/pages/RegisterPage.spec.ts': ['PrimaryButton.vue', 'TextInput.vue'],
             'apps/families/domains/home/pages/HomePage.spec.ts': [
                 'CardContainer.vue',
                 'LegoBrick.vue',
@@ -841,12 +840,6 @@ describe('Architecture', () => {
             // Split-spec: SUT is SettingsPage.vue (filename mismatch is intentional).
             'apps/families/domains/settings/pages/SettingsPageConfig.spec.ts': [
                 'PageHeader.vue',
-                'PrimaryButton.vue',
-                'SettingsPage.vue',
-                'TextInput.vue',
-            ],
-            // Split-spec: SUT is SettingsPage.vue (filename mismatch is intentional).
-            'apps/families/domains/settings/pages/SettingsPageInviteEmail.spec.ts': [
                 'PrimaryButton.vue',
                 'SettingsPage.vue',
                 'TextInput.vue',

@@ -143,16 +143,6 @@ const unregister =
  * so the wholesale fs-http mock keeps the real fs-http/axios modules out of
  * the integration import chain (ADR-0012 test isolation).
  */
-/**
- * Faithful stand-in for fs-http's re-exported axios `isAxiosError`: real axios
- * checks `payload.isAxiosError === true`, and errors built by `makeAxiosError`
- * carry that flag. fs-form's `handleSubmit` calls this to decide whether a
- * rejection is a swallowable 422 — spec files whose fs-http mock factory omits
- * it would throw `isAxiosError is not a function` on the first error response.
- */
-export const isAxiosError = (error: unknown): boolean =>
-    typeof error === 'object' && error !== null && (error as {isAxiosError?: unknown}).isAxiosError === true;
-
 export const guarded =
     <T>(fn: (arg: T) => void, onError?: (error: unknown) => void): ((arg: T) => void) =>
     (arg: T) => {

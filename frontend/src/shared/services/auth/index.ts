@@ -5,7 +5,7 @@ import {NotLoggedInError} from '@shared/errors/not-logged-in';
 import {isAxiosError} from 'axios';
 import {computed, shallowRef} from 'vue';
 
-import type {AuthService, Credentials, RegistrationData} from './types';
+import type {AuthService, Credentials} from './types';
 
 export const createAuthService = <Profile extends {id: number}>(httpService: HttpService): AuthService<Profile> => {
     const userRef: ShallowRef<Profile | null> = shallowRef(null);
@@ -18,11 +18,6 @@ export const createAuthService = <Profile extends {id: number}>(httpService: Htt
         if (!currentUser) throw new NotLoggedInError();
 
         return currentUser.id;
-    };
-
-    const register = async (registrationData: RegistrationData): Promise<void> => {
-        const {data} = await httpService.postRequest<Profile>('/register', registrationData);
-        userRef.value = data;
     };
 
     const login = async (loginData: Credentials): Promise<void> => {
@@ -64,5 +59,5 @@ export const createAuthService = <Profile extends {id: number}>(httpService: Htt
         }
     };
 
-    return {isLoggedIn, user, userId, register, login, logout, clearUser, checkIfLoggedIn};
+    return {isLoggedIn, user, userId, login, logout, clearUser, checkIfLoggedIn};
 };

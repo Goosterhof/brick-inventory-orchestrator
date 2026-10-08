@@ -125,8 +125,8 @@ const goToSettings = async () => await familyRouterService.goToRoute('settings')
                     <p text="[var(--brick-muted-text)]" m="b-2">{{ t('home.tagline').value }}</p>
                     <p text="[var(--brick-muted-text)]" m="b-6">{{ t('home.brandDescription').value }}</p>
 
-                    <NavLink to="/register" @click="familyRouterService.goToRoute('register')">
-                        {{ t('auth.createAccount').value }}
+                    <NavLink to="/login" @click="familyRouterService.goToRoute('login')">
+                        {{ t('auth.logIn').value }}
                     </NavLink>
                 </div>
 

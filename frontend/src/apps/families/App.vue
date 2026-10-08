@@ -48,9 +48,6 @@ const handleLogout = async () => {
             <FamilyRouterLink v-show="!familyAuthService.isLoggedIn.value" :to="{name: 'login'}">
                 {{ t('auth.logIn').value }}
             </FamilyRouterLink>
-            <FamilyRouterLink v-show="!familyAuthService.isLoggedIn.value" :to="{name: 'register'}">
-                {{ t('auth.register').value }}
-            </FamilyRouterLink>
         </template>
 
         <template #mobile-links>
@@ -111,14 +108,6 @@ const handleLogout = async () => {
                 @click="familyRouterService.goToRoute('login')"
             >
                 {{ t('auth.logIn').value }}
-            </NavMobileLink>
-            <NavMobileLink
-                v-show="!familyAuthService.isLoggedIn.value"
-                to="/register"
-                :active="currentRouteName === 'register'"
-                @click="familyRouterService.goToRoute('register')"
-            >
-                {{ t('auth.register').value }}
             </NavMobileLink>
         </template>
 

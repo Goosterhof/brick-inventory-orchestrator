@@ -88,11 +88,10 @@ describe('LoginPage — integration', () => {
         await goToRoute.mock.results[0]?.value;
     });
 
-    it('renders the register link via real FamilyRouterLink', () => {
+    it('renders no link to registration', () => {
         const wrapper = mountPage();
 
-        const link = wrapper.find('a');
-        expect(link.exists()).toBe(true);
-        expect(wrapper.text()).toContain("Don't have an account yet?");
+        expect(wrapper.find('a').exists()).toBe(false);
+        expect(wrapper.text()).not.toContain('Register');
     });
 });

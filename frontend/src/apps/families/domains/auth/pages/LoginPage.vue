@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-    FamilyRouterLink,
-    familyAuthService,
-    familyHttpService,
-    familyRouterService,
-    familyTranslationService,
-} from '@app/services';
+import {familyAuthService, familyHttpService, familyRouterService, familyTranslationService} from '@app/services';
 import {useForm} from '@script-development/fs-form';
 import {FormField, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
@@ -62,12 +56,5 @@ const onSubmit = () =>
 
             <PrimaryButton type="submit" :disabled="submitting">{{ t('auth.logIn').value }}</PrimaryButton>
         </form>
-
-        <p m="t-6" text="center">
-            {{ t('auth.noAccountYet').value }}
-            <FamilyRouterLink :to="{name: 'register'}" font="bold" text="decoration-underline">
-                {{ t('auth.register').value }}
-            </FamilyRouterLink>
-        </p>
     </div>
 </template>

@@ -98,6 +98,6 @@ describe('auth session resilience — integration', () => {
 
         const navLink = wrapper.findComponent(NavLink);
         expect(navLink.exists()).toBe(true);
-        expect(navLink.text()).toContain('Create Account');
+        expect(navLink.text()).toContain('Log In');
     });
 });
