@@ -127,18 +127,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Invite Code Settings
-    |--------------------------------------------------------------------------
-    |
-    | Configuration for the family invite code system. The TTL controls
-    | how long an invite code remains valid after generation, in days.
-    |
-     */
-
-    'invite_code_ttl_days' => (int) env('INVITE_CODE_TTL_DAYS', 7),
-
-    /*
-    |--------------------------------------------------------------------------
     | Import Settings
     |--------------------------------------------------------------------------
     |

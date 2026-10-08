@@ -5,12 +5,10 @@ declare(strict_types = 1);
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\MeController;
-use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BrickIdentificationController;
 use App\Http\Controllers\FamilyController;
 use App\Http\Controllers\FamilySetController;
 use App\Http\Controllers\FeedbackController;
-use App\Http\Controllers\InviteCodeController;
 use App\Http\Controllers\SetController;
 use App\Http\Controllers\StorageOptionController;
 use App\Models\Family;
@@ -27,7 +25,6 @@ Route::get('/health', fn() => response()->json([
     'timestamp' => now()->toIso8601String(),
 ]));
 
-Route::post('/register', RegisterController::class)->middleware('throttle:auth');
 Route::post('/login', LoginController::class)->middleware('throttle:auth');
 Route::post('/logout', LogoutController::class)->middleware('auth:sanctum');
 Route::get('/me', MeController::class)->middleware('auth:sanctum');
@@ -121,18 +118,6 @@ Route::middleware(['auth:sanctum', 'family.ownership'])->group(function(): void 
         ->can('setRebrickableToken', Family::class);
     Route::delete('/family/members/{user}', [FamilyController::class, 'removeMember'])
         ->can('removeMember', Family::class);
-
-    // Invite Codes
-    Route::post('/family/invite-code', [InviteCodeController::class, 'store'])
-        ->can('generateInviteCode', Family::class);
-    Route::post('/family/invite-code/email', [InviteCodeController::class, 'email'])
-        ->middleware('throttle:invite-email')
-        ->can('generateInviteCode', Family::class);
-    Route::get('/family/invite-code', [InviteCodeController::class, 'show'])
-        ->middleware(['etag', 'cache.headers:private;max_age=60'])
-        ->can('viewInviteCode', Family::class);
-    Route::delete('/family/invite-code', [InviteCodeController::class, 'destroy'])
-        ->can('revokeInviteCode', Family::class);
 
     // Brick Identification
     Route::post('/identify-brick', [BrickIdentificationController::class, 'identify'])

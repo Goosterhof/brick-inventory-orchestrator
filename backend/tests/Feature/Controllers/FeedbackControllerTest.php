@@ -283,8 +283,7 @@ describe('FeedbackController', function(): void {
             expect($middleware)->toContain('throttle:feedback');
         });
 
-        // Behavioural assertion. Mirrors the invite-email precedent in InviteCodeControllerTest:
-        // the limiter is explicitly re-enabled by forcing the env to 'production' and re-binding
+        // Behavioural assertion. The limiter is explicitly re-enabled by forcing the env to 'production' and re-binding
         // the provider closures, because the default testing env would make this vacuous.
         it('should rate-limit at 5 requests per hour per user', function(): void {
             // arrange

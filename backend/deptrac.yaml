@@ -67,12 +67,6 @@ deptrac:
         - type: classLike
           value: App\\Jobs\\.*
 
-    # --- Mail layer (App\ leaf — primitives only, no other App deps) ---
-    - name: Mail
-      collectors:
-        - type: classLike
-          value: App\\Mail\\.*
-
     # --- Entry point layer ---
     - name: Controller
       collectors:
@@ -148,16 +142,11 @@ deptrac:
       - Action
       - Job
       - Contract
-      - Mail
       - Model
       - InputDTO
       - ResultDTO
       - Enum
       - Exception
-
-    # Mail layer is an App\ leaf — Mailables receive primitives via constructor,
-    # so they must not depend on Models, DTOs, or any other App\ class.
-    Mail: []
 
     # Jobs wrap Actions for async execution
     Job:

@@ -15,7 +15,6 @@
     <source>
         <include>
             <directory>app/Actions</directory>
-            <directory>app/Mail</directory>
             <directory>app/Services</directory>
         </include>
     </source>
