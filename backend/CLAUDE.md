@@ -54,7 +54,7 @@ app/
 │   ├── StorageOption           #   Physical locations (hierarchical)
 │   ├── StorageOptionPart       #   What's stored where
 │   ├── ImportJob               #   Async Rebrickable import tracking
-│   └── InviteCode              #   Family invitation codes
+│   └── InviteCode              #   Dormant (WR-2118): no route reads or writes it; table kept
 ├── Http/
 │   ├── Controllers/            # Thin request handlers
 │   ├── Requests/               # Validated input DTOs (FormRequests)
@@ -66,7 +66,6 @@ app/
 ├── Contracts/                  # Service interfaces
 ├── Exceptions/                 # Typed failure signals
 ├── Enums/                      # Status enums
-├── Mail/                       # Outbound notifications (primitive-only Mailables)
 ├── Policies/                   # Authorization rules
 └── Providers/                  # DI bindings
 
@@ -163,31 +162,29 @@ Thin wrappers that move actions onto the async conveyor belt.
 - `failed()` callback: static Model queries are acceptable here — this method is called by the queue worker directly, not resolved from the container
 - `failed()` leak discipline: persist an **opaque** user-facing failure message; raw exception detail (`getMessage()`, `getTraceAsString()`) goes to the server-side log sink (`logger()` / `Log::`) **only** — never into a persisted column or response body (it can carry DSN credentials, SQL, or API keys). Canonical shape: `ImportOwnedSetsJob::failed()`. Enforced by `tests/Architecture/JobFailedHandlerLeakArchitectureTest.php` (war-room enforcement queue #140/#134)
 
-### Mail
+### Personal App — No Admission, No Mail (WR-2118)
 
-Mailables in `app/Mail/` are App-layer leaves. They render a view and that's it.
+BIO admits nobody but its owner (Commander ruling 2026-10-08). There is no registration route, no invite flow, and no mail capability. An account is created only from a shell on the host:
 
-- `final` classes extending `Illuminate\Mail\Mailable` and implementing `ShouldQueue`
-- Constructor accepts **primitives only** (`string`, `int`, `bool`, `?string`, `?CarbonImmutable`) — no Models, no DTOs, no other App imports
-- Public surface is the Mailable contract only — `__construct`, `envelope`, `content`, `attachments`, `headers`. `MailArchitectureTest` enforces all of it
-- Subject lives in `envelope()`. View lives in `content()` as a Markdown view path (`mail.<name>`). View payload bound via `with: [...]` — pass primitives only
-- From-address comes from `config('mail.from')` (`MAIL_FROM_ADDRESS`/`MAIL_FROM_NAME`)
-- The Action sends via the `Illuminate\Contracts\Mail\Mailer` contract: `$this->mailer->to($recipient)->send($mailable)`
-- Deptrac: the `Mail` layer has **no allowed dependencies**; only the `Action` layer may depend on `Mail`
+```
+php artisan account:create <email> <password> --name="..." --family="..."
+```
+
+`tests/Architecture/PersonalAppArchitectureTest.php` enforces it: the set of routes without `auth:sanctum` equals a literal allowlist; no `App\` class uses Laravel's mail or notification classes; no file in `app/` creates a `User` or `Family` outside `CreateAccountAction` (console-only) and `RemoveFamilyMemberAction`. A new public route or a mail import is a change to that test, reviewed as such.
 
 ### Queue Worker
 
-The Foundry writes async work; a `queue:work` worker reads it. **Production needs both, period.** A `ShouldQueue` mailable hitting an absent worker is a silent failure.
+The Foundry writes async work; a `queue:work` worker reads it. **Production needs both, period.** A queued job hitting an absent worker is a silent failure.
 
 - **Production (Railway):** a dedicated `worker` service runs against the same image and env as the web service:
   ```
   php artisan queue:work --queue=default --tries=3 --backoff=10 --timeout=60 --max-time=3600
   ```
   `--max-time=3600` recycles the process hourly to bound memory leaks.
-- **Timeout precedence:** a per-job `#[Timeout]` attribute overrides the worker's `--timeout` flag (`Worker::timeoutForJob()` prefers the job's value). Both real jobs — `ImportOwnedSetsJob` and `SyncSetPartsJob` — declare `#[Timeout(600)]` + `#[FailOnTimeout]` and may run up to 10 minutes; `--timeout=60` effectively governs only attribute-less jobs (currently queued mail such as `InviteCodeMail`).
+- **Timeout precedence:** a per-job `#[Timeout]` attribute overrides the worker's `--timeout` flag (`Worker::timeoutForJob()` prefers the job's value). Both real jobs — `ImportOwnedSetsJob` and `SyncSetPartsJob` — declare `#[Timeout(600)]` + `#[FailOnTimeout]` and may run up to 10 minutes; `--timeout=60` effectively governs only attribute-less jobs (there are none today).
 - **Reservation invariant:** the database queue's `retry_after` must strictly exceed the largest per-job `#[Timeout]` in `app/Jobs` — otherwise a long job's reservation expires mid-run and the worker re-dispatches it while the first attempt is still on the conveyor belt.
 - **Local dev:** orchestrator-side `make queue` runs the same command inside the backend container. Run it in a second terminal alongside `make up`.
-- **Tests:** unit/feature tests use `Mail::fake()` / `Bus::fake()`. E2E uses fakes by the same default.
+- **Tests:** unit/feature tests use `Bus::fake()` / `Queue::fake()`.
 - **Verifying alive:** `php artisan queue:monitor default --max=100` or query the `failed_jobs` table.
 
 ### Middleware
@@ -198,7 +195,7 @@ The Foundry writes async work; a `queue:work` worker reads it. **Production need
 
 ### Exceptions
 
-Typed failures with global handling. No silent swallowing. All 12 rendered mappings (source of truth: `bootstrap/app.php`):
+Typed failures with global handling. No silent swallowing. All 10 rendered mappings (source of truth: `bootstrap/app.php`):
 
 ```
 SetNotFoundException              → 404
@@ -209,8 +206,6 @@ BrickognizeApiException           → 502
 InvalidApiResponseException       → 502
 CannotRemoveSelfException         → 422
 UserNotInFamilyException          → 404
-InviteCodeNotFoundException       → 404
-InvalidInviteCodeException        → 422
 ImportAlreadyInProgressException  → 409
 ReportSubmissionException         → 502 (vendor — kendo-report-tool)
 ```
@@ -244,7 +239,7 @@ The PrePushPermitGate that used to precede the pre-push gauntlet was retired 202
 
 ### Coverage Policy
 
-- **Unit tests (Actions, Services, Mail):** 100% — every Action, every Service, every Mailable
+- **Unit tests (Actions, Services):** 100% — every Action, every Service
 - **Feature tests (Controllers):** 90% — integration drills cover the main paths
 - **Mutation testing:** 76% minimum — sabotage drill ensures tests catch defects, not just touch lines
 
@@ -253,7 +248,7 @@ The PrePushPermitGate that used to precede the pre-push gauntlet was retired 202
 Functional rows with strict one-way dependencies. Wing aisles do not cross.
 
 ```
-Leaf Layers (no App deps):          Model, InputDTO, Enum, Exception, Mail
+Leaf Layers (no App deps):          Model, InputDTO, Enum, Exception
 Result-DTO Layer:                   ResultDTO → Enum, Model
 Interface Layer:                    Contract → InputDTO, Enum, Exception
 Supply Lines:                       Service → Contract, InputDTO, Exception
@@ -261,7 +256,7 @@ Input Processing:                   FormRequest → InputDTO, Enum, Model
 Output Shaping:                     ResourceData → Model, Enum, ResultDTO, Exception, Contract
 Authorization:                      Policy → Model
 Security:                           Middleware → Model, Contract
-Orchestration:                      Action → Action, Job, Mail, Contract, Model, InputDTO, ResultDTO, Enum, Exception
+Orchestration:                      Action → Action, Job, Contract, Model, InputDTO, ResultDTO, Enum, Exception
 Async Execution:                    Job → Action, Contract, Model, Enum
 Entry Point:                        Controller → Action, FormRequest, ResourceData, Model, ResultDTO, Enum
 Wiring:                             Provider → Contract, Service, Policy

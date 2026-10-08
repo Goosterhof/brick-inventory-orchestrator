@@ -70,7 +70,6 @@ composer phpstan
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/register` | Create a new user and family |
 | `GET` | `/sets/{setNum}/parts` | Get parts list for a LEGO set |
 | `GET` | `/storage-options` | List your storage locations |
 | `POST` | `/storage-options` | Create a storage location |
@@ -81,7 +80,7 @@ composer phpstan
 | `POST` | `/family-sets/import-from-rebrickable` | Import sets from Rebrickable |
 | `POST` | `/identify-brick` | Identify a brick from an image |
 
-All endpoints except `/register`, `/health`, and `/sets/{setNum}/parts` require authentication via Laravel Sanctum.
+All endpoints except `/login` and `/health` require authentication via Laravel Sanctum. There is no registration endpoint: accounts are created on the host with `php artisan account:create` (WR-2118).
 
 ## Architecture
 
