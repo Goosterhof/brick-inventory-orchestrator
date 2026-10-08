@@ -17,7 +17,7 @@ test.describe("Parts", () => {
     email = testEmail();
     password = "password123";
 
-    await createTestUser(email, password);
+    createTestUser(email, password);
     await loginViaUi(page, email, password);
   });
 

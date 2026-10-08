@@ -81,18 +81,8 @@ describe('App', () => {
 
         // Assert
         const links = wrapper.findAllComponents({name: 'FamilyRouterLink'});
-        expect(links).toHaveLength(9);
-        const [
-            homeLink,
-            aboutLink,
-            setsLink,
-            storageLink,
-            partsLink,
-            brickDnaLink,
-            settingsLink,
-            loginLink,
-            registerLink,
-        ] = links;
+        expect(links).toHaveLength(8);
+        const [homeLink, aboutLink, setsLink, storageLink, partsLink, brickDnaLink, settingsLink, loginLink] = links;
         expect(homeLink?.text()).toBe('navigation.home');
         expect(aboutLink?.text()).toBe('navigation.about');
         expect(setsLink?.text()).toContain('navigation.sets');
@@ -101,7 +91,6 @@ describe('App', () => {
         expect(brickDnaLink?.text()).toContain('navigation.brickDna');
         expect(settingsLink?.text()).toContain('navigation.settings');
         expect(loginLink?.text()).toContain('auth.logIn');
-        expect(registerLink?.text()).toContain('auth.register');
     });
 
     it('should render mobile navigation links', () => {
@@ -110,7 +99,7 @@ describe('App', () => {
 
         // Assert
         const mobileLinks = wrapper.findAllComponents({name: 'NavMobileLink'});
-        expect(mobileLinks).toHaveLength(9);
+        expect(mobileLinks).toHaveLength(8);
         expect(mobileLinks.find((l) => l.text() === 'navigation.home')?.exists()).toBe(true);
         expect(mobileLinks.find((l) => l.text() === 'navigation.about')?.exists()).toBe(true);
         expect(mobileLinks.find((l) => l.text().includes('navigation.sets'))?.exists()).toBe(true);
@@ -119,7 +108,6 @@ describe('App', () => {
         expect(mobileLinks.find((l) => l.text().includes('navigation.brickDna'))?.exists()).toBe(true);
         expect(mobileLinks.find((l) => l.text().includes('navigation.settings'))?.exists()).toBe(true);
         expect(mobileLinks.find((l) => l.text().includes('auth.logIn'))?.exists()).toBe(true);
-        expect(mobileLinks.find((l) => l.text().includes('auth.register'))?.exists()).toBe(true);
     });
 
     it('should mark active mobile link based on current route', () => {

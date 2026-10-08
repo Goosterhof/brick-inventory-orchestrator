@@ -137,7 +137,7 @@ make init
 # Stack the Modular Buildings (start services)
 make up
 
-# Run the queue worker (separate terminal — required for emails and async imports)
+# Run the queue worker (separate terminal — required for async imports)
 make queue
 
 # Disassemble (stop services)
@@ -226,10 +226,10 @@ The Plate uses cookie-based auth (`withCredentials: true`), NOT token-based. Key
 
 ### Queue Worker (`make queue`)
 
-The Brick uses the database queue driver. Async work — emails (e.g. `InviteCodeMail`), Rebrickable imports — is enqueued into the `jobs` table and drained by a worker process:
+The Brick uses the database queue driver. Async work — Rebrickable imports and set-part syncs — is enqueued into the `jobs` table and drained by a worker process:
 
-- **Local dev:** `make queue` in a second terminal alongside `make up`. The worker runs `php artisan queue:work` inside the backend container with `--tries=3 --backoff=10 --timeout=60 --max-time=3600` (recycles hourly to bound memory). Note: a per-job `#[Timeout]` attribute overrides `--timeout` — the import/sync jobs (`ImportOwnedSetsJob`, `SyncSetPartsJob`) declare `#[Timeout(600)]` and may run up to 10 minutes, so `--timeout=60` effectively governs only jobs without the attribute (queued mail). The queue's `retry_after` must strictly exceed the largest per-job `#[Timeout]`, or a long job's reservation expires mid-run and it gets re-dispatched.
-- **E2E tests:** the e2e profile uses **fakes** (`Mail::fake()`, `Queue::fake()`) inside the test process — no worker container required. The choice keeps e2e deterministic; running a real worker in e2e is a future call if/when we have email-flow assertions that need the round-trip.
+- **Local dev:** `make queue` in a second terminal alongside `make up`. The worker runs `php artisan queue:work` inside the backend container with `--tries=3 --backoff=10 --timeout=60 --max-time=3600` (recycles hourly to bound memory). Note: a per-job `#[Timeout]` attribute overrides `--timeout` — the import/sync jobs (`ImportOwnedSetsJob`, `SyncSetPartsJob`) declare `#[Timeout(600)]` and may run up to 10 minutes, so `--timeout=60` effectively governs only jobs without the attribute (none today). The queue's `retry_after` must strictly exceed the largest per-job `#[Timeout]`, or a long job's reservation expires mid-run and it gets re-dispatched.
+- **E2E tests:** no worker container runs in e2e; specs assert on the synchronous API response, never on a drained job.
 - **Production:** the Brick provisions a Railway `worker` service running the same `queue:work` command. See `backend/CLAUDE.md` → "Queue Worker" for the production command and verification procedure.
 
 If you hit the API endpoint that triggers a job and nothing happens, the most likely cause is "the worker isn't running" — check `make queue` is alive in another terminal.
@@ -288,7 +288,7 @@ make e2e-down   # Clear the table
 
 **Test structure:**
 - `e2e/tests/health.spec.ts` — Brick and Plate health checks
-- `e2e/tests/auth.spec.ts` — Minifig Badge flows (registration, login)
+- `e2e/tests/auth.spec.ts` — Minifig Badge flows (login, logout). Users are provisioned with `php artisan account:create` inside the backend container (`e2e/lib/api.ts`) — BIO has no registration route (WR-2118)
 - `e2e/tests/family-sets.spec.ts` — CRUD stud connections (requires auth)
 
 **Writing tests:**

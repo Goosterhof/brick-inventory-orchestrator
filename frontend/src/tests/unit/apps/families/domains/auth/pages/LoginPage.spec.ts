@@ -140,14 +140,12 @@ describe('LoginPage', () => {
         expect(mockGoToRoute).not.toHaveBeenCalled();
     });
 
-    it('should render link to register page', () => {
+    it('should not offer registration', () => {
         // Arrange & Act
         const wrapper = renderPage();
 
         // Assert
-        const paragraph = wrapper.find('p');
-        expect(paragraph.text()).toContain('auth.noAccountYet');
-        expect(paragraph.text()).toContain('auth.register');
+        expect(wrapper.text()).not.toContain('auth.register');
     });
 
     it('should rethrow non-422 errors', async () => {

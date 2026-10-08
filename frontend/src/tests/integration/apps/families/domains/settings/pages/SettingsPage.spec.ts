@@ -6,7 +6,6 @@ import BadgeLabel from '@shared/components/BadgeLabel.vue';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -34,8 +33,6 @@ describe('SettingsPage — integration', () => {
 
     const mountWithMembers = async (members = [headMember, regularMember]) => {
         mockServer.onGet('/family/members', members);
-        // Invite code endpoint — 404 means no active code (caught by page)
-        // No route registered = rejection = simulates 404
         const wrapper = mount(SettingsPage);
         await flushPromises();
         return wrapper;
@@ -86,26 +83,6 @@ describe('SettingsPage — integration', () => {
             .find((field) => field.props('label') === 'Rebrickable user token');
         expect(tokenField).toBeDefined();
         expect(tokenField?.find('input').exists()).toBe(true);
-    });
-
-    it('renders invite code section with PrimaryButton when user is head', async () => {
-        const wrapper = await mountWithMembers();
-
-        const buttons = wrapper.findAllComponents(PrimaryButton);
-        const generateBtn = buttons.find((b) => b.text().includes('Generate Invite Code'));
-        expect(generateBtn).toBeDefined();
-    });
-
-    it('hides invite code section when user is not head', async () => {
-        // Log in as non-head user
-        mockServer.onPost('/login', {id: 2, name: 'Bob', email: 'bob@test.com'});
-        await familyAuthService.login({email: 'bob@test.com', password: 'secret'});
-
-        const wrapper = await mountWithMembers();
-
-        const buttons = wrapper.findAllComponents(PrimaryButton);
-        const generateBtn = buttons.find((b) => b.text().includes('Generate Invite Code'));
-        expect(generateBtn).toBeUndefined();
     });
 
     it('renders theme toggle section with real button', async () => {

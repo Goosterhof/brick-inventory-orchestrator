@@ -39,7 +39,7 @@ describe('HomePage — integration', () => {
         const navLink = wrapper.findComponent(NavLink);
         expect(navLink.exists()).toBe(true);
         expect(navLink.find('a').exists()).toBe(true);
-        expect(navLink.text()).toContain('Create Account');
+        expect(navLink.text()).toContain('Log In');
     });
 
     it('renders dashboard with real PageHeader and StatCards when logged in', async () => {

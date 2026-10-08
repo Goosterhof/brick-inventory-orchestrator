@@ -1,0 +1,196 @@
+<?php
+
+declare(strict_types = 1);
+
+use App\Actions\Auth\CreateAccountAction;
+use App\Actions\Family\RemoveFamilyMemberAction;
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\CanResetPassword;
+use Illuminate\Contracts\Auth\PasswordBroker;
+use Illuminate\Contracts\Auth\PasswordBrokerFactory;
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Route as RouteFacade;
+use Tests\Architecture\Support\ArchTestHelper;
+use Tests\TestCase;
+
+/*
+|--------------------------------------------------------------------------
+| Personal App Architecture (WR-2118)
+|--------------------------------------------------------------------------
+|
+| BIO admits nobody: no HTTP route may create a User or Family, and the
+| application holds no mail capability. Checks:
+|   1. The set of routes without auth:sanctum equals a literal allowlist.
+|   2. No App\ class depends on Laravel's mail, notification or password-reset
+|      classes, or on Symfony Mailer / Resend.
+|   3. The one creation Action, and the Artisan/Process entry points that could
+|      invoke it, are used by console commands only.
+|   4. No file in app/ creates a User or Family outside a named allowlist.
+|   5. No routes/*.php file reads the environment or config.
+|
+ */
+
+uses(TestCase::class);
+
+it('should expose exactly the allowlisted routes without auth:sanctum', function(): void {
+    $allowlist = [
+        'GET api',
+        'GET api/health',
+        'POST api/login',
+        'GET docs/api',
+        'GET docs/api.json',
+        'GET sanctum/csrf-cookie',
+        // WR-2123: local-disk serve route, signed URLs only; to be closed.
+        'GET storage/{path}',
+        'PUT storage/{path}',
+        'GET up',
+        'GET {fallbackPlaceholder}',
+    ];
+
+    $routes = RouteFacade::getRoutes()->getRoutes();
+
+    expect($routes)->not->toBeEmpty('No routes were registered — the route enumeration is broken.');
+
+    $unauthenticated = [];
+
+    foreach ($routes as $route) {
+        /** @var Route $route */
+        if (\in_array('auth:sanctum', $route->gatherMiddleware(), strict: true)) {
+            continue;
+        }
+
+        foreach (array_diff($route->methods(), ['HEAD']) as $method) {
+            $unauthenticated[] = $method . ' ' . $route->uri();
+        }
+    }
+
+    sort($unauthenticated);
+    sort($allowlist);
+
+    expect($unauthenticated)->not->toBeEmpty('No unauthenticated routes found — the filter is broken (api/login must be public).');
+    expect($unauthenticated)->toBe(
+        $allowlist,
+        'The set of routes without auth:sanctum changed. BIO is a personal app (WR-2118): '
+        . 'a new public route is a new way in. Unexpected: ' . implode(', ', array_diff($unauthenticated, $allowlist))
+        . ' | Missing: ' . implode(', ', array_diff($allowlist, $unauthenticated)),
+    );
+});
+
+arch('application classes should not use mail or notifications')
+    ->expect('App')
+    ->not->toUse([
+        'Illuminate\Contracts\Mail',
+        'Illuminate\Mail',
+        Mail::class,
+        'Illuminate\Contracts\Notifications',
+        'Illuminate\Notifications',
+        Notification::class,
+        'Illuminate\Auth\Notifications',
+        'Illuminate\Auth\Passwords',
+        MustVerifyEmail::class,
+        \Illuminate\Contracts\Auth\MustVerifyEmail::class,
+        CanResetPassword::class,
+        PasswordBroker::class,
+        PasswordBrokerFactory::class,
+        Password::class,
+        'Symfony\Component\Mailer',
+        'Resend',
+    ]);
+
+arch('the account creation action should only be used by console commands')
+    ->expect(CreateAccountAction::class)
+    ->toOnlyBeUsedIn('App\Console');
+
+arch('artisan and process entry points should only be used by console commands')
+    ->expect('App')
+    ->not->toUse([
+        Artisan::class,
+        Kernel::class,
+        \Illuminate\Foundation\Console\Kernel::class,
+        Process::class,
+        'Illuminate\Process',
+        'Symfony\Component\Process',
+    ])
+    ->ignoring('App\Console');
+
+it('should create users and families only in allowlisted classes', function(): void {
+    $allowlist = [
+        // Console-only: the operator's shell is the one way to provision an account.
+        CreateAccountAction::class,
+        // Moves a removed member into a solo family; reachable only by the head, creates no user.
+        RemoveFamilyMemberAction::class,
+    ];
+
+    $appPath = \dirname(__DIR__, 2) . '/app';
+    $files = ArchTestHelper::phpFilesIn($appPath);
+
+    expect($files)->not->toBeEmpty('No PHP files found under app/ — the scan is broken.');
+
+    $creationCall = '(?:newInstance|newModelInstance|create|forceCreate|createQuietly|firstOrCreate|firstOrNew|updateOrCreate|createOrFirst|insert|insertGetId|insertOrIgnore|upsert)';
+
+    $staticPatterns = [
+        '/\b(?:User|Family)::(?:query\(\)\s*->\s*)?' . $creationCall . '\s*\(/',
+        '/\bnew\s+\\\?(?:App\\\Models\\\)?(?:User|Family)\b/',
+        '/->\s*users\(\)\s*->\s*(?:save|saveMany|saveQuietly|' . $creationCall . '|createMany)\s*\(/',
+        '/(?:->|::)\s*table\(\s*[\'"](?:users|families)[\'"]\s*\)/',
+        '/\binsert\s+(?:ignore\s+)?into\s+[`"\']?(?:users|families)\b/i',
+        '/\b(?:User|Family)::factory\(/',
+    ];
+
+    $violations = [];
+
+    foreach ($files as $file) {
+        $className = ArchTestHelper::resolveClassName($file, $appPath, 'App');
+
+        if (\in_array($className, $allowlist, strict: true)) {
+            continue;
+        }
+
+        $content = (string) file_get_contents($file);
+        $patterns = $staticPatterns;
+
+        preg_match_all('/\b(?:private|protected|public)\s+(?:readonly\s+)?\\\?(?:App\\\Models\\\)?(?:User|Family)\s+\$(\w+)/', $content, $matches);
+
+        foreach ($matches[1] as $property) {
+            $patterns[] = '/\$this->' . $property . '\b[^;]*?->\s*' . $creationCall . '\s*\(/s';
+        }
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $content) === 1) {
+                $violations[] = $className . ' matches ' . $pattern;
+            }
+        }
+    }
+
+    expect($violations)->toBeEmpty(ArchTestHelper::formatViolations(
+        'User/Family creation found outside the allowlist (WR-2118 — BIO admits nobody over HTTP):',
+        $violations,
+    ));
+});
+
+it('should register routes unconditionally', function(): void {
+    $routeFiles = glob(\dirname(__DIR__, 2) . '/routes/*.php');
+
+    expect($routeFiles)->not->toBeEmpty('No route files found under routes/ — the scan is broken.');
+
+    $conditional = '/\b(?:environment|isLocal|isProduction|runningUnitTests|runningInConsole|config|env)\s*\(|\b(?:Config|Env)::/';
+
+    $violations = [];
+
+    foreach ((array) $routeFiles as $routeFile) {
+        if (preg_match_all($conditional, (string) file_get_contents((string) $routeFile), $matches) > 0) {
+            $violations[] = basename((string) $routeFile) . ': ' . implode(', ', array_unique($matches[0]));
+        }
+    }
+
+    expect($violations)->toBeEmpty(ArchTestHelper::formatViolations(
+        'A route file reads the environment or config; a route registered only outside the testing env is invisible to the allowlist (WR-2118):',
+        $violations,
+    ));
+});

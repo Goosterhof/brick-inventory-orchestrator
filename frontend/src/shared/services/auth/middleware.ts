@@ -17,7 +17,7 @@ import type {AuthService} from './types';
  *   after the first recovery must not re-fire. This makes registration order
  *   at app boot a non-issue.
  * - Redirect only from authOnly routes — on public routes the chrome simply
- *   flips to logged-out in place; login/register stay undisturbed, so no
+ *   flips to logged-out in place; the login page stays undisturbed, so no
  *   redirect loops are possible.
  */
 export const registerAuthErrorMiddleware = <Profile, Routes extends RouteRecordRaw[]>(

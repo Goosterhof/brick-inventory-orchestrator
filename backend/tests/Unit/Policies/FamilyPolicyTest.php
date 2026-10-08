@@ -36,9 +36,6 @@ describe('FamilyPolicy', function(): void {
         })->with([
             'removeMember' => ['removeMember'],
             'setRebrickableToken' => ['setRebrickableToken'],
-            'generateInviteCode' => ['generateInviteCode'],
-            'viewInviteCode' => ['viewInviteCode'],
-            'revokeInviteCode' => ['revokeInviteCode'],
         ]);
 
         it('should deny non-head member from calling method', function(string $method): void {
@@ -50,9 +47,6 @@ describe('FamilyPolicy', function(): void {
         })->with([
             'removeMember' => ['removeMember'],
             'setRebrickableToken' => ['setRebrickableToken'],
-            'generateInviteCode' => ['generateInviteCode'],
-            'viewInviteCode' => ['viewInviteCode'],
-            'revokeInviteCode' => ['revokeInviteCode'],
         ]);
     });
 });

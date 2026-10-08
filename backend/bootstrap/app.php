@@ -6,8 +6,6 @@ use App\Exceptions\BrickognizeApiException;
 use App\Exceptions\CannotRemoveSelfException;
 use App\Exceptions\ImportAlreadyInProgressException;
 use App\Exceptions\InvalidApiResponseException;
-use App\Exceptions\InvalidInviteCodeException;
-use App\Exceptions\InviteCodeNotFoundException;
 use App\Exceptions\MissingRebrickableTokenException;
 use App\Exceptions\NotFamilyHeadException;
 use App\Exceptions\RebrickableApiException;
@@ -54,8 +52,6 @@ return Application::configure(basePath: \dirname(__DIR__))
             NotFamilyHeadException::class,
             CannotRemoveSelfException::class,
             UserNotInFamilyException::class,
-            InviteCodeNotFoundException::class,
-            InvalidInviteCodeException::class,
             ImportAlreadyInProgressException::class,
         ]);
 
@@ -89,10 +85,6 @@ return Application::configure(basePath: \dirname(__DIR__))
         $exceptions->render(fn(CannotRemoveSelfException $cannotRemoveSelfException, Request $request): JsonResponse => response()->json(['error' => 'Cannot remove yourself from the family'], 422));
 
         $exceptions->render(fn(UserNotInFamilyException $userNotInFamilyException, Request $request): JsonResponse => response()->json(['error' => 'User is not a member of this family'], 404));
-
-        $exceptions->render(fn(InviteCodeNotFoundException $inviteCodeNotFoundException, Request $request): JsonResponse => response()->json(['error' => 'No active invite code found'], 404));
-
-        $exceptions->render(fn(InvalidInviteCodeException $invalidInviteCodeException, Request $request): JsonResponse => response()->json(['error' => 'The invite code is invalid, expired, or revoked'], 422));
 
         $exceptions->render(fn(ImportAlreadyInProgressException $importAlreadyInProgressException, Request $request): JsonResponse => response()->json(['error' => 'An import is already in progress for this family'], 409));
 

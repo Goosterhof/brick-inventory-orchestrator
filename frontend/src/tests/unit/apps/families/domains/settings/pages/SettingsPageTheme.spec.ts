@@ -4,7 +4,6 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 const {
     createMockAxiosWithError,
-    MockAxiosError,
     createMockFsHelpers,
     createMockStringTs,
     createMockFamilyServices,
@@ -35,15 +34,10 @@ vi.mock('@app/services', () =>
     }),
 );
 
-const mockMembersAndNoInviteCode = () => {
+const mockMembers = () => {
     mockGetRequest.mockImplementation((url: string) => {
         if (url === '/family/members') {
             return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-        }
-        if (url === '/family/invite-code') {
-            const error = new MockAxiosError('Not Found');
-            error.response = {status: 404, data: null, statusText: 'Not Found', headers: {}, config: {}};
-            return Promise.reject(error);
         }
         return Promise.reject(new Error(`Unexpected GET: ${url}`));
     });
@@ -53,7 +47,7 @@ describe('SettingsPage — theme', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockUserId.mockReturnValue(1);
-        mockMembersAndNoInviteCode();
+        mockMembers();
         mockIsDark.value = false;
     });
 

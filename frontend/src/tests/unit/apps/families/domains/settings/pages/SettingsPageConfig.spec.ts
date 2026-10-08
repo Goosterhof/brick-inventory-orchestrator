@@ -43,15 +43,10 @@ vi.mock('@app/services', () =>
     }),
 );
 
-const mockMembersAndNoInviteCode = () => {
+const mockMembers = () => {
     mockGetRequest.mockImplementation((url: string) => {
         if (url === '/family/members') {
             return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-        }
-        if (url === '/family/invite-code') {
-            const error = new MockAxiosError('Not Found');
-            error.response = {status: 404, data: null, statusText: 'Not Found', headers: {}, config: {}};
-            return Promise.reject(error);
         }
         return Promise.reject(new Error(`Unexpected GET: ${url}`));
     });
@@ -61,7 +56,7 @@ describe('SettingsPage — config', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockUserId.mockReturnValue(1);
-        mockMembersAndNoInviteCode();
+        mockMembers();
     });
 
     it('should render page header with title', () => {
@@ -114,7 +109,7 @@ describe('SettingsPage — config', () => {
 
             // Act
             const allForms = wrapper.findAll('form');
-            const [, tokenForm] = allForms;
+            const [tokenForm] = allForms;
             await tokenForm?.trigger('submit');
             await flushPromises();
 
@@ -133,7 +128,7 @@ describe('SettingsPage — config', () => {
 
             // Act
             const allForms = wrapper.findAll('form');
-            const [, tokenForm] = allForms;
+            const [tokenForm] = allForms;
             await tokenForm?.trigger('submit');
             await flushPromises();
 
@@ -150,7 +145,7 @@ describe('SettingsPage — config', () => {
 
             // Act
             const allForms = wrapper.findAll('form');
-            const [, tokenForm] = allForms;
+            const [tokenForm] = allForms;
             await tokenForm?.trigger('submit');
             await flushPromises();
 
@@ -169,7 +164,7 @@ describe('SettingsPage — config', () => {
 
             // Act
             const allForms = wrapper.findAll('form');
-            const [, tokenForm] = allForms;
+            const [tokenForm] = allForms;
             await tokenForm?.trigger('submit');
             await flushPromises();
 
@@ -186,7 +181,7 @@ describe('SettingsPage — config', () => {
 
             // Act
             const allForms = wrapper.findAll('form');
-            const [, tokenForm] = allForms;
+            const [tokenForm] = allForms;
             await tokenForm?.trigger('submit');
             await flushPromises();
 
@@ -258,11 +253,6 @@ describe('SettingsPage — config', () => {
                 if (url === '/family/members') {
                     return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
                 }
-                if (url === '/family/invite-code') {
-                    const error = new MockAxiosError('Not Found');
-                    error.response = {status: 404, data: null, statusText: 'Not Found', headers: {}, config: {}};
-                    return Promise.reject(error);
-                }
                 if (url === '/family-sets/import-status') {
                     return Promise.resolve({data: completedJob});
                 }
@@ -292,11 +282,6 @@ describe('SettingsPage — config', () => {
                 if (url === '/family/members') {
                     return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
                 }
-                if (url === '/family/invite-code') {
-                    const error = new MockAxiosError('Not Found');
-                    error.response = {status: 404, data: null, statusText: 'Not Found', headers: {}, config: {}};
-                    return Promise.reject(error);
-                }
                 if (url === '/family-sets/import-status') {
                     return Promise.resolve({data: completedJob});
                 }
@@ -324,11 +309,6 @@ describe('SettingsPage — config', () => {
             mockGetRequest.mockImplementation((url: string) => {
                 if (url === '/family/members') {
                     return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-                }
-                if (url === '/family/invite-code') {
-                    const error = new MockAxiosError('Not Found');
-                    error.response = {status: 404, data: null, statusText: 'Not Found', headers: {}, config: {}};
-                    return Promise.reject(error);
                 }
                 if (url === '/family-sets/import-status') {
                     return Promise.resolve({data: failedJob});
@@ -438,11 +418,6 @@ describe('SettingsPage — config', () => {
                 if (url === '/family/members') {
                     return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
                 }
-                if (url === '/family/invite-code') {
-                    const error = new MockAxiosError('Not Found');
-                    error.response = {status: 404, data: null, statusText: 'Not Found', headers: {}, config: {}};
-                    return Promise.reject(error);
-                }
                 if (url === '/family-sets/import-status') {
                     return Promise.resolve({data: runningJob});
                 }
@@ -471,11 +446,6 @@ describe('SettingsPage — config', () => {
             mockGetRequest.mockImplementation((url: string) => {
                 if (url === '/family/members') {
                     return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-                }
-                if (url === '/family/invite-code') {
-                    const error = new MockAxiosError('Not Found');
-                    error.response = {status: 404, data: null, statusText: 'Not Found', headers: {}, config: {}};
-                    return Promise.reject(error);
                 }
                 if (url === '/family-sets/import-status') {
                     pollCallCount++;
@@ -512,11 +482,6 @@ describe('SettingsPage — config', () => {
             mockGetRequest.mockImplementation((url: string) => {
                 if (url === '/family/members') {
                     return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-                }
-                if (url === '/family/invite-code') {
-                    const error = new MockAxiosError('Not Found');
-                    error.response = {status: 404, data: null, statusText: 'Not Found', headers: {}, config: {}};
-                    return Promise.reject(error);
                 }
                 if (url === '/family-sets/import-status') {
                     pollCallCount++;

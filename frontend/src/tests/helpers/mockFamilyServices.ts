@@ -50,7 +50,6 @@ export const createMockFamilyServices = (overrides?: FamilyServicesOverrides): F
             isLoggedIn: {value: false},
             user: {value: null},
             userId: vi.fn<() => number>(),
-            register: vi.fn<() => Promise<void>>(),
             login: vi.fn<() => Promise<void>>(),
             logout: vi.fn<() => Promise<void>>(),
             clearUser: vi.fn<() => void>(),

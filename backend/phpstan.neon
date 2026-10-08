@@ -112,9 +112,6 @@ parameters:
             identifier: staticMethod.deprecated
             path: tests/*
         -
-            identifier: cast.int
-            path: tests/*
-        -
             identifier: booleanNot.exprNotBoolean
             path: tests/*
         -
@@ -153,10 +150,6 @@ parameters:
             identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
             count: 1
             path: tests/Unit/Resources/FamilySetResourceDataTest.php
-        -
-            identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
-            count: 4
-            path: tests/Unit/Resources/InviteCodeResourceDataTest.php
         -
             identifier: forbidAdHocDateParsing.stringParsedOutsideBoundary
             count: 2
