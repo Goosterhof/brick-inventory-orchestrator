@@ -53,8 +53,7 @@ app/
 │   ├── FamilySet, SetPart      #   What families own & what's inside
 │   ├── StorageOption           #   Physical locations (hierarchical)
 │   ├── StorageOptionPart       #   What's stored where
-│   ├── ImportJob               #   Async Rebrickable import tracking
-│   └── InviteCode              #   Dormant (WR-2118): no route reads or writes it; table kept
+│   └── ImportJob               #   Async Rebrickable import tracking
 ├── Http/
 │   ├── Controllers/            # Thin request handlers
 │   ├── Requests/               # Validated input DTOs (FormRequests)
@@ -167,8 +166,10 @@ Thin wrappers that move actions onto the async conveyor belt.
 BIO admits nobody but its owner (Commander ruling 2026-10-08). There is no registration route, no invite flow, and no mail capability. An account is created only from a shell on the host:
 
 ```
-php artisan account:create <email> <password> --name="..." --family="..."
+php artisan account:create <email> --name="..." --family="..."
 ```
+
+Leave the password out: the command asks for it with a hidden prompt, or reads it from stdin under `--no-interaction` (`printf '%s\n' "$PW" | php artisan account:create <email> -n`). An empty password exits 1 and creates nothing. The positional `<password>` still works, for e2e provisioning, but puts the secret on argv (WR-2123).
 
 `tests/Architecture/PersonalAppArchitectureTest.php` enforces it: the set of routes without `auth:sanctum` equals a literal allowlist; no `App\` class uses Laravel's mail or notification classes; no file in `app/` creates a `User` or `Family` outside `CreateAccountAction` (console-only), and no route adds, removes or re-homes a family member (WR-2123). A new public route or a mail import is a change to that test, reviewed as such.
 
