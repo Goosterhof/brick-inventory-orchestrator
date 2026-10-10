@@ -46,9 +46,6 @@ it('should expose exactly the allowlisted routes without auth:sanctum', function
         'GET docs/api',
         'GET docs/api.json',
         'GET sanctum/csrf-cookie',
-        // WR-2123: local-disk serve route, signed URLs only; to be closed.
-        'GET storage/{path}',
-        'PUT storage/{path}',
         'GET up',
         'GET {fallbackPlaceholder}',
     ];
