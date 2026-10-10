@@ -58,14 +58,6 @@ class Family extends Model
     }
 
     /**
-     * @return HasMany<InviteCode, $this>
-     */
-    public function inviteCodes(): HasMany
-    {
-        return $this->hasMany(InviteCode::class);
-    }
-
-    /**
      * @return HasMany<ImportJob, $this>
      */
     public function importJobs(): HasMany
@@ -80,7 +72,7 @@ class Family extends Model
      */
     public static function cascadeRelations(): array
     {
-        return ['users', 'storageOptions', 'familySets', 'inviteCodes', 'importJobs'];
+        return ['users', 'storageOptions', 'familySets', 'importJobs'];
     }
 
     /**

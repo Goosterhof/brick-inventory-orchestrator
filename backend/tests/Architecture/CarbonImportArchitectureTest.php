@@ -6,7 +6,6 @@ use App\Models\Color;
 use App\Models\Family;
 use App\Models\FamilySet;
 use App\Models\ImportJob;
-use App\Models\InviteCode;
 use App\Models\Part;
 use App\Models\Set;
 use App\Models\SetPart;
@@ -24,11 +23,11 @@ use Tests\Architecture\Support\ArchTestHelper;
 | Mutable Carbon is a footgun — methods like `addDay()` mutate in-place and
 | produce surprise aliasing between variables that "should" be independent.
 |
-| Eleven models in `app/Models/` currently import `Carbon\Carbon`. Migrating
+| Ten models in `app/Models/` currently import `Carbon\Carbon`. Migrating
 | them is a separate, larger refactor; this gate's job is to stop the wound
 | from getting larger, not to pay down the debt.
 |
-| The allow-list below grandfathers those eleven models. Adding a twelfth
+| The allow-list below grandfathers those ten models. Adding an eleventh
 | violator fails this test. The remedy is:
 |   - Preferred:  use `Carbon\CarbonImmutable` instead.
 |   - Exception: extend the allow-list with Commander sign-off + rationale,
@@ -42,7 +41,7 @@ use Tests\Architecture\Support\ArchTestHelper;
 
 /**
  * Grandfathered allow-list — fully-qualified class names that may import
- * `Carbon\Carbon`. All eleven entries are tech debt that predates the gate;
+ * `Carbon\Carbon`. All ten entries are tech debt that predates the gate;
  * each will migrate to `Carbon\CarbonImmutable` when next touched or in a
  * dedicated migration sweep.
  *
@@ -54,7 +53,6 @@ $grandfatheredMutableCarbon = [
     Family::class,
     FamilySet::class,
     ImportJob::class,
-    InviteCode::class,
     Part::class,
     Set::class,
     SetPart::class,

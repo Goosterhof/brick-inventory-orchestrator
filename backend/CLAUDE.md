@@ -53,8 +53,7 @@ app/
 │   ├── FamilySet, SetPart      #   What families own & what's inside
 │   ├── StorageOption           #   Physical locations (hierarchical)
 │   ├── StorageOptionPart       #   What's stored where
-│   ├── ImportJob               #   Async Rebrickable import tracking
-│   └── InviteCode              #   Dormant (WR-2118): no route reads or writes it; table kept
+│   └── ImportJob               #   Async Rebrickable import tracking
 ├── Http/
 │   ├── Controllers/            # Thin request handlers
 │   ├── Requests/               # Validated input DTOs (FormRequests)

@@ -4,7 +4,9 @@ declare(strict_types = 1);
 
 use App\Models\Family;
 use App\Models\User;
+use Illuminate\Database\Migrations\Migration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 
 covers(Family::class);
 
@@ -41,5 +43,25 @@ describe('Family', function(): void {
 
         expect($user->family)->toBeInstanceOf(Family::class)
             ->and($user->family->id)->toBe($family->id);
+    });
+
+    describe('invite codes (WR-2123)', function(): void {
+        it('should have no invite_codes table and no inviteCodes cascade relation', function(): void {
+            expect(Schema::hasTable('invite_codes'))->toBeFalse()
+                ->and(Family::cascadeRelations())->not->toContain('inviteCodes');
+        });
+
+        it('should recreate invite_codes on rollback and drop it again on migrate', function(): void {
+            /** @var Migration $migration */
+            $migration = require database_path('migrations/2026_10_10_000001_drop_invite_codes_table.php');
+
+            $migration->down();
+
+            expect(Schema::hasColumns('invite_codes', ['id', 'family_id', 'code', 'generated_by', 'expires_at', 'revoked_at', 'created_at', 'updated_at']))->toBeTrue();
+
+            $migration->up();
+
+            expect(Schema::hasTable('invite_codes'))->toBeFalse();
+        });
     });
 });
