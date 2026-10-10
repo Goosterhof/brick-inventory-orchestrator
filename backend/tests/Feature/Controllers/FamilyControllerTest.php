@@ -15,38 +15,6 @@ covers(FamilyController::class);
 uses(RefreshDatabase::class);
 
 describe('FamilyController', function(): void {
-    describe('members', function(): void {
-        it('should return family members with head flag', function(): void {
-            $headUser = User::factory()->create();
-            $member = User::factory()->forFamily($headUser->family)->create();
-
-            $response = $this->actingAs($headUser)->getJson('/api/family/members');
-
-            $response->assertStatus(200)
-                ->assertJsonCount(2)
-                ->assertJsonPath('0.name', $headUser->name)
-                ->assertJsonPath('0.is_head', true)
-                ->assertJsonPath('1.name', $member->name)
-                ->assertJsonPath('1.is_head', false);
-        });
-
-        it('should not include other families members', function(): void {
-            $user = User::factory()->create();
-            User::factory()->create(); // different family
-
-            $response = $this->actingAs($user)->getJson('/api/family/members');
-
-            $response->assertStatus(200)
-                ->assertJsonCount(1);
-        });
-
-        it('should return 401 when unauthenticated', function(): void {
-            $response = $this->getJson('/api/family/members');
-
-            $response->assertStatus(401);
-        });
-    });
-
     describe('parts', function(): void {
         it('should return parts for authenticated user', function(): void {
             $user = User::factory()->create();

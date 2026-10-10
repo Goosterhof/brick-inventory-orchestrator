@@ -5,10 +5,3 @@ export interface Profile {
     email: string;
     emailVerifiedAt: string | null;
 }
-
-export interface FamilyMember {
-    id: number;
-    name: string;
-    email: string;
-    isHead: boolean;
-}

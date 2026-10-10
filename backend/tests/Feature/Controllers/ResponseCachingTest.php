@@ -216,16 +216,6 @@ describe('Response Caching', function(): void {
             $response->assertHeader('Cache-Control', 'max-age=60, private');
         });
 
-        it('should return private Cache-Control on family members', function(): void {
-            $user = User::factory()->create();
-
-            $response = $this->actingAs($user)->getJson('/api/family/members');
-
-            $response->assertStatus(200);
-            $response->assertHeader('ETag');
-            $response->assertHeader('Cache-Control', 'max-age=60, private');
-        });
-
         it('should return private Cache-Control on family stats', function(): void {
             $user = User::factory()->create();
 

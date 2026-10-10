@@ -1,75 +1,14 @@
 <script setup lang="ts">
 import type {ImportJob} from '@app/types/importJob';
-import type {FamilyMember} from '@app/types/profile';
 
-import {
-    familyAuthService,
-    familyHttpService,
-    familySoundService,
-    familyThemeService,
-    familyTranslationService,
-} from '@app/services';
+import {familyHttpService, familySoundService, familyThemeService, familyTranslationService} from '@app/services';
 import {FormField, TextInput} from '@script-development/ui-inputs';
-import BadgeLabel from '@shared/components/BadgeLabel.vue';
-import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
-import DangerButton from '@shared/components/DangerButton.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {isAxiosError} from 'axios';
-import {computed, onMounted, onUnmounted, ref, useId} from 'vue';
+import {onUnmounted, ref, useId} from 'vue';
 
 const {t} = familyTranslationService;
-
-const members = ref<FamilyMember[]>([]);
-const membersLoading = ref(true);
-
-const isHead = computed(() => {
-    const userId = familyAuthService.userId();
-    return members.value.some((member) => member.id === userId && member.isHead);
-});
-
-const memberToRemove = ref<FamilyMember | null>(null);
-const showRemoveConfirm = ref(false);
-const memberRemoved = ref(false);
-const removeMemberError = ref('');
-
-const confirmRemoveMember = (member: FamilyMember) => {
-    memberToRemove.value = member;
-    showRemoveConfirm.value = true;
-    memberRemoved.value = false;
-    removeMemberError.value = '';
-};
-
-const cancelRemoveMember = () => {
-    showRemoveConfirm.value = false;
-    memberToRemove.value = null;
-};
-
-const removeMember = async () => {
-    if (!memberToRemove.value) return;
-
-    const memberId = memberToRemove.value.id;
-    showRemoveConfirm.value = false;
-
-    try {
-        await familyHttpService.deleteRequest(`/family/members/${String(memberId)}`);
-        members.value = members.value.filter((m) => m.id !== memberId);
-        memberRemoved.value = true;
-        removeMemberError.value = '';
-    } catch (error: unknown) {
-        const status = isAxiosError(error) ? error.response?.status : undefined;
-        if (status === 422) {
-            removeMemberError.value = t('settings.removeMemberSelfError').value;
-        } else if (status === 404) {
-            removeMemberError.value = t('settings.removeMemberNotFound').value;
-            members.value = members.value.filter((m) => m.id !== memberId);
-        } else {
-            removeMemberError.value = t('settings.removeMemberError').value;
-        }
-    } finally {
-        memberToRemove.value = null;
-    }
-};
 
 const rebrickableToken = ref('');
 const tokenSaving = ref(false);
@@ -80,12 +19,6 @@ const importing = ref(false);
 const importJob = ref<ImportJob | null>(null);
 const importError = ref('');
 let pollInterval: ReturnType<typeof setInterval> | null = null;
-
-onMounted(async () => {
-    const response = await familyHttpService.getRequest<FamilyMember[]>('/family/members');
-    members.value = response.data;
-    membersLoading.value = false;
-});
 
 const rebrickableTokenId = useId();
 
@@ -184,57 +117,6 @@ onUnmounted(() => {
                         familyThemeService.isDark.value ? t('settings.themeDark').value : t('settings.themeLight').value
                     }}
                 </button>
-            </section>
-
-            <hr border="t-3 [var(--brick-border-color)]" />
-
-            <section flex="~ col" gap="4">
-                <h2 text="xl" font="bold" uppercase tracking="wide">{{ t('settings.membersTitle').value }}</h2>
-
-                <p v-if="membersLoading" text="[var(--brick-muted-text)]">{{ t('common.loading').value }}</p>
-
-                <div v-else flex="~ col" gap="2">
-                    <div
-                        v-for="member in members"
-                        :key="member.id"
-                        flex
-                        items="center"
-                        gap="3"
-                        p="3"
-                        bg="[var(--brick-card-bg)]"
-                        class="brick-border"
-                    >
-                        <div flex="1">
-                            <p font="bold">{{ member.name }}</p>
-                            <p text="sm [var(--brick-muted-text)]">{{ member.email }}</p>
-                        </div>
-                        <BadgeLabel v-if="member.isHead" variant="highlight">
-                            {{ t('settings.familyHead').value }}
-                        </BadgeLabel>
-                        <DangerButton v-if="isHead && !member.isHead" @click="confirmRemoveMember(member)">
-                            {{ t('settings.removeMember').value }}
-                        </DangerButton>
-                    </div>
-
-                    <p v-if="memberRemoved" text="baseplate-green" font="bold">
-                        {{ t('settings.memberRemoved').value }}
-                    </p>
-                    <p v-if="removeMemberError" text="[var(--brick-danger-text)]" font="bold">
-                        {{ removeMemberError }}
-                    </p>
-                </div>
-
-                <ConfirmDialog
-                    :open="showRemoveConfirm"
-                    :title="t('settings.removeMemberTitle').value"
-                    :message="t('settings.removeMemberMessage').value"
-                    :sound-service="familySoundService"
-                    @confirm="removeMember"
-                    @cancel="cancelRemoveMember"
-                >
-                    <template #confirm>{{ t('settings.removeMember').value }}</template>
-                    <template #cancel>{{ t('common.cancel').value }}</template>
-                </ConfirmDialog>
             </section>
 
             <hr border="t-3 [var(--brick-border-color)]" />

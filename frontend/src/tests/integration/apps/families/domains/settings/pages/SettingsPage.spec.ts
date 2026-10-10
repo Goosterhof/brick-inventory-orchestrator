@@ -2,9 +2,6 @@ import SettingsPage from '@app/domains/settings/pages/SettingsPage.vue';
 import {familyAuthService} from '@app/services';
 import {mockServer} from '@integration/helpers/mock-server';
 import {FormField} from '@script-development/ui-inputs';
-import BadgeLabel from '@shared/components/BadgeLabel.vue';
-import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
-import DangerButton from '@shared/components/DangerButton.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import {flushPromises, mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -14,69 +11,37 @@ vi.mock('@script-development/fs-http', async () => {
     return {createHttpService: () => mockHttpService, guarded};
 });
 
-/**
- * Snake_case fixtures — matching real API response format.
- * toCamelCaseTyped() converts these to camelCase before they reach the component.
- */
-const headMember = {id: 1, name: 'Alice', email: 'alice@test.com', is_head: true};
-const regularMember = {id: 2, name: 'Bob', email: 'bob@test.com', is_head: false};
-
 describe('SettingsPage — integration', () => {
     beforeEach(async () => {
         vi.clearAllMocks();
         mockServer.reset();
         localStorage.clear();
-        // Log the user in so familyAuthService.userId() works
         mockServer.onPost('/login', {id: 1, name: 'Alice', email: 'alice@test.com'});
         await familyAuthService.login({email: 'alice@test.com', password: 'secret'});
     });
 
-    const mountWithMembers = async (members = [headMember, regularMember]) => {
-        mockServer.onGet('/family/members', members);
+    const mountPage = async () => {
         const wrapper = mount(SettingsPage);
         await flushPromises();
         return wrapper;
     };
 
     it('renders PageHeader with real h1 element', async () => {
-        const wrapper = await mountWithMembers();
+        const wrapper = await mountPage();
 
         const pageHeader = wrapper.findComponent(PageHeader);
         expect(pageHeader.find('h1').text()).toBe('Settings');
     });
 
-    it('renders members with real BadgeLabel for family head', async () => {
-        const wrapper = await mountWithMembers();
+    it('renders no family members section and requests no member list (WR-2123)', async () => {
+        const wrapper = await mountPage();
 
-        const badges = wrapper.findAllComponents(BadgeLabel);
-        const headBadge = badges.find((b) => b.text().includes('Head'));
-        expect(headBadge).toBeDefined();
-        expect(headBadge?.props('variant')).toBe('highlight');
-    });
-
-    it('renders real DangerButton for removing non-head members', async () => {
-        const wrapper = await mountWithMembers();
-
-        const dangerButtons = wrapper.findAllComponents(DangerButton);
-        const removeBtn = dangerButtons.find((b) => b.text().includes('Remove'));
-        expect(removeBtn).toBeDefined();
-        expect(removeBtn?.find('button').exists()).toBe(true);
-    });
-
-    it('opens real ConfirmDialog when clicking remove member button', async () => {
-        const wrapper = await mountWithMembers();
-
-        const dangerButtons = wrapper.findAllComponents(DangerButton);
-        const removeBtn = dangerButtons.find((b) => b.text().includes('Remove'));
-        await removeBtn?.find('button').trigger('click');
-
-        const confirmDialog = wrapper.findComponent(ConfirmDialog);
-        expect(confirmDialog.props('open')).toBe(true);
-        expect(confirmDialog.props('title')).toBe('Remove family member');
+        expect(wrapper.text()).not.toContain('Family members');
+        expect(mockServer.callsTo('GET', '/family/members')).toHaveLength(0);
     });
 
     it('renders real TextInput for rebrickable token', async () => {
-        const wrapper = await mountWithMembers();
+        const wrapper = await mountPage();
 
         const tokenField = wrapper
             .findAllComponents(FormField)
@@ -86,7 +51,7 @@ describe('SettingsPage — integration', () => {
     });
 
     it('renders theme toggle section with real button', async () => {
-        const wrapper = await mountWithMembers();
+        const wrapper = await mountPage();
 
         expect(wrapper.text()).toContain('Appearance');
         const buttons = wrapper.findAll('button');
@@ -95,7 +60,7 @@ describe('SettingsPage — integration', () => {
     });
 
     it('toggles theme when theme button is clicked', async () => {
-        const wrapper = await mountWithMembers();
+        const wrapper = await mountPage();
 
         const buttons = wrapper.findAll('button');
         const themeBtn = buttons.find((b) => b.text().includes('Light mode') || b.text().includes('Dark mode'));
@@ -109,7 +74,6 @@ describe('SettingsPage — integration', () => {
             (b) => b.text().includes('Light mode') || b.text().includes('Dark mode'),
         );
 
-        // After toggle, the label should have changed
         expect(updatedThemeBtn?.text()).not.toBe(initialText);
     });
 });

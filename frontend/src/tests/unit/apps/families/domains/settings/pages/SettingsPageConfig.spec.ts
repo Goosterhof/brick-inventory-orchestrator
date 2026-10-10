@@ -29,34 +29,26 @@ vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
 
-const {mockGetRequest, mockPutRequest, mockPostRequest, mockUserId} = vi.hoisted(() => ({
+const {mockGetRequest, mockPutRequest, mockPostRequest} = vi.hoisted(() => ({
     mockGetRequest: vi.fn<(url: string) => Promise<unknown>>(),
     mockPutRequest: vi.fn<() => Promise<unknown>>(),
     mockPostRequest: vi.fn<() => Promise<unknown>>(),
-    mockUserId: vi.fn<() => number>(),
 }));
 
 vi.mock('@app/services', () =>
     createMockFamilyServices({
         familyHttpService: {getRequest: mockGetRequest, postRequest: mockPostRequest, putRequest: mockPutRequest},
-        familyAuthService: {isLoggedIn: {value: true}, userId: mockUserId},
     }),
 );
 
-const mockMembers = () => {
-    mockGetRequest.mockImplementation((url: string) => {
-        if (url === '/family/members') {
-            return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-        }
-        return Promise.reject(new Error(`Unexpected GET: ${url}`));
-    });
+const rejectUnexpectedGets = () => {
+    mockGetRequest.mockImplementation((url: string) => Promise.reject(new Error(`Unexpected GET: ${url}`)));
 };
 
 describe('SettingsPage — config', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockUserId.mockReturnValue(1);
-        mockMembers();
+        rejectUnexpectedGets();
     });
 
     it('should render page header with title', () => {
@@ -65,6 +57,15 @@ describe('SettingsPage — config', () => {
 
         // Assert
         expect(wrapper.findComponent(PageHeader).props('title')).toBe('settings.title');
+    });
+
+    it('should request nothing on mount now that the member list is gone (WR-2123)', async () => {
+        // Arrange & Act
+        shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
+        await flushPromises();
+
+        // Assert
+        expect(mockGetRequest).not.toHaveBeenCalled();
     });
 
     it('should render rebrickable token input', () => {
@@ -250,9 +251,6 @@ describe('SettingsPage — config', () => {
             // Arrange
             mockPostRequest.mockResolvedValue({data: pendingJob});
             mockGetRequest.mockImplementation((url: string) => {
-                if (url === '/family/members') {
-                    return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-                }
                 if (url === '/family-sets/import-status') {
                     return Promise.resolve({data: completedJob});
                 }
@@ -279,9 +277,6 @@ describe('SettingsPage — config', () => {
             // Arrange
             mockPostRequest.mockResolvedValue({data: pendingJob});
             mockGetRequest.mockImplementation((url: string) => {
-                if (url === '/family/members') {
-                    return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-                }
                 if (url === '/family-sets/import-status') {
                     return Promise.resolve({data: completedJob});
                 }
@@ -307,9 +302,6 @@ describe('SettingsPage — config', () => {
             // Arrange
             mockPostRequest.mockResolvedValue({data: pendingJob});
             mockGetRequest.mockImplementation((url: string) => {
-                if (url === '/family/members') {
-                    return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-                }
                 if (url === '/family-sets/import-status') {
                     return Promise.resolve({data: failedJob});
                 }
@@ -415,9 +407,6 @@ describe('SettingsPage — config', () => {
             const runningJob = {...pendingJob, status: 'in_progress', totalSets: 7, processedSets: 3};
             mockPostRequest.mockResolvedValue({data: pendingJob});
             mockGetRequest.mockImplementation((url: string) => {
-                if (url === '/family/members') {
-                    return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-                }
                 if (url === '/family-sets/import-status') {
                     return Promise.resolve({data: runningJob});
                 }
@@ -444,9 +433,6 @@ describe('SettingsPage — config', () => {
             mockPostRequest.mockResolvedValue({data: pendingJob});
             let pollCallCount = 0;
             mockGetRequest.mockImplementation((url: string) => {
-                if (url === '/family/members') {
-                    return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-                }
                 if (url === '/family-sets/import-status') {
                     pollCallCount++;
                     return Promise.reject(new Error('Network error'));
@@ -480,9 +466,6 @@ describe('SettingsPage — config', () => {
             mockPostRequest.mockResolvedValue({data: pendingJob});
             let pollCallCount = 0;
             mockGetRequest.mockImplementation((url: string) => {
-                if (url === '/family/members') {
-                    return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-                }
                 if (url === '/family-sets/import-status') {
                     pollCallCount++;
                     return Promise.resolve({data: completedJob});

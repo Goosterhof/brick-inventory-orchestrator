@@ -20,7 +20,7 @@ test.describe("Settings", () => {
 
     await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Appearance" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Family members" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Family members" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Invite Code" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Rebrickable API" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Import collection" })).toBeVisible();
