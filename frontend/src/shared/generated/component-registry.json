@@ -30,12 +30,11 @@
             "consumers": {
                 "families": {
                     "parts": ["src/apps/families/domains/parts/modals/PartUsageModal.vue"],
-                    "sets": ["src/apps/families/domains/sets/components/SetListItem.vue"],
-                    "settings": ["src/apps/families/domains/settings/pages/SettingsPage.vue"]
+                    "sets": ["src/apps/families/domains/sets/components/SetListItem.vue"]
                 },
                 "showcase": {"_root": ["src/apps/showcase/components/ComponentGallery.vue"]}
             },
-            "adoption": {"apps": 2, "domains": 3},
+            "adoption": {"apps": 2, "domains": 2},
             "apiSurface": {
                 "props": [{"name": "variant", "required": false}],
                 "emits": [],
@@ -120,12 +119,11 @@
             "consumers": {
                 "families": {
                     "sets": ["src/apps/families/domains/sets/pages/EditSetPage.vue"],
-                    "settings": ["src/apps/families/domains/settings/pages/SettingsPage.vue"],
                     "storage": ["src/apps/families/domains/storage/pages/EditStoragePage.vue"]
                 },
                 "showcase": {"_root": ["src/apps/showcase/components/ComponentGallery.vue"]}
             },
-            "adoption": {"apps": 2, "domains": 3},
+            "adoption": {"apps": 2, "domains": 2},
             "apiSurface": {
                 "props": [
                     {"name": "open", "required": true},
@@ -146,7 +144,6 @@
             "consumers": {
                 "families": {
                     "sets": ["src/apps/families/domains/sets/pages/EditSetPage.vue"],
-                    "settings": ["src/apps/families/domains/settings/pages/SettingsPage.vue"],
                     "storage": ["src/apps/families/domains/storage/pages/EditStoragePage.vue"]
                 },
                 "showcase": {
@@ -157,7 +154,7 @@
                     ]
                 }
             },
-            "adoption": {"apps": 2, "domains": 3},
+            "adoption": {"apps": 2, "domains": 2},
             "apiSurface": {
                 "props": [
                     {"name": "type", "required": false},

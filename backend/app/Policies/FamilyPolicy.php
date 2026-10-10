@@ -8,11 +8,6 @@ use App\Models\User;
 
 final readonly class FamilyPolicy
 {
-    public function viewMembers(User $user): bool
-    {
-        return true;
-    }
-
     public function viewParts(User $user): bool
     {
         return true;
@@ -34,11 +29,6 @@ final readonly class FamilyPolicy
     }
 
     public function setRebrickableToken(User $user): bool
-    {
-        return $user->family->head_id === $user->id;
-    }
-
-    public function removeMember(User $user): bool
     {
         return $user->family->head_id === $user->id;
     }

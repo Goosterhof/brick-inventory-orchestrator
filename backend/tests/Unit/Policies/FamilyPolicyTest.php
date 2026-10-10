@@ -18,7 +18,6 @@ describe('FamilyPolicy', function(): void {
 
             expect($this->policy->{$method}($user))->toBeTrue();
         })->with([
-            'viewMembers' => ['viewMembers'],
             'viewParts' => ['viewParts'],
             'viewStats' => ['viewStats'],
             'viewBrickDna' => ['viewBrickDna'],
@@ -34,7 +33,6 @@ describe('FamilyPolicy', function(): void {
 
             expect($this->policy->{$method}($user))->toBeTrue();
         })->with([
-            'removeMember' => ['removeMember'],
             'setRebrickableToken' => ['setRebrickableToken'],
         ]);
 
@@ -45,7 +43,6 @@ describe('FamilyPolicy', function(): void {
 
             expect($this->policy->{$method}($user))->toBeFalse();
         })->with([
-            'removeMember' => ['removeMember'],
             'setRebrickableToken' => ['setRebrickableToken'],
         ]);
     });

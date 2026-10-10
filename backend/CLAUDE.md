@@ -170,7 +170,7 @@ BIO admits nobody but its owner (Commander ruling 2026-10-08). There is no regis
 php artisan account:create <email> <password> --name="..." --family="..."
 ```
 
-`tests/Architecture/PersonalAppArchitectureTest.php` enforces it: the set of routes without `auth:sanctum` equals a literal allowlist; no `App\` class uses Laravel's mail or notification classes; no file in `app/` creates a `User` or `Family` outside `CreateAccountAction` (console-only) and `RemoveFamilyMemberAction`. A new public route or a mail import is a change to that test, reviewed as such.
+`tests/Architecture/PersonalAppArchitectureTest.php` enforces it: the set of routes without `auth:sanctum` equals a literal allowlist; no `App\` class uses Laravel's mail or notification classes; no file in `app/` creates a `User` or `Family` outside `CreateAccountAction` (console-only), and no route adds, removes or re-homes a family member (WR-2123). A new public route or a mail import is a change to that test, reviewed as such.
 
 ### Queue Worker
 
@@ -195,7 +195,7 @@ The Foundry writes async work; a `queue:work` worker reads it. **Production need
 
 ### Exceptions
 
-Typed failures with global handling. No silent swallowing. All 10 rendered mappings (source of truth: `bootstrap/app.php`):
+Typed failures with global handling. No silent swallowing. All 8 rendered mappings (source of truth: `bootstrap/app.php`):
 
 ```
 SetNotFoundException              → 404
@@ -204,8 +204,6 @@ NotFamilyHeadException            → 403
 RebrickableApiException           → 502 (404 when the upstream 404s)
 BrickognizeApiException           → 502
 InvalidApiResponseException       → 502
-CannotRemoveSelfException         → 422
-UserNotInFamilyException          → 404
 ImportAlreadyInProgressException  → 409
 ReportSubmissionException         → 502 (vendor — kendo-report-tool)
 ```

@@ -98,9 +98,6 @@ Route::middleware(['auth:sanctum', 'family.ownership'])->group(function(): void 
         ->can('delete', 'family_set');
 
     // Family
-    Route::get('/family/members', [FamilyController::class, 'members'])
-        ->middleware(['etag', 'cache.headers:private;max_age=60'])
-        ->can('viewMembers', Family::class);
     Route::get('/family/parts', [FamilyController::class, 'parts'])
         ->middleware(['etag', 'cache.headers:private;max_age=60'])
         ->can('viewParts', Family::class);
@@ -116,8 +113,6 @@ Route::middleware(['auth:sanctum', 'family.ownership'])->group(function(): void 
         ->can('viewBrickDna', Family::class);
     Route::put('/family/rebrickable-token', [FamilyController::class, 'setRebrickableToken'])
         ->can('setRebrickableToken', Family::class);
-    Route::delete('/family/members/{user}', [FamilyController::class, 'removeMember'])
-        ->can('removeMember', Family::class);
 
     // Brick Identification
     Route::post('/identify-brick', [BrickIdentificationController::class, 'identify'])

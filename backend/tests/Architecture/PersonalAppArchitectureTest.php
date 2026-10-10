@@ -3,7 +3,6 @@
 declare(strict_types = 1);
 
 use App\Actions\Auth\CreateAccountAction;
-use App\Actions\Family\RemoveFamilyMemberAction;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\PasswordBroker;
@@ -123,8 +122,6 @@ it('should create users and families only in allowlisted classes', function(): v
     $allowlist = [
         // Console-only: the operator's shell is the one way to provision an account.
         CreateAccountAction::class,
-        // Moves a removed member into a solo family; reachable only by the head, creates no user.
-        RemoveFamilyMemberAction::class,
     ];
 
     $appPath = \dirname(__DIR__, 2) . '/app';

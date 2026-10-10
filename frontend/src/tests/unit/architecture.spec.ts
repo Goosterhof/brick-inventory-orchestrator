@@ -845,14 +845,6 @@ describe('Architecture', () => {
                 'TextInput.vue',
             ],
             // Split-spec: SUT is SettingsPage.vue (filename mismatch is intentional).
-            'apps/families/domains/settings/pages/SettingsPageMembers.spec.ts': [
-                'BadgeLabel.vue',
-                'ConfirmDialog.vue',
-                'DangerButton.vue',
-                'PrimaryButton.vue',
-                'SettingsPage.vue',
-            ],
-            // Split-spec: SUT is SettingsPage.vue (filename mismatch is intentional).
             'apps/families/domains/settings/pages/SettingsPageTheme.spec.ts': ['SettingsPage.vue'],
             'apps/families/domains/storage/pages/AddStoragePage.spec.ts': [
                 'NumberInput.vue',

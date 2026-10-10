@@ -8,11 +8,9 @@ use App\Actions\Family\GetBrickDnaAction;
 use App\Actions\Family\GetFamilyPartsAction;
 use App\Actions\Family\GetFamilyPartUsageAction;
 use App\Actions\Family\GetFamilyStatsAction;
-use App\Actions\Family\RemoveFamilyMemberAction;
 use App\Actions\Family\SetRebrickableTokenAction;
 use App\Http\Requests\Family\SetRebrickableTokenRequest;
 use App\Http\Resources\BrickDnaResourceData;
-use App\Http\Resources\FamilyMemberResourceData;
 use App\Http\Resources\FamilyPartUsageResourceData;
 use App\Http\Resources\FamilyStatsResourceData;
 use App\Models\User;
@@ -22,17 +20,6 @@ use Illuminate\Http\Request;
 
 class FamilyController extends Controller
 {
-    public function members(
-        #[CurrentUser]
-        User $user,
-    ): JsonResponse {
-        // Payload is array<int, FamilyMemberResourceData> — the ADR-0009 collection shape
-        // (ResourceData::collection() returns array<int, static> by design). The rule's
-        // isArray() gate cannot see element types, so a ResourceData list reads as a bare array.
-        // @phpstan-ignore forbidInlineArrayJsonResponseInControllers.arrayPayload
-        return new JsonResponse(FamilyMemberResourceData::fromFamily($user->family));
-    }
-
     public function parts(
         #[CurrentUser]
         User $user,
@@ -89,20 +76,5 @@ class FamilyController extends Controller
         $setRebrickableTokenAction->execute($user->family, $setRebrickableTokenRequest->toDto(), $user);
 
         return response()->json(null, 204);
-    }
-
-    public function removeMember(
-        User $user,
-        #[CurrentUser]
-        User $currentUser,
-        RemoveFamilyMemberAction $removeFamilyMemberAction,
-    ): JsonResponse {
-        $removeFamilyMemberAction->execute($currentUser->family, $user, $currentUser);
-
-        // Single-key ack, not a domain resource — the noise class the rule's own docblock
-        // tells consumers to separate from the resource-shape class. The sanctioned fix is a
-        // shared MessageResponse subclass; BIO has none, and inventing one is out of WR-0533 scope.
-        // @phpstan-ignore forbidInlineArrayJsonResponseInControllers.arrayPayload
-        return new JsonResponse(['message' => 'Member removed from family'], 200);
     }
 }

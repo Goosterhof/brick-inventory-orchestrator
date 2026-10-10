@@ -16,11 +16,10 @@ vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
 
-const {mockGetRequest, mockUserId, mockIsDark, mockToggleTheme} = await vi.hoisted(async () => {
+const {mockGetRequest, mockIsDark, mockToggleTheme} = await vi.hoisted(async () => {
     const {ref} = await import('vue');
     return {
         mockGetRequest: vi.fn<(url: string) => Promise<unknown>>(),
-        mockUserId: vi.fn<() => number>(),
         mockIsDark: ref(false),
         mockToggleTheme: vi.fn<() => void>(),
     };
@@ -29,25 +28,18 @@ const {mockGetRequest, mockUserId, mockIsDark, mockToggleTheme} = await vi.hoist
 vi.mock('@app/services', () =>
     createMockFamilyServices({
         familyHttpService: {getRequest: mockGetRequest},
-        familyAuthService: {isLoggedIn: {value: true}, userId: mockUserId},
         familyThemeService: {isDark: mockIsDark, toggleTheme: mockToggleTheme},
     }),
 );
 
-const mockMembers = () => {
-    mockGetRequest.mockImplementation((url: string) => {
-        if (url === '/family/members') {
-            return Promise.resolve({data: [{id: 1, name: 'Jan', email: 'jan@example.com', isHead: true}]});
-        }
-        return Promise.reject(new Error(`Unexpected GET: ${url}`));
-    });
+const rejectUnexpectedGets = () => {
+    mockGetRequest.mockImplementation((url: string) => Promise.reject(new Error(`Unexpected GET: ${url}`)));
 };
 
 describe('SettingsPage — theme', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockUserId.mockReturnValue(1);
-        mockMembers();
+        rejectUnexpectedGets();
         mockIsDark.value = false;
     });
 
