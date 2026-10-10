@@ -1,0 +1,7 @@
+# WR-2124: crit-ai reviews everything; the guarded paths below belong to @Goosterhof alone.
+# Last match wins, so every guarded line must stay below the catch-all.
+*                                                        @crit-ai
+
+/backend/tests/Architecture/PersonalAppArchitectureTest.php  @Goosterhof
+/.github/workflows/                                      @Goosterhof
+/.github/CODEOWNERS                                      @Goosterhof
