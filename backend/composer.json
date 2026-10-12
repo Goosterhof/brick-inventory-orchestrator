@@ -12,7 +12,7 @@
         "laravel/octane": "^2.13",
         "laravel/sanctum": "^4.2",
         "laravel/tinker": "^3.0.0",
-        "script-development/kendo-error-tracker": "^0.1.0",
+        "script-development/kendo-error-tracker": "^0.2.1",
         "script-development/kendo-report-tool": "^0.1.0"
     },
     "require-dev": {
