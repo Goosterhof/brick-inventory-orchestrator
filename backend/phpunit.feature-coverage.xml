@@ -12,6 +12,7 @@
             <exclude>tests/Feature/Jobs</exclude>
             <exclude>tests/Feature/Configuration</exclude>
             <exclude>tests/Feature/Console</exclude>
+            <exclude>tests/Feature/Auth/AccountProvisioningPermitTest.php</exclude>
             <exclude>tests/Feature/Controllers/ResponseCachingTest.php</exclude>
         </testsuite>
     </testsuites>

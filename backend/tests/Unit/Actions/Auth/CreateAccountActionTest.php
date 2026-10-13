@@ -3,6 +3,7 @@
 declare(strict_types = 1);
 
 use App\Actions\Auth\CreateAccountAction;
+use App\Auth\AccountProvisioningPermit;
 use App\DataTransferObjects\Input\Auth\CreateAccountData;
 use App\Models\Family;
 use App\Models\User;
@@ -14,7 +15,12 @@ covers(CreateAccountAction::class);
 describe('CreateAccountAction', function(): void {
     beforeEach(function(): void {
         $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
+        $this->permitOpenInTransaction = null;
+        $this->db->shouldReceive('transaction')->once()->andReturnUsing(function(\Closure $callback): mixed {
+            $this->permitOpenInTransaction = AccountProvisioningPermit::isOpen();
+
+            return $callback();
+        });
 
         $this->events = [];
         $this->familyValues = [];
@@ -93,5 +99,17 @@ describe('CreateAccountAction', function(): void {
             'family.head_id',
             'family.save',
         ]);
+    });
+
+    it('should hold the provisioning permit for the transaction and release it after (WR-2128)', function(): void {
+        // arrange
+        AccountProvisioningPermit::close();
+
+        // act
+        $this->action->execute($this->data);
+
+        // assert
+        expect($this->permitOpenInTransaction)->toBeTrue()
+            ->and(AccountProvisioningPermit::isOpen())->toBeFalse();
     });
 });

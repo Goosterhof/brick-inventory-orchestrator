@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace App\Actions\Auth;
 
+use App\Auth\AccountProvisioningPermit;
 use App\DataTransferObjects\Input\Auth\CreateAccountData;
 use App\Models\Family;
 use App\Models\User;
@@ -12,6 +13,7 @@ use Illuminate\Database\ConnectionInterface;
 /**
  * WR-2118: the only User/Family creation path. Invoked by the account:create console
  * command alone — PersonalAppArchitectureTest fails if anything outside App\Console uses it.
+ * WR-2128: the User model refuses the insert unless this action holds the provisioning permit.
  */
 final readonly class CreateAccountAction
 {
@@ -23,7 +25,7 @@ final readonly class CreateAccountAction
 
     public function execute(CreateAccountData $createAccountData): User
     {
-        return $this->connection->transaction(function() use ($createAccountData): User {
+        return AccountProvisioningPermit::during(fn(): User => $this->connection->transaction(function() use ($createAccountData): User {
             $family = $this->family->newInstance();
             $family->name = $createAccountData->familyName;
             $family->save();
@@ -41,6 +43,6 @@ final readonly class CreateAccountAction
             $family->save();
 
             return $user;
-        });
+        }));
     }
 }

@@ -8,11 +8,14 @@ use Rector\Naming\Rector\Assign\RenameVariableToMatchMethodCallReturnTypeRector;
 use Rector\Naming\Rector\Class_\RenamePropertyToMatchTypeRector;
 use Rector\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector;
 use Rector\Naming\Rector\ClassMethod\RenameVariableToMatchNewTypeRector;
+use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Php74\Rector\Closure\ClosureToArrowFunctionRector;
 use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
+use RectorLaravel\Rector\FuncCall\AppToResolveRector;
 use RectorLaravel\Rector\FuncCall\RemoveDumpDataDeadCodeRector;
 use RectorLaravel\Rector\MethodCall\WhereToWhereLikeRector;
 use RectorLaravel\Rector\StaticCall\CarbonToDateFacadeRector;
+use RectorLaravel\Rector\StaticCall\EloquentMagicMethodToQueryBuilderRector;
 use RectorLaravel\Rector\StaticCall\RouteActionCallableRector;
 use RectorLaravel\Set\LaravelLevelSetList;
 use RectorLaravel\Set\LaravelSetList;
@@ -49,6 +52,18 @@ return RectorConfig::configure()
         // Transaction closures in Actions must use full closures (arch test enforced)
         ClosureToArrowFunctionRector::class => [
             __DIR__ . '/app/Actions',
+        ],
+        // WR-2128: each spelling of a User insert is a bypass shape under test; rewriting it to
+        // the canonical form would test one shape many times.
+        AppToResolveRector::class => [
+            __DIR__ . '/tests/Feature/Auth/AccountProvisioningPermitTest.php',
+        ],
+        EloquentMagicMethodToQueryBuilderRector::class => [
+            __DIR__ . '/tests/Feature/Auth/AccountProvisioningPermitTest.php',
+            __DIR__ . '/tests/Fixtures/AliasedUserImport.php',
+        ],
+        StringClassNameToClassConstantRector::class => [
+            __DIR__ . '/tests/Feature/Auth/AccountProvisioningPermitTest.php',
         ],
         // Laravel requires (User $user, Model $model) signature in Policies
         RemoveUnusedPublicMethodParameterRector::class => [
