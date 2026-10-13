@@ -10,6 +10,7 @@
 /backend/app/Actions/Auth/CreateAccountAction.php        @Goosterhof
 /backend/app/Console/Commands/CreateAccountCommand.php   @Goosterhof
 /backend/database/seeders/DatabaseSeeder.php             @Goosterhof
+/backend/database/migrations/                            @Goosterhof
 /backend/config/octane.php                               @Goosterhof
 /backend/bin/                                            @Goosterhof
 /railway.toml                                            @Goosterhof
