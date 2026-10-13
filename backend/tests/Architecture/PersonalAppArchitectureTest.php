@@ -3,6 +3,11 @@
 declare(strict_types = 1);
 
 use App\Actions\Auth\CreateAccountAction;
+use App\Auth\AccountProvisioningPermit;
+use App\Auth\CloseAccountProvisioningPermit;
+use App\Auth\ProvisioningGuardedBuilder;
+use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\PasswordBroker;
@@ -30,8 +35,12 @@ use Tests\TestCase;
 |      classes, or on Symfony Mailer / Resend.
 |   3. The one creation Action, and the Artisan/Process entry points that could
 |      invoke it, are used by console commands only.
-|   4. No file in app/ creates a User or Family outside a named allowlist.
+|   4. No file in app/ creates a Family outside a named allowlist, and no file writes the
+|      users or families table through a raw query. Eloquent User inserts are refused at
+|      runtime unless the provisioning permit is open (WR-2128); this scan covers only the
+|      paths that bypass Eloquent, which the runtime guard cannot see.
 |   5. No routes/*.php file reads the environment or config.
+|   6. Only the classes that make up the WR-2128 guard may use the provisioning permit.
 |
  */
 
@@ -115,10 +124,12 @@ arch('artisan and process entry points should only be used by console commands')
     ])
     ->ignoring('App\Console');
 
-it('should create users and families only in allowlisted classes', function(): void {
+it('should create families and write the users table only in allowlisted classes', function(): void {
     $allowlist = [
         // Console-only: the operator's shell is the one way to provision an account.
         CreateAccountAction::class,
+        // Refuses its own base-query inserts unless the permit is open.
+        ProvisioningGuardedBuilder::class,
     ];
 
     $appPath = \dirname(__DIR__, 2) . '/app';
@@ -129,12 +140,13 @@ it('should create users and families only in allowlisted classes', function(): v
     $creationCall = '(?:newInstance|newModelInstance|create|forceCreate|createQuietly|firstOrCreate|firstOrNew|updateOrCreate|createOrFirst|insert|insertGetId|insertOrIgnore|upsert)';
 
     $staticPatterns = [
-        '/\b(?:User|Family)::(?:query\(\)\s*->\s*)?' . $creationCall . '\s*\(/',
-        '/\bnew\s+\\\?(?:App\\\Models\\\)?(?:User|Family)\b/',
-        '/->\s*users\(\)\s*->\s*(?:save|saveMany|saveQuietly|' . $creationCall . '|createMany)\s*\(/',
+        '/\bFamily::(?:query\(\)\s*->\s*)?' . $creationCall . '\s*\(/',
+        '/\bnew\s+\\\?(?:App\\\Models\\\)?Family\b/',
         '/(?:->|::)\s*table\(\s*[\'"](?:users|families)[\'"]\s*\)/',
         '/\binsert\s+(?:ignore\s+)?into\s+[`"\']?(?:users|families)\b/i',
-        '/\b(?:User|Family)::factory\(/',
+        '/\bFamily::factory\(/',
+        // A base query builder is past ProvisioningGuardedBuilder, whatever model it came from.
+        '/->\s*(?:toBase|getQuery)\(\)\s*->\s*(?:insert\w*|upsert)\s*\(/i',
     ];
 
     $violations = [];
@@ -149,7 +161,7 @@ it('should create users and families only in allowlisted classes', function(): v
         $content = (string) file_get_contents($file);
         $patterns = $staticPatterns;
 
-        preg_match_all('/\b(?:private|protected|public)\s+(?:readonly\s+)?\\\?(?:App\\\Models\\\)?(?:User|Family)\s+\$(\w+)/', $content, $matches);
+        preg_match_all('/\b(?:private|protected|public)\s+(?:readonly\s+)?\\\?(?:App\\\Models\\\)?Family\s+\$(\w+)/', $content, $matches);
 
         foreach ($matches[1] as $property) {
             $patterns[] = '/\$this->' . $property . '\b[^;]*?->\s*' . $creationCall . '\s*\(/s';
@@ -163,10 +175,20 @@ it('should create users and families only in allowlisted classes', function(): v
     }
 
     expect($violations)->toBeEmpty(ArchTestHelper::formatViolations(
-        'User/Family creation found outside the allowlist (WR-2118 — BIO admits nobody over HTTP):',
+        'Family creation or a raw users/families write found outside the allowlist (WR-2118, WR-2128):',
         $violations,
     ));
 });
+
+arch('the provisioning permit should only be used by the WR-2128 guard and the account creation action')
+    ->expect(AccountProvisioningPermit::class)
+    ->toOnlyBeUsedIn([
+        CreateAccountAction::class,
+        User::class,
+        ProvisioningGuardedBuilder::class,
+        CloseAccountProvisioningPermit::class,
+        DatabaseSeeder::class,
+    ]);
 
 it('should register routes unconditionally', function(): void {
     $routeFiles = glob(\dirname(__DIR__, 2) . '/routes/*.php');

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Database\Seeders;
 
+use App\Auth\AccountProvisioningPermit;
 use App\Models\Family;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -29,12 +30,12 @@ class DatabaseSeeder extends Seeder
         // Create a test family for tenant-scoped seeders
         $family = Family::factory()->create(['name' => 'Test Family']);
 
-        // Create a test user for the family
-        User::factory()->create([
+        // Create a test user for the family; WR-2128 refuses a User insert without the permit.
+        AccountProvisioningPermit::during(fn(): User => User::factory()->create([
             'family_id' => $family->id,
             'name' => 'Test User',
             'email' => 'test@example.com',
-        ]);
+        ]));
 
         // Tenant seeders (create tenant entities such as families)
         // Uncomment to create additional families:

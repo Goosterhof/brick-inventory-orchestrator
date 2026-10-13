@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use App\Auth\CloseAccountProvisioningPermit;
 use Laravel\Octane\Contracts\OperationTerminated;
 use Laravel\Octane\Events\RequestHandled;
 use Laravel\Octane\Events\RequestReceived;
@@ -80,6 +81,7 @@ return [
 
         RequestTerminated::class => [
             // FlushUploadedFiles::class,
+            CloseAccountProvisioningPermit::class,
         ],
 
         TaskReceived::class => [
@@ -88,7 +90,7 @@ return [
         ],
 
         TaskTerminated::class => [
-
+            CloseAccountProvisioningPermit::class,
         ],
 
         TickReceived::class => [

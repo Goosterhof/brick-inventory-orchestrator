@@ -27,6 +27,12 @@ deptrac:
         - type: classLike
           value: App\\Exceptions\\.*
 
+    # --- Account provisioning guard (WR-2128) ---
+    - name: Auth
+      collectors:
+        - type: classLike
+          value: App\\Auth\\.*
+
     # --- Interface layer ---
     - name: Contract
       collectors:
@@ -89,6 +95,7 @@ deptrac:
     Model:
       - Enum
       - Contract
+      - Auth
     InputDTO:
       - Enum
     ResultDTO:
@@ -96,6 +103,10 @@ deptrac:
       - Model
     Enum: []
     Exception: []
+
+    # The provisioning permit and its guards throw their own exception and nothing else.
+    Auth:
+      - Exception
 
     # Contracts define interfaces using DTOs, exceptions, and enums.
     # Input DTOs cover supplier-response shapes (Rebrickable/Brickognize)
@@ -140,6 +151,7 @@ deptrac:
     # Receive InputDTOs; return ResultDTOs (or Models, Collections, void).
     Action:
       - Action
+      - Auth
       - Job
       - Contract
       - Model
