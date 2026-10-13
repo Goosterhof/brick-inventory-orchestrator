@@ -168,13 +168,16 @@ it('should keep the provisioning permit out of migrations, and out of seeders an
 
 it('should reach the database only through a guarded connection', function(): void {
     // AccountTableWriteGuard sits on Connection::run() of every connection the factory builds.
-    // Three things skip it: a raw PDO handle, a connection built outside the factory (a driver
-    // connection or connector class, DB::extend()), and a resolver or factory that replaces ours.
+    // Four things skip it: a raw PDO handle, a connection built outside the factory (a driver
+    // connection or connector class, DB::extend()), a resolver or factory that replaces ours, and
+    // code that reaches into Connection to empty the guard's own state (beforeExecutingCallbacks,
+    // the static resolvers).
     // Every identifier or string naming one of them must appear below, file by file, exactly as
     // often as it does now.
     $allowlist = [
         'app/Auth/AccountTableWriteGuard.php' => [
             // The resolver hands the factory's PDO (or its lazy closure) to the guarded connection.
+            '$pdo', '$pdo',
             \PDO::class, \PDO::class, 'resolverFor',
             MariaDbConnection::class, MySqlConnection::class, PostgresConnection::class,
             SQLiteConnection::class, SqlServerConnection::class,
@@ -195,10 +198,10 @@ it('should reach the database only through a guarded connection', function(): vo
 
     expect($files)->not->toBeEmpty('No PHP files found — the scan is broken.');
 
-    $identifiers = [\T_STRING, \T_NAME_QUALIFIED, \T_NAME_FULLY_QUALIFIED, \T_NAME_RELATIVE];
+    $identifiers = [\T_STRING, \T_NAME_QUALIFIED, \T_NAME_FULLY_QUALIFIED, \T_NAME_RELATIVE, \T_VARIABLE];
     $strings = [\T_CONSTANT_ENCAPSED_STRING, \T_ENCAPSED_AND_WHITESPACE];
-    $identifierPattern = '/pdo|^resolverFor$|^extend$|ConnectionFactory|Connector$|(?:MySql|MariaDb|Postgres|SQLite|SqlServer)Connection$/i';
-    $stringPattern = '/pdo|db\.factory|Connector\b|(?:MySql|MariaDb|Postgres|SQLite|SqlServer)Connection\b/i';
+    $identifierPattern = '/pdo|^resolverFor$|^extend$|^beforeExecutingCallbacks$|^\$?resolvers$|ConnectionFactory|Connector$|(?:MySql|MariaDb|Postgres|SQLite|SqlServer)Connection$/i';
+    $stringPattern = '/pdo|db\.factory|beforeExecutingCallbacks|\bresolvers\b|Connector\b|(?:MySql|MariaDb|Postgres|SQLite|SqlServer)Connection\b/i';
     $found = [];
 
     foreach ($files as $file) {
