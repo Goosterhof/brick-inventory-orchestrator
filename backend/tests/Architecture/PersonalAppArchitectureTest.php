@@ -273,6 +273,82 @@ it('should keep the provisioning permit out of routes, bootstrap and config, and
     ));
 });
 
+it('should not rebind a closure into another scope or use reflection', function(): void {
+    // The permit's flag, the guard's callbacks and its resolvers are private or protected state.
+    // Reaching them needs a scope rebinding (Closure::bind, ->bindTo(), ->call()) or reflection,
+    // whatever the field is called, so this pins the mechanism rather than the fields. Every use
+    // must appear below, file by file, exactly as often as it does now.
+    $allowlist = [
+        // isInstalledFor() reads the scope of the resolver closure; it changes nothing.
+        'app/Auth/AccountTableWriteGuard.php' => [\ReflectionFunction::class, \ReflectionFunction::class],
+    ];
+
+    $root = \dirname(__DIR__, 2);
+    $files = [];
+
+    foreach (['app', 'bootstrap', 'config', 'database', 'routes'] as $directory) {
+        $files = [...$files, ...ArchTestHelper::phpFilesIn($root . '/' . $directory)];
+    }
+
+    $files = array_filter($files, fn(string $file): bool => !str_contains($file, '/bootstrap/cache/'));
+
+    expect($files)->not->toBeEmpty('No PHP files found — the scan is broken.');
+
+    $names = [\T_STRING, \T_NAME_QUALIFIED, \T_NAME_FULLY_QUALIFIED, \T_NAME_RELATIVE];
+    $insignificant = [\T_WHITESPACE, \T_COMMENT, \T_DOC_COMMENT];
+    $found = [];
+
+    foreach ($files as $file) {
+        $tokens = array_values(array_filter(
+            token_get_all((string) file_get_contents($file)),
+            fn(array|string $token): bool => !\is_array($token) || !\in_array($token[0], $insignificant, strict: true),
+        ));
+
+        foreach ($tokens as $index => $token) {
+            if (!\is_array($token) || !\in_array($token[0], $names, strict: true)) {
+                continue;
+            }
+
+            $name = mb_ltrim($token[1], '\\');
+            $last = mb_strtolower((string) mb_strrchr('\\' . $name, '\\'));
+            $previous = $tokens[$index - 1] ?? null;
+            $beforePrevious = $tokens[$index - 2] ?? null;
+            $afterArrow = \is_array($previous) && \in_array($previous[0], [\T_OBJECT_OPERATOR, \T_NULLSAFE_OBJECT_OPERATOR], strict: true);
+            $afterDoubleColon = \is_array($previous) && $previous[0] === \T_DOUBLE_COLON;
+            $onThis = \is_array($beforePrevious) && $beforePrevious[0] === \T_VARIABLE && $beforePrevious[1] === '$this';
+
+            $hit = str_starts_with($last, '\reflection')
+                || $last === '\bindto'
+                || ($last === '\bind' && $afterDoubleColon)
+                || ($last === '\call' && $afterArrow && !$onThis);
+
+            if ($hit) {
+                $found[str_replace($root . '/', '', $file)][] = $name;
+            }
+        }
+    }
+
+    expect($found)->not->toBeEmpty('Nothing found — the scan is broken (the guard itself uses ReflectionFunction).');
+
+    $violations = [];
+
+    foreach (array_unique([...array_keys($found), ...array_keys($allowlist)]) as $path) {
+        $actual = $found[$path] ?? [];
+        $expected = $allowlist[$path] ?? [];
+        sort($actual);
+        sort($expected);
+
+        if ($actual !== $expected) {
+            $violations[] = $path . ': found [' . implode(' | ', $actual) . '], allowlisted [' . implode(' | ', $expected) . ']';
+        }
+    }
+
+    expect($violations)->toBeEmpty(ArchTestHelper::formatViolations(
+        'A closure rebound into another scope, or reflection, can open the permit or empty the guard (WR-2128):',
+        $violations,
+    ));
+});
+
 it('should register routes unconditionally', function(): void {
     $routeFiles = glob(\dirname(__DIR__, 2) . '/routes/*.php');
 

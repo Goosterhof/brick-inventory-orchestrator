@@ -11,6 +11,7 @@
 /backend/app/Console/Commands/CreateAccountCommand.php   @Goosterhof
 /backend/database/seeders/DatabaseSeeder.php             @Goosterhof
 /backend/database/migrations/                            @Goosterhof
+/backend/database/schema/                                @Goosterhof
 /backend/config/octane.php                               @Goosterhof
 /backend/app/Providers/AppServiceProvider.php            @Goosterhof
 /backend/bin/                                            @Goosterhof
