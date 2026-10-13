@@ -46,6 +46,14 @@ use Tests\TestCase;
 
 uses(TestCase::class);
 
+// Writes that never pass through Eloquent, so the runtime guard (WR-2128) cannot see them.
+$rawWritePatterns = [
+    '/(?:->|::)\s*table\(\s*[\'"](?:users|families)[\'"]\s*\)/',
+    '/\binsert\s+(?:ignore\s+)?into\s+[`"\']?(?:users|families)\b/i',
+    // A base query builder is past ProvisioningGuardedBuilder, whatever model it came from.
+    '/->\s*(?:toBase|getQuery)\(\)\s*->\s*(?:insert\w*|upsert)\s*\(/i',
+];
+
 it('should expose exactly the allowlisted routes without auth:sanctum', function(): void {
     $allowlist = [
         'GET api',
@@ -124,7 +132,7 @@ arch('artisan and process entry points should only be used by console commands')
     ])
     ->ignoring('App\Console');
 
-it('should create families and write the users table only in allowlisted classes', function(): void {
+it('should create families and write the users table only in allowlisted classes', function() use ($rawWritePatterns): void {
     $allowlist = [
         // Console-only: the operator's shell is the one way to provision an account.
         CreateAccountAction::class,
@@ -142,11 +150,8 @@ it('should create families and write the users table only in allowlisted classes
     $staticPatterns = [
         '/\bFamily::(?:query\(\)\s*->\s*)?' . $creationCall . '\s*\(/',
         '/\bnew\s+\\\?(?:App\\\Models\\\)?Family\b/',
-        '/(?:->|::)\s*table\(\s*[\'"](?:users|families)[\'"]\s*\)/',
-        '/\binsert\s+(?:ignore\s+)?into\s+[`"\']?(?:users|families)\b/i',
         '/\bFamily::factory\(/',
-        // A base query builder is past ProvisioningGuardedBuilder, whatever model it came from.
-        '/->\s*(?:toBase|getQuery)\(\)\s*->\s*(?:insert\w*|upsert)\s*\(/i',
+        ...$rawWritePatterns,
     ];
 
     $violations = [];
@@ -189,6 +194,73 @@ arch('the provisioning permit should only be used by the WR-2128 guard and the a
         CloseAccountProvisioningPermit::class,
         DatabaseSeeder::class,
     ]);
+
+arch('application classes should not use seeders')
+    ->expect('App')
+    ->not->toUse('Database\Seeders');
+
+it('should keep migrations, seeders and factories off the users and families tables', function() use ($rawWritePatterns): void {
+    $databasePath = \dirname(__DIR__, 2) . '/database';
+    $migrations = ArchTestHelper::phpFilesIn($databasePath . '/migrations');
+    $files = [...$migrations, ...ArchTestHelper::phpFilesIn($databasePath . '/seeders'), ...ArchTestHelper::phpFilesIn($databasePath . '/factories')];
+
+    expect($migrations)->not->toBeEmpty('No migrations found under database/migrations — the scan is broken.');
+
+    // Every web boot runs migrate --force (bin/start.sh), so a migration may not touch accounts at all.
+    $migrationPatterns = [
+        ...$rawWritePatterns,
+        '/\bAccountProvisioningPermit\b/',
+        '/\bApp\\\Models\\\(?:User|Family)\b/',
+        '/\b(?:User|Family)::/',
+        '/Database\\\Seeders|db:seed/',
+    ];
+
+    $violations = [];
+
+    foreach ($files as $file) {
+        $content = (string) file_get_contents($file);
+        $patterns = \in_array($file, $migrations, strict: true) ? $migrationPatterns : $rawWritePatterns;
+
+        if (basename($file) !== 'DatabaseSeeder.php' && !\in_array($file, $migrations, strict: true)) {
+            $patterns[] = '/\bAccountProvisioningPermit\b/';
+        }
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $content) === 1) {
+                $violations[] = basename($file) . ' matches ' . $pattern;
+            }
+        }
+    }
+
+    expect($violations)->toBeEmpty(ArchTestHelper::formatViolations(
+        'A migration, seeder or factory writes accounts outside the provisioning permit (WR-2128):',
+        $violations,
+    ));
+});
+
+it('should open the provisioning permit only from the test harness', function(): void {
+    $root = \dirname(__DIR__, 2);
+    $files = [];
+
+    foreach (['app', 'bootstrap', 'config', 'database', 'routes'] as $directory) {
+        $files = [...$files, ...ArchTestHelper::phpFilesIn($root . '/' . $directory)];
+    }
+
+    expect($files)->not->toBeEmpty('No PHP files found — the scan is broken.');
+
+    $violations = [];
+
+    foreach ($files as $file) {
+        if (preg_match('/AccountProvisioningPermit::open\s*\(/', (string) file_get_contents($file)) === 1) {
+            $violations[] = str_replace($root . '/', '', $file);
+        }
+    }
+
+    expect($violations)->toBeEmpty(ArchTestHelper::formatViolations(
+        'AccountProvisioningPermit::open() is for tests/ only; application code opens the permit through during(), which closes it again (WR-2128):',
+        $violations,
+    ));
+});
 
 it('should register routes unconditionally', function(): void {
     $routeFiles = glob(\dirname(__DIR__, 2) . '/routes/*.php');

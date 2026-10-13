@@ -7,5 +7,12 @@
 /backend/app/Models/User.php                             @Goosterhof
 /backend/tests/Feature/Auth/AccountProvisioningPermitTest.php  @Goosterhof
 /backend/tests/TestCase.php                              @Goosterhof
+/backend/app/Actions/Auth/CreateAccountAction.php        @Goosterhof
+/backend/app/Console/Commands/CreateAccountCommand.php   @Goosterhof
+/backend/database/seeders/DatabaseSeeder.php             @Goosterhof
+/backend/config/octane.php                               @Goosterhof
+/backend/bin/                                            @Goosterhof
+/railway.toml                                            @Goosterhof
+/Dockerfile                                              @Goosterhof
 /.github/workflows/                                      @Goosterhof
 /.github/CODEOWNERS                                      @Goosterhof
