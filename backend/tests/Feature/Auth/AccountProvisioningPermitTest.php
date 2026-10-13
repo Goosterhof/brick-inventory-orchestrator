@@ -8,6 +8,7 @@ use App\Auth\ProvisioningGuardedBuilder;
 use App\Exceptions\AccountProvisioningClosedException;
 use App\Models\Family;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
@@ -23,6 +24,7 @@ covers(
     ProvisioningGuardedBuilder::class,
     CloseAccountProvisioningPermit::class,
     User::class,
+    DatabaseSeeder::class,
 );
 
 uses(RefreshDatabase::class);
@@ -168,6 +170,32 @@ describe('account provisioning permit', function(): void {
 
             AccountProvisioningPermit::close();
         });
+    });
+
+    describe('database seeder (WR-2192)', function(): void {
+        afterEach(function(): void {
+            $this->app['env'] = 'testing';
+        });
+
+        it('should refuse to seed its known-password account outside local and testing', function(string $environment): void {
+            $this->app['env'] = $environment;
+            $before = User::query()->count();
+
+            expect(fn(): int => Artisan::call('db:seed', ['--force' => true]))
+                ->toThrow(\RuntimeException::class, \sprintf('refuses to run in the "%s" environment', $environment));
+
+            expect(User::query()->count())->toBe($before)
+                ->and(AccountProvisioningPermit::isOpen())->toBeFalse();
+        })->with(['production', 'staging', 'e2e']);
+
+        it('should seed its test account in local and testing and close the permit after', function(string $environment): void {
+            $this->app['env'] = $environment;
+
+            Artisan::call('db:seed', ['--force' => true]);
+
+            expect(User::query()->where('email', 'test@example.com')->count())->toBe(1)
+                ->and(AccountProvisioningPermit::isOpen())->toBeFalse();
+        })->with(['local', 'testing']);
     });
 
     describe('octane', function(): void {

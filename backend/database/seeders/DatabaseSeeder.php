@@ -9,6 +9,9 @@ use App\Models\Family;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use RuntimeException;
+
+use function sprintf;
 
 class DatabaseSeeder extends Seeder
 {
@@ -19,6 +22,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $environment = app()->environment();
+
+        if (!app()->environment(['local', 'testing'])) {
+            // WR-2192: the seeded account has a known password, so seeding it anywhere a
+            // stranger can reach would open BIO to them. Reference data seeds by --class.
+            throw new RuntimeException(sprintf('DatabaseSeeder creates a known-password account and refuses to run in the "%s" environment (WR-2192); seed reference data with db:seed --class instead.', $environment));
+        }
+
         // Reference data seeders (no family required)
         $this->call([
             ColorSeeder::class,
