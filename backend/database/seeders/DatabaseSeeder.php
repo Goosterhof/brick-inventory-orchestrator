@@ -38,12 +38,9 @@ class DatabaseSeeder extends Seeder
             SetPartSeeder::class,
         ]);
 
-        // Create a test family for tenant-scoped seeders
-        $family = Family::factory()->create(['name' => 'Test Family']);
-
-        // Create a test user for the family; WR-2128 refuses a User insert without the permit.
+        // A test family and its user; WR-2128 refuses an insert into either table without the permit.
         AccountProvisioningPermit::during(fn(): User => User::factory()->create([
-            'family_id' => $family->id,
+            'family_id' => Family::factory()->create(['name' => 'Test Family'])->id,
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]));

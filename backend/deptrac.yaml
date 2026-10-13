@@ -95,7 +95,6 @@ deptrac:
     Model:
       - Enum
       - Contract
-      - Auth
     InputDTO:
       - Enum
     ResultDTO:
@@ -188,6 +187,7 @@ deptrac:
     # Providers wire interfaces to implementations and configure action dependencies
     Provider:
       - Action
+      - Auth
       - Contract
       - Service
       - Policy
