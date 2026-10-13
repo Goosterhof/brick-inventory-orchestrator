@@ -12,6 +12,11 @@ use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\PasswordBroker;
 use Illuminate\Contracts\Auth\PasswordBrokerFactory;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Database\MariaDbConnection;
+use Illuminate\Database\MySqlConnection;
+use Illuminate\Database\PostgresConnection;
+use Illuminate\Database\SQLiteConnection;
+use Illuminate\Database\SqlServerConnection;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
@@ -161,14 +166,22 @@ it('should keep the provisioning permit out of migrations, and out of seeders an
     ));
 });
 
-it('should reach the database only through a guarded connection, never a raw PDO handle', function(): void {
-    // AccountTableWriteGuard sits on Connection::run(); a PDO handle runs SQL without it. Every
-    // identifier naming PDO must appear below, file by file, exactly as often as it does now.
+it('should reach the database only through a guarded connection', function(): void {
+    // AccountTableWriteGuard sits on Connection::run() of every connection the factory builds.
+    // Three things skip it: a raw PDO handle, a connection built outside the factory (a driver
+    // connection or connector class, DB::extend()), and a resolver or factory that replaces ours.
+    // Every identifier or string naming one of them must appear below, file by file, exactly as
+    // often as it does now.
     $allowlist = [
-        // The resolver hands the factory's PDO (or its lazy closure) to the guarded connection.
-        'app/Auth/AccountTableWriteGuard.php' => [\PDO::class, \PDO::class],
-        // Driver option constants (Pdo\Mysql::ATTR_SSL_CA), no handle.
-        'config/database.php' => [Mysql::class],
+        'app/Auth/AccountTableWriteGuard.php' => [
+            // The resolver hands the factory's PDO (or its lazy closure) to the guarded connection.
+            \PDO::class, \PDO::class, 'resolverFor',
+            MariaDbConnection::class, MySqlConnection::class, PostgresConnection::class,
+            SQLiteConnection::class, SqlServerConnection::class,
+            'MariaDbConnection', 'MySqlConnection', 'PostgresConnection', 'SQLiteConnection', 'SqlServerConnection',
+        ],
+        // Driver option constants (Pdo\Mysql::ATTR_SSL_CA) and an extension check; no handle.
+        'config/database.php' => [Mysql::class, 'pdo_mysql', 'pdo_mysql'],
     ];
 
     $root = \dirname(__DIR__, 2);
@@ -183,17 +196,28 @@ it('should reach the database only through a guarded connection, never a raw PDO
     expect($files)->not->toBeEmpty('No PHP files found — the scan is broken.');
 
     $identifiers = [\T_STRING, \T_NAME_QUALIFIED, \T_NAME_FULLY_QUALIFIED, \T_NAME_RELATIVE];
+    $strings = [\T_CONSTANT_ENCAPSED_STRING, \T_ENCAPSED_AND_WHITESPACE];
+    $identifierPattern = '/pdo|^resolverFor$|^extend$|ConnectionFactory|Connector$|(?:MySql|MariaDb|Postgres|SQLite|SqlServer)Connection$/i';
+    $stringPattern = '/pdo|db\.factory|Connector\b|(?:MySql|MariaDb|Postgres|SQLite|SqlServer)Connection\b/i';
     $found = [];
 
     foreach ($files as $file) {
         foreach (token_get_all((string) file_get_contents($file)) as $token) {
-            if (\is_array($token) && \in_array($token[0], $identifiers, strict: true) && mb_stripos($token[1], 'pdo') !== false) {
-                $found[str_replace($root . '/', '', $file)][] = $token[1];
+            if (!\is_array($token)) {
+                continue;
+            }
+
+            $isIdentifier = \in_array($token[0], $identifiers, strict: true) && preg_match($identifierPattern, $token[1]) === 1;
+            $isString = \in_array($token[0], $strings, strict: true) && preg_match($stringPattern, $token[1]) === 1;
+
+            if ($isIdentifier || $isString) {
+                $literal = $token[0] === \T_CONSTANT_ENCAPSED_STRING ? mb_substr($token[1], 1, -1) : $token[1];
+                $found[str_replace($root . '/', '', $file)][] = mb_ltrim($literal, '\\');
             }
         }
     }
 
-    expect($found)->not->toBeEmpty('No PDO identifier found — the scan is broken (the guard itself names PDO).');
+    expect($found)->not->toBeEmpty('Nothing found — the scan is broken (the guard itself names PDO).');
 
     $violations = [];
 
@@ -209,7 +233,7 @@ it('should reach the database only through a guarded connection, never a raw PDO
     }
 
     expect($violations)->toBeEmpty(ArchTestHelper::formatViolations(
-        'A PDO identifier outside the allowlist; SQL run on a raw handle skips the account-table guard (WR-2128):',
+        'A raw PDO handle, a connection built outside the factory, or a replaced resolver skips the account-table guard (WR-2128):',
         $violations,
     ));
 });

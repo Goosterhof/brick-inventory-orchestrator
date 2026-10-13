@@ -12,6 +12,7 @@
 /backend/database/seeders/DatabaseSeeder.php             @Goosterhof
 /backend/database/migrations/                            @Goosterhof
 /backend/config/octane.php                               @Goosterhof
+/backend/app/Providers/AppServiceProvider.php            @Goosterhof
 /backend/bin/                                            @Goosterhof
 /railway.toml                                            @Goosterhof
 /Dockerfile                                              @Goosterhof
