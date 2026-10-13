@@ -35,10 +35,10 @@ use Tests\TestCase;
 |      classes, or on Symfony Mailer / Resend.
 |   3. The one creation Action, and the Artisan/Process entry points that could
 |      invoke it, are used by console commands only.
-|   4. No file in app/ creates a Family outside a named allowlist, and no file writes the
-|      users or families table through a raw query. Eloquent User inserts are refused at
-|      runtime unless the provisioning permit is open (WR-2128); this scan covers only the
-|      paths that bypass Eloquent, which the runtime guard cannot see.
+|   4. No file in app/ creates a Family outside a named allowlist. Eloquent User inserts are
+|      refused at runtime unless the provisioning permit is open (WR-2128); the raw paths that
+|      bypass Eloquent are caught by name: no string outside an allowlist names the users or
+|      families table.
 |   5. No routes/*.php file reads the environment or config.
 |   6. Only the classes that make up the WR-2128 guard may use the provisioning permit.
 |
@@ -46,13 +46,9 @@ use Tests\TestCase;
 
 uses(TestCase::class);
 
-// Writes that never pass through Eloquent, so the runtime guard (WR-2128) cannot see them.
-$rawWritePatterns = [
-    '/(?:->|::)\s*table\(\s*[\'"](?:users|families)[\'"]\s*\)/',
-    '/\binsert\s+(?:ignore\s+)?into\s+[`"\']?(?:users|families)\b/i',
-    // A base query builder is past ProvisioningGuardedBuilder, whatever model it came from.
-    '/->\s*(?:toBase|getQuery)\(\)\s*->\s*(?:insert\w*|upsert)\s*\(/i',
-];
+// A base query builder is past ProvisioningGuardedBuilder, whatever model it came from, and names
+// no table the string-literal scan below could see.
+$baseQueryInsertPattern = '/->\s*(?:toBase|getQuery)\(\)\s*->\s*(?:insert\w*|upsert)\s*\(/i';
 
 it('should expose exactly the allowlisted routes without auth:sanctum', function(): void {
     $allowlist = [
@@ -132,7 +128,7 @@ arch('artisan and process entry points should only be used by console commands')
     ])
     ->ignoring('App\Console');
 
-it('should create families and write the users table only in allowlisted classes', function() use ($rawWritePatterns): void {
+it('should create families and insert past the guarded builder only in allowlisted classes', function() use ($baseQueryInsertPattern): void {
     $allowlist = [
         // Console-only: the operator's shell is the one way to provision an account.
         CreateAccountAction::class,
@@ -151,7 +147,7 @@ it('should create families and write the users table only in allowlisted classes
         '/\bFamily::(?:query\(\)\s*->\s*)?' . $creationCall . '\s*\(/',
         '/\bnew\s+\\\?(?:App\\\Models\\\)?Family\b/',
         '/\bFamily::factory\(/',
-        ...$rawWritePatterns,
+        $baseQueryInsertPattern,
     ];
 
     $violations = [];
@@ -180,7 +176,7 @@ it('should create families and write the users table only in allowlisted classes
     }
 
     expect($violations)->toBeEmpty(ArchTestHelper::formatViolations(
-        'Family creation or a raw users/families write found outside the allowlist (WR-2118, WR-2128):',
+        'Family creation or a base-query insert found outside the allowlist (WR-2118, WR-2128):',
         $violations,
     ));
 });
@@ -199,7 +195,85 @@ arch('application classes should not use seeders')
     ->expect('App')
     ->not->toUse('Database\Seeders');
 
-it('should keep migrations, seeders and factories off the users and families tables', function() use ($rawWritePatterns): void {
+it('should name the users and families tables only where the allowlist says', function(): void {
+    // Raw writes never reach Eloquent, so the runtime guard cannot see them, and every way of
+    // spelling one (table(), from(), an alias, a schema prefix, raw SQL) carries the table name in
+    // a string. So this scans for the name, not the call: every string literal or heredoc that
+    // contains the word users or families must appear below, file by file, exactly as often as it
+    // does now. A new one fails until the owner adds it here.
+    $allowlist = [
+        // A relation name in cascadeRelations(), not a table.
+        'app/Models/Family.php' => ['users'],
+        // A Rebrickable API path.
+        'app/Services/RebrickableService.php' => ['/users/%s/sets/'],
+        // The auth provider's name.
+        'config/auth.php' => ['users', 'users', 'users', 'users', 'users'],
+        // Schema changes and foreign keys; the one statement is the head_id backfill (an UPDATE).
+        'database/migrations/0001_01_01_000000_create_users_table.php' => ['users', 'users'],
+        'database/migrations/2026_01_20_000001_create_families_table.php' => ['families', 'families'],
+        'database/migrations/2026_01_20_000002_add_family_id_to_users_table.php' => ['users', 'users'],
+        'database/migrations/2026_01_29_123056_add_rebrickable_user_token_to_families_table.php' => ['families', 'families'],
+        'database/migrations/2026_02_02_000001_add_head_id_to_families_table.php' => [
+            'UPDATE families SET head_id = ( SELECT id FROM users WHERE users.family_id = families.id ORDER BY id LIMIT 1 ) WHERE head_id IS NULL',
+            'families',
+            'families',
+            'users',
+        ],
+        'database/migrations/2026_03_25_000001_create_invite_codes_table.php' => ['families', 'users'],
+        'database/migrations/2026_03_28_000001_create_import_jobs_table.php' => ['families'],
+        'database/migrations/2026_10_10_000001_drop_invite_codes_table.php' => ['families', 'users'],
+    ];
+
+    $root = \dirname(__DIR__, 2);
+    $files = [];
+
+    foreach (['app', 'bootstrap', 'config', 'database', 'routes'] as $directory) {
+        $files = [...$files, ...ArchTestHelper::phpFilesIn($root . '/' . $directory)];
+    }
+
+    $files = array_filter($files, fn(string $file): bool => !str_contains($file, '/bootstrap/cache/'));
+
+    expect($files)->not->toBeEmpty('No PHP files found — the scan is broken.');
+
+    $found = [];
+
+    foreach ($files as $file) {
+        foreach (token_get_all((string) file_get_contents($file)) as $token) {
+            if (!\is_array($token) || !\in_array($token[0], [\T_CONSTANT_ENCAPSED_STRING, \T_ENCAPSED_AND_WHITESPACE], strict: true)) {
+                continue;
+            }
+
+            if (preg_match('/\b(?:users|families)\b/i', $token[1]) !== 1) {
+                continue;
+            }
+
+            $literal = $token[0] === \T_CONSTANT_ENCAPSED_STRING ? mb_substr($token[1], 1, -1) : $token[1];
+            $found[str_replace($root . '/', '', $file)][] = mb_trim((string) preg_replace('/\s+/', ' ', $literal));
+        }
+    }
+
+    expect($found)->not->toBeEmpty('No string names users or families — the scan is broken (the create-table migrations must match).');
+
+    $violations = [];
+
+    foreach (array_unique([...array_keys($found), ...array_keys($allowlist)]) as $path) {
+        $actual = $found[$path] ?? [];
+        $expected = $allowlist[$path] ?? [];
+        sort($actual);
+        sort($expected);
+
+        if ($actual !== $expected) {
+            $violations[] = $path . ': found [' . implode(' | ', $actual) . '], allowlisted [' . implode(' | ', $expected) . ']';
+        }
+    }
+
+    expect($violations)->toBeEmpty(ArchTestHelper::formatViolations(
+        'A string names the users or families table outside the allowlist; a raw write there bypasses the runtime guard (WR-2128):',
+        $violations,
+    ));
+});
+
+it('should keep migrations, seeders and factories away from accounts', function() use ($baseQueryInsertPattern): void {
     $databasePath = \dirname(__DIR__, 2) . '/database';
     $migrations = ArchTestHelper::phpFilesIn($databasePath . '/migrations');
     $files = [...$migrations, ...ArchTestHelper::phpFilesIn($databasePath . '/seeders'), ...ArchTestHelper::phpFilesIn($databasePath . '/factories')];
@@ -208,7 +282,6 @@ it('should keep migrations, seeders and factories off the users and families tab
 
     // Every web boot runs migrate --force (bin/start.sh), so a migration may not touch accounts at all.
     $migrationPatterns = [
-        ...$rawWritePatterns,
         '/\bAccountProvisioningPermit\b/',
         '/\bApp\\\Models\\\(?:User|Family)\b/',
         '/\b(?:User|Family)::/',
@@ -219,7 +292,7 @@ it('should keep migrations, seeders and factories off the users and families tab
 
     foreach ($files as $file) {
         $content = (string) file_get_contents($file);
-        $patterns = \in_array($file, $migrations, strict: true) ? $migrationPatterns : $rawWritePatterns;
+        $patterns = \in_array($file, $migrations, strict: true) ? $migrationPatterns : [$baseQueryInsertPattern];
 
         if (basename($file) !== 'DatabaseSeeder.php' && !\in_array($file, $migrations, strict: true)) {
             $patterns[] = '/\bAccountProvisioningPermit\b/';
@@ -238,7 +311,7 @@ it('should keep migrations, seeders and factories off the users and families tab
     ));
 });
 
-it('should open the provisioning permit only from the test harness', function(): void {
+it('should keep the provisioning permit out of routes, bootstrap and config, and open() in tests only', function(): void {
     $root = \dirname(__DIR__, 2);
     $files = [];
 
@@ -251,13 +324,21 @@ it('should open the provisioning permit only from the test harness', function():
     $violations = [];
 
     foreach ($files as $file) {
-        if (preg_match('/AccountProvisioningPermit::open\s*\(/', (string) file_get_contents($file)) === 1) {
-            $violations[] = str_replace($root . '/', '', $file);
+        $path = str_replace($root . '/', '', $file);
+        $content = (string) file_get_contents($file);
+
+        if (preg_match('/AccountProvisioningPermit::open\s*\(/', $content) === 1) {
+            $violations[] = $path . ': calls open()';
+        }
+
+        // Closures here are not classes, so toOnlyBeUsedIn cannot see them.
+        if (preg_match('#^(?:bootstrap|config|routes)/#', $path) === 1 && preg_match('/\bAccountProvisioningPermit\b/', $content) === 1) {
+            $violations[] = $path . ': references the permit';
         }
     }
 
     expect($violations)->toBeEmpty(ArchTestHelper::formatViolations(
-        'AccountProvisioningPermit::open() is for tests/ only; application code opens the permit through during(), which closes it again (WR-2128):',
+        'The provisioning permit is held only by its named classes, and open() is for tests/ only (WR-2128):',
         $violations,
     ));
 });
