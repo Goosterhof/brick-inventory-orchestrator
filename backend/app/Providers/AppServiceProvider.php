@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace App\Providers;
 
+use App\Auth\AccountTableWriteGuard;
 use App\Contracts\BrickIdentificationServiceInterface;
 use App\Contracts\LegoDataServiceInterface;
 use App\Policies\BrickIdentificationPolicy;
@@ -25,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // WR-2128: before any connection exists, so every connection the factory builds carries the guard.
+        AccountTableWriteGuard::install();
+
         $this->app->bind(LegoDataServiceInterface::class, RebrickableService::class);
         $this->app->bind(BrickIdentificationServiceInterface::class, BrickognizeService::class);
         $this->app->bind(StatefulGuard::class, fn(mixed $app) => Auth::guard('web'));
