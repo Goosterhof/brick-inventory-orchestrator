@@ -8,6 +8,7 @@ use App\Auth\ProvisioningGuardedBuilder;
 use App\Exceptions\AccountProvisioningClosedException;
 use App\Models\Family;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -96,6 +97,22 @@ describe('account provisioning permit', function(): void {
             'query()->insertOrIgnoreUsing()' => [fn(): int => User::query()->insertOrIgnoreUsing(['name', 'email', 'password', 'family_id'], User::query()->select(['name'])->selectRaw("'t@example.com'")->addSelect(['password', 'family_id']))],
             'query()->insertOrIgnoreReturning()' => [fn(Family $f, \Closure $a): Collection => User::query()->insertOrIgnoreReturning([$a($f, 'u@example.com')])],
         ]);
+
+        it('should guard every insert the Eloquent builder passes through to the base query', function(): void {
+            $passthru = new \ReflectionProperty(Builder::class, 'passthru')->getValue(User::query());
+            $inserts = array_values(array_filter($passthru, fn(string $method): bool => str_starts_with($method, 'insert') || str_starts_with($method, 'upsert')));
+
+            $guarded = array_map(
+                fn(\ReflectionMethod $method): string => mb_strtolower($method->getName()),
+                array_filter(
+                    new \ReflectionClass(ProvisioningGuardedBuilder::class)->getMethods(),
+                    fn(\ReflectionMethod $method): bool => $method->getDeclaringClass()->getName() === ProvisioningGuardedBuilder::class,
+                ),
+            );
+
+            expect($inserts)->not->toBeEmpty('No insert methods found in the Eloquent passthru list — the scan is broken.')
+                ->and(array_values(array_diff($inserts, $guarded)))->toBe([], 'Laravel passes these inserts to the base query and ProvisioningGuardedBuilder does not override them.');
+        });
 
         it('should leave updates to existing users alone', function(): void {
             $this->existing->name = 'Renamed';
