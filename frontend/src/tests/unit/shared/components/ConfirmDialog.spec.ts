@@ -1,7 +1,7 @@
 import type {SoundService} from '@shared/services/sound';
+import type {ComponentPublicInstance} from 'vue';
 
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
-import ModalDialog from '@shared/components/ModalDialog.vue';
 import {shallowMount} from '@vue/test-utils';
 import {describe, expect, it, vi} from 'vitest';
 import {computed} from 'vue';
@@ -98,7 +98,7 @@ describe('ConfirmDialog', () => {
             const wrapper = mountDialog();
 
             // Act
-            wrapper.findComponent(ModalDialog).vm.$emit('close');
+            (wrapper.findComponent({name: 'ModalDialog'}).vm as ComponentPublicInstance).$emit('close');
             await wrapper.vm.$nextTick();
 
             // Assert
@@ -137,7 +137,7 @@ describe('ConfirmDialog', () => {
             const wrapper = mountDialog(true);
 
             // Assert
-            expect(wrapper.findComponent(ModalDialog).props('open')).toBe(true);
+            expect(wrapper.findComponent({name: 'ModalDialog'}).props('open')).toBe(true);
         });
     });
 
@@ -162,7 +162,7 @@ describe('ConfirmDialog', () => {
             const wrapper = mountDialog(false, undefined, soundService);
 
             // Assert
-            expect(wrapper.findComponent(ModalDialog).props('soundService')).toBeDefined();
+            expect(wrapper.findComponent({name: 'ModalDialog'}).props('soundService')).toBeDefined();
         });
 
         it('should not play sound when confirm is clicked without soundService', async () => {

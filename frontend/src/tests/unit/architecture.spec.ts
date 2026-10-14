@@ -880,27 +880,10 @@ describe('Architecture', () => {
             'apps/showcase/components/BrickDimensions.spec.ts': ['SectionHeading.vue'],
             'apps/showcase/components/BrickShapes.spec.ts': ['SectionHeading.vue'],
             'apps/showcase/components/ColorPalette.spec.ts': ['SectionHeading.vue'],
-            'apps/showcase/components/ComponentHealthMocked.spec.ts': ['ComponentHealth.vue', 'SectionHeading.vue'],
-            'apps/showcase/components/DialogServiceDemo.spec.ts': ['PrimaryButton.vue', 'SectionHeading.vue'],
-            'apps/showcase/components/FormValidationWorkbench.spec.ts': [
-                'DateInput.vue',
-                'NumberInput.vue',
-                'PrimaryButton.vue',
-                'SectionHeading.vue',
-                'SelectInput.vue',
-                'TextInput.vue',
-                'TextareaInput.vue',
-            ],
-            'apps/showcase/components/ResourceAdapterPlayground.spec.ts': [
-                'DangerButton.vue',
-                'NumberInput.vue',
-                'PrimaryButton.vue',
-                'TextInput.vue',
-            ],
+            // Split-spec: SUT is ComponentHealth.vue (the mocked-registry variant needs its own module scope).
+            'apps/showcase/components/ComponentHealthMocked.spec.ts': ['ComponentHealth.vue'],
             'apps/showcase/components/SnapDemo.spec.ts': ['SectionHeading.vue'],
             'apps/showcase/components/TypographySpecimen.spec.ts': ['SectionHeading.vue'],
-            'shared/components/ConfirmDialog.spec.ts': ['ModalDialog.vue'],
-            'shared/components/EmptyState.spec.ts': ['LegoBrick.vue'],
         };
 
         const getTopLevelVueImports = (filePath: string): string[] => {
