@@ -880,8 +880,6 @@ describe('Architecture', () => {
             'apps/showcase/components/BrickDimensions.spec.ts': ['SectionHeading.vue'],
             'apps/showcase/components/BrickShapes.spec.ts': ['SectionHeading.vue'],
             'apps/showcase/components/ColorPalette.spec.ts': ['SectionHeading.vue'],
-            // Split-spec: SUT is ComponentHealth.vue (the mocked-registry variant needs its own module scope).
-            'apps/showcase/components/ComponentHealthMocked.spec.ts': ['ComponentHealth.vue'],
             'apps/showcase/components/SnapDemo.spec.ts': ['SectionHeading.vue'],
             'apps/showcase/components/TypographySpecimen.spec.ts': ['SectionHeading.vue'],
         };

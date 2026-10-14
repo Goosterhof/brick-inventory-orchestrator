@@ -2,8 +2,6 @@ import {shallowMount} from '@vue/test-utils';
 import {describe, expect, it, vi} from 'vitest';
 import {nextTick} from 'vue';
 
-import ComponentHealth from '@/apps/showcase/components/ComponentHealth.vue';
-
 // Stub SectionHeading via vi.mock so the spec never pulls its .vue graph in (ADR-0012).
 const {mkHeadingStub} = vi.hoisted(() => ({
     mkHeadingStub: (name: string) => ({
@@ -48,6 +46,10 @@ vi.mock('@shared/generated/component-registry.json', () => ({
         },
     },
 }));
+
+// The SUT is ComponentHealth.vue, which does not match this split spec's filename, so it is loaded
+// dynamically rather than through a top-level .vue import (architecture spec, ADR-0012).
+const {default: ComponentHealth} = await import('@/apps/showcase/components/ComponentHealth.vue');
 
 describe('ComponentHealth (mocked registry)', () => {
     const stubs = {SectionHeading: false as const};
