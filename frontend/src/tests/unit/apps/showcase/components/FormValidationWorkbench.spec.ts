@@ -1,17 +1,33 @@
 import type {ComponentPublicInstance} from 'vue';
 
 import {FormField, TextInput} from '@script-development/ui-inputs';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {shallowMount} from '@vue/test-utils';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {nextTick} from 'vue';
 
 import FormValidationWorkbench from '@/apps/showcase/components/FormValidationWorkbench.vue';
-import SectionHeading from '@/apps/showcase/components/SectionHeading.vue';
 
 const {createMockUiInputs} = await vi.hoisted(() => import('../../../../helpers'));
 
 vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
+
+// Stub the shared pieces via vi.mock so the spec never pulls their .vue graph in (ADR-0012).
+const {mkHeadingStub, mkButtonStub} = vi.hoisted(() => ({
+    mkHeadingStub: (name: string) => ({
+        name,
+        props: {number: String, title: String},
+        template: `<div data-stub="${name}">{{ number }} {{ title }}</div>`,
+    }),
+    mkButtonStub: (name: string) => ({
+        name,
+        props: {disabled: Boolean},
+        emits: ['click'],
+        template: `<button :disabled="disabled" @click="$emit('click')"><slot /></button>`,
+    }),
+}));
+
+vi.mock('@shared/components/PrimaryButton.vue', () => ({default: mkButtonStub('PrimaryButton')}));
+vi.mock('@/apps/showcase/components/SectionHeading.vue', () => ({default: mkHeadingStub('SectionHeading')}));
 
 // atom-at-call-site: labels/errors live on FormField; every control is a
 // ui-inputs atom (TextInput / NumberInput / DateInput / Textarea / SingleSelect).
@@ -23,14 +39,14 @@ const textInputByLabel = (wrapper: ReturnType<typeof shallowMount>, label: strin
 
 describe('FormValidationWorkbench', () => {
     const stubs = {
-        SectionHeading,
+        SectionHeading: false as const,
         FormField: false,
         TextInput: false,
         NumberInput: false,
         DateInput: false,
         Textarea: false,
         SingleSelect: false,
-        PrimaryButton,
+        PrimaryButton: false as const,
     };
     const mount = () => shallowMount(FormValidationWorkbench, {global: {stubs}});
 

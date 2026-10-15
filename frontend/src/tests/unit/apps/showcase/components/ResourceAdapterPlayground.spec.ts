@@ -1,6 +1,4 @@
 import {TextInput} from '@script-development/ui-inputs';
-import DangerButton from '@shared/components/DangerButton.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {shallowMount} from '@vue/test-utils';
 import {describe, expect, it, vi} from 'vitest';
 import {nextTick} from 'vue';
@@ -456,7 +454,7 @@ describe('ResourceAdapterPlayground', () => {
     it('should use DangerButton for destructive actions', () => {
         const wrapper = shallowMount(ResourceAdapterPlayground, {global: {stubs}});
 
-        const dangerButtons = wrapper.findAllComponents(DangerButton);
+        const dangerButtons = wrapper.findAllComponents({name: 'DangerButton'});
         const dangerTexts = dangerButtons.map((b) => b.text());
         expect(dangerTexts).toContain('Reset Form');
         expect(dangerTexts).toContain('Clear Storage');
@@ -465,7 +463,7 @@ describe('ResourceAdapterPlayground', () => {
     it('should use PrimaryButton for create action', () => {
         const wrapper = shallowMount(ResourceAdapterPlayground, {global: {stubs}});
 
-        const primaryButtons = wrapper.findAllComponents(PrimaryButton);
+        const primaryButtons = wrapper.findAllComponents({name: 'PrimaryButton'});
         const primaryTexts = primaryButtons.map((b) => b.text());
         expect(primaryTexts).toContain('Create');
     });

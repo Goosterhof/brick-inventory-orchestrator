@@ -1,17 +1,33 @@
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 import DialogServiceDemo from '@/apps/showcase/components/DialogServiceDemo.vue';
-import SectionHeading from '@/apps/showcase/components/SectionHeading.vue';
+
+// Stub the shared pieces via vi.mock so the spec never pulls their .vue graph in (ADR-0012).
+const {mkHeadingStub, mkButtonStub} = vi.hoisted(() => ({
+    mkHeadingStub: (name: string) => ({
+        name,
+        props: {number: String, title: String},
+        template: `<div data-stub="${name}">{{ number }} {{ title }}</div>`,
+    }),
+    mkButtonStub: (name: string) => ({
+        name,
+        props: {disabled: Boolean},
+        emits: ['click'],
+        template: `<button :disabled="disabled" @click="$emit('click')"><slot /></button>`,
+    }),
+}));
+
+vi.mock('@shared/components/PrimaryButton.vue', () => ({default: mkButtonStub('PrimaryButton')}));
+vi.mock('@/apps/showcase/components/SectionHeading.vue', () => ({default: mkHeadingStub('SectionHeading')}));
 
 describe('DialogServiceDemo', () => {
     // fs-dialog 0.2+ wraps content in <Suspense> and re-renders the vnode each
     // tick. Unstub both Suspense and the inline DemoDialogContent so the dialog
     // body actually renders for the interactive tests.
     const stubs = {
-        SectionHeading,
-        PrimaryButton,
+        SectionHeading: false as const,
+        PrimaryButton: false as const,
         DialogContainer: false as const,
         DemoDialogContent: false as const,
         Suspense: false as const,

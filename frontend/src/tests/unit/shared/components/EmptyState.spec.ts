@@ -1,5 +1,4 @@
 import EmptyState from '@shared/components/EmptyState.vue';
-import LegoBrick from '@shared/components/LegoBrick.vue';
 import {shallowMount} from '@vue/test-utils';
 import {describe, expect, it} from 'vitest';
 
@@ -25,7 +24,7 @@ describe('EmptyState', () => {
         const wrapper = shallowMount(EmptyState, {props: {message: 'Empty'}});
 
         // Assert
-        expect(wrapper.findComponent(LegoBrick).exists()).toBe(false);
+        expect(wrapper.findComponent({name: 'LegoBrick'}).exists()).toBe(false);
     });
 
     it('should show LegoBrick when showBrick is true', () => {
@@ -33,7 +32,7 @@ describe('EmptyState', () => {
         const wrapper = shallowMount(EmptyState, {props: {message: 'Empty', showBrick: true}});
 
         // Assert
-        const brick = wrapper.findComponent(LegoBrick);
+        const brick = wrapper.findComponent({name: 'LegoBrick'});
         expect(brick.exists()).toBe(true);
         expect(brick.props('shadow')).toBe(false);
         expect(brick.props('columns')).toBe(4);
@@ -45,7 +44,7 @@ describe('EmptyState', () => {
         const wrapper = shallowMount(EmptyState, {props: {message: 'Empty', showBrick: true}});
 
         // Assert
-        expect(wrapper.findComponent(LegoBrick).props('color')).toBe('#F5C518');
+        expect(wrapper.findComponent({name: 'LegoBrick'}).props('color')).toBe('#F5C518');
     });
 
     it('should use custom brick color when specified', () => {
@@ -53,7 +52,7 @@ describe('EmptyState', () => {
         const wrapper = shallowMount(EmptyState, {props: {message: 'Empty', showBrick: true, brickColor: '#C41A16'}});
 
         // Assert
-        expect(wrapper.findComponent(LegoBrick).props('color')).toBe('#C41A16');
+        expect(wrapper.findComponent({name: 'LegoBrick'}).props('color')).toBe('#C41A16');
     });
 
     it('should render slot content', () => {
