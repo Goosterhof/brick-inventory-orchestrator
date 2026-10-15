@@ -1,10 +1,4 @@
-import YearDistributionChart from '@app/domains/home/components/YearDistributionChart.vue';
 import HomePage from '@app/domains/home/pages/HomePage.vue';
-import CardContainer from '@shared/components/CardContainer.vue';
-import LegoBrick from '@shared/components/LegoBrick.vue';
-import NavLink from '@shared/components/NavLink.vue';
-import PageHeader from '@shared/components/PageHeader.vue';
-import StatCard from '@shared/components/StatCard.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -63,7 +57,7 @@ describe('HomePage', () => {
             // Assert
             expect(wrapper.text()).toContain('home.brandTitle');
             expect(wrapper.text()).toContain('home.tagline');
-            expect(wrapper.findComponent(NavLink).exists()).toBe(true);
+            expect(wrapper.findComponent({name: 'NavLink'}).exists()).toBe(true);
         });
 
         it('should render three LegoBricks in hero section', () => {
@@ -74,7 +68,7 @@ describe('HomePage', () => {
             const wrapper = shallowMount(HomePage);
 
             // Assert
-            const bricks = wrapper.findAllComponents(LegoBrick);
+            const bricks = wrapper.findAllComponents({name: 'LegoBrick'});
             expect(bricks).toHaveLength(3);
             expect(bricks.find((b) => b.props('color') === '#F5C518')).toBeDefined();
             expect(bricks.find((b) => b.props('color') === '#C41A16')).toBeDefined();
@@ -126,7 +120,7 @@ describe('HomePage', () => {
             await flushPromises();
 
             // Assert
-            expect(wrapper.findComponent(PageHeader).props('title')).toBe('home.dashboardTitle');
+            expect(wrapper.findComponent({name: 'PageHeader'}).props('title')).toBe('home.dashboardTitle');
         });
 
         it('should render stat cards with correct values', async () => {
@@ -138,7 +132,7 @@ describe('HomePage', () => {
             await flushPromises();
 
             // Assert
-            const statCards = wrapper.findAllComponents(StatCard);
+            const statCards = wrapper.findAllComponents({name: 'StatCard'});
             expect(statCards.length).toBeGreaterThanOrEqual(3);
             expect(statCards[0]?.props('value')).toBe('5');
             expect(statCards[1]?.props('value')).toBe('3');
@@ -178,8 +172,8 @@ describe('HomePage', () => {
             await flushPromises();
 
             // Assert
-            const statusCards = wrapper.findAllComponents(StatCard).filter((c) => {
-                const label = c.props('label');
+            const statusCards = wrapper.findAllComponents({name: 'StatCard'}).filter((c) => {
+                const label = (c.props() as {label: string}).label;
                 return label === 'sets.sealed' || label === 'sets.built';
             });
             expect(statusCards.length).toBe(2);
@@ -194,7 +188,7 @@ describe('HomePage', () => {
             await flushPromises();
 
             // Assert
-            const navLinks = wrapper.findAllComponents(NavLink);
+            const navLinks = wrapper.findAllComponents({name: 'NavLink'});
             expect(navLinks.length).toBe(6);
             expect(wrapper.text()).toContain('navigation.sets');
             expect(wrapper.text()).toContain('navigation.storage');
@@ -211,7 +205,7 @@ describe('HomePage', () => {
             await flushPromises();
 
             // Act
-            const navLinks = wrapper.findAllComponents(NavLink);
+            const navLinks = wrapper.findAllComponents({name: 'NavLink'});
             const setsLink = navLinks.find((link) => link.text().includes('navigation.sets'));
             await setsLink?.trigger('click');
             await flushPromises();
@@ -227,7 +221,7 @@ describe('HomePage', () => {
             await flushPromises();
 
             // Act
-            const navLinks = wrapper.findAllComponents(NavLink);
+            const navLinks = wrapper.findAllComponents({name: 'NavLink'});
             const storageLink = navLinks.find((link) => link.text().includes('navigation.storage'));
             await storageLink?.trigger('click');
             await flushPromises();
@@ -292,8 +286,8 @@ describe('HomePage', () => {
 
             // Assert
             expect(wrapper.text()).toContain('home.yearDistribution');
-            expect(wrapper.findComponent(YearDistributionChart).exists()).toBe(true);
-            expect(wrapper.findComponent(CardContainer).exists()).toBe(true);
+            expect(wrapper.findComponent({name: 'YearDistributionChart'}).exists()).toBe(true);
+            expect(wrapper.findComponent({name: 'CardContainer'}).exists()).toBe(true);
         });
 
         it('should pass correct distribution to chart', async () => {
@@ -306,7 +300,7 @@ describe('HomePage', () => {
             await flushPromises();
 
             // Assert
-            const chart = wrapper.findComponent(YearDistributionChart);
+            const chart = wrapper.findComponent({name: 'YearDistributionChart'});
             const distribution = chart.props('distribution') as Map<number, number>;
             expect(distribution.get(2020)).toBe(2);
             expect(distribution.get(2015)).toBe(1);
@@ -323,7 +317,7 @@ describe('HomePage', () => {
 
             // Assert
             expect(wrapper.text()).toContain('home.yearDistributionEmpty');
-            expect(wrapper.findComponent(YearDistributionChart).exists()).toBe(false);
+            expect(wrapper.findComponent({name: 'YearDistributionChart'}).exists()).toBe(false);
         });
 
         it('should filter out sets with null year', async () => {
@@ -336,7 +330,7 @@ describe('HomePage', () => {
             await flushPromises();
 
             // Assert
-            const chart = wrapper.findComponent(YearDistributionChart);
+            const chart = wrapper.findComponent({name: 'YearDistributionChart'});
             const distribution = chart.props('distribution') as Map<number, number>;
             expect(distribution.size).toBe(1);
             expect(distribution.get(2020)).toBe(1);
@@ -351,7 +345,7 @@ describe('HomePage', () => {
             const wrapper = shallowMount(HomePage);
 
             // Assert
-            expect(wrapper.findComponent(YearDistributionChart).exists()).toBe(false);
+            expect(wrapper.findComponent({name: 'YearDistributionChart'}).exists()).toBe(false);
             expect(wrapper.text()).not.toContain('home.yearDistribution');
         });
     });
@@ -431,7 +425,7 @@ describe('HomePage', () => {
 
             // Assert
             expect(wrapper.text()).toContain('home.yearDistribution');
-            expect(wrapper.findComponent(YearDistributionChart).exists()).toBe(true);
+            expect(wrapper.findComponent({name: 'YearDistributionChart'}).exists()).toBe(true);
         });
 
         it('should still render quick actions when the stats request rejects', async () => {

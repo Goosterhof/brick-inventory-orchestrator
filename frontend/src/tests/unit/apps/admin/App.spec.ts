@@ -1,4 +1,3 @@
-import NavLink from '@shared/components/NavLink.vue';
 import {shallowMount} from '@vue/test-utils';
 import {describe, expect, it, vi} from 'vitest';
 
@@ -27,7 +26,7 @@ describe('App', () => {
         const wrapper = shallowMount(App);
 
         // Assert
-        const navLink = wrapper.findComponent(NavLink);
+        const navLink = wrapper.findComponent({name: 'NavLink'});
         expect(navLink.exists()).toBe(true);
         expect(navLink.props('to')).toBe('/');
         expect(navLink.text()).toBe('Dashboard');
@@ -44,12 +43,12 @@ describe('App', () => {
         expect(routerView.exists()).toBe(true);
     });
 
-    it('should call goToRoute when Dashboard link is clicked', () => {
+    it('should call goToRoute when Dashboard link is clicked', async () => {
         // Arrange
         const wrapper = shallowMount(App);
 
         // Act
-        wrapper.findComponent(NavLink).vm.$emit('click');
+        await wrapper.findComponent({name: 'NavLink'}).trigger('click');
 
         // Assert
         expect(mockGoToRoute).toHaveBeenCalledWith('home');

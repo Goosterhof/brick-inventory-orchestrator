@@ -1,8 +1,6 @@
 import type {VueWrapper} from '@vue/test-utils';
 
 import App from '@app/App.vue';
-import NavHeader from '@shared/components/NavHeader.vue';
-import NavMobileLink from '@shared/components/NavMobileLink.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -66,7 +64,22 @@ vi.mock('@shared/components/NavMobileLink.vue', () => ({
     },
 }));
 
-const mountApp = () => shallowMount(App, {global: {stubs: {NavHeader, NavMobileLink}}});
+const mountApp = () =>
+    shallowMount(App, {
+        global: {
+            stubs: {
+                'nav-header': {
+                    name: 'NavHeader',
+                    template: '<div><slot name="links" /><slot name="mobile-links" /><slot name="actions" /></div>',
+                },
+                'nav-mobile-link': {
+                    name: 'NavMobileLink',
+                    props: ['to', 'active'],
+                    template: '<a class="mobile-link" :data-active="active"><slot /></a>',
+                },
+            },
+        },
+    });
 
 describe('App', () => {
     beforeEach(() => {
