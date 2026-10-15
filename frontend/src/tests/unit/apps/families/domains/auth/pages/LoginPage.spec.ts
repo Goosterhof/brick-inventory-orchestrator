@@ -1,6 +1,5 @@
 import LoginPage from '@app/domains/auth/pages/LoginPage.vue';
 import {FormField, TextInput} from '@script-development/ui-inputs';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {AxiosError} from 'axios';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -81,7 +80,7 @@ describe('LoginPage', () => {
         const wrapper = renderPage();
 
         // Assert
-        const button = wrapper.findComponent(PrimaryButton);
+        const button = wrapper.findComponent({name: 'PrimaryButton'});
         expect(button.exists()).toBe(true);
         expect(button.props('type')).toBe('submit');
         expect(button.text()).toBe('auth.logIn');

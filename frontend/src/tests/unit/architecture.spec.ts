@@ -783,17 +783,6 @@ describe('Architecture', () => {
          * basenames the spec is permitted to import.
          */
         const LEGACY_CROSS_COMPONENT_IMPORTS: Record<string, readonly string[]> = {
-            'apps/admin/App.spec.ts': ['NavLink.vue'],
-            'apps/families/App.spec.ts': ['NavHeader.vue', 'NavMobileLink.vue'],
-            'apps/families/domains/auth/pages/LoginPage.spec.ts': ['PrimaryButton.vue', 'TextInput.vue'],
-            'apps/families/domains/home/pages/HomePage.spec.ts': [
-                'CardContainer.vue',
-                'LegoBrick.vue',
-                'NavLink.vue',
-                'PageHeader.vue',
-                'StatCard.vue',
-                'YearDistributionChart.vue',
-            ],
             'apps/families/domains/parts/modals/PartUsageModal.spec.ts': [
                 'EmptyState.vue',
                 'ListItemButton.vue',
