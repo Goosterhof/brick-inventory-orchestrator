@@ -1,9 +1,7 @@
+import type {ComponentPublicInstance} from 'vue';
+
 import EditSetPage from '@app/domains/sets/pages/EditSetPage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
-import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
-import DangerButton from '@shared/components/DangerButton.vue';
-import LoadingState from '@shared/components/LoadingState.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {AxiosError} from 'axios';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -24,6 +22,16 @@ vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
 vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
+vi.mock('@shared/components/ConfirmDialog.vue', () => ({
+    default: {name: 'ConfirmDialog', props: ['open'], emits: ['confirm', 'cancel'], template: '<div><slot /></div>'},
+}));
+vi.mock('@shared/components/DangerButton.vue', () => ({
+    default: {name: 'DangerButton', emits: ['click'], template: '<button><slot /></button>'},
+}));
+vi.mock('@shared/components/LoadingState.vue', () => ({default: {name: 'LoadingState', template: '<div />'}}));
+vi.mock('@shared/components/PrimaryButton.vue', () => ({
+    default: {name: 'PrimaryButton', template: '<button><slot /></button>'},
+}));
 
 const {mockGetOrFailById, mockGoToRoute, mockCurrentRouteId, mockPatch, mockDelete, mockRetrieveAll} = vi.hoisted(
     () => ({
@@ -147,7 +155,7 @@ describe('EditSetPage', () => {
         const wrapper = renderPage();
 
         // Assert
-        expect(wrapper.findComponent(LoadingState).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'LoadingState'}).exists()).toBe(true);
     });
 
     it('should submit update with correct payload', async () => {
@@ -262,11 +270,11 @@ describe('EditSetPage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent(DangerButton).vm.$emit('click');
+        (wrapper.findComponent({name: 'DangerButton'}).vm as ComponentPublicInstance).$emit('click');
         await wrapper.vm.$nextTick();
 
         // Assert
-        expect(wrapper.findComponent(ConfirmDialog).props('open')).toBe(true);
+        expect(wrapper.findComponent({name: 'ConfirmDialog'}).props('open')).toBe(true);
     });
 
     it('should delete set and navigate to overview on confirm', async () => {
@@ -277,9 +285,9 @@ describe('EditSetPage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent(DangerButton).vm.$emit('click');
+        (wrapper.findComponent({name: 'DangerButton'}).vm as ComponentPublicInstance).$emit('click');
         await wrapper.vm.$nextTick();
-        wrapper.findComponent(ConfirmDialog).vm.$emit('confirm');
+        (wrapper.findComponent({name: 'ConfirmDialog'}).vm as ComponentPublicInstance).$emit('confirm');
         await flushPromises();
 
         // Assert
@@ -294,14 +302,14 @@ describe('EditSetPage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent(DangerButton).vm.$emit('click');
+        (wrapper.findComponent({name: 'DangerButton'}).vm as ComponentPublicInstance).$emit('click');
         await wrapper.vm.$nextTick();
-        wrapper.findComponent(ConfirmDialog).vm.$emit('cancel');
+        (wrapper.findComponent({name: 'ConfirmDialog'}).vm as ComponentPublicInstance).$emit('cancel');
         await wrapper.vm.$nextTick();
 
         // Assert
         expect(mockDelete).not.toHaveBeenCalled();
-        expect(wrapper.findComponent(ConfirmDialog).props('open')).toBe(false);
+        expect(wrapper.findComponent({name: 'ConfirmDialog'}).props('open')).toBe(false);
     });
 
     it('should render save and delete buttons', async () => {
@@ -313,10 +321,10 @@ describe('EditSetPage', () => {
         await flushPromises();
 
         // Assert
-        const primaryButton = wrapper.findComponent(PrimaryButton);
+        const primaryButton = wrapper.findComponent({name: 'PrimaryButton'});
         expect(primaryButton.text()).toBe('sets.save');
 
-        const dangerButton = wrapper.findComponent(DangerButton);
+        const dangerButton = wrapper.findComponent({name: 'DangerButton'});
         expect(dangerButton.exists()).toBe(true);
     });
 

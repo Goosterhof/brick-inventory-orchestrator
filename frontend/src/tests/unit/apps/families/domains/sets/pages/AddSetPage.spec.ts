@@ -2,7 +2,6 @@ import type {FamilySet} from '@app/types/familySet';
 
 import AddSetPage from '@app/domains/sets/pages/AddSetPage.vue';
 import {FormField} from '@script-development/ui-inputs';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {AxiosError} from 'axios';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -40,6 +39,9 @@ vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
 vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
+vi.mock('@shared/components/PrimaryButton.vue', () => ({
+    default: {name: 'PrimaryButton', props: ['type', 'disabled'], template: '<button><slot /></button>'},
+}));
 vi.mock('@app/services', () =>
     createMockFamilyServices({
         familyAuthService: {isLoggedIn: {value: true}},
@@ -123,7 +125,7 @@ describe('AddSetPage', () => {
         const wrapper = renderPage();
 
         // Assert
-        const button = wrapper.findComponent(PrimaryButton);
+        const button = wrapper.findComponent({name: 'PrimaryButton'});
         expect(button.exists()).toBe(true);
         expect(button.props('type')).toBe('submit');
         expect(button.text()).toBe('sets.add');

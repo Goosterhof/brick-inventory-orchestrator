@@ -2,10 +2,6 @@ import type {ComponentPublicInstance} from 'vue';
 
 import SetDetailPage from '@app/domains/sets/pages/SetDetailPage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
-import BackButton from '@shared/components/BackButton.vue';
-import LoadingState from '@shared/components/LoadingState.vue';
-import PartListItem from '@shared/components/PartListItem.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {ref} from 'vue';
@@ -18,6 +14,34 @@ vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
+
+vi.mock('@shared/components/BackButton.vue', () => ({
+    default: {name: 'BackButton', emits: ['click'], template: '<button><slot /></button>'},
+}));
+vi.mock('@shared/components/LoadingState.vue', () => ({default: {name: 'LoadingState', template: '<div />'}}));
+vi.mock('@shared/components/PartListItem.vue', () => ({
+    default: {
+        name: 'PartListItem',
+        props: {
+            spare: Boolean,
+            name: String,
+            partNum: String,
+            quantity: Number,
+            colorRgb: String,
+            colorName: String,
+            imageUrl: String,
+        },
+        template: '<button><slot /></button>',
+    },
+}));
+vi.mock('@shared/components/PrimaryButton.vue', () => ({
+    default: {name: 'PrimaryButton', template: '<button><slot /></button>'},
+}));
+
+const BackButton = {name: 'BackButton'};
+const LoadingState = {name: 'LoadingState'};
+const PartListItem = {name: 'PartListItem'};
+const PrimaryButton = {name: 'PrimaryButton'};
 
 vi.mock('@app/modals/PlacePartModal.vue', () => ({
     default: {
@@ -220,7 +244,7 @@ describe('SetDetailPage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent(BackButton).vm.$emit('click');
+        (wrapper.findComponent(BackButton).vm as ComponentPublicInstance).$emit('click');
         await flushPromises();
 
         // Assert
