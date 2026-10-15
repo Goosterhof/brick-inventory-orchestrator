@@ -1,6 +1,5 @@
 import AddStoragePage from '@app/domains/storage/pages/AddStoragePage.vue';
 import {FormField, TextInput} from '@script-development/ui-inputs';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {AxiosError} from 'axios';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -93,7 +92,7 @@ describe('AddStoragePage', () => {
         const wrapper = renderPage();
 
         // Assert
-        const button = wrapper.findComponent(PrimaryButton);
+        const button = wrapper.findComponent({name: 'PrimaryButton'});
         expect(button.exists()).toBe(true);
         expect(button.props('type')).toBe('submit');
         expect(button.text()).toBe('storage.add');

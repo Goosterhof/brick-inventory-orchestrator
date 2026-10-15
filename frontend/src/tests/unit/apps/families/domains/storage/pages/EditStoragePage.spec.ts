@@ -1,10 +1,6 @@
 import EditStoragePage from '@app/domains/storage/pages/EditStoragePage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import {TextInput} from '@script-development/ui-inputs';
-import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
-import DangerButton from '@shared/components/DangerButton.vue';
-import LoadingState from '@shared/components/LoadingState.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {AxiosError} from 'axios';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -176,7 +172,7 @@ describe('EditStoragePage', () => {
         const wrapper = renderPage();
 
         // Assert
-        expect(wrapper.findComponent(LoadingState).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'LoadingState'}).exists()).toBe(true);
     });
 
     it('should submit update with correct payload', async () => {
@@ -260,11 +256,11 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent(DangerButton).vm.$emit('click');
+        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
         await wrapper.vm.$nextTick();
 
         // Assert
-        expect(wrapper.findComponent(ConfirmDialog).props('open')).toBe(true);
+        expect(wrapper.findComponent({name: 'ConfirmDialog'}).props('open')).toBe(true);
     });
 
     it('should delete storage option and navigate to overview on confirm', async () => {
@@ -275,9 +271,9 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent(DangerButton).vm.$emit('click');
+        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
         await wrapper.vm.$nextTick();
-        wrapper.findComponent(ConfirmDialog).vm.$emit('confirm');
+        wrapper.findComponent({name: 'ConfirmDialog'}).vm.$emit('confirm');
         await flushPromises();
 
         // Assert
@@ -292,14 +288,14 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent(DangerButton).vm.$emit('click');
+        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
         await wrapper.vm.$nextTick();
-        wrapper.findComponent(ConfirmDialog).vm.$emit('cancel');
+        wrapper.findComponent({name: 'ConfirmDialog'}).vm.$emit('cancel');
         await wrapper.vm.$nextTick();
 
         // Assert
         expect(mockDelete).not.toHaveBeenCalled();
-        expect(wrapper.findComponent(ConfirmDialog).props('open')).toBe(false);
+        expect(wrapper.findComponent({name: 'ConfirmDialog'}).props('open')).toBe(false);
     });
 
     it('should render save and delete buttons', async () => {
@@ -311,10 +307,10 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Assert
-        const primaryButton = wrapper.findComponent(PrimaryButton);
+        const primaryButton = wrapper.findComponent({name: 'PrimaryButton'});
         expect(primaryButton.text()).toBe('storage.save');
 
-        const dangerButton = wrapper.findComponent(DangerButton);
+        const dangerButton = wrapper.findComponent({name: 'DangerButton'});
         expect(dangerButton.exists()).toBe(true);
     });
 
