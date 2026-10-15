@@ -799,34 +799,6 @@ describe('Architecture', () => {
                 'ListItemButton.vue',
                 'ModalDialog.vue',
             ],
-            'apps/families/domains/sets/pages/AddSetPage.spec.ts': [
-                'DateInput.vue',
-                'NumberInput.vue',
-                'PrimaryButton.vue',
-                'SelectInput.vue',
-                'TextInput.vue',
-                'TextareaInput.vue',
-            ],
-            'apps/families/domains/sets/pages/EditSetPage.spec.ts': [
-                'ConfirmDialog.vue',
-                'DangerButton.vue',
-                'LoadingState.vue',
-                'NumberInput.vue',
-                'PrimaryButton.vue',
-                'SelectInput.vue',
-            ],
-            'apps/families/domains/sets/pages/IdentifyBrickPage.spec.ts': [
-                'BackButton.vue',
-                'CameraCapture.vue',
-                'PageHeader.vue',
-                'PrimaryButton.vue',
-            ],
-            'apps/families/domains/sets/pages/SetDetailPage.spec.ts': [
-                'BackButton.vue',
-                'LoadingState.vue',
-                'PartListItem.vue',
-                'PrimaryButton.vue',
-            ],
             // Split-spec: SUT is SetsOverviewPage.vue (filename mismatch is intentional, PR #120).
             'apps/families/domains/sets/pages/SetsOverviewFiltering.spec.ts': ['SetsOverviewPage.vue'],
             // Split-spec: SUT is SetsOverviewPage.vue (filename mismatch is intentional, PR #120).

@@ -1,8 +1,6 @@
+import type {ComponentPublicInstance} from 'vue';
+
 import IdentifyBrickPage from '@app/domains/sets/pages/IdentifyBrickPage.vue';
-import BackButton from '@shared/components/BackButton.vue';
-import PageHeader from '@shared/components/PageHeader.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
-import CameraCapture from '@shared/components/scanner/CameraCapture.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -13,6 +11,19 @@ const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamil
 const {mockPostRequest, mockGoToRoute} = vi.hoisted(() => ({
     mockPostRequest: vi.fn<() => Promise<unknown>>(),
     mockGoToRoute: vi.fn<() => Promise<void>>(),
+}));
+
+vi.mock('@shared/components/BackButton.vue', () => ({
+    default: {name: 'BackButton', emits: ['click'], template: '<button><slot /></button>'},
+}));
+vi.mock('@shared/components/PageHeader.vue', () => ({
+    default: {name: 'PageHeader', props: ['title'], template: '<header><slot /></header>'},
+}));
+vi.mock('@shared/components/PrimaryButton.vue', () => ({
+    default: {name: 'PrimaryButton', template: '<button><slot /></button>'},
+}));
+vi.mock('@shared/components/scanner/CameraCapture.vue', () => ({
+    default: {name: 'CameraCapture', emits: ['capture'], template: '<div />'},
 }));
 
 vi.mock('axios', () => createMockAxios());
@@ -36,7 +47,7 @@ describe('IdentifyBrickPage', () => {
         const wrapper = shallowMount(IdentifyBrickPage);
 
         // Assert
-        expect(wrapper.findComponent(PageHeader).props('title')).toBe('sets.identifyBrick');
+        expect(wrapper.findComponent({name: 'PageHeader'}).props('title')).toBe('sets.identifyBrick');
     });
 
     it('should render CameraCapture component', () => {
@@ -44,7 +55,7 @@ describe('IdentifyBrickPage', () => {
         const wrapper = shallowMount(IdentifyBrickPage);
 
         // Assert
-        expect(wrapper.findComponent(CameraCapture).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'CameraCapture'}).exists()).toBe(true);
     });
 
     it('should render back button', () => {
@@ -52,7 +63,7 @@ describe('IdentifyBrickPage', () => {
         const wrapper = shallowMount(IdentifyBrickPage);
 
         // Assert
-        expect(wrapper.findComponent(BackButton).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'BackButton'}).exists()).toBe(true);
     });
 
     it('should navigate back when back button is clicked', async () => {
@@ -60,7 +71,7 @@ describe('IdentifyBrickPage', () => {
         const wrapper = shallowMount(IdentifyBrickPage);
 
         // Act
-        wrapper.findComponent(BackButton).vm.$emit('click');
+        (wrapper.findComponent({name: 'BackButton'}).vm as ComponentPublicInstance).$emit('click');
         await flushPromises();
 
         // Assert
@@ -76,7 +87,7 @@ describe('IdentifyBrickPage', () => {
         const blob = new Blob(['image'], {type: 'image/jpeg'});
 
         // Act
-        wrapper.findComponent(CameraCapture).vm.$emit('capture', blob);
+        (wrapper.findComponent({name: 'CameraCapture'}).vm as ComponentPublicInstance).$emit('capture', blob);
         await flushPromises();
 
         // Assert
@@ -98,7 +109,7 @@ describe('IdentifyBrickPage', () => {
         const blob = new Blob(['image'], {type: 'image/jpeg'});
 
         // Act
-        wrapper.findComponent(CameraCapture).vm.$emit('capture', blob);
+        (wrapper.findComponent({name: 'CameraCapture'}).vm as ComponentPublicInstance).$emit('capture', blob);
         await flushPromises();
 
         // Assert
@@ -115,11 +126,11 @@ describe('IdentifyBrickPage', () => {
         const blob = new Blob(['image'], {type: 'image/jpeg'});
 
         // Act
-        wrapper.findComponent(CameraCapture).vm.$emit('capture', blob);
+        (wrapper.findComponent({name: 'CameraCapture'}).vm as ComponentPublicInstance).$emit('capture', blob);
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(CameraCapture).exists()).toBe(false);
+        expect(wrapper.findComponent({name: 'CameraCapture'}).exists()).toBe(false);
     });
 
     it('should show error on identification failure', async () => {
@@ -129,7 +140,7 @@ describe('IdentifyBrickPage', () => {
         const blob = new Blob(['image'], {type: 'image/jpeg'});
 
         // Act
-        wrapper.findComponent(CameraCapture).vm.$emit('capture', blob);
+        (wrapper.findComponent({name: 'CameraCapture'}).vm as ComponentPublicInstance).$emit('capture', blob);
         await flushPromises();
 
         // Assert
@@ -148,7 +159,7 @@ describe('IdentifyBrickPage', () => {
         const blob = new Blob(['image'], {type: 'image/jpeg'});
 
         // Act
-        wrapper.findComponent(CameraCapture).vm.$emit('capture', blob);
+        (wrapper.findComponent({name: 'CameraCapture'}).vm as ComponentPublicInstance).$emit('capture', blob);
         await flushPromises();
 
         // Assert
@@ -163,18 +174,18 @@ describe('IdentifyBrickPage', () => {
         });
         const wrapper = shallowMount(IdentifyBrickPage);
         const blob = new Blob(['image'], {type: 'image/jpeg'});
-        wrapper.findComponent(CameraCapture).vm.$emit('capture', blob);
+        (wrapper.findComponent({name: 'CameraCapture'}).vm as ComponentPublicInstance).$emit('capture', blob);
         await flushPromises();
 
         // Act
         const tryAgainButton = wrapper
-            .findAllComponents(PrimaryButton)
+            .findAllComponents({name: 'PrimaryButton'})
             .find((btn) => btn.text() === 'sets.identifyAgain');
         await tryAgainButton?.trigger('click');
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(CameraCapture).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'CameraCapture'}).exists()).toBe(true);
         expect(wrapper.text()).not.toContain('Brick 2 x 4');
     });
 
@@ -183,18 +194,18 @@ describe('IdentifyBrickPage', () => {
         mockPostRequest.mockRejectedValue(new Error('Server error'));
         const wrapper = shallowMount(IdentifyBrickPage);
         const blob = new Blob(['image'], {type: 'image/jpeg'});
-        wrapper.findComponent(CameraCapture).vm.$emit('capture', blob);
+        (wrapper.findComponent({name: 'CameraCapture'}).vm as ComponentPublicInstance).$emit('capture', blob);
         await flushPromises();
 
         // Act
         const tryAgainButton = wrapper
-            .findAllComponents(PrimaryButton)
+            .findAllComponents({name: 'PrimaryButton'})
             .find((btn) => btn.text() === 'sets.identifyAgain');
         await tryAgainButton?.trigger('click');
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(CameraCapture).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'CameraCapture'}).exists()).toBe(true);
         expect(wrapper.text()).not.toContain('sets.identifyError');
     });
 });
