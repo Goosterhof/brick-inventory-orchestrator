@@ -327,7 +327,7 @@ describe('PlacePartModal', () => {
             await flushPromises();
 
             // Act
-            wrapper.findComponent({name: 'ModalDialog'}).vm.$emit('close');
+            (wrapper.findComponent({name: 'ModalDialog'}).vm as ComponentPublicInstance).$emit('close');
 
             // Assert
             expect(wrapper.emitted('close')).toBeDefined();

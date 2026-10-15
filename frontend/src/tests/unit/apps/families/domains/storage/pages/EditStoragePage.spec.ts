@@ -5,6 +5,7 @@ import {flushPromises, shallowMount} from '@vue/test-utils';
 import {AxiosError} from 'axios';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {ref} from 'vue';
+import type {ComponentPublicInstance} from 'vue';
 
 const {
     createMockAxiosWithError,
@@ -266,7 +267,7 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
+        (wrapper.findComponent({name: 'DangerButton'}).vm as ComponentPublicInstance).$emit('click');
         await wrapper.vm.$nextTick();
 
         // Assert
@@ -281,9 +282,9 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
+        (wrapper.findComponent({name: 'DangerButton'}).vm as ComponentPublicInstance).$emit('click');
         await wrapper.vm.$nextTick();
-        wrapper.findComponent({name: 'ConfirmDialog'}).vm.$emit('confirm');
+        (wrapper.findComponent({name: 'ConfirmDialog'}).vm as ComponentPublicInstance).$emit('confirm');
         await flushPromises();
 
         // Assert
@@ -298,9 +299,9 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
+        (wrapper.findComponent({name: 'DangerButton'}).vm as ComponentPublicInstance).$emit('click');
         await wrapper.vm.$nextTick();
-        wrapper.findComponent({name: 'ConfirmDialog'}).vm.$emit('cancel');
+        (wrapper.findComponent({name: 'ConfirmDialog'}).vm as ComponentPublicInstance).$emit('cancel');
         await wrapper.vm.$nextTick();
 
         // Assert
