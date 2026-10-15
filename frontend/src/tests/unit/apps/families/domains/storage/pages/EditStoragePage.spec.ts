@@ -1,3 +1,5 @@
+import type {ComponentPublicInstance} from 'vue';
+
 import EditStoragePage from '@app/domains/storage/pages/EditStoragePage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import {TextInput} from '@script-development/ui-inputs';
@@ -5,7 +7,6 @@ import {flushPromises, shallowMount} from '@vue/test-utils';
 import {AxiosError} from 'axios';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {ref} from 'vue';
-import type {ComponentPublicInstance} from 'vue';
 
 const {
     createMockAxiosWithError,

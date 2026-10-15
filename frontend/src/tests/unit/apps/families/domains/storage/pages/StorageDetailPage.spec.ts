@@ -1,9 +1,10 @@
+import type {ComponentPublicInstance} from 'vue';
+
 import StorageDetailPage from '@app/domains/storage/pages/StorageDetailPage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {ref} from 'vue';
-import type {ComponentPublicInstance} from 'vue';
 
 const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices, createMockFamilyStores} =
     await vi.hoisted(() => import('../../../../../../helpers'));
