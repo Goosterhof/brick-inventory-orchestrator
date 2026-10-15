@@ -1,8 +1,13 @@
 import StorageDetailPage from '@app/domains/storage/pages/StorageDetailPage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import {flushPromises, shallowMount} from '@vue/test-utils';
+import type {VueWrapper} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {ref} from 'vue';
+
+const emitFrom = (wrapper: VueWrapper | undefined, event: string): void => {
+    wrapper?.vm.$emit(event);
+};
 
 const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices, createMockFamilyStores} =
     await vi.hoisted(() => import('../../../../../../helpers'));
@@ -151,7 +156,7 @@ describe('StorageDetailPage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent({name: 'BackButton'}).vm.$emit('click');
+        emitFrom(wrapper.findComponent({name: 'BackButton'}), 'click');
         await flushPromises();
 
         // Assert

@@ -2,9 +2,14 @@ import EditStoragePage from '@app/domains/storage/pages/EditStoragePage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import {TextInput} from '@script-development/ui-inputs';
 import {flushPromises, shallowMount} from '@vue/test-utils';
+import type {VueWrapper} from '@vue/test-utils';
 import {AxiosError} from 'axios';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {ref} from 'vue';
+
+const emitFrom = (wrapper: VueWrapper | undefined, event: string): void => {
+    wrapper?.vm.$emit(event);
+};
 
 const {
     createMockAxiosWithError,
@@ -256,7 +261,7 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
+        emitFrom(wrapper.findComponent({name: 'DangerButton'}), 'click');
         await wrapper.vm.$nextTick();
 
         // Assert
@@ -271,9 +276,9 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
+        emitFrom(wrapper.findComponent({name: 'DangerButton'}), 'click');
         await wrapper.vm.$nextTick();
-        wrapper.findComponent({name: 'ConfirmDialog'}).vm.$emit('confirm');
+        emitFrom(wrapper.findComponent({name: 'ConfirmDialog'}), 'confirm');
         await flushPromises();
 
         // Assert
@@ -288,9 +293,9 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
+        emitFrom(wrapper.findComponent({name: 'DangerButton'}), 'click');
         await wrapper.vm.$nextTick();
-        wrapper.findComponent({name: 'ConfirmDialog'}).vm.$emit('cancel');
+        emitFrom(wrapper.findComponent({name: 'ConfirmDialog'}), 'cancel');
         await wrapper.vm.$nextTick();
 
         // Assert

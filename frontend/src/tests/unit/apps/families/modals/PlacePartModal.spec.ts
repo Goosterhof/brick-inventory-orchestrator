@@ -3,7 +3,12 @@ import type {ComponentPublicInstance} from 'vue';
 import PlacePartModal from '@app/modals/PlacePartModal.vue';
 import {FormField} from '@script-development/ui-inputs';
 import {flushPromises, shallowMount} from '@vue/test-utils';
+import type {VueWrapper} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+
+const emitFrom = (wrapper: VueWrapper | undefined, event: string): void => {
+    wrapper?.vm.$emit(event);
+};
 
 const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices, createMockUiInputs} =
     await vi.hoisted(() => import('../../../../helpers'));
@@ -316,7 +321,7 @@ describe('PlacePartModal', () => {
             await flushPromises();
 
             // Act
-            wrapper.findComponent({name: 'ModalDialog'}).vm.$emit('close');
+            emitFrom(wrapper.findComponent({name: 'ModalDialog'}), 'close');
 
             // Assert
             expect(wrapper.emitted('close')).toBeDefined();
