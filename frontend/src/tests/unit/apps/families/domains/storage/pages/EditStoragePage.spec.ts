@@ -1,5 +1,3 @@
-import type {VueWrapper} from '@vue/test-utils';
-
 import EditStoragePage from '@app/domains/storage/pages/EditStoragePage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import {TextInput} from '@script-development/ui-inputs';
@@ -7,10 +5,6 @@ import {flushPromises, shallowMount} from '@vue/test-utils';
 import {AxiosError} from 'axios';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {ref} from 'vue';
-
-const emitFrom = (wrapper: VueWrapper | undefined, event: string): void => {
-    wrapper?.vm.$emit(event);
-};
 
 const {
     createMockAxiosWithError,
@@ -27,6 +21,16 @@ vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
 vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
+vi.mock('@shared/components/LoadingState.vue', () => ({default: {name: 'LoadingState', template: '<div />'}}));
+vi.mock('@shared/components/DangerButton.vue', () => ({
+    default: {name: 'DangerButton', emits: ['click'], template: '<button @click="$emit(\'click\')"><slot /></button>'},
+}));
+vi.mock('@shared/components/ConfirmDialog.vue', () => ({
+    default: {name: 'ConfirmDialog', props: ['open'], emits: ['confirm', 'cancel'], template: '<div><slot /></div>'},
+}));
+vi.mock('@shared/components/PrimaryButton.vue', () => ({
+    default: {name: 'PrimaryButton', emits: ['click'], template: '<button @click="$emit(\'click\')"><slot /></button>'},
+}));
 
 // atom-at-call-site: the page composes FormField + the TextInput (name),
 // Textarea (description) and NumberInput (row/column) atoms; unstub them so the
@@ -262,7 +266,7 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        emitFrom(wrapper.findComponent({name: 'DangerButton'}), 'click');
+        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
         await wrapper.vm.$nextTick();
 
         // Assert
@@ -277,9 +281,9 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        emitFrom(wrapper.findComponent({name: 'DangerButton'}), 'click');
+        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
         await wrapper.vm.$nextTick();
-        emitFrom(wrapper.findComponent({name: 'ConfirmDialog'}), 'confirm');
+        wrapper.findComponent({name: 'ConfirmDialog'}).vm.$emit('confirm');
         await flushPromises();
 
         // Assert
@@ -294,9 +298,9 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Act
-        emitFrom(wrapper.findComponent({name: 'DangerButton'}), 'click');
+        wrapper.findComponent({name: 'DangerButton'}).vm.$emit('click');
         await wrapper.vm.$nextTick();
-        emitFrom(wrapper.findComponent({name: 'ConfirmDialog'}), 'cancel');
+        wrapper.findComponent({name: 'ConfirmDialog'}).vm.$emit('cancel');
         await wrapper.vm.$nextTick();
 
         // Assert

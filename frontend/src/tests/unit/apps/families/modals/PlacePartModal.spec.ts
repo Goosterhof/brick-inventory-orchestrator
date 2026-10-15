@@ -1,4 +1,3 @@
-import type {VueWrapper} from '@vue/test-utils';
 import type {ComponentPublicInstance} from 'vue';
 
 import PlacePartModal from '@app/modals/PlacePartModal.vue';
@@ -6,16 +5,23 @@ import {FormField} from '@script-development/ui-inputs';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-const emitFrom = (wrapper: VueWrapper | undefined, event: string): void => {
-    wrapper?.vm.$emit(event);
-};
-
 const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices, createMockUiInputs} =
     await vi.hoisted(() => import('../../../../helpers'));
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
 
 vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
+vi.mock('@shared/components/ModalDialog.vue', () => ({
+    default: {
+        name: 'ModalDialog',
+        props: ['open'],
+        emits: ['close'],
+        template: '<div><slot name="title" /><slot /></div>',
+    },
+}));
+vi.mock('@shared/components/PrimaryButton.vue', () => ({
+    default: {name: 'PrimaryButton', emits: ['click'], template: '<button @click="$emit(\'click\')"><slot /></button>'},
+}));
 
 vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
@@ -321,7 +327,7 @@ describe('PlacePartModal', () => {
             await flushPromises();
 
             // Act
-            emitFrom(wrapper.findComponent({name: 'ModalDialog'}), 'close');
+            wrapper.findComponent({name: 'ModalDialog'}).vm.$emit('close');
 
             // Assert
             expect(wrapper.emitted('close')).toBeDefined();

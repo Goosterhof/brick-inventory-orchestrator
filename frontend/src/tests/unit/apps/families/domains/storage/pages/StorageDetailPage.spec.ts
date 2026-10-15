@@ -1,14 +1,8 @@
-import type {VueWrapper} from '@vue/test-utils';
-
 import StorageDetailPage from '@app/domains/storage/pages/StorageDetailPage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {ref} from 'vue';
-
-const emitFrom = (wrapper: VueWrapper | undefined, event: string): void => {
-    wrapper?.vm.$emit(event);
-};
 
 const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices, createMockFamilyStores} =
     await vi.hoisted(() => import('../../../../../../helpers'));
@@ -16,6 +10,26 @@ const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamil
 vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
+vi.mock('@shared/components/BackButton.vue', () => ({
+    default: {name: 'BackButton', emits: ['click'], template: '<button @click="$emit(\'click\')"><slot /></button>'},
+}));
+vi.mock('@shared/components/DetailRow.vue', () => ({
+    default: {name: 'DetailRow', props: ['label'], template: '<div><slot /></div>'},
+}));
+vi.mock('@shared/components/EmptyState.vue', () => ({
+    default: {name: 'EmptyState', props: ['message'], template: '<div>{{ message }}</div>'},
+}));
+vi.mock('@shared/components/LoadingState.vue', () => ({default: {name: 'LoadingState', template: '<div />'}}));
+vi.mock('@shared/components/PartListItem.vue', () => ({
+    default: {
+        name: 'PartListItem',
+        props: ['name', 'partNum', 'quantity', 'imageUrl', 'colorName', 'colorRgb'],
+        template: '<div />',
+    },
+}));
+vi.mock('@shared/components/PrimaryButton.vue', () => ({
+    default: {name: 'PrimaryButton', emits: ['click'], template: '<button @click="$emit(\'click\')"><slot /></button>'},
+}));
 
 const {mockGetOrFailById, mockGetRequest, mockGoToRoute, mockCurrentRouteId, mockRetrieveAll} = vi.hoisted(() => ({
     mockGetOrFailById: vi.fn<(id: number) => Promise<unknown>>(),
@@ -157,7 +171,7 @@ describe('StorageDetailPage', () => {
         await flushPromises();
 
         // Act
-        emitFrom(wrapper.findComponent({name: 'BackButton'}), 'click');
+        wrapper.findComponent({name: 'BackButton'}).vm.$emit('click');
         await flushPromises();
 
         // Assert
