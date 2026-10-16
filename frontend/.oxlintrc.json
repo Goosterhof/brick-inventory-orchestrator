@@ -297,12 +297,12 @@
                             {
                                 "name": "vue-router",
                                 "importNames": ["RouterLink"],
-                                "message": "RouterLink is forbidden in shared components (ADR-001). Use <a> tags with click emits instead."
+                                "message": "RouterLink is forbidden in shared components (ADR-0003). Use <a> tags with click emits instead."
                             },
                             {
                                 "name": "vue-router",
                                 "importNames": ["useRouter", "useRoute"],
-                                "message": "Direct useRouter/useRoute is forbidden in shared code (ADR-001). Shared modules must remain router-agnostic."
+                                "message": "Direct useRouter/useRoute is forbidden in shared code (ADR-0003). Shared modules must remain router-agnostic."
                             }
                         ]
                     }
@@ -337,7 +337,7 @@
                             {
                                 "name": "vue-router",
                                 "importNames": ["useRouter", "useRoute"],
-                                "message": "Direct useRouter/useRoute is forbidden in apps (ADR-001). Use RouterService instead."
+                                "message": "Direct useRouter/useRoute is forbidden in apps (ADR-0003). Use RouterService instead."
                             }
                         ]
                     }
@@ -372,7 +372,7 @@
                             {
                                 "name": "vue-router",
                                 "importNames": ["useRouter", "useRoute"],
-                                "message": "Direct useRouter/useRoute is forbidden in apps (ADR-001). Use RouterService instead."
+                                "message": "Direct useRouter/useRoute is forbidden in apps (ADR-0003). Use RouterService instead."
                             }
                         ]
                     }

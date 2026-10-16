@@ -63,12 +63,12 @@ for (const file of vueFiles) {
         errors.push(`${file}: defineExpose is forbidden. Use props and emits for parent-child communication instead.`);
     }
 
-    // Check 4: No unscoped <style> blocks — only <style scoped> allowed for third-party overrides (ADR-003)
+    // Check 4: No unscoped <style> blocks — only <style scoped> allowed for third-party overrides (ADR-0005)
     if (styleIndex !== -1) {
         const hasUnscopedStyle = /<style(?![^>]*\bscoped\b)[^>]*>/.test(content);
         if (hasUnscopedStyle) {
             errors.push(
-                `${file}: Unscoped <style> blocks are forbidden (ADR-003). Use UnoCSS attributify for styling. If overriding third-party CSS, use <style scoped> instead.`,
+                `${file}: Unscoped <style> blocks are forbidden (ADR-0005). Use UnoCSS attributify for styling. If overriding third-party CSS, use <style scoped> instead.`,
             );
         }
     }
@@ -88,7 +88,7 @@ for (const file of vueFiles) {
         errors.push(`${file}: defineProps must come before defineSlots`);
     }
 
-    // Check 6: No <RouterLink> or <router-link> in shared components (ADR-001)
+    // Check 6: No <RouterLink> or <router-link> in shared components (ADR-0003)
     // The oxlint import ban catches JS imports, but globally registered components can be used without import
     if (file.startsWith('src/shared/') || file.includes('/shared/')) {
         const templateMatch = content.match(/<template[\s\S]*$/);
@@ -96,7 +96,7 @@ for (const file of vueFiles) {
             const template = templateMatch[0];
             if (/<RouterLink[\s/>]/.test(template) || /<router-link[\s/>]/.test(template)) {
                 errors.push(
-                    `${file}: <RouterLink>/<router-link> is forbidden in shared components (ADR-001). Use <a> tags with click emits instead.`,
+                    `${file}: <RouterLink>/<router-link> is forbidden in shared components (ADR-0003). Use <a> tags with click emits instead.`,
                 );
             }
         }
@@ -172,7 +172,7 @@ for (const file of allSourceFiles) {
 
 // ── Cross-file checks (all .vue and .ts files) ─────────────────────────────────
 
-// Check 7: No coverage ignore comments (ADR-005)
+// Check 7: No coverage ignore comments (ADR-0007)
 // istanbul ignore, v8 ignore, c8 ignore are all banned — every line must be tested or removed
 const COVERAGE_IGNORE_PATTERN = /\/\*\s*(istanbul|v8|c8)\s+ignore\b/;
 
@@ -188,13 +188,13 @@ for (const file of allSourceFiles) {
     for (let i = 0; i < lines.length; i++) {
         if (COVERAGE_IGNORE_PATTERN.test(lines[i])) {
             errors.push(
-                `${file}:${i + 1}: Coverage ignore comments are forbidden (ADR-005). Restructure the code to be testable instead.`,
+                `${file}:${i + 1}: Coverage ignore comments are forbidden (ADR-0007). Restructure the code to be testable instead.`,
             );
         }
     }
 }
 
-// Check 8: No singleton exports in shared services (ADR-002)
+// Check 8: No singleton exports in shared services (ADR-0004)
 // Shared services must export factory functions, not pre-instantiated instances.
 // Detects: export const x = createSomething(...), export const x = new Something(), export default new Something()
 const SINGLETON_CALL_PATTERN = /^export\s+(?:const|let|var)\s+\w+\s*=\s*(?:new\s+\w|create\w*\()/;
@@ -217,18 +217,18 @@ for (const file of allSourceFiles) {
 
         if (SINGLETON_CALL_PATTERN.test(line)) {
             errors.push(
-                `${file}:${i + 1}: Shared services must not export pre-instantiated instances (ADR-002). Export a factory function and let each app call it.`,
+                `${file}:${i + 1}: Shared services must not export pre-instantiated instances (ADR-0004). Export a factory function and let each app call it.`,
             );
         }
         if (EXPORT_DEFAULT_INSTANCE_PATTERN.test(line)) {
             errors.push(
-                `${file}:${i + 1}: Shared services must not export pre-instantiated instances (ADR-002). Export a factory function and let each app call it.`,
+                `${file}:${i + 1}: Shared services must not export pre-instantiated instances (ADR-0004). Export a factory function and let each app call it.`,
             );
         }
     }
 }
 
-// Check 9: vi.mock() must include a factory function (ADR-010)
+// Check 9: vi.mock() must include a factory function (ADR-0012)
 // Without a factory, vi.mock() still triggers a full module load during test collection.
 // Only vi.mock("module", () => ({...})) avoids the import chain entirely.
 const VI_MOCK_WITHOUT_FACTORY = /vi\.mock\(\s*["'][^"']+["']\s*\)/;
@@ -243,7 +243,7 @@ for (const file of specFiles) {
     for (let i = 0; i < lines.length; i++) {
         if (VI_MOCK_WITHOUT_FACTORY.test(lines[i])) {
             errors.push(
-                `${file}:${i + 1}: vi.mock() must include a factory function as the second argument (ADR-010). Use vi.mock("module", () => ({...})) instead of vi.mock("module").`,
+                `${file}:${i + 1}: vi.mock() must include a factory function as the second argument (ADR-0012). Use vi.mock("module", () => ({...})) instead of vi.mock("module").`,
             );
         }
     }
