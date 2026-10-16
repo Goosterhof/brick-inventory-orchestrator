@@ -143,21 +143,21 @@ HTTP middleware can be registered/unregistered at runtime.
 
 ## Quality Inspection
 
-| Command                 | What It Inspects                                            |
-| ----------------------- | ----------------------------------------------------------- |
-| `npm run dev`           | Start dev server (families, default)                        |
-| `npm run dev:admin`     | Start dev server (admin)                                    |
-| `npm run dev:showcase`  | Start dev server (showcase)                                 |
-| `npm run build`         | Build all 3 apps (type-checks first)                        |
-| `npm run test:unit`     | Run the test suite                                          |
-| `npm run test:coverage` | Run tests with coverage (**100% required — no exceptions**) |
-| `npm run lint`          | oxlint with type-aware checking                             |
-| `npm run lint:vue`      | Custom Vue conventions linter                               |
-| `npm run format`        | Format with oxfmt                                           |
-| `npm run format:check`  | Check formatting without modifying                          |
-| `npm run type-check`    | vue-tsc type checking                                       |
-| `npm run knip`          | Detect unused code/exports (no dead bricks)                 |
-| `npm run size`          | Check bundle size limits                                    |
+| Command                 | What It Inspects                                                                        |
+| ----------------------- | --------------------------------------------------------------------------------------- |
+| `npm run dev`           | Start dev server (families, default)                                                    |
+| `npm run dev:admin`     | Start dev server (admin)                                                                |
+| `npm run dev:showcase`  | Start dev server (showcase)                                                             |
+| `npm run build`         | Build all 3 apps (type-checks first)                                                    |
+| `npm run test:unit`     | Run the test suite                                                                      |
+| `npm run test:coverage` | Run tests with coverage (**100% of the files the gate measures** — see Coverage Policy) |
+| `npm run lint`          | oxlint with type-aware checking                                                         |
+| `npm run lint:vue`      | Custom Vue conventions linter                                                           |
+| `npm run format`        | Format with oxfmt                                                                       |
+| `npm run format:check`  | Check formatting without modifying                                                      |
+| `npm run type-check`    | vue-tsc type checking                                                                   |
+| `npm run knip`          | Detect unused code/exports (no dead bricks)                                             |
+| `npm run size`          | Check bundle size limits                                                                |
 
 ### Hooks and CI
 
@@ -169,7 +169,11 @@ Hooks are light (ADR-0028 Amendment 2); root `CLAUDE.md` § Git Hooks has the ta
 
 ### Coverage Policy
 
-**100% coverage on lines, functions, branches, and statements.** If you build it, you test it.
+**100% coverage on lines, functions, branches, and statements — of the files the gate measures.** If you build it, you test it.
+
+The gate does not measure the whole frontend. `coverage.exclude` in `vitest.config.ts` is the source of truth for its scope: it leaves out every app's `main.ts`, `App.vue` and its `router/`, `domains/`, `pages/`, `services/`, `stores/` and `types/` directories. What the 100% thresholds measure is `src/shared/` plus the app files outside those directories (showcase components, families modals). Most app code is outside it.
+
+Excluded app code is exercised by the page integration suite (`npm run test:integration:run`, ADR-0024), which CI runs but which carries **no coverage threshold**, and by nothing that measures branches. Stryker's `mutate` list is narrower still (`src/shared/` helpers, composables, middleware and auth). So a dead branch in a domain page, store or service can ship under a green "100%": BIO-0016 did exactly that (duplicate-set detection dead in `AddSetPage`/`ScanSetPage`, fixed in PR #286). When you change excluded code, its tests are yours to write; the gate will not ask for them.
 
 ## Style Guide — Neo-Brutalist LEGO Aesthetic
 
