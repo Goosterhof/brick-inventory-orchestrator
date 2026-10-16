@@ -78,7 +78,7 @@
         "@stryker-mutator/vitest-runner": "^10",
         "@tsconfig/node24": "^24.0.5",
         "@types/node": "^24.19.1",
-        "@types/three": "^0.185.4",
+        "@types/three": "^0.186.0",
         "@typescript/native-preview": "^7.0.0-dev.20260707.2",
         "@unocss/reset": "^66.10.5",
         "@vitejs/plugin-vue": "^6.0.9",
