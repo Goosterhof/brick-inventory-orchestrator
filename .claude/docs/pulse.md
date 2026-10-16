@@ -18,7 +18,7 @@ A consolidated, current-state assessment of both wings. Updated by The Steward a
 **Foundry Wing Rating:** 8.5/10
 **Assessed:** 2026-07-16 (both wings — [`2026-07-16-warden-cross-wing-sweep`](../records/audits/2026-07-16-warden-cross-wing-sweep.md))
 
-**Gallery (frontend):** Strong unit layer — factory mocks, exact-navigation assertions, 100% coverage gauntlet maintained; 2026-07-16 sweep green on lint / type-check / knip / unit suite (1435 tests). Multi-app structure with strict isolation; import boundaries and ADR-0029 middleware verified clean. Page integration test layer (ADR-0024) Battle-tested and CI-gated (spec list from the filesystem, counts from `npm run test:integration:run`). Mutation Testing v2 CI-gated with per-file 90% floor (96.27% aggregate at last measure, 2026-06-01). fs-form adoption complete (PR #245) — local form composables retired. Rating held at 7.5 by: the Pulse's own self-contradictions (stale JSDOM and `form-data`-advisory clauses contradicting the wing manual and this file's Active Concerns — reconciled via BIO-0023), the third-cycle Parts-page duplication cluster (BIO-0008), and a dev-only `format:check` gate failure on 5 showcase files.
+**Gallery (frontend):** Strong unit layer — factory mocks, exact-navigation assertions, 100% unit-coverage gate maintained over its measured scope (`src/shared/` and the app files outside the excluded `router/domains/pages/services/stores/types` directories — most app code is outside it; frontend/CLAUDE.md § Coverage Policy, BIO-0007); 2026-07-16 sweep green on lint / type-check / knip / unit suite (1435 tests). Multi-app structure with strict isolation; import boundaries and ADR-0029 middleware verified clean. Page integration test layer (ADR-0024) Battle-tested and CI-gated (spec list from the filesystem, counts from `npm run test:integration:run`). Mutation Testing v2 CI-gated with per-file 90% floor (96.27% aggregate at last measure, 2026-06-01). fs-form adoption complete (PR #245) — local form composables retired. Rating held at 7.5 by: the Pulse's own self-contradictions (stale JSDOM and `form-data`-advisory clauses contradicting the wing manual and this file's Active Concerns — reconciled via BIO-0023), the third-cycle Parts-page duplication cluster (BIO-0008), and a dev-only `format:check` gate failure on 5 showcase files.
 
 **Foundry (backend):** Code architecture clean on independent re-verification — 40 Actions / 12 Controllers / 2 Services fully comply, ADR-0015 try-catch roster still reconciled, policy/factory parity holds. 2026-07-16 sweep: full gauntlet green — lint, PHPStan max 0 errors, Deptrac 0 violations, 114 architecture tests passing, full `composer test` green (687-test suite). Coverage/mutation last measured 2026-05-26/29: 100% unit, 100% feature, 79.68% mutation. Rating raised (8 → 8.5): the only medium finding this sweep is the decisions.md ledger drift (ADR-0028 row still marked Accepted post-retirement — reconciled via BIO-0023).
 
@@ -137,7 +137,7 @@ _None in progress._ The Brickworks merger closed 2026-05-19 — see the closing 
 | Button/nav components lack keyboard tests | Low | Noted in learnings — add when touching next |
 | Oxlint JS plugins not yet available for custom Vue checks | Low | Monitoring oxc milestone 3 — will replace `lint-vue-conventions.mjs` |
 | `prevCursor` field in part types unused by UI | Low | API returns prevCursor but pagination is forward-only; retained for type accuracy. Third inspection cycle unresolved as of 2026-05-20 (escalated from Casebook Recurring Patterns). |
-| Domain pages excluded from unit-coverage 100% gate | Low | `src/apps/**/domains/**` excluded from thresholds — catch-branch gaps require manual inspection or integration-test coverage. No automated detection. Surfaced by [`2026-05-20-gallery-pulse-refresh`](../records/audits/2026-05-20-gallery-pulse-refresh.md). |
+| App code excluded from the unit-coverage 100% gate | Medium | `coverage.exclude` in `vitest.config.ts` leaves out every app's `router/`, `domains/`, `pages/`, `services/`, `stores/` and `types/` directories plus `main.ts`/`App.vue`. Branch gaps there need manual inspection or the integration suite, which has no coverage threshold. No automated detection. **Real since BIO-0016** (dead duplicate-set detection in `AddSetPage`/`ScanSetPage` shipped green under the gate, PR #286). The claim is qualified (BIO-0007, option a); widening the gate is option (b), not taken. Surfaced by [`2026-05-20-gallery-pulse-refresh`](../records/audits/2026-05-20-gallery-pulse-refresh.md). |
 
 ### Foundry Wing
 
@@ -186,12 +186,12 @@ Ideas planted but deferred — revisit when the trigger condition is met. Seeds 
 
 ### Gallery Wing
 
-_Coverage figures below reflect the unit test gauntlet only. The integration suite (`npm run test:integration:run`) is a separate, independently-gated layer per ADR-0024 — spec/test counts come from the runner, green on `main`, executed as a required step in `frontend-ci.yml` between `Test with coverage` and `Build` (PR #100, merged 2026-05-25)._
+_Coverage figures below reflect the unit test gauntlet only, over the gate's measured scope (`coverage.exclude` in `vitest.config.ts`; most app code is outside it — frontend/CLAUDE.md § Coverage Policy). The integration suite (`npm run test:integration:run`) is a separate, independently-gated layer per ADR-0024 — spec/test counts come from the runner, green on `main`, executed as a required step in `frontend-ci.yml` between `Test with coverage` and `Build` (PR #100, merged 2026-05-25)._
 
 | Metric | Value | Source |
 |---|---|---|
-| Test coverage (lines) | 100% | `npm run test:coverage` |
-| Test coverage (branches) | 100% | `npm run test:coverage` |
+| Test coverage (lines, gated scope) | 100% | `npm run test:coverage` |
+| Test coverage (branches, gated scope) | 100% | `npm run test:coverage` |
 | Test count | _run `npm run test:unit` for current count_ | gauntlet output |
 | Shared components | _see `meta.componentCount`_ | `src/shared/generated/component-registry.json` |
 | Domains (Families) | _list `src/apps/families/domains/`_ | file system |
