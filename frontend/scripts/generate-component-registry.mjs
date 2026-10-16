@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Component Health Registry Generator (ADR-009)
+ * Component Health Registry Generator (ADR-0011)
  *
  * Generates five metrics for each shared component:
  * 1. Consumer map — which files import each component, grouped by app and domain
