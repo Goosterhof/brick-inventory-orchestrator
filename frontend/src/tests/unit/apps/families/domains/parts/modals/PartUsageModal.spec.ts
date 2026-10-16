@@ -1,8 +1,5 @@
 import PartUsageModal from '@app/domains/parts/modals/PartUsageModal.vue';
-import EmptyState from '@shared/components/EmptyState.vue';
-import ListItemButton from '@shared/components/ListItemButton.vue';
-import ModalDialog from '@shared/components/ModalDialog.vue';
-import {flushPromises, shallowMount} from '@vue/test-utils';
+import {flushPromises, shallowMount, type VueWrapper} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices} = await vi.hoisted(
@@ -15,6 +12,26 @@ const {mockGetRequest, mockGoToRoute} = vi.hoisted(() => ({
 }));
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
+vi.mock('@shared/components/ListItemButton.vue', () => ({
+    default: {name: 'ListItemButton', template: '<button @click="$emit(\'click\')"><slot /></button>'},
+}));
+vi.mock('@shared/components/EmptyState.vue', () => ({
+    default: {name: 'EmptyState', props: ['message'], template: '<div>{{ message }}</div>'},
+}));
+vi.mock('@shared/components/BadgeLabel.vue', () => ({
+    default: {name: 'BadgeLabel', template: '<span><slot /></span>'},
+}));
+vi.mock('@shared/components/ModalDialog.vue', () => ({
+    default: {
+        name: 'ModalDialog',
+        props: ['open'],
+        emits: ['close'],
+        template: '<div><slot name="title" /><slot /></div>',
+    },
+}));
+vi.mock('@shared/components/PrimaryButton.vue', () => ({
+    default: {name: 'PrimaryButton', template: '<button @click="$emit(\'click\')"><slot /></button>'},
+}));
 vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
@@ -136,7 +153,7 @@ describe('PartUsageModal', () => {
         await flushPromises();
 
         // Assert
-        const items = wrapper.findAllComponents(ListItemButton);
+        const items = wrapper.findAllComponents({name: 'ListItemButton'});
         expect(items).toHaveLength(2);
 
         const firstText = items[0]?.text() ?? '';
@@ -162,8 +179,8 @@ describe('PartUsageModal', () => {
         await flushPromises();
 
         // Act
-        const items = wrapper.findAllComponents(ListItemButton);
-        items[0]?.vm.$emit('click');
+        const items = wrapper.findAllComponents({name: 'ListItemButton'});
+        await items[0]?.trigger('click');
         await flushPromises();
 
         // Assert
@@ -180,7 +197,7 @@ describe('PartUsageModal', () => {
         await flushPromises();
 
         // Assert
-        const empty = wrapper.findComponent(EmptyState);
+        const empty = wrapper.findComponent({name: 'EmptyState'});
         expect(empty.exists()).toBe(true);
         expect(empty.props('message')).toBe('parts.usageEmpty');
     });
@@ -203,7 +220,7 @@ describe('PartUsageModal', () => {
 
         // Assert — moved to populated state
         expect(wrapper.find("[data-testid='usage-error']").exists()).toBe(false);
-        expect(wrapper.findAllComponents(ListItemButton)).toHaveLength(2);
+        expect(wrapper.findAllComponents({name: 'ListItemButton'})).toHaveLength(2);
         expect(mockGetRequest).toHaveBeenCalledTimes(2);
     });
 
@@ -214,7 +231,7 @@ describe('PartUsageModal', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent(ModalDialog).vm.$emit('close');
+        (wrapper.findComponent({name: 'ModalDialog'}) as VueWrapper).vm.$emit('close');
 
         // Assert
         expect(wrapper.emitted('close')).toBeDefined();
@@ -225,14 +242,14 @@ describe('PartUsageModal', () => {
         mockGetRequest.mockResolvedValueOnce({data: mockUsageResponse});
         const wrapper = mountModal(true, '3001', 1);
         await flushPromises();
-        expect(wrapper.findAllComponents(ListItemButton)).toHaveLength(2);
+        expect(wrapper.findAllComponents({name: 'ListItemButton'})).toHaveLength(2);
 
         // Act — second fetch hangs while we change props
         mockGetRequest.mockReturnValueOnce(new Promise(() => {}));
         await wrapper.setProps({partNum: '3002', colorId: 5});
 
         // Assert — list cleared while reloading; loading visible
-        expect(wrapper.findAllComponents(ListItemButton)).toHaveLength(0);
+        expect(wrapper.findAllComponents({name: 'ListItemButton'})).toHaveLength(0);
         expect(wrapper.find("[data-testid='usage-loading']").exists()).toBe(true);
     });
 });

@@ -783,11 +783,6 @@ describe('Architecture', () => {
          * basenames the spec is permitted to import.
          */
         const LEGACY_CROSS_COMPONENT_IMPORTS: Record<string, readonly string[]> = {
-            'apps/families/domains/parts/modals/PartUsageModal.spec.ts': [
-                'EmptyState.vue',
-                'ListItemButton.vue',
-                'ModalDialog.vue',
-            ],
             // Split-spec: SUT is SetsOverviewPage.vue (filename mismatch is intentional, PR #120).
             'apps/families/domains/sets/pages/SetsOverviewFiltering.spec.ts': ['SetsOverviewPage.vue'],
             // Split-spec: SUT is SetsOverviewPage.vue (filename mismatch is intentional, PR #120).
