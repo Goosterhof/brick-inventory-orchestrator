@@ -12,6 +12,26 @@ const {mockGetRequest, mockGoToRoute} = vi.hoisted(() => ({
 }));
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
+vi.mock('@shared/components/ListItemButton.vue', () => ({
+    default: {name: 'ListItemButton', template: '<button @click="$emit(\'click\')"><slot /></button>'},
+}));
+vi.mock('@shared/components/EmptyState.vue', () => ({
+    default: {name: 'EmptyState', props: ['message'], template: '<div>{{ message }}</div>'},
+}));
+vi.mock('@shared/components/BadgeLabel.vue', () => ({
+    default: {name: 'BadgeLabel', template: '<span><slot /></span>'},
+}));
+vi.mock('@shared/components/ModalDialog.vue', () => ({
+    default: {
+        name: 'ModalDialog',
+        props: ['open'],
+        emits: ['close'],
+        template: '<div><slot name="title" /><slot /></div>',
+    },
+}));
+vi.mock('@shared/components/PrimaryButton.vue', () => ({
+    default: {name: 'PrimaryButton', template: '<button @click="$emit(\'click\')"><slot /></button>'},
+}));
 vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
 vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
