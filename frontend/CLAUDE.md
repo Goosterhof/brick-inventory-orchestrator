@@ -143,21 +143,21 @@ HTTP middleware can be registered/unregistered at runtime.
 
 ## Quality Inspection
 
-| Command                 | What It Inspects                                            |
-| ----------------------- | ----------------------------------------------------------- |
-| `npm run dev`           | Start dev server (families, default)                        |
-| `npm run dev:admin`     | Start dev server (admin)                                    |
-| `npm run dev:showcase`  | Start dev server (showcase)                                 |
-| `npm run build`         | Build all 3 apps (type-checks first)                        |
-| `npm run test:unit`     | Run the test suite                                          |
-| `npm run test:coverage` | Run tests with coverage (**100% required — no exceptions**) |
-| `npm run lint`          | oxlint with type-aware checking                             |
-| `npm run lint:vue`      | Custom Vue conventions linter                               |
-| `npm run format`        | Format with oxfmt                                           |
-| `npm run format:check`  | Check formatting without modifying                          |
-| `npm run type-check`    | vue-tsc type checking                                       |
-| `npm run knip`          | Detect unused code/exports (no dead bricks)                 |
-| `npm run size`          | Check bundle size limits                                    |
+| Command                 | What It Inspects                                                               |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| `npm run dev`           | Start dev server (families, default)                                           |
+| `npm run dev:admin`     | Start dev server (admin)                                                       |
+| `npm run dev:showcase`  | Start dev server (showcase)                                                    |
+| `npm run build`         | Build all 3 apps (type-checks first)                                           |
+| `npm run test:unit`     | Run the test suite                                                             |
+| `npm run test:coverage` | Run the included-source unit coverage gate (**100% required — no exceptions**) |
+| `npm run lint`          | oxlint with type-aware checking                                                |
+| `npm run lint:vue`      | Custom Vue conventions linter                                                  |
+| `npm run format`        | Format with oxfmt                                                              |
+| `npm run format:check`  | Check formatting without modifying                                             |
+| `npm run type-check`    | vue-tsc type checking                                                          |
+| `npm run knip`          | Detect unused code/exports (no dead bricks)                                    |
+| `npm run size`          | Check bundle size limits                                                       |
 
 ### Hooks and CI
 
@@ -169,7 +169,7 @@ Hooks are light (ADR-0028 Amendment 2); root `CLAUDE.md` § Git Hooks has the ta
 
 ### Coverage Policy
 
-**100% coverage on lines, functions, branches, and statements.** If you build it, you test it.
+**100% coverage on lines, functions, branches, and statements for the source files included by the unit gate.** This is not whole-application coverage: `vitest.config.ts` excludes every app's `domains/`, `pages/`, `services/`, `stores/`, `types/`, and `router/` directories, plus `main.ts` and `App.vue`. Cover excluded app behavior through the page integration suite (`npm run test:integration:run`), which CI runs separately. If you build it, you test it in the applicable layer.
 
 ## Style Guide — Neo-Brutalist LEGO Aesthetic
 
