@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c6d116c8806bbda696818fcd029c0775",
+    "content-hash": "bd907f3981050d6ae2455462a323593b",
     "packages": [
         {
             "name": "brick/math",
@@ -3511,23 +3511,25 @@
         },
         {
             "name": "script-development/kendo-error-tracker",
-            "version": "v0.1.2",
+            "version": "v0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/script-development/kendo-error-tracker.git",
-                "reference": "c00d422fccc16b1e65ba9855be6f410ef0b5b62f"
+                "reference": "77ccacf6966fe991cb110a65a8aef63dd6aeea61"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/script-development/kendo-error-tracker/zipball/c00d422fccc16b1e65ba9855be6f410ef0b5b62f",
-                "reference": "c00d422fccc16b1e65ba9855be6f410ef0b5b62f",
+                "url": "https://api.github.com/repos/script-development/kendo-error-tracker/zipball/77ccacf6966fe991cb110a65a8aef63dd6aeea61",
+                "reference": "77ccacf6966fe991cb110a65a8aef63dd6aeea61",
                 "shasum": ""
             },
             "require": {
                 "illuminate/bus": "^11.0 || ^12.0 || ^13.0",
+                "illuminate/console": "^11.0 || ^12.0 || ^13.0",
                 "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
                 "illuminate/http": "^11.0 || ^12.0 || ^13.0",
                 "illuminate/queue": "^11.0 || ^12.0 || ^13.0",
+                "illuminate/routing": "^11.0 || ^12.0 || ^13.0",
                 "illuminate/support": "^11.0 || ^12.0 || ^13.0",
                 "php": "^8.4"
             },
@@ -3563,9 +3565,9 @@
             ],
             "support": {
                 "issues": "https://github.com/script-development/kendo-error-tracker/issues",
-                "source": "https://github.com/script-development/kendo-error-tracker/tree/v0.1.2"
+                "source": "https://github.com/script-development/kendo-error-tracker/tree/v0.2.1"
             },
-            "time": "2026-10-01T11:36:57+00:00"
+            "time": "2026-10-08T11:10:16+00:00"
         },
         {
             "name": "script-development/kendo-report-tool",
