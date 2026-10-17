@@ -22,7 +22,16 @@ function storageOptionAdapter(
     }
 
     return resourceAdapter<StorageOption>(
-        {name: '', description: null, parentId: null, row: null, column: null, childIds: []},
+        {
+            name: '',
+            description: null,
+            parentId: null,
+            row: null,
+            column: null,
+            gridRows: null,
+            gridColumns: null,
+            childIds: [],
+        },
         DOMAIN_NAME,
         storeModule,
         familyHttpService,

@@ -58,7 +58,8 @@ describe('EditStoragePage — integration', () => {
         await flushPromises();
 
         expect(wrapper.findComponent(TextInput).exists()).toBe(true);
-        expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
+        // This fixture has no parent, so row and column controls are hidden.
+        expect(wrapper.findAll('input[type="number"]')).toHaveLength(0);
     });
 
     it('renders real PrimaryButton and DangerButton', async () => {

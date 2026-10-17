@@ -5,25 +5,44 @@ import {useForm} from '@script-development/fs-form';
 import {FormField, NumberInput, SingleSelect, Textarea, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
-import {computed, onMounted, useId} from 'vue';
+import {computed, onMounted, useId, watch} from 'vue';
 
 const {t} = familyTranslationService;
 const adapted = storageOptionStoreModule.generateNew();
 const {getAll, retrieveAll} = storageOptionStoreModule;
 const parentId = useId();
 const parentOptions = computed(() => getAll.value.map((option) => ({id: option.id, label: option.name})));
+const selectedParent = computed(() => getAll.value.find((option) => option.id === adapted.mutable.value.parentId));
+const hasParentGrid = computed(
+    () =>
+        selectedParent.value !== undefined &&
+        selectedParent.value.gridRows !== null &&
+        selectedParent.value.gridColumns !== null,
+);
+watch(
+    () => adapted.mutable.value.parentId,
+    () => {
+        adapted.mutable.value.row = null;
+        adapted.mutable.value.column = null;
+    },
+);
 
-type AddStorageField = 'name' | 'description' | 'parentId' | 'row' | 'column';
+type AddStorageField = 'name' | 'description' | 'parentId' | 'row' | 'column' | 'gridRows' | 'gridColumns';
 const {errors, handleSubmit, submitting} = useForm<AddStorageField>(familyHttpService, {keyMapper: camelKey});
 
 const nameId = useId();
 const descriptionId = useId();
 const rowId = useId();
 const columnId = useId();
+const gridRowsId = useId();
+const gridColumnsId = useId();
 
 const onSubmit = () =>
     handleSubmit(async () => {
+        const {gridRows, gridColumns} = adapted.mutable.value;
+        if ((gridRows === null) !== (gridColumns === null)) return;
         const created = await adapted.create();
+        await retrieveAll();
         await familyRouterService.goToRoute('storage-detail', created.id);
     });
 
@@ -46,6 +65,49 @@ onMounted(() => retrieveAll());
                     />
                 </template>
             </FormField>
+
+            <fieldset flex="~ col" gap="4" border="1 [var(--brick-border)]" p="4" rounded>
+                <legend font="bold">{{ t('storage.grid').value }}</legend>
+                <p text="sm [var(--brick-muted-text)]">{{ t('storage.gridHelp').value }}</p>
+                <div flex gap="4">
+                    <FormField
+                        :id="gridRowsId"
+                        :label="t('storage.gridRows').value"
+                        :error="errors.gridRows"
+                        :required="adapted.mutable.value.gridColumns !== null"
+                    >
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <NumberInput
+                                :id="controlId"
+                                v-model="adapted.mutable.value.gridRows"
+                                :min="1"
+                                :max="100"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
+                    <FormField
+                        :id="gridColumnsId"
+                        :label="t('storage.gridColumns').value"
+                        :error="errors.gridColumns"
+                        :required="adapted.mutable.value.gridRows !== null"
+                    >
+                        <template #default="{controlId, required, invalid, describedby}">
+                            <NumberInput
+                                :id="controlId"
+                                v-model="adapted.mutable.value.gridColumns"
+                                :min="1"
+                                :max="100"
+                                :required="required"
+                                :invalid="invalid"
+                                :describedby="describedby"
+                            />
+                        </template>
+                    </FormField>
+                </div>
+            </fieldset>
 
             <FormField :id="parentId" :label="t('storage.parentLocation').value" :error="errors.parentId">
                 <template #default="{controlId, required, invalid, describedby}">
@@ -76,14 +138,15 @@ onMounted(() => retrieveAll());
                 </template>
             </FormField>
 
-            <div flex gap="4">
+            <div v-if="hasParentGrid" flex gap="4">
                 <div flex="1 ~ col" gap="2">
                     <FormField :id="rowId" :label="t('storage.row').value" :error="errors.row">
                         <template #default="{controlId, required, invalid, describedby}">
                             <NumberInput
                                 :id="controlId"
                                 v-model="adapted.mutable.value.row"
-                                :min="0"
+                                :min="1"
+                                :max="selectedParent?.gridRows ?? undefined"
                                 :required="required"
                                 :invalid="invalid"
                                 :describedby="describedby"
@@ -97,7 +160,8 @@ onMounted(() => retrieveAll());
                             <NumberInput
                                 :id="controlId"
                                 v-model="adapted.mutable.value.column"
-                                :min="0"
+                                :min="1"
+                                :max="selectedParent?.gridColumns ?? undefined"
                                 :required="required"
                                 :invalid="invalid"
                                 :describedby="describedby"

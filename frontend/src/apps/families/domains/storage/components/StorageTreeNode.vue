@@ -15,6 +15,14 @@ const children = () => options.filter((child) => child.parentId === option.id);
             <div flex="1">
                 <p font="bold">{{ option.name }}</p>
                 <p v-if="option.description" text="sm [var(--brick-muted-text)]">{{ option.description }}</p>
+                <p v-if="option.gridRows !== null && option.gridColumns !== null" text="sm [var(--brick-muted-text)]">
+                    {{
+                        t('storage.gridDimensions', {
+                            rows: String(option.gridRows),
+                            columns: String(option.gridColumns),
+                        }).value
+                    }}
+                </p>
                 <div flex gap="2" m="t-1">
                     <span
                         v-if="option.childIds.length > 0"
