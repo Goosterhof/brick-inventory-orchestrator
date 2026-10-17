@@ -60,8 +60,32 @@ describe('StorageOptionController', function(): void {
             $response = $this->actingAs($user)->getJson('/api/storage-options');
 
             $response->assertStatus(200)
-                ->assertJsonCount(1)
+                ->assertJsonCount(2)
                 ->assertJsonPath('0.child_ids.0', $drawer->id);
+        });
+
+        it('should return storage options at every hierarchy depth', function(): void {
+            $user = User::factory()->create();
+            $cabinet = StorageOption::factory()->create([
+                'family_id' => $user->family_id,
+                'name' => 'Cabinet',
+            ]);
+            $drawer = StorageOption::factory()->create([
+                'family_id' => $user->family_id,
+                'parent_id' => $cabinet->id,
+                'name' => 'Drawer',
+            ]);
+            $compartment = StorageOption::factory()->create([
+                'family_id' => $user->family_id,
+                'parent_id' => $drawer->id,
+                'name' => 'Compartment',
+            ]);
+
+            $response = $this->actingAs($user)->getJson('/api/storage-options');
+
+            $response->assertStatus(200)
+                ->assertJsonCount(3)
+                ->assertJsonFragment(['id' => $compartment->id, 'name' => 'Compartment', 'parent_id' => $drawer->id]);
         });
     });
 
