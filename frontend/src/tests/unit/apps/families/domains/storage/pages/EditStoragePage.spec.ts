@@ -154,7 +154,8 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Assert
-        const options = (wrapper.findComponent(SingleSelect).props() as {options: {id: number; label: string}[]}).options;
+        const options = (wrapper.findComponent(SingleSelect).props() as {options: {id: number; label: string}[]})
+            .options;
         expect(options).toStrictEqual([
             {id: 2, label: 'Cabinet'},
             {id: 8, label: 'Other drawer'},
