@@ -104,9 +104,7 @@ const mockChildOption = {
 };
 
 const renderPage = () =>
-    shallowMount(StorageOverviewPage, {
-        global: {stubs: {FormField: false, TextInput: false, StorageTreeNode: false}},
-    });
+    shallowMount(StorageOverviewPage, {global: {stubs: {FormField: false, TextInput: false, StorageTreeNode: false}}});
 
 describe('StorageOverviewPage', () => {
     beforeEach(() => {
