@@ -1,6 +1,6 @@
 import EditStoragePage from '@app/domains/storage/pages/EditStoragePage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
-import {TextInput} from '@script-development/ui-inputs';
+import {SingleSelect, TextInput} from '@script-development/ui-inputs';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
@@ -18,6 +18,7 @@ const {
     createMockFamilyStores,
     createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
+const mockStorageOptions = vi.hoisted(() => ({value: [] as {id: number; name: string; parentId: number | null}[]}));
 
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
@@ -31,7 +32,7 @@ vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
 // slots render.
 const renderPage = () =>
     shallowMount(EditStoragePage, {
-        global: {stubs: {FormField: false, TextInput: false, NumberInput: false, Textarea: false}},
+        global: {stubs: {FormField: false, SingleSelect: false, TextInput: false, NumberInput: false, Textarea: false}},
     });
 
 const {mockGetOrFailById, mockGoToRoute, mockCurrentRouteId, mockPatch, mockDelete, mockRetrieveAll} = vi.hoisted(
@@ -55,7 +56,7 @@ vi.mock('@app/services', () =>
 vi.mock('@app/stores', () =>
     createMockFamilyStores({
         storageOptionStoreModule: {
-            getAll: {value: []},
+            getAll: mockStorageOptions,
             retrieveAll: mockRetrieveAll,
             getById: vi.fn<() => unknown>(),
             getOrFailById: mockGetOrFailById,
@@ -90,6 +91,7 @@ describe('EditStoragePage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockCurrentRouteId.value = 5;
+        mockStorageOptions.value = [];
     });
 
     it('should fetch storage option on mount', async () => {
@@ -134,6 +136,61 @@ describe('EditStoragePage', () => {
         expect(numberValues).toStrictEqual(['1', '2']);
 
         expect((wrapper.get('textarea').element as HTMLTextAreaElement).value).toBe('Linkerla op plank 1');
+    });
+
+    it('should exclude itself and all descendants from parent options', async () => {
+        // Arrange
+        mockStorageOptions.value = [
+            {id: 2, name: 'Cabinet', parentId: null},
+            {id: 5, name: 'Lade A', parentId: 2},
+            {id: 6, name: 'Bin A', parentId: 5},
+            {id: 7, name: 'Drawer B', parentId: 6},
+            {id: 8, name: 'Other drawer', parentId: 2},
+        ];
+        mockGetOrFailById.mockResolvedValue(createMockAdapted());
+
+        // Act
+        const wrapper = renderPage();
+        await flushPromises();
+
+        // Assert
+        const options = (wrapper.findComponent(SingleSelect).props() as {options: {id: number; label: string}[]})
+            .options;
+        expect(options).toStrictEqual([
+            {id: 2, label: 'Cabinet'},
+            {id: 8, label: 'Other drawer'},
+        ]);
+        expect(options).not.toContainEqual({id: 5, label: 'Lade A'});
+        expect(options).not.toContainEqual({id: 6, label: 'Bin A'});
+        expect(options).not.toContainEqual({id: 7, label: 'Drawer B'});
+    });
+
+    it('should submit the selected parent id', async () => {
+        // Arrange
+        mockStorageOptions.value = [
+            {id: 2, name: 'Cabinet', parentId: null},
+            {id: 5, name: 'Lade A', parentId: null},
+        ];
+        const adapted = createMockAdapted();
+        mockGetOrFailById.mockResolvedValue(adapted);
+        mockPatch.mockResolvedValue({});
+        const wrapper = renderPage();
+        await flushPromises();
+
+        // Act
+        wrapper.findComponent(SingleSelect).vm.$emit('update:modelValue', 2);
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        // Assert
+        expect(adapted.mutable.value.parentId).toBe(2);
+        expect(mockPatch).toHaveBeenCalledWith({
+            name: 'Lade A',
+            description: 'Linkerla op plank 1',
+            parentId: 2,
+            row: 1,
+            column: 2,
+        });
     });
 
     it('should update a number field on valid numeric input', async () => {

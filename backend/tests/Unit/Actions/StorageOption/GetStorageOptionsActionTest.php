@@ -23,10 +23,6 @@ describe('GetStorageOptionsAction', function(): void {
             ->with('family_id', 5)
             ->once()
             ->andReturnSelf();
-        $builder->shouldReceive('whereNull')
-            ->with('parent_id')
-            ->once()
-            ->andReturnSelf();
         $builder->shouldReceive('orderBy')
             ->with('id')
             ->once()
