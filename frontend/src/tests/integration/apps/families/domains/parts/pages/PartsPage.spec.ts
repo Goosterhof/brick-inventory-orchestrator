@@ -6,6 +6,7 @@ import FilterChip from '@shared/components/FilterChip.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PartListItem from '@shared/components/PartListItem.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
+import {exportCsv} from '@shared/helpers/csv';
 import {flushPromises, mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -180,84 +181,64 @@ describe('PartsPage — integration', () => {
         expect(wrapper.text()).toContain('Stacking bricks...');
     });
 
-    it('does not show load more button when next_cursor is null', async () => {
-        mockServer.onGet(INITIAL_URL, makeEnvelope([makePart()], {next_cursor: null}));
-        const wrapper = mount(PartsPage);
-        await flushPromises();
-
-        expect(wrapper.find("[data-testid='load-more-button']").exists()).toBe(false);
-    });
-
-    it('shows load more button when next_cursor is present', async () => {
-        mockServer.onGet(INITIAL_URL, makeEnvelope([makePart()], {next_cursor: 'eyJpZCI6MjV9'}));
-        const wrapper = mount(PartsPage);
-        await flushPromises();
-
-        const button = wrapper.find("[data-testid='load-more-button']");
-        expect(button.exists()).toBe(true);
-        expect(button.text()).toBe('Load more bricks');
-    });
-
-    it('fetches next page and appends results when load more is clicked', async () => {
+    it('aggregates, searches, filters and exports the complete inventory across three pages', async () => {
+        const firstPage = Array.from({length: 100}, (_, index) =>
+            makePart({storage_option_id: index + 1, storage_option_name: `Box ${index + 1}`, quantity: 1}),
+        );
+        mockServer.onGet(INITIAL_URL, makeEnvelope(firstPage, {next_cursor: 'page+2='}));
         mockServer.onGet(
-            INITIAL_URL,
-            makeEnvelope([makePart({part_id: 1, part_name: 'Brick 2x4'})], {next_cursor: 'cursor-page-2'}),
+            '/family/parts?per_page=100&cursor=page%2B2%3D',
+            makeEnvelope(
+                [makePart({part_id: 2, part_num: '3002', part_name: 'Plate 1x2', color_id: 2, color_name: 'Blue'})],
+                {next_cursor: 'page-3'},
+            ),
         );
         mockServer.onGet(
-            '/family/parts?per_page=100&cursor=cursor-page-2',
-            makeEnvelope([makePart({part_id: 2, part_num: '3002', part_name: 'Plate 1x2', color_id: 2})]),
+            '/family/parts?per_page=100&cursor=page-3',
+            makeEnvelope([
+                makePart({storage_option_id: 101, storage_option_name: 'Last box', quantity: 4, family_set_id: null}),
+            ]),
         );
         const wrapper = mount(PartsPage);
-        await flushPromises();
-
-        expect(wrapper.findAllComponents(PartListItem)).toHaveLength(1);
-
-        await wrapper.find("[data-testid='load-more-button']").trigger('click');
         await flushPromises();
 
         const items = wrapper.findAllComponents(PartListItem);
         expect(items).toHaveLength(2);
-        expect(items.find((p) => p.props('name') === 'Plate 1x2')).toBeDefined();
-    });
-
-    it('hides load more button when last page has no next_cursor', async () => {
-        mockServer.onGet(INITIAL_URL, makeEnvelope([makePart()], {next_cursor: 'cursor-page-2'}));
-        mockServer.onGet(
-            '/family/parts?per_page=100&cursor=cursor-page-2',
-            makeEnvelope([makePart({part_id: 2, part_num: '3002', part_name: 'Plate 1x2', color_id: 2})], {
-                next_cursor: null,
-            }),
+        expect(items.find((item) => item.props('partNum') === '3001')?.props('quantity')).toBe(104);
+        expect(wrapper.get('[data-testid="part-row-1_1"]').text()).toContain('Last box (4x)');
+        expect(wrapper.findAllComponents(FilterChip).map((chip) => chip.text())).toContain('Blue');
+        const exportButton = wrapper.findAllComponents(PrimaryButton).find((button) => button.text() === 'Export CSV');
+        await exportButton?.trigger('click');
+        const locations = [...firstPage.map((row) => `${row.storage_option_name} (1x)`), 'Last box (4x)'].join('; ');
+        expect(exportCsv).toHaveBeenLastCalledWith(
+            ['Part Number', 'Name', 'Color', 'Total Quantity', 'Storage Locations'],
+            [
+                ['3001', 'Brick 2x4', 'Red', '104', locations],
+                ['3002', 'Plate 1x2', 'Blue', '5', 'Box A (5x)'],
+            ],
+            'lego-parts.csv',
         );
-        const wrapper = mount(PartsPage);
-        await flushPromises();
 
-        expect(wrapper.find("[data-testid='load-more-button']").exists()).toBe(true);
-
-        await wrapper.find("[data-testid='load-more-button']").trigger('click');
-        await flushPromises();
-
-        expect(wrapper.find("[data-testid='load-more-button']").exists()).toBe(false);
-    });
-
-    it('shows loading state on load more button while fetching', async () => {
-        mockServer.onGet(INITIAL_URL, makeEnvelope([makePart()], {next_cursor: 'cursor-page-2'}));
-
-        const wrapper = mount(PartsPage);
-        await flushPromises();
-
-        const button = wrapper.find("[data-testid='load-more-button']");
-        expect(button.text()).toBe('Load more bricks');
-
-        // Don't register next page route — the request will hang as a rejected promise
-        // Instead, register a route that we can check against
-        mockServer.onGet('/family/parts?per_page=100&cursor=cursor-page-2', makeEnvelope([]));
-
-        await button.trigger('click');
-        // After click, before promise resolves, button should show loading text
-        expect(button.text()).toBe('Loading...');
-        expect(button.attributes('disabled')).toBeDefined();
-
-        await flushPromises();
+        await wrapper.get('input[type="search"]').setValue('3002');
+        expect(wrapper.findAllComponents(PartListItem)).toHaveLength(1);
+        expect(wrapper.findComponent(PartListItem).props('name')).toBe('Plate 1x2');
+        await exportButton?.trigger('click');
+        expect(exportCsv).toHaveBeenLastCalledWith(
+            expect.any(Array),
+            [['3002', 'Plate 1x2', 'Blue', '5', 'Box A (5x)']],
+            'lego-parts.csv',
+        );
+        await wrapper.get('input[type="search"]').setValue('');
+        const blue = wrapper.findAllComponents(FilterChip).find((chip) => chip.text() === 'Blue');
+        await blue?.find('button').trigger('click');
+        expect(wrapper.findAllComponents(PartListItem)).toHaveLength(1);
+        expect(wrapper.findComponent(PartListItem).props('partNum')).toBe('3002');
+        await blue?.find('button').trigger('click');
+        const orphan = wrapper.findAllComponents(FilterChip).find((chip) => chip.text() === 'Orphan parts');
+        await orphan?.find('button').trigger('click');
+        expect(wrapper.findAllComponents(PartListItem)).toHaveLength(1);
+        expect(wrapper.findComponent(PartListItem).props('partNum')).toBe('3001');
+        expect(wrapper.findComponent(PartListItem).props('quantity')).toBe(104);
     });
 
     it('opens the reverse lookup modal with fetched usage when a row is clicked', async () => {
