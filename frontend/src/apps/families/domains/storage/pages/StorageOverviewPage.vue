@@ -89,6 +89,17 @@ const goToDetail = async (id: number) => {
                             <p v-if="option.description" text="sm [var(--brick-muted-text)]">
                                 {{ option.description }}
                             </p>
+                            <p
+                                v-if="option.gridRows !== null && option.gridColumns !== null"
+                                text="sm [var(--brick-muted-text)]"
+                            >
+                                {{
+                                    t('storage.gridDimensions', {
+                                        rows: String(option.gridRows),
+                                        columns: String(option.gridColumns),
+                                    }).value
+                                }}
+                            </p>
                         </div>
                     </ListItemButton>
                 </div>

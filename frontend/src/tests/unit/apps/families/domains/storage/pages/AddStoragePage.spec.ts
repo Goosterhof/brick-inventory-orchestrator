@@ -47,8 +47,19 @@ vi.mock('@app/stores', () =>
                 parentId: null,
                 row: null,
                 column: null,
+                gridRows: null,
+                gridColumns: null,
                 childIds: [],
-                mutable: ref({name: '', description: null, parentId: null, row: null, column: null, childIds: []}),
+                mutable: ref({
+                    name: '',
+                    description: null,
+                    parentId: null,
+                    row: null,
+                    column: null,
+                    gridRows: null,
+                    gridColumns: null,
+                    childIds: [],
+                }),
                 reset: vi.fn<() => void>(),
                 create: mockCreate,
             }),
@@ -80,15 +91,15 @@ describe('AddStoragePage', () => {
         // Arrange & Act
         const wrapper = renderPage();
 
-        // Assert — five labelled fields (name, parent, description, row, column)
+        // Assert — grid dimensions plus name, parent and description; coordinates need a gridded parent.
         expect(wrapper.findAllComponents(FormField)).toHaveLength(5);
         const labels = wrapper.findAll('.ui-label').map((label) => label.text().replace(/\*$/, ''));
         expect(labels).toStrictEqual([
             'storage.name',
+            'storage.gridRows',
+            'storage.gridColumns',
             'storage.parentLocation',
             'storage.description',
-            'storage.row',
-            'storage.column',
         ]);
 
         // name is a TextInput; description a Textarea; row/column are NumberInputs
@@ -139,8 +150,9 @@ describe('AddStoragePage', () => {
         mockCreate.mockResolvedValue({id: 1, name: 'Lade A', childIds: []});
         const wrapper = renderPage();
 
-        // Act — a valid number flows through the NumberInput v-model into row
+        // Act — a valid number flows through the first grid dimension.
         await wrapper.findAll('input[type="number"]')[0]?.setValue('3');
+        await wrapper.findAll('input[type="number"]')[1]?.setValue('4');
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
@@ -153,7 +165,7 @@ describe('AddStoragePage', () => {
         mockCreate.mockResolvedValue({id: 1, name: 'Lade A', childIds: []});
         const wrapper = renderPage();
 
-        // Act — clearing the NumberInput emits null into row
+        // Act — clearing the first grid dimension emits null.
         await wrapper.findAll('input[type="number"]')[0]?.setValue('');
         await wrapper.find('form').trigger('submit');
         await flushPromises();

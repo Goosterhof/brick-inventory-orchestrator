@@ -33,7 +33,17 @@ describe('AddStoragePage — integration', () => {
 
     it('loads parent locations into the selector and submits the selected parent', async () => {
         mockServer.onGet('storage-options', [
-            {id: 3, name: 'Drawer', description: null, parent_id: null, row: null, column: null, child_ids: []},
+            {
+                id: 3,
+                name: 'Drawer',
+                description: null,
+                parent_id: null,
+                row: null,
+                column: null,
+                grid_rows: 4,
+                grid_columns: 6,
+                child_ids: [],
+            },
         ]);
         mockServer.onPost('storage-options', {
             id: 7,
@@ -42,6 +52,8 @@ describe('AddStoragePage — integration', () => {
             parent_id: 3,
             row: null,
             column: null,
+            grid_rows: null,
+            grid_columns: null,
             child_ids: [],
         });
         const wrapper = mountPage();
@@ -56,14 +68,22 @@ describe('AddStoragePage — integration', () => {
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
-        expect(mockServer.callsTo('POST', 'storage-options')[0]?.body).toMatchObject({name: 'Bin', parent_id: 3});
+        expect(mockServer.callsTo('POST', 'storage-options')[0]?.body).toMatchObject({
+            name: 'Bin',
+            parent_id: 3,
+            grid_rows: null,
+            grid_columns: null,
+        });
+        expect(wrapper.findAll('input[type="number"]')).toHaveLength(4);
+        expect(wrapper.findAll('input[type="number"]')[2]?.attributes('max')).toBe('4');
+        expect(wrapper.findAll('input[type="number"]')[3]?.attributes('max')).toBe('6');
     });
 
     it('labels every field', () => {
         const wrapper = mountPage();
 
         const labels = wrapper.findAll('.ui-label').map((label) => label.text().replace(/\*$/, ''));
-        expect(labels).toStrictEqual(['Name', 'Parent location', 'Description', 'Row', 'Column']);
+        expect(labels).toStrictEqual(['Name', 'Rows', 'Columns', 'Parent location', 'Description']);
     });
 
     it('renders real PrimaryButton for submission', () => {
@@ -82,6 +102,8 @@ describe('AddStoragePage — integration', () => {
             parent_id: null,
             row: null,
             column: null,
+            grid_rows: null,
+            grid_columns: null,
             child_ids: [],
         });
         const wrapper = mountPage();
@@ -96,9 +118,50 @@ describe('AddStoragePage — integration', () => {
         // goToRoute navigates to the detail page of the created storage option.
         const createCalls = mockServer.callsTo('POST', 'storage-options');
         expect(createCalls).toHaveLength(1);
-        expect(createCalls[0]?.body).toMatchObject({name: 'Shelf A', parent_id: null, row: null, column: null});
+        expect(createCalls[0]?.body).toMatchObject({
+            name: 'Shelf A',
+            parent_id: null,
+            row: null,
+            column: null,
+            grid_rows: null,
+            grid_columns: null,
+        });
         expect(createCalls[0]?.body).not.toHaveProperty('parentId');
         expect(goToRoute).toHaveBeenCalledWith('storage-detail', 7);
+    });
+
+    it('submits both grid dimensions and refreshes the store after creating a grid', async () => {
+        mockServer.onPost('storage-options', {
+            id: 8,
+            name: 'Cabinet',
+            description: null,
+            parent_id: null,
+            row: null,
+            column: null,
+            grid_rows: 4,
+            grid_columns: 6,
+            child_ids: [],
+        });
+        const wrapper = mountPage();
+        const numbers = wrapper.findAll('input[type="number"]');
+        await numbers[0]?.setValue('4');
+        await numbers[1]?.setValue('6');
+        await wrapper.findComponent(TextInput).find('input').setValue('Cabinet');
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        expect(mockServer.callsTo('POST', 'storage-options')[0]?.body).toMatchObject({grid_rows: 4, grid_columns: 6});
+        expect(mockServer.callsTo('GET', 'storage-options')).toHaveLength(2);
+    });
+
+    it('does not submit when only one grid dimension is filled', async () => {
+        const wrapper = mountPage();
+        await wrapper.findAll('input[type="number"]')[0]?.setValue('4');
+        await wrapper.findComponent(TextInput).find('input').setValue('Cabinet');
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        expect(mockServer.callsTo('POST', 'storage-options')).toHaveLength(0);
     });
 
     it('renders page title', () => {

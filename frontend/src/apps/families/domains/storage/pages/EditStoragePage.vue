@@ -12,7 +12,7 @@ import DangerButton from '@shared/components/DangerButton.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
-import {computed, onMounted, ref, useId} from 'vue';
+import {computed, onMounted, ref, useId, watch} from 'vue';
 
 const {t} = familyTranslationService;
 const adapted = ref<Adapted<StorageOption> | null>(null);
@@ -43,6 +43,24 @@ const parentOptions = computed(() => {
         .filter((option) => !excluded.has(option.id))
         .map((option) => ({id: option.id, label: option.name}));
 });
+const selectedParent = computed(() =>
+    storageOptionStoreModule.getAll.value.find((option) => option.id === adapted.value?.mutable.parentId),
+);
+const hasParentGrid = computed(
+    () =>
+        selectedParent.value !== undefined &&
+        selectedParent.value.gridRows !== null &&
+        selectedParent.value.gridColumns !== null,
+);
+watch(
+    () => adapted.value?.mutable.parentId,
+    (parentId, previousParentId) => {
+        if (previousParentId !== undefined && parentId !== previousParentId && adapted.value) {
+            adapted.value.mutable.row = null;
+            adapted.value.mutable.column = null;
+        }
+    },
+);
 
 onMounted(async () => {
     const id = familyRouterService.currentRouteId.value;
@@ -131,14 +149,24 @@ const handleDelete = async () => {
                     </template>
                 </FormField>
 
-                <div flex gap="4">
+                <p v-if="adapted.gridRows !== null && adapted.gridColumns !== null" text="sm [var(--brick-muted-text)]">
+                    {{
+                        t('storage.gridDimensions', {
+                            rows: String(adapted.gridRows),
+                            columns: String(adapted.gridColumns),
+                        }).value
+                    }}
+                </p>
+
+                <div v-if="hasParentGrid" flex gap="4">
                     <div flex="1 ~ col" gap="2">
                         <FormField :id="rowId" :label="t('storage.row').value" :error="errors.row">
                             <template #default="{controlId, required, invalid, describedby}">
                                 <NumberInput
                                     :id="controlId"
                                     v-model="adapted.mutable.row"
-                                    :min="0"
+                                    :min="1"
+                                    :max="selectedParent?.gridRows ?? undefined"
                                     :required="required"
                                     :invalid="invalid"
                                     :describedby="describedby"
@@ -152,7 +180,8 @@ const handleDelete = async () => {
                                 <NumberInput
                                     :id="controlId"
                                     v-model="adapted.mutable.column"
-                                    :min="0"
+                                    :min="1"
+                                    :max="selectedParent?.gridColumns ?? undefined"
                                     :required="required"
                                     :invalid="invalid"
                                     :describedby="describedby"

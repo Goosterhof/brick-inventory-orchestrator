@@ -16,7 +16,15 @@ const {
     createMockFamilyStores,
     createMockUiInputs,
 } = await vi.hoisted(() => import('../../../../../../helpers'));
-const mockStorageOptions = vi.hoisted(() => ({value: [] as {id: number; name: string; parentId: number | null}[]}));
+const mockStorageOptions = vi.hoisted(() => ({
+    value: [] as {
+        id: number;
+        name: string;
+        parentId: number | null;
+        gridRows?: number | null;
+        gridColumns?: number | null;
+    }[],
+}));
 
 vi.mock('@shared/components/ConfirmDialog.vue', () => ({
     default: {
@@ -88,16 +96,20 @@ const createMockAdapted = () => ({
     id: 5,
     name: 'Lade A',
     description: 'Linkerla op plank 1',
-    parentId: null,
+    parentId: 2,
     row: 1,
     column: 2,
+    gridRows: 4,
+    gridColumns: 6,
     childIds: [6, 7],
     mutable: ref({
         name: 'Lade A',
         description: 'Linkerla op plank 1',
-        parentId: null,
+        parentId: 2,
         row: 1,
         column: 2,
+        gridRows: 4,
+        gridColumns: 6,
         childIds: [6, 7],
     }),
     reset: vi.fn<() => void>(),
@@ -110,7 +122,7 @@ describe('EditStoragePage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockCurrentRouteId.value = 5;
-        mockStorageOptions.value = [];
+        mockStorageOptions.value = [{id: 2, name: 'Cabinet', parentId: null, gridRows: 4, gridColumns: 6}];
     });
 
     it('should fetch storage option on mount', async () => {
@@ -153,6 +165,9 @@ describe('EditStoragePage', () => {
             .findAll('input[type="number"]')
             .map((input) => (input.element as HTMLInputElement).value);
         expect(numberValues).toStrictEqual(['1', '2']);
+        expect(wrapper.text()).toContain('storage.gridDimensions');
+        expect(wrapper.findAll('input[type="number"]')[0]?.attributes('max')).toBe('4');
+        expect(wrapper.findAll('input[type="number"]')[1]?.attributes('max')).toBe('6');
 
         expect((wrapper.get('textarea').element as HTMLTextAreaElement).value).toBe('Linkerla op plank 1');
     });
@@ -160,7 +175,7 @@ describe('EditStoragePage', () => {
     it('should exclude itself and all descendants from parent options', async () => {
         // Arrange
         mockStorageOptions.value = [
-            {id: 2, name: 'Cabinet', parentId: null},
+            {id: 2, name: 'Cabinet', parentId: null, gridRows: 4, gridColumns: 6},
             {id: 5, name: 'Lade A', parentId: 2},
             {id: 6, name: 'Bin A', parentId: 5},
             {id: 7, name: 'Drawer B', parentId: 6},
@@ -187,8 +202,8 @@ describe('EditStoragePage', () => {
     it('should submit the selected parent id', async () => {
         // Arrange
         mockStorageOptions.value = [
-            {id: 2, name: 'Cabinet', parentId: null},
-            {id: 5, name: 'Lade A', parentId: null},
+            {id: 2, name: 'Cabinet', parentId: null, gridRows: 4, gridColumns: 6},
+            {id: 5, name: 'Lade A', parentId: null, gridRows: null, gridColumns: null},
         ];
         const adapted = createMockAdapted();
         mockGetOrFailById.mockResolvedValue(adapted);
@@ -244,6 +259,24 @@ describe('EditStoragePage', () => {
         expect(mockPatch).toHaveBeenCalledWith(expect.objectContaining({row: null}));
     });
 
+    it('should hide and clear row and column when the selected parent has no grid', async () => {
+        mockStorageOptions.value = [
+            {id: 2, name: 'Cabinet', parentId: null, gridRows: 4, gridColumns: 6},
+            {id: 3, name: 'Shelf', parentId: null, gridRows: null, gridColumns: null},
+        ];
+        const adapted = createMockAdapted();
+        mockGetOrFailById.mockResolvedValue(adapted);
+        const wrapper = renderPage();
+        await flushPromises();
+
+        wrapper.findComponent(SingleSelect).vm.$emit('update:modelValue', 3);
+        await flushPromises();
+
+        expect(wrapper.findAll('input[type="number"]')).toHaveLength(0);
+        expect(adapted.mutable.value.row).toBeNull();
+        expect(adapted.mutable.value.column).toBeNull();
+    });
+
     it('should show loading state initially', () => {
         // Arrange
         mockGetOrFailById.mockReturnValue(new Promise(() => {}));
@@ -270,7 +303,7 @@ describe('EditStoragePage', () => {
         expect(mockPatch).toHaveBeenCalledWith({
             name: 'Lade A',
             description: 'Linkerla op plank 1',
-            parentId: null,
+            parentId: 2,
             row: 1,
             column: 2,
         });
