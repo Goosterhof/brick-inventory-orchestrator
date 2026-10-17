@@ -1,5 +1,5 @@
 import AddStoragePage from '@app/domains/storage/pages/AddStoragePage.vue';
-import {FormField, TextInput} from '@script-development/ui-inputs';
+import {FormField, SingleSelect, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {AxiosError} from 'axios';
@@ -57,7 +57,7 @@ vi.mock('@app/stores', () =>
 // TextInput / NumberInput / Textarea atoms render.
 const renderPage = () =>
     shallowMount(AddStoragePage, {
-        global: {stubs: {FormField: false, TextInput: false, NumberInput: false, Textarea: false}},
+        global: {stubs: {FormField: false, SingleSelect: false, TextInput: false, NumberInput: false, Textarea: false}},
     });
 
 describe('AddStoragePage', () => {
@@ -77,15 +77,22 @@ describe('AddStoragePage', () => {
         // Arrange & Act
         const wrapper = renderPage();
 
-        // Assert — four labelled fields (name, description, row, column)
-        expect(wrapper.findAllComponents(FormField)).toHaveLength(4);
+        // Assert — five labelled fields (name, parent, description, row, column)
+        expect(wrapper.findAllComponents(FormField)).toHaveLength(5);
         const labels = wrapper.findAll('.ui-label').map((label) => label.text().replace(/\*$/, ''));
-        expect(labels).toStrictEqual(['storage.name', 'storage.description', 'storage.row', 'storage.column']);
+        expect(labels).toStrictEqual([
+            'storage.name',
+            'storage.parentLocation',
+            'storage.description',
+            'storage.row',
+            'storage.column',
+        ]);
 
         // name is a TextInput; description a Textarea; row/column are NumberInputs
         expect(wrapper.findAllComponents(TextInput)).toHaveLength(1);
         expect(wrapper.find('textarea').exists()).toBe(true);
         expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
+        expect(wrapper.findComponent(SingleSelect).exists()).toBe(true);
     });
 
     it('should render submit button', () => {
