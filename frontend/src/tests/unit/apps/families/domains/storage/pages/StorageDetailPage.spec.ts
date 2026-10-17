@@ -1,17 +1,41 @@
+import type {ComponentPublicInstance} from 'vue';
+
 import StorageDetailPage from '@app/domains/storage/pages/StorageDetailPage.vue';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
-import BackButton from '@shared/components/BackButton.vue';
-import DetailRow from '@shared/components/DetailRow.vue';
-import EmptyState from '@shared/components/EmptyState.vue';
-import LoadingState from '@shared/components/LoadingState.vue';
-import PartListItem from '@shared/components/PartListItem.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {ref} from 'vue';
 
 const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices, createMockFamilyStores} =
     await vi.hoisted(() => import('../../../../../../helpers'));
+
+vi.mock('@shared/components/BackButton.vue', () => ({
+    default: {name: 'BackButton', emits: ['click'], template: '<button><slot /></button>'},
+}));
+
+vi.mock('@shared/components/DetailRow.vue', () => ({
+    default: {name: 'DetailRow', props: ['label'], template: '<div><slot /></div>'},
+}));
+
+vi.mock('@shared/components/EmptyState.vue', () => ({
+    default: {name: 'EmptyState', props: ['message'], template: '<div><slot /></div>'},
+}));
+
+vi.mock('@shared/components/LoadingState.vue', () => ({
+    default: {name: 'LoadingState', props: ['message'], template: '<div />'},
+}));
+
+vi.mock('@shared/components/PartListItem.vue', () => ({
+    default: {
+        name: 'PartListItem',
+        props: ['name', 'partNum', 'quantity', 'imageUrl', 'colorName', 'colorRgb', 'spare'],
+        template: '<div><slot /></div>',
+    },
+}));
+
+vi.mock('@shared/components/PrimaryButton.vue', () => ({
+    default: {name: 'PrimaryButton', props: ['type', 'disabled'], template: '<button><slot /></button>'},
+}));
 
 vi.mock('axios', () => createMockAxios());
 vi.mock('string-ts', () => createMockStringTs());
@@ -131,7 +155,7 @@ describe('StorageDetailPage', () => {
         const wrapper = shallowMount(StorageDetailPage);
 
         // Assert
-        expect(wrapper.findComponent(LoadingState).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'LoadingState'}).exists()).toBe(true);
     });
 
     it('should navigate to edit page when edit button is clicked', async () => {
@@ -142,7 +166,7 @@ describe('StorageDetailPage', () => {
         await flushPromises();
 
         // Act
-        await wrapper.findComponent(PrimaryButton).trigger('click');
+        await wrapper.findComponent({name: 'PrimaryButton'}).trigger('click');
         await flushPromises();
 
         // Assert
@@ -157,7 +181,7 @@ describe('StorageDetailPage', () => {
         await flushPromises();
 
         // Act
-        wrapper.findComponent(BackButton).vm.$emit('click');
+        (wrapper.findComponent({name: 'BackButton'}).vm as ComponentPublicInstance).$emit('click');
         await flushPromises();
 
         // Assert
@@ -187,7 +211,9 @@ describe('StorageDetailPage', () => {
         await flushPromises();
 
         // Assert
-        const rowDetail = wrapper.findAllComponents(DetailRow).find((r) => r.props('label') === 'storage.row');
+        const rowDetail = wrapper
+            .findAllComponents({name: 'DetailRow'})
+            .find((r) => r.props('label') === 'storage.row');
         expect(rowDetail).toBeUndefined();
     });
 
@@ -201,7 +227,9 @@ describe('StorageDetailPage', () => {
         await flushPromises();
 
         // Assert
-        const colDetail = wrapper.findAllComponents(DetailRow).find((r) => r.props('label') === 'storage.column');
+        const colDetail = wrapper
+            .findAllComponents({name: 'DetailRow'})
+            .find((r) => r.props('label') === 'storage.column');
         expect(colDetail).toBeUndefined();
     });
 
@@ -216,7 +244,7 @@ describe('StorageDetailPage', () => {
 
         // Assert
         const subLocationsRow = wrapper
-            .findAllComponents(DetailRow)
+            .findAllComponents({name: 'DetailRow'})
             .find((row) => row.props('label') === 'storage.subLocations');
         expect(subLocationsRow).toBeUndefined();
     });
@@ -232,7 +260,7 @@ describe('StorageDetailPage', () => {
 
         // Assert
         const subLocationsRow = wrapper
-            .findAllComponents(DetailRow)
+            .findAllComponents({name: 'DetailRow'})
             .find((row) => row.props('label') === 'storage.subLocations');
         expect(subLocationsRow).toBeDefined();
         expect(subLocationsRow?.text()).toContain('2');
@@ -250,7 +278,7 @@ describe('StorageDetailPage', () => {
         // Assert
         expect(wrapper.text()).toContain('storage.parts');
         expect(wrapper.text()).toContain('(2)');
-        const parts = wrapper.findAllComponents(PartListItem);
+        const parts = wrapper.findAllComponents({name: 'PartListItem'});
         expect(parts).toHaveLength(2);
         expect(parts[0]?.props('name')).toBe('Brick 2 x 4');
         expect(parts[0]?.props('partNum')).toBe('3001');
@@ -269,7 +297,7 @@ describe('StorageDetailPage', () => {
         await flushPromises();
 
         // Assert
-        const parts = wrapper.findAllComponents(PartListItem);
+        const parts = wrapper.findAllComponents({name: 'PartListItem'});
         expect(parts[0]?.props('colorRgb')).toBe('CC0000');
     });
 
@@ -283,7 +311,7 @@ describe('StorageDetailPage', () => {
         await flushPromises();
 
         // Assert
-        const parts = wrapper.findAllComponents(PartListItem);
+        const parts = wrapper.findAllComponents({name: 'PartListItem'});
         expect(parts[0]?.props('colorName')).toBe('Red');
     });
 
@@ -297,7 +325,7 @@ describe('StorageDetailPage', () => {
         await flushPromises();
 
         // Assert
-        const parts = wrapper.findAllComponents(PartListItem);
+        const parts = wrapper.findAllComponents({name: 'PartListItem'});
         expect(parts[0]?.props('imageUrl')).toBe('https://example.com/3001.jpg');
     });
 
@@ -311,7 +339,7 @@ describe('StorageDetailPage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(EmptyState).props('message')).toBe('storage.noParts');
+        expect(wrapper.findComponent({name: 'EmptyState'}).props('message')).toBe('storage.noParts');
     });
 
     it('should call retrieveAll when store is empty on direct navigation (EntryNotFoundError path)', async () => {

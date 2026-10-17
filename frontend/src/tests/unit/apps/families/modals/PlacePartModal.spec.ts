@@ -2,13 +2,24 @@ import type {ComponentPublicInstance} from 'vue';
 
 import PlacePartModal from '@app/modals/PlacePartModal.vue';
 import {FormField} from '@script-development/ui-inputs';
-import ModalDialog from '@shared/components/ModalDialog.vue';
-import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {flushPromises, shallowMount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 const {createMockAxios, createMockFsHelpers, createMockStringTs, createMockFamilyServices, createMockUiInputs} =
     await vi.hoisted(() => import('../../../../helpers'));
+
+vi.mock('@shared/components/ModalDialog.vue', () => ({
+    default: {
+        name: 'ModalDialog',
+        props: ['open'],
+        emits: ['close'],
+        template: '<div><slot name="title" /><slot /></div>',
+    },
+}));
+
+vi.mock('@shared/components/PrimaryButton.vue', () => ({
+    default: {name: 'PrimaryButton', props: ['type', 'disabled'], template: '<button><slot /></button>'},
+}));
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
 
@@ -50,10 +61,8 @@ const mountModal = (props: Record<string, unknown> = {}) =>
         props: {open: true, partIdentity: mockPartIdentity, ...props},
         global: {
             stubs: {
-                // Render the title slot so wrapper.text() can assert on the resolved title.
-                // Default shallowMount stubs do not render named slots; this surfaces them for testing.
-                // We declare `open` so findComponent(ModalDialog).props('open') still resolves correctly.
-                ModalDialog: {props: ['open'], template: '<div><slot name="title" /><slot /></div>'},
+                // Render named slots through the factory mock so title assertions exercise the page.
+                ModalDialog: false,
                 // Unstub the package controls so the FormField scoped slots + NumberInput + SingleSelect listbox render.
                 FormField: false,
                 NumberInput: false,
@@ -81,8 +90,8 @@ describe('PlacePartModal', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(ModalDialog).exists()).toBe(true);
-        expect(wrapper.findComponent(ModalDialog).props('open')).toBe(true);
+        expect(wrapper.findComponent({name: 'ModalDialog'}).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'ModalDialog'}).props('open')).toBe(true);
     });
 
     it('should display part identity (name, partNum, color)', async () => {
@@ -167,7 +176,7 @@ describe('PlacePartModal', () => {
         await flushPromises();
 
         // Assert
-        const button = wrapper.findComponent(PrimaryButton);
+        const button = wrapper.findComponent({name: 'PrimaryButton'});
         expect(button.text()).toBe('parts.placeAction');
     });
 
@@ -314,7 +323,7 @@ describe('PlacePartModal', () => {
             await flushPromises();
 
             // Act
-            wrapper.findComponent(ModalDialog).vm.$emit('close');
+            (wrapper.findComponent({name: 'ModalDialog'}).vm as ComponentPublicInstance).$emit('close');
 
             // Assert
             expect(wrapper.emitted('close')).toBeDefined();
