@@ -2,13 +2,16 @@
 import {familyHttpService, familyRouterService, familyTranslationService} from '@app/services';
 import {storageOptionStoreModule} from '@app/stores';
 import {useForm} from '@script-development/fs-form';
-import {FormField, NumberInput, Textarea, TextInput} from '@script-development/ui-inputs';
+import {FormField, NumberInput, SingleSelect, Textarea, TextInput} from '@script-development/ui-inputs';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
-import {useId} from 'vue';
+import {computed, onMounted, useId} from 'vue';
 
 const {t} = familyTranslationService;
 const adapted = storageOptionStoreModule.generateNew();
+const {getAll, retrieveAll} = storageOptionStoreModule;
+const parentId = useId();
+const parentOptions = computed(() => getAll.value.map((option) => ({id: option.id, label: option.name})));
 
 type AddStorageField = 'name' | 'description' | 'parentId' | 'row' | 'column';
 const {errors, handleSubmit, submitting} = useForm<AddStorageField>(familyHttpService, {keyMapper: camelKey});
@@ -23,6 +26,8 @@ const onSubmit = () =>
         const created = await adapted.create();
         await familyRouterService.goToRoute('storage-detail', created.id);
     });
+
+onMounted(() => retrieveAll());
 </script>
 
 <template>
@@ -35,6 +40,22 @@ const onSubmit = () =>
                     <TextInput
                         :id="controlId"
                         v-model="adapted.mutable.value.name"
+                        :required="required"
+                        :invalid="invalid"
+                        :describedby="describedby"
+                    />
+                </template>
+            </FormField>
+
+            <FormField :id="parentId" :label="t('storage.parentLocation').value" :error="errors.parentId">
+                <template #default="{controlId, required, invalid, describedby}">
+                    <SingleSelect
+                        :id="controlId"
+                        v-model="adapted.mutable.value.parentId"
+                        :options="parentOptions"
+                        label="label"
+                        :clear-label="t('storage.noParent').value"
+                        :options-label="t('storage.parentLocation').value"
                         :required="required"
                         :invalid="invalid"
                         :describedby="describedby"

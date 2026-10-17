@@ -6,13 +6,13 @@ import {familyHttpService, familyRouterService, familySoundService, familyTransl
 import {storageOptionStoreModule} from '@app/stores';
 import {EntryNotFoundError} from '@script-development/fs-adapter-store';
 import {useForm} from '@script-development/fs-form';
-import {FormField, NumberInput, Textarea, TextInput} from '@script-development/ui-inputs';
+import {FormField, NumberInput, SingleSelect, Textarea, TextInput} from '@script-development/ui-inputs';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
 import LoadingState from '@shared/components/LoadingState.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {camelKey} from '@shared/helpers/string';
-import {onMounted, ref, useId} from 'vue';
+import {computed, onMounted, ref, useId} from 'vue';
 
 const {t} = familyTranslationService;
 const adapted = ref<Adapted<StorageOption> | null>(null);
@@ -26,6 +26,23 @@ const nameId = useId();
 const descriptionId = useId();
 const rowId = useId();
 const columnId = useId();
+const parentId = useId();
+const parentOptions = computed(() => {
+    if (!adapted.value) return [];
+    const excluded = new Set<number>([adapted.value.id]);
+    let frontier = [adapted.value.id];
+    while (frontier.length > 0) {
+        const next = storageOptionStoreModule.getAll.value
+            .filter((option) => option.parentId !== null && frontier.includes(option.parentId))
+            .map((option) => option.id)
+            .filter((id) => !excluded.has(id));
+        for (const id of next) excluded.add(id);
+        frontier = next;
+    }
+    return storageOptionStoreModule.getAll.value
+        .filter((option) => !excluded.has(option.id))
+        .map((option) => ({id: option.id, label: option.name}));
+});
 
 onMounted(async () => {
     const id = familyRouterService.currentRouteId.value;
@@ -78,6 +95,22 @@ const handleDelete = async () => {
                         <TextInput
                             :id="controlId"
                             v-model="adapted.mutable.name"
+                            :required="required"
+                            :invalid="invalid"
+                            :describedby="describedby"
+                        />
+                    </template>
+                </FormField>
+
+                <FormField :id="parentId" :label="t('storage.parentLocation').value" :error="errors.parentId">
+                    <template #default="{controlId, required, invalid, describedby}">
+                        <SingleSelect
+                            :id="controlId"
+                            v-model="adapted.mutable.parentId"
+                            :options="parentOptions"
+                            label="label"
+                            :clear-label="t('storage.noParent').value"
+                            :options-label="t('storage.parentLocation').value"
                             :required="required"
                             :invalid="invalid"
                             :describedby="describedby"

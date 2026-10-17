@@ -71,6 +71,13 @@ describe('StorageOverviewPage — integration', () => {
         }
     });
 
+    it('renders storage locations recursively beyond two levels', async () => {
+        const wrapper = await mountPage([makeStorage(1, 'Drawer'), makeStorage(2, 'Bin', 1), makeStorage(3, 'Bag', 2)]);
+
+        expect(wrapper.findAllComponents(ListItemButton)).toHaveLength(3);
+        expect(wrapper.text()).toContain('Bag');
+    });
+
     it('renders search TextInput', async () => {
         const wrapper = await mountPage([makeStorage(1, 'Shelf A')]);
 

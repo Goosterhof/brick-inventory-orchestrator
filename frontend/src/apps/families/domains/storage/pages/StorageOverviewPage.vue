@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import type {StorageOption} from '@app/types/storageOption';
-import type {Adapted} from '@script-development/fs-adapter-store';
-
 import {familyLoadingService, familyRouterService, familySoundService, familyTranslationService} from '@app/services';
 import {storageOptionStoreModule} from '@app/stores';
 import {FormField, TextInput} from '@script-development/ui-inputs';
@@ -10,6 +7,8 @@ import ListItemButton from '@shared/components/ListItemButton.vue';
 import PageHeader from '@shared/components/PageHeader.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {computed, onMounted, ref, useId} from 'vue';
+
+import StorageTreeNode from '../components/StorageTreeNode.vue';
 
 const {t} = familyTranslationService;
 const {isLoading} = familyLoadingService;
@@ -31,8 +30,6 @@ const filteredOptions = computed(() => {
 });
 
 const topLevelOptions = computed(() => getAll.value.filter((o) => o.parentId === null));
-
-const getChildren = (parentId: number): Adapted<StorageOption>[] => getAll.value.filter((o) => o.parentId === parentId);
 
 onMounted(async () => {
     await retrieveAll();
@@ -99,66 +96,13 @@ const goToDetail = async (id: number) => {
 
             <!-- Tree view when not searching -->
             <div v-else flex="~ col" gap="4">
-                <div v-for="parent in topLevelOptions" :key="parent.id" flex="~ col" gap="2">
-                    <ListItemButton @click="goToDetail(parent.id)">
-                        <div flex="1">
-                            <p font="bold">{{ parent.name }}</p>
-                            <p v-if="parent.description" text="sm [var(--brick-muted-text)]">
-                                {{ parent.description }}
-                            </p>
-                            <div flex gap="2" m="t-1">
-                                <span
-                                    v-if="parent.childIds.length > 0"
-                                    text="xs"
-                                    p="x-2 y-1"
-                                    bg="[var(--brick-surface-subtle)]"
-                                    font="bold"
-                                >
-                                    {{ t('storage.subLocationsCount', {count: String(parent.childIds.length)}).value }}
-                                </span>
-                                <span
-                                    v-if="parent.row !== null && parent.column !== null"
-                                    text="xs [var(--brick-muted-text)]"
-                                >
-                                    {{
-                                        t('storage.rowColumnLabel', {
-                                            row: String(parent.row),
-                                            column: String(parent.column),
-                                        }).value
-                                    }}
-                                </span>
-                            </div>
-                        </div>
-                    </ListItemButton>
-
-                    <div v-if="getChildren(parent.id).length > 0" flex="~ col" gap="2" m="l-8">
-                        <ListItemButton
-                            v-for="child in getChildren(parent.id)"
-                            :key="child.id"
-                            @click="goToDetail(child.id)"
-                        >
-                            <div flex="1">
-                                <p font="bold">{{ child.name }}</p>
-                                <p v-if="child.description" text="sm [var(--brick-muted-text)]">
-                                    {{ child.description }}
-                                </p>
-                                <div flex gap="2" m="t-1">
-                                    <span
-                                        v-if="child.row !== null && child.column !== null"
-                                        text="xs [var(--brick-muted-text)]"
-                                    >
-                                        {{
-                                            t('storage.rowColumnLabel', {
-                                                row: String(child.row),
-                                                column: String(child.column),
-                                            }).value
-                                        }}
-                                    </span>
-                                </div>
-                            </div>
-                        </ListItemButton>
-                    </div>
-                </div>
+                <StorageTreeNode
+                    v-for="parent in topLevelOptions"
+                    :key="parent.id"
+                    :option="parent"
+                    :options="getAll"
+                    @select="goToDetail"
+                />
             </div>
         </template>
     </div>
