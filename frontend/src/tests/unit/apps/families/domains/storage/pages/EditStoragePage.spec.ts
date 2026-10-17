@@ -154,10 +154,14 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent(SingleSelect).props('options')).toStrictEqual([
+        const options = wrapper.findComponent(SingleSelect).props('options');
+        expect(options).toStrictEqual([
             {id: 2, label: 'Cabinet'},
             {id: 8, label: 'Other drawer'},
         ]);
+        expect(options).not.toContainEqual({id: 5, label: 'Lade A'});
+        expect(options).not.toContainEqual({id: 6, label: 'Bin A'});
+        expect(options).not.toContainEqual({id: 7, label: 'Drawer B'});
     });
 
     it('should submit the selected parent id', async () => {
@@ -179,7 +183,13 @@ describe('EditStoragePage', () => {
 
         // Assert
         expect(adapted.mutable.value.parentId).toBe(2);
-        expect(mockPatch).toHaveBeenCalledWith(expect.objectContaining({parentId: 2}));
+        expect(mockPatch).toHaveBeenCalledWith({
+            name: 'Lade A',
+            description: 'Linkerla op plank 1',
+            parentId: 2,
+            row: 1,
+            column: 2,
+        });
     });
 
     it('should update a number field on valid numeric input', async () => {
