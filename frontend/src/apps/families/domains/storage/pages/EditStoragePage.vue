@@ -53,9 +53,9 @@ const hasParentGrid = computed(
         selectedParent.value.gridColumns !== null,
 );
 watch(
-    () => adapted.value?.mutable.parentId,
-    (parentId, previousParentId) => {
-        if (previousParentId !== undefined && parentId !== previousParentId && adapted.value) {
+    () => [adapted.value, adapted.value?.mutable.parentId],
+    () => {
+        if (adapted.value && !hasParentGrid.value) {
             adapted.value.mutable.row = null;
             adapted.value.mutable.column = null;
         }

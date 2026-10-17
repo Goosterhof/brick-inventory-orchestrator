@@ -277,6 +277,24 @@ describe('EditStoragePage', () => {
         expect(adapted.mutable.value.column).toBeNull();
     });
 
+    it('should clear stored row and column when the initial parent has no grid', async () => {
+        mockStorageOptions.value = [{id: 2, name: 'Shelf', parentId: null, gridRows: null, gridColumns: null}];
+        const adapted = createMockAdapted();
+        mockGetOrFailById.mockResolvedValue(adapted);
+        mockPatch.mockResolvedValue({});
+        const wrapper = renderPage();
+        await flushPromises();
+
+        expect(wrapper.findAll('input[type="number"]')).toHaveLength(0);
+        expect(adapted.mutable.value.row).toBeNull();
+        expect(adapted.mutable.value.column).toBeNull();
+
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        expect(mockPatch).toHaveBeenCalledWith(expect.objectContaining({row: null, column: null}));
+    });
+
     it('should show loading state initially', () => {
         // Arrange
         mockGetOrFailById.mockReturnValue(new Promise(() => {}));
