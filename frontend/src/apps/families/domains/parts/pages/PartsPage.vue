@@ -17,8 +17,7 @@ import PartUsageModal from '../modals/PartUsageModal.vue';
 const {t} = familyTranslationService;
 const entries = ref<FamilyPartEntry[]>([]);
 const loading = ref(true);
-const loadingMore = ref(false);
-const nextCursor = ref<string | null>(null);
+const loadError = ref(false);
 const searchId = useId();
 const activeColorFilter = ref<string | null>(null);
 const showOrphansOnly = ref(false);
@@ -32,31 +31,28 @@ const fetchParts = async (cursor?: string): Promise<CursorPaginatedParts> => {
     return response.data;
 };
 
-onMounted(async () => {
+// Location rows for one part/color can span pages. Publish only a complete feed
+// so every total, filter and CSV uses the same fully loaded inventory.
+const loadParts = async () => {
+    loading.value = true;
+    loadError.value = false;
     try {
-        const envelope = await fetchParts();
-        entries.value = envelope.data;
-        nextCursor.value = envelope.nextCursor;
+        const allEntries: FamilyPartEntry[] = [];
+        let cursor: string | null = null;
+        do {
+            const envelope = await fetchParts(cursor ?? undefined);
+            allEntries.push(...envelope.data);
+            cursor = envelope.nextCursor;
+        } while (cursor !== null);
+        entries.value = allEntries;
     } catch {
-        entries.value = [];
+        loadError.value = true;
     } finally {
         loading.value = false;
     }
-});
-
-const loadMore = async () => {
-    if (!nextCursor.value || loadingMore.value) {
-        return;
-    }
-    loadingMore.value = true;
-    try {
-        const envelope = await fetchParts(nextCursor.value);
-        entries.value = [...entries.value, ...envelope.data];
-        nextCursor.value = envelope.nextCursor;
-    } finally {
-        loadingMore.value = false;
-    }
 };
+
+onMounted(loadParts);
 
 const groupedParts = computed((): GroupedFamilyPart[] => {
     const map = new Map<string, GroupedFamilyPart>();
@@ -210,6 +206,13 @@ const usageButtonLabel = (part: GroupedFamilyPart) =>
 
         <p v-if="loading" text="[var(--brick-muted-text)]">{{ t('common.loading').value }}</p>
 
+        <div v-else-if="loadError" role="alert" flex="~ col" gap="3" data-testid="parts-error">
+            <p>{{ t('parts.loadError').value }}</p>
+            <PrimaryButton :sound-service="familySoundService" data-testid="parts-retry" @click="loadParts">
+                {{ t('parts.retry').value }}
+            </PrimaryButton>
+        </div>
+
         <EmptyState
             v-else-if="groupedParts.length === 0"
             :message="t('parts.noParts').value"
@@ -332,23 +335,6 @@ const usageButtonLabel = (part: GroupedFamilyPart) =>
                 :color-id="usageColorId"
                 @close="closeUsageModal"
             />
-
-            <div v-if="nextCursor" flex justify="center" m="t-6">
-                <button
-                    class="brick-border brick-shadow brick-transition"
-                    bg="yellow-400 hover:yellow-300"
-                    p="x-6 y-3"
-                    font="bold"
-                    text="[var(--brick-page-text)]"
-                    :disabled="loadingMore"
-                    hover="brick-shadow-hover"
-                    active="brick-shadow-active"
-                    data-testid="load-more-button"
-                    @click="loadMore"
-                >
-                    {{ loadingMore ? t('parts.loadingMore').value : t('parts.loadMore').value }}
-                </button>
-            </div>
         </template>
     </div>
 </template>

@@ -223,7 +223,8 @@ describe('PartsPage', () => {
         await flushPromises();
 
         // Assert
-        expect(wrapper.findComponent({name: 'EmptyState'}).exists()).toBe(true);
+        expect(wrapper.get('[data-testid="parts-error"]').text()).toContain('parts.loadError');
+        expect(wrapper.findComponent({name: 'EmptyState'}).exists()).toBe(false);
     });
 
     describe('search', () => {
@@ -562,122 +563,69 @@ describe('PartsPage', () => {
         });
     });
 
-    describe('pagination', () => {
-        it('should not show load more button when next_cursor is null', async () => {
-            // Arrange
-            mockGetRequest.mockResolvedValue({data: makeEnvelope(mockPartsData, null)});
-
-            // Act
-            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
-            await flushPromises();
-
-            // Assert
-            expect(wrapper.find("[data-testid='load-more-button']").exists()).toBe(false);
-        });
-
-        it('should show load more button when next_cursor is present', async () => {
-            // Arrange
-            mockGetRequest.mockResolvedValue({data: makeEnvelope(mockPartsData, 'cursor-abc')});
-
-            // Act
-            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
-            await flushPromises();
-
-            // Assert
-            const button = wrapper.find("[data-testid='load-more-button']");
-            expect(button.exists()).toBe(true);
-            expect(button.text()).toBe('parts.loadMore');
-        });
-
-        it('should fetch next page and append results when load more is clicked', async () => {
-            // Arrange — first page with cursor
-            mockGetRequest.mockResolvedValueOnce({data: makeEnvelope(mockPartsData, 'cursor-page-2')});
-
-            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
-            await flushPromises();
-
-            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(2);
-
-            // Arrange — second page with no cursor
-            mockGetRequest.mockResolvedValueOnce({
-                data: makeEnvelope(
-                    [
-                        {
-                            partId: 30,
-                            partNum: '3003',
-                            partName: 'Brick 1 x 2',
-                            partImageUrl: null,
-                            colorId: 3,
-                            colorName: 'Green',
-                            colorRgb: '00CC00',
-                            storageOptionId: 7,
-                            storageOptionName: 'Drawer C',
-                            quantity: 6,
-                            familySetId: 2,
-                        },
-                    ],
-                    null,
-                ),
+    describe('complete inventory loading', () => {
+        it('keeps totals, controls and export hidden until the final page arrives', async () => {
+            let lastPageResolve: (value: unknown) => void = () => {};
+            const lastPage = new Promise<unknown>((resolve) => {
+                lastPageResolve = resolve;
             });
-
-            // Act
-            await wrapper.find("[data-testid='load-more-button']").trigger('click');
-            await flushPromises();
-
-            // Assert — 2 original grouped + 1 new = 3
-            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(3);
-            expect(mockGetRequest).toHaveBeenCalledWith('/family/parts?per_page=100&cursor=cursor-page-2');
-        });
-
-        it('should hide load more button after last page', async () => {
-            // Arrange
-            mockGetRequest.mockResolvedValueOnce({data: makeEnvelope(mockPartsData, 'cursor-page-2')});
-
+            mockGetRequest
+                .mockResolvedValueOnce({data: makeEnvelope(mockPartsData.slice(0, 1), 'page-2')})
+                .mockReturnValueOnce(lastPage);
             const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
-            expect(wrapper.find("[data-testid='load-more-button']").exists()).toBe(true);
+            expect(mockGetRequest).toHaveBeenNthCalledWith(2, '/family/parts?per_page=100&cursor=page-2');
+            expect(wrapper.text()).toContain('common.loading');
+            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(0);
+            expect(wrapper.findAllComponents({name: 'FilterChip'})).toHaveLength(0);
+            expect(wrapper.find('input[type="search"]').exists()).toBe(false);
+            expect(wrapper.findComponent({name: 'EmptyState'}).exists()).toBe(false);
+            expect(wrapper.text()).not.toContain('common.export');
 
-            // Arrange — last page
-            mockGetRequest.mockResolvedValueOnce({data: makeEnvelope([], null)});
-
-            // Act
-            await wrapper.find("[data-testid='load-more-button']").trigger('click');
+            lastPageResolve({data: makeEnvelope(mockPartsData.slice(1))});
             await flushPromises();
 
-            // Assert
-            expect(wrapper.find("[data-testid='load-more-button']").exists()).toBe(false);
+            expect(wrapper.text()).not.toContain('common.loading');
+            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(2);
+            expect(wrapper.find('input[type="search"]').exists()).toBe(true);
+            expect(wrapper.text()).toContain('common.export');
+            expect(mockGetRequest).toHaveBeenCalledTimes(2);
         });
 
-        it('should show loading state on load more button while fetching', async () => {
-            // Arrange
-            mockGetRequest.mockResolvedValueOnce({data: makeEnvelope(mockPartsData, 'cursor-page-2')});
-
+        it('discards partial pages after failure and retries from the beginning without duplicates', async () => {
+            mockGetRequest
+                .mockResolvedValueOnce({data: makeEnvelope(mockPartsData.slice(0, 1), 'page-2')})
+                .mockRejectedValueOnce(new Error('Network error'));
             const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
             await flushPromises();
 
-            // Arrange — next page hangs
-            mockGetRequest.mockReturnValueOnce(new Promise(() => {}));
+            expect(wrapper.get('[data-testid="parts-error"]').text()).toContain('parts.loadError');
+            expect(wrapper.text()).not.toContain('common.loading');
+            expect(wrapper.text()).not.toContain('common.export');
+            expect(wrapper.findAllComponents({name: 'PartListItem'})).toHaveLength(0);
+            expect(wrapper.find('input[type="search"]').exists()).toBe(false);
+            expect(wrapper.findComponent({name: 'EmptyState'}).exists()).toBe(false);
 
-            // Act
-            await wrapper.find("[data-testid='load-more-button']").trigger('click');
-
-            // Assert — button shows loading text and is disabled
-            const button = wrapper.find("[data-testid='load-more-button']");
-            expect(button.text()).toBe('parts.loadingMore');
-            expect(button.attributes('disabled')).toBeDefined();
-        });
-
-        it('should not fetch when loadMore is called without a cursor', async () => {
-            // Arrange — no cursor
-            mockGetRequest.mockResolvedValue({data: makeEnvelope(mockPartsData, null)});
-
-            const wrapper = shallowMount(PartsPage, {global: {stubs: {FormField: false, TextInput: false}}});
+            let retryPageResolve: (value: unknown) => void = () => {};
+            const retryPage = new Promise<unknown>((resolve) => {
+                retryPageResolve = resolve;
+            });
+            mockGetRequest
+                .mockReturnValueOnce(retryPage)
+                .mockResolvedValueOnce({data: makeEnvelope(mockPartsData.slice(1))});
+            await wrapper.get('[data-testid="parts-retry"]').trigger('click');
+            expect(wrapper.text()).toContain('common.loading');
+            expect(wrapper.find('[data-testid="parts-error"]').exists()).toBe(false);
+            expect(mockGetRequest).toHaveBeenNthCalledWith(3, '/family/parts?per_page=100');
+            retryPageResolve({data: makeEnvelope(mockPartsData.slice(0, 1), 'page-2')});
             await flushPromises();
 
-            // Assert — no button, and only 1 call was made (the initial fetch)
-            expect(wrapper.find("[data-testid='load-more-button']").exists()).toBe(false);
-            expect(mockGetRequest).toHaveBeenCalledTimes(1);
+            expect(wrapper.find('[data-testid="parts-error"]').exists()).toBe(false);
+            const items = wrapper.findAllComponents({name: 'PartListItem'});
+            expect(items).toHaveLength(2);
+            expect(items.find((item) => item.props('partNum') === '3001')?.props('quantity')).toBe(12);
+            expect(mockGetRequest).toHaveBeenCalledTimes(4);
         });
     });
 
