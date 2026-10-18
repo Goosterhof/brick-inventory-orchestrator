@@ -86,5 +86,7 @@ describe('IdentifyBrickPage — integration', () => {
 
         // The BackButton click delegates to goToRoute("sets") on the real router service.
         expect(goToRoute).toHaveBeenCalledWith('sets');
+        // Wait for the lazy-loaded sets route so its imports settle before teardown.
+        await goToRoute.mock.results[0]?.value;
     });
 });
