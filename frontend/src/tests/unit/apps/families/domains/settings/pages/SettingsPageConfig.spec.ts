@@ -491,5 +491,35 @@ describe('SettingsPage — config', () => {
             // Assert
             expect(pollCallCount).toBe(1);
         });
+
+        it('should stop polling when the page unmounts mid-import', async () => {
+            // Arrange
+            mockPostRequest.mockResolvedValue({data: pendingJob});
+            let pollCallCount = 0;
+            mockGetRequest.mockImplementation((url: string) => {
+                if (url === '/family-sets/import-status') {
+                    pollCallCount++;
+                    return Promise.resolve({data: pendingJob});
+                }
+                return Promise.reject(new Error(`Unexpected GET: ${url}`));
+            });
+            const wrapper = shallowMount(SettingsPage, {global: {stubs: {FormField: false, TextInput: false}}});
+            const importButton = wrapper
+                .findAllComponents(PrimaryButton)
+                .find((btn) => btn.text() === 'settings.importButton');
+            await importButton?.trigger('click');
+            await flushPromises();
+            vi.advanceTimersByTime(3000);
+            await flushPromises();
+            expect(pollCallCount).toBe(1);
+
+            // Act
+            wrapper.unmount();
+            vi.advanceTimersByTime(9000);
+            await flushPromises();
+
+            // Assert — no poll outlives the page
+            expect(pollCallCount).toBe(1);
+        });
     });
 });

@@ -51,11 +51,14 @@ export default mergeConfig(
                     'src/apps/**/App.vue',
                     'src/**/*.d.ts',
                     'src/apps/**/router/**',
-                    'src/apps/**/domains/**',
-                    'src/apps/**/pages/**',
-                    'src/apps/**/services/**',
-                    'src/apps/**/stores/**',
                     'src/apps/**/types/**',
+                    // Domains still outside the gate — each later slice of BIO-0007 (b) removes one entry
+                    'src/apps/families/domains/home/**',
+                    'src/apps/families/domains/parts/**',
+                    'src/apps/families/domains/storage/**',
+                    'src/apps/families/domains/sets/**',
+                    // Design prototypes driving canvas, WebGL and animation APIs happy-dom lacks — ruled outside the gate (BIO-0043)
+                    'src/apps/showcase/pages/**',
                     'src/shared/services/auth/types.ts',
                     'src/tests/**',
                 ],
@@ -78,10 +81,16 @@ export default mergeConfig(
                 // Families app — app-level service wiring
                 project('families/services', 'apps/families/services'),
 
+                // Families app — adapter-store modules
+                project('families/stores', 'apps/families/stores'),
+
                 // App roots — files directly in the app directory, not in domains
                 rootProject('families/root', 'apps/families'),
                 rootProject('admin/root', 'apps/admin'),
                 rootProject('showcase/root', 'apps/showcase'),
+
+                // Admin app — domain pages
+                project('admin/home', 'apps/admin/domains/home'),
 
                 // Shared directories
                 project('shared/components', 'shared/components'),

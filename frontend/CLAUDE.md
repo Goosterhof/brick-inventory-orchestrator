@@ -171,9 +171,20 @@ Hooks are light (ADR-0028 Amendment 2); root `CLAUDE.md` § Git Hooks has the ta
 
 **100% coverage on lines, functions, branches, and statements — of the files the gate measures.** If you build it, you test it.
 
-The gate does not measure the whole frontend. `coverage.exclude` in `vitest.config.ts` is the source of truth for its scope: it leaves out every app's `main.ts`, `App.vue` and its `router/`, `domains/`, `pages/`, `services/`, `stores/` and `types/` directories. What the 100% thresholds measure is `src/shared/` plus the app files outside those directories (showcase components, families modals). Most app code is outside it.
+The gate does not yet measure the whole frontend. `coverage.exclude` in `vitest.config.ts` is the source of truth for its scope. What the 100% thresholds measure:
 
-Excluded app code is exercised by the page integration suite (`npm run test:integration:run`, ADR-0024), which CI runs but which carries **no coverage threshold**, and by nothing that measures branches. Stryker's `mutate` list is narrower still (`src/shared/` helpers, composables, middleware and auth). So a dead branch in a domain page, store or service can ship under a green "100%": BIO-0016 did exactly that (duplicate-set detection dead in `AddSetPage`/`ScanSetPage`, fixed in PR #286). When you change excluded code, its tests are yours to write; the gate will not ask for them.
+- `src/shared/`;
+- the families app's `services/` and `stores/`, and its modals;
+- the families domains `about`, `auth`, `brick-dna` and `settings` (route modules and pages), and the admin `home` domain;
+- the showcase components.
+
+What stays outside, and why:
+
+- **Four families domains still to come** — `home`, `parts`, `storage` and `sets` are excluded one entry each. Epic BIO-0007 (option b) brings them under the gate one slice at a time; each slice removes its entry.
+- **Showcase prototypes, by ruling** — `src/apps/showcase/pages/**` are design prototypes driving canvas, WebGL and animation APIs that happy-dom does not implement. They are outside the gate deliberately (investor ruling 2026-10-16, BIO-0043), not waiting for a slice.
+- **Bootstrap and typing** — every app's `main.ts`, `App.vue`, `router/` and `types/`.
+
+Excluded app code is exercised by the page integration suite (`npm run test:integration:run`, ADR-0024), which CI runs but which carries **no coverage threshold**, and by nothing that measures branches. Stryker's `mutate` list is narrower still (`src/shared/` helpers, composables, middleware and auth). So a dead branch in an excluded domain can ship under a green "100%": BIO-0016 did exactly that (duplicate-set detection dead in `AddSetPage`/`ScanSetPage`, fixed in PR #286). When you change excluded code, its tests are yours to write; the gate will not ask for them.
 
 ## Style Guide — Neo-Brutalist LEGO Aesthetic
 

@@ -98,4 +98,16 @@ describe('familyHttpService transform middleware', () => {
             expect.any(Error),
         );
     });
+
+    it('should leave a non-object response body untouched', async () => {
+        // Arrange
+        mock.onGet('/health').reply(200, 'ok');
+
+        // Act
+        const response = await familyHttpService.getRequest('/health');
+
+        // Assert
+        expect(response.data).toBe('ok');
+        expect(deepCamelKeys).not.toHaveBeenCalled();
+    });
 });
