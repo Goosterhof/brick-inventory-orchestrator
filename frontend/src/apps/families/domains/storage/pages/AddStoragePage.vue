@@ -39,8 +39,6 @@ const gridColumnsId = useId();
 
 const onSubmit = () =>
     handleSubmit(async () => {
-        const {gridRows, gridColumns} = adapted.mutable.value;
-        if ((gridRows === null) !== (gridColumns === null)) return;
         const created = await adapted.create();
         await retrieveAll();
         await familyRouterService.goToRoute('storage-detail', created.id);
