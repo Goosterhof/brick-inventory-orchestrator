@@ -2,12 +2,16 @@
 
 declare(strict_types = 1);
 
+use App\Actions\StorageOption\UpdateStorageOptionAction;
+use App\DataTransferObjects\Input\StorageOption\StorageOptionData;
 use App\Http\Controllers\StorageOptionController;
 use App\Models\Part;
 use App\Models\StorageOption;
 use App\Models\StorageOptionPart;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 covers(StorageOptionController::class);
 
@@ -366,6 +370,97 @@ describe('StorageOptionController', function(): void {
     });
 
     describe('update', function(): void {
+        it('rechecks ancestry at the write after another reparent', function(): void {
+            $user = User::factory()->create();
+            $first = StorageOption::factory()->create(['family_id' => $user->family_id]);
+            $second = StorageOption::factory()->create(['family_id' => $user->family_id]);
+
+            $this->actingAs($user)->patchJson('/api/storage-options/' . $second->id, [
+                'name' => 'Second',
+                'parent_id' => $first->id,
+            ])->assertOk();
+
+            // This action represents a request that passed validation before the
+            // preceding reparent committed. It must inspect the current tree.
+            try {
+                resolve(UpdateStorageOptionAction::class)->execute($first, new StorageOptionData(
+                    name: 'First',
+                    parentId: $second->id,
+                ));
+                $this->fail('The stale reparent should have been rejected.');
+            } catch (ValidationException $validationException) {
+                expect($validationException->errors())->toHaveKey('parent_id');
+            }
+
+            $this->assertDatabaseHas('storage_options', ['id' => $first->id, 'parent_id' => null]);
+        });
+
+        it('rejects a parent outside the family at the write', function(): void {
+            $user = User::factory()->create();
+            $location = StorageOption::factory()->create(['family_id' => $user->family_id]);
+            $otherFamilyParent = StorageOption::factory()->create();
+
+            try {
+                resolve(UpdateStorageOptionAction::class)->execute($location, new StorageOptionData(
+                    name: 'Moved',
+                    parentId: $otherFamilyParent->id,
+                ));
+                $this->fail('The parent outside the family should have been rejected.');
+            } catch (ValidationException $validationException) {
+                expect($validationException->errors())->toHaveKey('parent_id');
+            }
+
+            $this->assertDatabaseHas('storage_options', ['id' => $location->id, 'parent_id' => null]);
+        });
+
+        it('rejects an already cyclic parent chain at the write', function(): void {
+            $user = User::factory()->create();
+            $location = StorageOption::factory()->create(['family_id' => $user->family_id]);
+            $first = StorageOption::factory()->create(['family_id' => $user->family_id]);
+            $second = StorageOption::factory()->create(['family_id' => $user->family_id, 'parent_id' => $first->id]);
+            $first->parent_id = $second->id;
+            $first->save();
+
+            try {
+                resolve(UpdateStorageOptionAction::class)->execute($location, new StorageOptionData(
+                    name: 'Moved',
+                    parentId: $first->id,
+                ));
+                $this->fail('The cyclic parent chain should have been rejected.');
+            } catch (ValidationException $validationException) {
+                expect($validationException->errors())->toHaveKey('parent_id');
+            }
+
+            $this->assertDatabaseHas('storage_options', ['id' => $location->id, 'parent_id' => null]);
+        });
+
+        it('checks a deep parent chain with a fixed number of reads', function(): void {
+            $user = User::factory()->create();
+            $location = StorageOption::factory()->create(['family_id' => $user->family_id]);
+            $ancestor = StorageOption::factory()->create(['family_id' => $user->family_id]);
+
+            for ($depth = 0; $depth < 25; $depth++) {
+                $ancestor = StorageOption::factory()->create([
+                    'family_id' => $user->family_id,
+                    'parent_id' => $ancestor->id,
+                ]);
+            }
+
+            $reads = 0;
+            DB::listen(function($query) use (&$reads): void {
+                if (str_starts_with(mb_strtolower($query->sql), 'select') && str_contains($query->sql, 'storage_options')) {
+                    $reads++;
+                }
+            });
+
+            $this->actingAs($user)->patchJson('/api/storage-options/' . $location->id, [
+                'name' => 'Moved',
+                'parent_id' => $ancestor->id,
+            ])->assertOk();
+
+            expect($reads)->toBeLessThan(10);
+        });
+
         it('should reject itself as parent', function(): void {
             $user = User::factory()->create();
             $storageOption = StorageOption::factory()->create(['family_id' => $user->family_id]);
