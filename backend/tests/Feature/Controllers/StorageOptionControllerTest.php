@@ -366,6 +366,67 @@ describe('StorageOptionController', function(): void {
     });
 
     describe('update', function(): void {
+        it('should reject a storage option as its own parent', function(): void {
+            $user = User::factory()->create();
+            $option = StorageOption::factory()->forFamily($user->family)->create();
+
+            $this->actingAs($user)->patchJson('/api/storage-options/' . $option->id, [
+                'name' => $option->name,
+                'parent_id' => $option->id,
+            ])->assertUnprocessable()->assertJsonValidationErrors('parent_id');
+
+            $this->assertDatabaseHas('storage_options', ['id' => $option->id, 'parent_id' => null]);
+        });
+
+        it('should reject a descendant two levels down as parent', function(): void {
+            $user = User::factory()->create();
+            $option = StorageOption::factory()->forFamily($user->family)->create();
+            $child = StorageOption::factory()->forFamily($user->family)->create(['parent_id' => $option->id]);
+            $grandchild = StorageOption::factory()->forFamily($user->family)->create(['parent_id' => $child->id]);
+
+            $this->actingAs($user)->patchJson('/api/storage-options/' . $option->id, [
+                'name' => $option->name,
+                'parent_id' => $grandchild->id,
+            ])->assertUnprocessable()->assertJsonValidationErrors('parent_id');
+
+            $this->assertDatabaseHas('storage_options', ['id' => $option->id, 'parent_id' => null]);
+        });
+
+        it('should reject a parent whose ancestry is already cyclic', function(): void {
+            $user = User::factory()->create();
+            $option = StorageOption::factory()->forFamily($user->family)->create();
+            $first = StorageOption::factory()->forFamily($user->family)->create();
+            $second = StorageOption::factory()->forFamily($user->family)->create(['parent_id' => $first->id]);
+            $first->parent_id = $second->id;
+            $first->save();
+
+            $this->actingAs($user)->patchJson('/api/storage-options/' . $option->id, [
+                'name' => $option->name,
+                'parent_id' => $first->id,
+            ])->assertUnprocessable()->assertJsonValidationErrors('parent_id');
+
+            $this->assertDatabaseHas('storage_options', ['id' => $option->id, 'parent_id' => null]);
+        });
+
+        it('should allow reparenting and clearing the parent', function(): void {
+            $user = User::factory()->create();
+            $first = StorageOption::factory()->forFamily($user->family)->create();
+            $second = StorageOption::factory()->forFamily($user->family)->create();
+            $option = StorageOption::factory()->forFamily($user->family)->create(['parent_id' => $first->id]);
+
+            $this->actingAs($user)->patchJson('/api/storage-options/' . $option->id, [
+                'name' => $option->name,
+                'parent_id' => $second->id,
+            ])->assertOk()->assertJsonPath('parent_id', $second->id);
+
+            $this->actingAs($user)->patchJson('/api/storage-options/' . $option->id, [
+                'name' => $option->name,
+                'parent_id' => null,
+            ])->assertOk()->assertJsonPath('parent_id', null);
+
+            $this->assertDatabaseHas('storage_options', ['id' => $option->id, 'parent_id' => null]);
+        });
+
         it('should update a storage option', function(): void {
             $user = User::factory()->create();
             $storageOption = StorageOption::factory()->create([

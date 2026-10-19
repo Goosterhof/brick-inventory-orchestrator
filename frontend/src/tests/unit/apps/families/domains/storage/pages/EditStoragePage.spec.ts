@@ -49,7 +49,16 @@ vi.mock('@shared/components/PrimaryButton.vue', () => ({
 
 vi.mock('axios', () => createMockAxiosWithError());
 vi.mock('string-ts', () => createMockStringTs());
-vi.mock('@script-development/fs-helpers', () => createMockFsHelpers());
+vi.mock('@script-development/fs-helpers', () => ({
+    ...createMockFsHelpers(),
+    deepCamelKeys: (value: Record<string, unknown>) =>
+        Object.fromEntries(
+            Object.entries(value).map(([key, entry]) => [
+                key.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase()),
+                entry,
+            ]),
+        ),
+}));
 vi.mock('@script-development/ui-inputs', () => createMockUiInputs());
 
 vi.mock('@phosphor-icons/vue', () => ({PhX: {template: '<i />'}}));
@@ -62,19 +71,34 @@ const renderPage = () =>
         global: {stubs: {FormField: false, SingleSelect: false, TextInput: false, NumberInput: false, Textarea: false}},
     });
 
-const {mockGetOrFailById, mockGoToRoute, mockCurrentRouteId, mockPatch, mockDelete, mockRetrieveAll} = vi.hoisted(
-    () => ({
-        mockGetOrFailById: vi.fn<() => Promise<unknown>>(),
-        mockGoToRoute: vi.fn<() => Promise<void>>(),
-        mockCurrentRouteId: {value: 5},
-        mockPatch: vi.fn<() => Promise<unknown>>(),
-        mockDelete: vi.fn<() => Promise<void>>(),
-        mockRetrieveAll: vi.fn<() => Promise<void>>(),
-    }),
-);
+const {
+    mockGetOrFailById,
+    mockGoToRoute,
+    mockCurrentRouteId,
+    mockPatch,
+    mockDelete,
+    mockRetrieveAll,
+    capturedErrorMiddleware,
+} = vi.hoisted(() => ({
+    mockGetOrFailById: vi.fn<() => Promise<unknown>>(),
+    mockGoToRoute: vi.fn<() => Promise<void>>(),
+    mockCurrentRouteId: {value: 5},
+    mockPatch: vi.fn<() => Promise<unknown>>(),
+    mockDelete: vi.fn<() => Promise<void>>(),
+    mockRetrieveAll: vi.fn<() => Promise<void>>(),
+    capturedErrorMiddleware: {current: undefined as ((error: unknown) => void) | undefined},
+}));
 
 vi.mock('@app/services', () =>
     createMockFamilyServices({
+        familyHttpService: {
+            registerResponseErrorMiddleware: vi.fn<(middleware: (error: unknown) => void) => () => void>(
+                (middleware) => {
+                    capturedErrorMiddleware.current = middleware;
+                    return vi.fn<() => void>();
+                },
+            ),
+        },
         familyAuthService: {isLoggedIn: {value: true}},
         familyRouterService: {goToRoute: mockGoToRoute, currentRouteId: mockCurrentRouteId},
         familyLoadingService: {isLoading: {value: false}},
@@ -342,12 +366,21 @@ describe('EditStoragePage', () => {
         expect(mockGoToRoute).toHaveBeenCalledWith('storage-detail', 5);
     });
 
-    it('should not navigate on 422 validation error', async () => {
+    it('should show a 422 parent error on the parent field', async () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
         const axiosError = new AxiosError('Validation failed');
-        axiosError.response = {status: 422, data: {}, statusText: '', headers: {}, config: {} as never};
-        mockPatch.mockRejectedValue(axiosError);
+        axiosError.response = {
+            status: 422,
+            data: {errors: {parent_id: ['The selected parent cannot be this location or one of its descendants.']}},
+            statusText: '',
+            headers: {},
+            config: {} as never,
+        };
+        mockPatch.mockImplementationOnce(() => {
+            capturedErrorMiddleware.current?.(axiosError);
+            return Promise.reject(axiosError);
+        });
         const wrapper = renderPage();
         await flushPromises();
 
@@ -356,6 +389,10 @@ describe('EditStoragePage', () => {
         await flushPromises();
 
         // Assert
+        expect(wrapper.get('.ui-error').text()).toBe(
+            'The selected parent cannot be this location or one of its descendants.',
+        );
+        expect(wrapper.findComponent(SingleSelect).props('invalid')).toBe(true);
         expect(mockGoToRoute).not.toHaveBeenCalled();
     });
 
