@@ -34,7 +34,7 @@ final readonly class UpdateStorageOptionAction
 
             if ($storageOptionData->parentId !== null) {
                 /** @var array<int, int|null> $parents */
-                $parents = StorageOption::query()
+                $parents = $this->connection->table('storage_options')
                     ->where('family_id', $storageOption->family_id)
                     ->pluck('parent_id', 'id')
                     ->all();
