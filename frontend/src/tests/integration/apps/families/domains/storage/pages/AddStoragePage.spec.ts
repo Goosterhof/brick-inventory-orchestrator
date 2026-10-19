@@ -154,14 +154,76 @@ describe('AddStoragePage — integration', () => {
         expect(mockServer.callsTo('GET', 'storage-options')).toHaveLength(2);
     });
 
-    it('does not submit when only one grid dimension is filled', async () => {
+    it.each([
+        {filledIndex: 0, emptyField: 'grid_columns', errorText: 'Columns are required when rows are provided.'},
+        {filledIndex: 1, emptyField: 'grid_rows', errorText: 'Rows are required when columns are provided.'},
+    ])(
+        'shows a validation error when only one grid dimension is filled',
+        async ({filledIndex, emptyField, errorText}) => {
+            mockServer.onPostError('storage-options', 422, {errors: {[emptyField]: [errorText]}});
+            const wrapper = mountPage();
+            await wrapper.findAll('input[type="number"]')[filledIndex]?.setValue('4');
+            await wrapper.findComponent(TextInput).find('input').setValue('Cabinet');
+            await wrapper.find('form').trigger('submit');
+            await flushPromises();
+
+            expect(mockServer.callsTo('POST', 'storage-options')).toHaveLength(1);
+            expect(wrapper.text()).toContain(errorText);
+        },
+    );
+
+    it('clears row and column when switching from a gridded parent to a gridless parent', async () => {
+        mockServer.onGet('storage-options', [
+            {
+                id: 3,
+                name: 'Drawer',
+                description: null,
+                parent_id: null,
+                row: null,
+                column: null,
+                grid_rows: 4,
+                grid_columns: 6,
+                child_ids: [],
+            },
+            {
+                id: 4,
+                name: 'Shelf',
+                description: null,
+                parent_id: null,
+                row: null,
+                column: null,
+                grid_rows: null,
+                grid_columns: null,
+                child_ids: [],
+            },
+        ]);
+        mockServer.onPost('storage-options', {
+            id: 7,
+            name: 'Bin',
+            description: null,
+            parent_id: 4,
+            row: null,
+            column: null,
+            grid_rows: null,
+            grid_columns: null,
+            child_ids: [],
+        });
         const wrapper = mountPage();
-        await wrapper.findAll('input[type="number"]')[0]?.setValue('4');
-        await wrapper.findComponent(TextInput).find('input').setValue('Cabinet');
+        await flushPromises();
+
+        const select = wrapper.findComponent(SingleSelect);
+        select.vm.$emit('update:modelValue', 3);
+        await flushPromises();
+        const coordinates = wrapper.findAll('input[type="number"]');
+        await coordinates[2]?.setValue('2');
+        await coordinates[3]?.setValue('3');
+        select.vm.$emit('update:modelValue', 4);
+        await flushPromises();
+        await wrapper.findComponent(TextInput).find('input').setValue('Bin');
         await wrapper.find('form').trigger('submit');
         await flushPromises();
 
-        expect(mockServer.callsTo('POST', 'storage-options')).toHaveLength(0);
+        expect(mockServer.callsTo('POST', 'storage-options')[0]?.body).toMatchObject({row: null, column: null});
     });
 
     it('renders page title', () => {
