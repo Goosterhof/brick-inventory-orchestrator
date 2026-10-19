@@ -392,7 +392,7 @@ describe('EditStoragePage', () => {
         expect(wrapper.get('.ui-error').text()).toBe(
             'The selected parent cannot be this location or one of its descendants.',
         );
-        expect(wrapper.findComponent(SingleSelect).props('invalid')).toBe(true);
+        expect(wrapper.get('[role="combobox"]').attributes('aria-invalid')).toBe('true');
         expect(mockGoToRoute).not.toHaveBeenCalled();
     });
 
