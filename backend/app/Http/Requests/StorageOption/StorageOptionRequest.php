@@ -49,33 +49,6 @@ final class StorageOptionRequest extends FormRequest
 
                     return;
                 }
-
-                $storageOption = $this->route('storage_option');
-
-                if (!$storageOption instanceof StorageOption || $parentOption === null) {
-                    return;
-                }
-
-                $visited = [];
-
-                while ($parentOption !== null) {
-                    if ($parentOption->id === $storageOption->id) {
-                        $fail('The selected parent cannot be this location or one of its descendants.');
-
-                        return;
-                    }
-
-                    if (isset($visited[$parentOption->id])) {
-                        $fail('The selected parent has a cyclic ancestry.');
-
-                        return;
-                    }
-
-                    $visited[$parentOption->id] = true;
-                    $parentOption = $parentOption->parent_id === null
-                        ? null
-                        : StorageOption::query()->find($parentOption->parent_id);
-                }
             }],
             self::ROW => ['nullable', 'integer', 'min:0', function(string $attribute, mixed $value, Closure $fail): void {
                 $parent = $this->resolveParent();

@@ -2,12 +2,16 @@
 
 declare(strict_types = 1);
 
+use App\Actions\StorageOption\UpdateStorageOptionAction;
+use App\DataTransferObjects\Input\StorageOption\StorageOptionData;
 use App\Http\Controllers\StorageOptionController;
 use App\Models\Part;
 use App\Models\StorageOption;
 use App\Models\StorageOptionPart;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 covers(StorageOptionController::class);
 
@@ -366,6 +370,50 @@ describe('StorageOptionController', function(): void {
     });
 
     describe('update', function(): void {
+        it('rechecks ancestry after a previously valid parent becomes a descendant', function(): void {
+            $user = User::factory()->create();
+            $option = StorageOption::factory()->forFamily($user->family)->create();
+            $parent = StorageOption::factory()->forFamily($user->family)->create();
+            $data = new StorageOptionData(name: $option->name, parentId: $parent->id);
+
+            // A competing update changes the tree after request validation.
+            $parent->parent_id = $option->id;
+            $parent->save();
+
+            try {
+                resolve(UpdateStorageOptionAction::class)->execute($option, $data);
+                $this->fail('Expected parent validation to reject the changed ancestry.');
+            } catch (ValidationException $validationException) {
+                expect($validationException->errors())->toHaveKey('parent_id');
+            }
+
+            $this->assertDatabaseHas('storage_options', ['id' => $option->id, 'parent_id' => null]);
+        });
+
+        it('checks a deep parent chain with a fixed number of storage option queries', function(): void {
+            $user = User::factory()->create();
+            $option = StorageOption::factory()->forFamily($user->family)->create();
+            $parent = StorageOption::factory()->forFamily($user->family)->create();
+
+            for ($depth = 0; $depth < 30; $depth++) {
+                $parent = StorageOption::factory()->forFamily($user->family)->create(['parent_id' => $parent->id]);
+            }
+
+            $storageOptionSelects = 0;
+            DB::listen(function($query) use (&$storageOptionSelects): void {
+                if (str_contains($query->sql, 'storage_options') && str_starts_with(mb_strtolower($query->sql), 'select')) {
+                    $storageOptionSelects++;
+                }
+            });
+
+            $this->actingAs($user)->patchJson('/api/storage-options/' . $option->id, [
+                'name' => $option->name,
+                'parent_id' => $parent->id,
+            ])->assertOk();
+
+            expect($storageOptionSelects)->toBeLessThanOrEqual(5);
+        });
+
         it('should reject a storage option as its own parent', function(): void {
             $user = User::factory()->create();
             $option = StorageOption::factory()->forFamily($user->family)->create();

@@ -5,141 +5,88 @@ declare(strict_types = 1);
 use App\Actions\StorageOption\UpdateStorageOptionAction;
 use App\DataTransferObjects\Input\StorageOption\StorageOptionData;
 use App\Models\StorageOption;
-use Illuminate\Database\ConnectionInterface;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 
 covers(UpdateStorageOptionAction::class);
 
+uses(RefreshDatabase::class);
+
 describe('UpdateStorageOptionAction', function(): void {
-    beforeEach(function(): void {
-        $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
-    });
-
-    it('should update storage option properties', function(): void {
-        // arrange
-        $savedValues = [];
-        $storageOption = \Mockery::mock(StorageOption::class);
-        $storageOption->allows('setAttribute')->andReturnUsing(function($key, $value) use (&$savedValues): void {
-            $savedValues[$key] = $value;
-        });
-        $storageOption->allows('getAttribute')->andReturnUsing(function($key) use (&$savedValues): mixed {
-            return $savedValues[$key] ?? null;
-        });
-        $storageOption->shouldReceive('save')->once();
-
-        $action = new UpdateStorageOptionAction($this->db);
-        $data = new StorageOptionData(
-            name: 'New Name',
-            description: 'New description',
-        );
-
-        // act
-        $result = $action->execute($storageOption, $data);
-
-        // assert
-        expect($result)->toBe($storageOption)
-            ->and($savedValues['name'])->toBe('New Name')
-            ->and($savedValues['description'])->toBe('New description');
-    });
-
-    it('should update row and column', function(): void {
-        // arrange
-        $savedValues = [];
-        $storageOption = \Mockery::mock(StorageOption::class);
-        $storageOption->allows('setAttribute')->andReturnUsing(function($key, $value) use (&$savedValues): void {
-            $savedValues[$key] = $value;
-        });
-        $storageOption->allows('getAttribute')->andReturnUsing(function($key) use (&$savedValues): mixed {
-            return $savedValues[$key] ?? null;
-        });
-        $storageOption->shouldReceive('save')->once();
-
-        $action = new UpdateStorageOptionAction($this->db);
-        $data = new StorageOptionData(
-            name: 'Drawer',
-            row: 3,
-            column: 4,
-        );
-
-        // act
-        $action->execute($storageOption, $data);
-
-        // assert
-        expect($savedValues['row'])->toBe(3)
-            ->and($savedValues['column'])->toBe(4);
-    });
-
-    it('should update parent_id', function(): void {
-        // arrange
-        $savedValues = [];
-        $storageOption = \Mockery::mock(StorageOption::class);
-        $storageOption->allows('setAttribute')->andReturnUsing(function($key, $value) use (&$savedValues): void {
-            $savedValues[$key] = $value;
-        });
-        $storageOption->allows('getAttribute')->andReturnUsing(function($key) use (&$savedValues): mixed {
-            return $savedValues[$key] ?? null;
-        });
-        $storageOption->shouldReceive('save')->once();
-
-        $action = new UpdateStorageOptionAction($this->db);
-        $data = new StorageOptionData(
-            name: 'Drawer',
-            parentId: 5,
-        );
-
-        // act
-        $action->execute($storageOption, $data);
-
-        // assert
-        expect($savedValues['parent_id'])->toBe(5);
-    });
-
-    it('should ignore grid_rows and grid_columns in the DTO (immutable after create)', function(): void {
-        // arrange: pre-seed the persisted dims so we can prove they survive untouched
-        $savedValues = [
+    it('updates a location and preserves immutable grid dimensions', function(): void {
+        $user = User::factory()->create();
+        $first = StorageOption::factory()->forFamily($user->family)->create();
+        $second = StorageOption::factory()->forFamily($user->family)->create();
+        $option = StorageOption::factory()->forFamily($user->family)->create([
+            'parent_id' => $first->id,
             'grid_rows' => 5,
             'grid_columns' => 6,
-        ];
-        $storageOption = \Mockery::mock(StorageOption::class);
-        $storageOption->allows('setAttribute')->andReturnUsing(function($key, $value) use (&$savedValues): void {
-            $savedValues[$key] = $value;
-        });
-        $storageOption->allows('getAttribute')->andReturnUsing(function($key) use (&$savedValues): mixed {
-            return $savedValues[$key] ?? null;
-        });
-        $storageOption->shouldReceive('save')->once();
+        ]);
 
-        $action = new UpdateStorageOptionAction($this->db);
-        $data = new StorageOptionData(
-            name: 'Resized?',
+        $result = resolve(UpdateStorageOptionAction::class)->execute($option, new StorageOptionData(
+            name: 'Renamed',
+            description: 'Updated',
+            parentId: $second->id,
+            row: 2,
+            column: 3,
             gridRows: 99,
             gridColumns: 99,
-        );
+        ));
 
-        // act
-        $action->execute($storageOption, $data);
+        expect($result)->toBe($option);
+        $this->assertDatabaseHas('storage_options', [
+            'id' => $option->id,
+            'name' => 'Renamed',
+            'description' => 'Updated',
+            'parent_id' => $second->id,
+            'row' => 2,
+            'column' => 3,
+            'grid_rows' => 5,
+            'grid_columns' => 6,
+        ]);
 
-        // assert — the new dim values are silently dropped; the persisted dims remain
-        expect($savedValues['grid_rows'])->toBe(5)
-            ->and($savedValues['grid_columns'])->toBe(6)
-            ->and($savedValues['name'])->toBe('Resized?');
+        resolve(UpdateStorageOptionAction::class)->execute($option, new StorageOptionData(name: 'Root'));
+        $this->assertDatabaseHas('storage_options', ['id' => $option->id, 'parent_id' => null]);
     });
 
-    it('should call save on the storage option', function(): void {
-        // arrange
-        $storageOption = \Mockery::mock(StorageOption::class);
-        $storageOption->allows('setAttribute');
-        $storageOption->allows('getAttribute');
-        $storageOption->shouldReceive('save')->once();
+    it('rejects itself and descendants as parents', function(): void {
+        $user = User::factory()->create();
+        $option = StorageOption::factory()->forFamily($user->family)->create();
+        $child = StorageOption::factory()->forFamily($user->family)->create(['parent_id' => $option->id]);
 
-        $action = new UpdateStorageOptionAction($this->db);
-        $data = new StorageOptionData(
-            name: 'Updated',
-        );
+        foreach ([$option->id, $child->id] as $parentId) {
+            expect(fn() => resolve(UpdateStorageOptionAction::class)->execute(
+                $option,
+                new StorageOptionData(name: $option->name, parentId: $parentId),
+            ))->toThrow(ValidationException::class);
+        }
 
-        // act
-        $action->execute($storageOption, $data);
+        $this->assertDatabaseHas('storage_options', ['id' => $option->id, 'parent_id' => null]);
+    });
 
-        // assert - Mockery expectations verify the interactions
+    it('rejects an existing cycle in the proposed parent ancestry', function(): void {
+        $user = User::factory()->create();
+        $option = StorageOption::factory()->forFamily($user->family)->create();
+        $first = StorageOption::factory()->forFamily($user->family)->create();
+        $second = StorageOption::factory()->forFamily($user->family)->create(['parent_id' => $first->id]);
+        $first->parent_id = $second->id;
+        $first->save();
+
+        expect(fn() => resolve(UpdateStorageOptionAction::class)->execute(
+            $option,
+            new StorageOptionData(name: $option->name, parentId: $first->id),
+        ))->toThrow(ValidationException::class);
+    });
+
+    it('rejects a parent outside the location family', function(): void {
+        $user = User::factory()->create();
+        $option = StorageOption::factory()->forFamily($user->family)->create();
+        $foreignParent = StorageOption::factory()->create();
+
+        expect(fn() => resolve(UpdateStorageOptionAction::class)->execute(
+            $option,
+            new StorageOptionData(name: $option->name, parentId: $foreignParent->id),
+        ))->toThrow(ValidationException::class);
     });
 });
