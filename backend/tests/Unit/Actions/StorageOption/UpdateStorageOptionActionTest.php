@@ -7,7 +7,6 @@ use App\DataTransferObjects\Input\StorageOption\StorageOptionData;
 use App\Models\StorageOption;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 covers(UpdateStorageOptionAction::class);
@@ -66,16 +65,16 @@ describe('UpdateStorageOptionAction', function(): void {
             ]);
     });
 
-    it('checks every proposed parent against the current family tree', function(): void {
+    it('checks only the proposed parent ancestry within the family', function(): void {
         $cases = [
-            'self' => [1, [1 => null], 'The selected parent cannot be this location or one of its descendants.'],
-            'descendant' => [3, [1 => null, 2 => 1, 3 => 2], 'The selected parent cannot be this location or one of its descendants.'],
-            'existing cycle' => [2, [1 => null, 2 => 3, 3 => 2], 'The selected parent has a cyclic ancestry.'],
-            'missing from family' => [4, [1 => null, 2 => null], 'The selected parent does not belong to your family.'],
-            'valid ancestor chain' => [3, [1 => null, 2 => null, 3 => 2], null],
+            'self' => [1, [1 => null], [], 'The selected parent cannot be this location or one of its descendants.'],
+            'descendant' => [3, [1 => null, 2 => 1, 3 => 2], [3, 2], 'The selected parent cannot be this location or one of its descendants.'],
+            'existing cycle' => [2, [1 => null, 2 => 3, 3 => 2], [2, 3], 'The selected parent has a cyclic ancestry.'],
+            'missing from family' => [4, [1 => null, 2 => null], [4], 'The selected parent does not belong to your family.'],
+            'invalid ancestry' => [2, [1 => null, 2 => 'invalid'], [2], 'The selected parent has invalid ancestry.'],
         ];
 
-        foreach ($cases as $case => [$parentId, $parents, $expectedError]) {
+        foreach ($cases as $case => [$parentId, $parents, $expectedQueries, $expectedError]) {
             $connection = \Mockery::mock(ConnectionInterface::class);
             $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback): StorageOption => $callback());
 
@@ -85,10 +84,24 @@ describe('UpdateStorageOptionAction', function(): void {
             $familyQuery->shouldReceive('first')->once()->andReturn(null);
             $connection->shouldReceive('table')->with('families')->once()->andReturn($familyQuery);
 
+            $queriedIds = [];
             $storageQuery = \Mockery::mock(Builder::class);
-            $storageQuery->shouldReceive('where')->with('family_id', 7)->once()->andReturnSelf();
-            $storageQuery->shouldReceive('pluck')->with('parent_id', 'id')->once()->andReturn(new Collection($parents));
-            $connection->shouldReceive('table')->with('storage_options')->once()->andReturn($storageQuery);
+            $storageQuery->shouldReceive('where')->with('family_id', 7)->andReturnSelf();
+            $storageQuery->shouldReceive('where')->with('id', \Mockery::type('int'))->andReturnUsing(function(string $column, int $id) use (&$queriedIds, $storageQuery): Builder {
+                $queriedIds[] = $id;
+
+                return $storageQuery;
+            });
+            $storageQuery->shouldReceive('first')->with(['parent_id'])->andReturnUsing(function() use (&$queriedIds, $parents): ?object {
+                $id = end($queriedIds);
+
+                if ($id === false) {
+                    throw new \LogicException('Expected an ancestor lookup before reading its result.');
+                }
+
+                return \array_key_exists($id, $parents) ? (object) ['parent_id' => $parents[$id]] : null;
+            });
+            $connection->shouldReceive('table')->with('storage_options')->times(\count($expectedQueries))->andReturn($storageQuery);
 
             $option = \Mockery::mock(StorageOption::class);
             $option->allows('getAttribute')->andReturnUsing(fn(string $key): ?int => match ($key) {
@@ -97,23 +110,19 @@ describe('UpdateStorageOptionAction', function(): void {
                 default => null,
             });
             $option->allows('setAttribute');
-            $option->shouldReceive('save')->times($expectedError === null ? 1 : 0)->andReturn(true);
+            $option->shouldReceive('save')->never();
 
             $action = new UpdateStorageOptionAction($connection);
             $data = new StorageOptionData(name: 'Updated', parentId: $parentId);
 
-            if ($expectedError !== null) {
-                try {
-                    $action->execute($option, $data);
-                    $this->fail("Expected {$case} to be rejected.");
-                } catch (ValidationException $exception) {
-                    expect($exception->errors()['parent_id'])->toBe([$expectedError]);
-                }
-
-                continue;
+            try {
+                $action->execute($option, $data);
+                $this->fail("Expected {$case} to be rejected.");
+            } catch (ValidationException $exception) {
+                expect($exception->errors()['parent_id'])->toBe([$expectedError]);
             }
 
-            expect($action->execute($option, $data))->toBe($option);
+            expect($queriedIds)->toBe($expectedQueries);
         }
     });
 });

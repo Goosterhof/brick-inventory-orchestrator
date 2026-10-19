@@ -390,7 +390,7 @@ describe('StorageOptionController', function(): void {
             $this->assertDatabaseHas('storage_options', ['id' => $option->id, 'parent_id' => null]);
         });
 
-        it('checks a deep parent chain with a fixed number of storage option queries', function(): void {
+        it('checks a deep parent chain using one scoped query per ancestor', function(): void {
             $user = User::factory()->create();
             $option = StorageOption::factory()->forFamily($user->family)->create();
             $parent = StorageOption::factory()->forFamily($user->family)->create();
@@ -399,10 +399,10 @@ describe('StorageOptionController', function(): void {
                 $parent = StorageOption::factory()->forFamily($user->family)->create(['parent_id' => $parent->id]);
             }
 
-            $storageOptionSelects = 0;
-            DB::listen(function($query) use (&$storageOptionSelects): void {
-                if (str_contains($query->sql, 'storage_options') && str_starts_with(mb_strtolower($query->sql), 'select')) {
-                    $storageOptionSelects++;
+            $ancestorQueries = [];
+            DB::listen(function($query) use (&$ancestorQueries): void {
+                if (str_contains($query->sql, 'storage_options') && preg_match('/^select [`"]?parent_id[`"]? from /i', $query->sql) === 1) {
+                    $ancestorQueries[] = $query->sql;
                 }
             });
 
@@ -411,7 +411,10 @@ describe('StorageOptionController', function(): void {
                 'parent_id' => $parent->id,
             ])->assertOk();
 
-            expect($storageOptionSelects)->toBeLessThanOrEqual(5);
+            expect($ancestorQueries)->toHaveCount(31);
+            foreach ($ancestorQueries as $ancestorQuery) {
+                expect($ancestorQuery)->toContain('family_id')->toContain('id')->toContain('limit 1');
+            }
         });
 
         it('should reject a storage option as its own parent', function(): void {

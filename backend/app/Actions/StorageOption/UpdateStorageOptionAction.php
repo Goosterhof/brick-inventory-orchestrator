@@ -9,7 +9,7 @@ use App\Models\StorageOption;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Validation\ValidationException;
 
-use function array_key_exists;
+use function is_int;
 
 /**
  * Updates an existing StorageOption.
@@ -33,11 +33,6 @@ final readonly class UpdateStorageOptionAction
             $this->connection->table('families')->where('id', $storageOption->family_id)->lockForUpdate()->first();
 
             if ($storageOptionData->parentId !== null) {
-                /** @var array<int, int|null> $parents */
-                $parents = $this->connection->table('storage_options')
-                    ->where('family_id', $storageOption->family_id)
-                    ->pluck('parent_id', 'id')
-                    ->all();
                 $candidateId = $storageOptionData->parentId;
                 $visited = [];
 
@@ -50,12 +45,21 @@ final readonly class UpdateStorageOptionAction
                         throw ValidationException::withMessages(['parent_id' => 'The selected parent has a cyclic ancestry.']);
                     }
 
-                    if (!array_key_exists($candidateId, $parents)) {
+                    $parent = $this->connection->table('storage_options')
+                        ->where('family_id', $storageOption->family_id)
+                        ->where('id', $candidateId)
+                        ->first(['parent_id']);
+
+                    if ($parent === null) {
                         throw ValidationException::withMessages(['parent_id' => 'The selected parent does not belong to your family.']);
                     }
 
+                    if ($parent->parent_id !== null && !is_int($parent->parent_id)) {
+                        throw ValidationException::withMessages(['parent_id' => 'The selected parent has invalid ancestry.']);
+                    }
+
                     $visited[$candidateId] = true;
-                    $candidateId = $parents[$candidateId];
+                    $candidateId = $parent->parent_id;
                 }
             }
 
