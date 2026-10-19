@@ -237,6 +237,11 @@ export const mockServer = {
         routes.PATCH.set(endpoint, responseData);
     },
 
+    /** Register a PATCH route that runs error middleware before rejecting. */
+    onPatchError: (endpoint: string, status: number, data: unknown): void => {
+        routes.PATCH.set(endpoint, new MockErrorRoute(status, data));
+    },
+
     /** Register a DELETE route. */
     onDelete: (endpoint: string, responseData?: unknown): void => {
         routes.DELETE.set(endpoint, responseData);
