@@ -114,6 +114,7 @@ onMounted(() => retrieveAll());
                         v-model="adapted.mutable.value.parentId"
                         :options="parentOptions"
                         label="label"
+                        alphabetical-sort
                         :clear-label="t('storage.noParent').value"
                         :options-label="t('storage.parentLocation').value"
                         :required="required"

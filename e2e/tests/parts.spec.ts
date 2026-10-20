@@ -114,7 +114,7 @@ test.describe("Parts", () => {
 
     // The PlacePartModal label "Storage location" comes from the
     // sets.selectStorage translation key (line 133).
-    // Storage location is a ui-inputs SingleSelect (role="combobox" trigger +
+    // Storage location is a ui-inputs GroupSelect (role="combobox" trigger +
     // role="option" listbox), not a native <select> — open it and pick the option.
     const storageSelect = page.getByLabel("Storage location");
     await expect(storageSelect).toBeVisible();

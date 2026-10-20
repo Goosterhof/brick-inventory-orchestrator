@@ -10,7 +10,7 @@
  * FormField reproduces the real scoped-slot contract (control-id / error-id /
  * required / invalid / describedby) and renders label + error, so callers can
  * assert `.ui-label` / `.ui-error` and drive the composed control. TextInput /
- * SingleSelect emit `update:modelValue` so `v-model` still round-trips.
+ * SingleSelect / GroupSelect emit `update:modelValue` so `v-model` still round-trips.
  */
 export const createMockUiInputs = () => ({
     FormField: {
@@ -139,20 +139,22 @@ export const createMockUiInputs = () => ({
     },
     SingleSelect: {
         name: 'SingleSelect',
-        props: [
-            'id',
-            'modelValue',
-            'options',
-            'label',
-            'placeholder',
-            'disabled',
-            'required',
-            'invalid',
-            'describedby',
-            'optionsLabel',
-            'alphabeticalSort',
-            'emptyText',
-        ],
+        // `alphabeticalSort` is Boolean-typed so the bare `alphabetical-sort` attribute
+        // coerces to true, as on the real package's typed prop.
+        props: {
+            id: {},
+            modelValue: {},
+            options: {},
+            label: {},
+            placeholder: {},
+            disabled: {},
+            required: {},
+            invalid: {},
+            describedby: {},
+            optionsLabel: {},
+            alphabeticalSort: {type: Boolean, default: false},
+            emptyText: {},
+        },
         emits: ['update:modelValue'],
         template: `
             <div class="ui-select">
@@ -174,6 +176,53 @@ export const createMockUiInputs = () => ({
                         @click="$emit('update:modelValue', option.id)"
                     >{{ typeof label === 'function' ? label(option) : option[label] }}</li>
                 </ul>
+            </div>
+        `,
+    },
+    GroupSelect: {
+        name: 'GroupSelect',
+        props: [
+            'id',
+            'modelValue',
+            'groups',
+            'label',
+            'placeholder',
+            'disabled',
+            'required',
+            'invalid',
+            'describedby',
+            'optionsLabel',
+            'emptyText',
+            'clearLabel',
+        ],
+        emits: ['update:modelValue'],
+        template: `
+            <div class="ui-select">
+                <button
+                    :id="id"
+                    type="button"
+                    role="combobox"
+                    class="ui-control ui-select__trigger"
+                    :disabled="disabled"
+                    :aria-required="required || undefined"
+                    :aria-invalid="invalid || undefined"
+                    :aria-describedby="describedby"
+                >{{ modelValue }}</button>
+                <div role="listbox" :aria-label="optionsLabel">
+                    <ul
+                        v-for="(group, groupIndex) in groups"
+                        :key="groupIndex"
+                        role="group"
+                        :aria-label="group.header === false ? undefined : group.text"
+                    >
+                        <li
+                            v-for="option in group.options"
+                            :key="String(option.id)"
+                            role="option"
+                            @click="$emit('update:modelValue', option.id)"
+                        >{{ typeof label === 'function' ? label(option) : option[label] }}</li>
+                    </ul>
+                </div>
             </div>
         `,
     },

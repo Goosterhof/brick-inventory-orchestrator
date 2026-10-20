@@ -51,6 +51,31 @@ const mockPartIdentity = {
     partImageUrl: 'https://example.com/3001.jpg',
 };
 
+const storage = (id: number, name: string, parentId: number | null) => ({
+    id,
+    name,
+    description: null,
+    parentId,
+    row: null,
+    column: null,
+    gridRows: null,
+    gridColumns: null,
+    childIds: [],
+});
+
+interface RenderedGroup {
+    text: string;
+    header?: boolean;
+    options: {name: string}[];
+}
+
+const renderedGroups = (wrapper: ReturnType<typeof shallowMount>) =>
+    (wrapper.findComponent({name: 'GroupSelect'}).props('groups') as RenderedGroup[]).map((group) => ({
+        text: group.text,
+        header: group.header,
+        names: group.options.map((option) => option.name),
+    }));
+
 const mockStorageOptions = [
     {id: 1, name: 'Drawer A', description: null, parentId: null, row: null, column: null, childIds: []},
     {id: 2, name: 'Drawer B', description: null, parentId: null, row: null, column: null, childIds: []},
@@ -63,18 +88,18 @@ const mountModal = (props: Record<string, unknown> = {}) =>
             stubs: {
                 // Render named slots through the factory mock so title assertions exercise the page.
                 ModalDialog: false,
-                // Unstub the package controls so the FormField scoped slots + NumberInput + SingleSelect listbox render.
+                // Unstub the package controls so the FormField scoped slots + NumberInput + GroupSelect listbox render.
                 FormField: false,
                 NumberInput: false,
-                SingleSelect: false,
+                GroupSelect: false,
             },
         },
     });
 
-// Select a storage option by id through the mock SingleSelect (v-model emits the
+// Select a storage option by id through the mock GroupSelect (v-model emits the
 // option id) — this also covers ids absent from the list, which a DOM click can't.
 const selectStorage = (wrapper: ReturnType<typeof shallowMount>, id: number): void => {
-    const select = wrapper.findComponent({name: 'SingleSelect'}).vm as ComponentPublicInstance;
+    const select = wrapper.findComponent({name: 'GroupSelect'}).vm as ComponentPublicInstance;
     select.$emit('update:modelValue', id);
 };
 
@@ -144,12 +169,106 @@ describe('PlacePartModal', () => {
         const wrapper = mountModal();
         await flushPromises();
 
-        // Assert — SingleSelect renders the two storage options as listbox items
-        expect(wrapper.findComponent({name: 'SingleSelect'}).exists()).toBe(true);
+        // Assert — GroupSelect renders the two storage options as listbox items
+        expect(wrapper.findComponent({name: 'GroupSelect'}).exists()).toBe(true);
         const options = wrapper.findAll('[role="option"]');
         expect(options).toHaveLength(2);
         expect(options[0]?.text()).toBe('Drawer A');
         expect(options[1]?.text()).toBe('Drawer B');
+    });
+
+    describe('storage grouping', () => {
+        it('should list top-level storage first, then each parent storage as a group of its children', async () => {
+            // Arrange
+            mockGetRequest.mockResolvedValue({
+                data: [
+                    storage(3, 'Shelf', null),
+                    storage(5, 'Bin 1', 3),
+                    storage(2, 'Drawer B', null),
+                    storage(6, 'Slot X', 5),
+                    storage(4, 'Bin 2', 3),
+                    storage(1, 'Drawer A', null),
+                ],
+            });
+
+            // Act
+            const wrapper = mountModal();
+            await flushPromises();
+
+            // Assert
+            expect(renderedGroups(wrapper)).toStrictEqual([
+                {text: '', header: false, names: ['Drawer A', 'Drawer B', 'Shelf']},
+                {text: 'Shelf', header: true, names: ['Bin 1', 'Bin 2']},
+                {text: 'Shelf › Bin 1', header: true, names: ['Slot X']},
+            ]);
+            const groups = wrapper.findAll('[role="group"]');
+            expect(groups.map((group) => group.attributes('aria-label'))).toStrictEqual([
+                undefined,
+                'Shelf',
+                'Shelf › Bin 1',
+            ]);
+            expect(groups[1]?.findAll('[role="option"]').map((option) => option.text())).toStrictEqual([
+                'Bin 1',
+                'Bin 2',
+            ]);
+        });
+
+        it('should keep storage whose parent is not in the list selectable at top level', async () => {
+            // Arrange
+            mockGetRequest.mockResolvedValue({data: [storage(1, 'Drawer A', null), storage(7, 'Loose box', 99)]});
+
+            // Act
+            const wrapper = mountModal();
+            await flushPromises();
+
+            // Assert
+            expect(renderedGroups(wrapper)).toStrictEqual([
+                {text: '', header: false, names: ['Drawer A', 'Loose box']},
+            ]);
+        });
+
+        it('should stop the parent path at a storage already on it when parents form a cycle', async () => {
+            // Arrange
+            mockGetRequest.mockResolvedValue({data: [storage(1, 'A', 2), storage(2, 'B', 1)]});
+
+            // Act
+            const wrapper = mountModal();
+            await flushPromises();
+
+            // Assert
+            expect(renderedGroups(wrapper)).toStrictEqual([
+                {text: '', header: false, names: []},
+                {text: 'A › B', header: true, names: ['A']},
+                {text: 'B › A', header: true, names: ['B']},
+            ]);
+        });
+
+        it('should place the part in a nested storage picked from its parent group', async () => {
+            // Arrange
+            mockGetRequest.mockResolvedValue({
+                data: [storage(3, 'Shelf', null), storage(5, 'Bin 1', 3), storage(4, 'Bin 2', 3)],
+            });
+            mockPostRequest.mockResolvedValue({data: {}});
+            const wrapper = mountModal({defaultQuantity: 2});
+            await flushPromises();
+            const shelfGroup = wrapper.findAll('[role="group"]')[1];
+
+            // Act
+            await shelfGroup?.findAll('[role="option"]')[1]?.trigger('click');
+            await wrapper.find('form').trigger('submit');
+            await flushPromises();
+
+            // Assert
+            expect(wrapper.findComponent({name: 'GroupSelect'}).props('modelValue')).toBe(4);
+            expect(mockPostRequest).toHaveBeenCalledWith('/storage-options/4/parts', {
+                partId: 10,
+                colorId: 1,
+                quantity: 2,
+            });
+            expect(wrapper.emitted('assigned')).toStrictEqual([
+                [{storageOptionId: 4, storageOptionName: 'Bin 2', quantity: 2}],
+            ]);
+        });
     });
 
     it('should render quantity input prefilled with defaultQuantity', async () => {

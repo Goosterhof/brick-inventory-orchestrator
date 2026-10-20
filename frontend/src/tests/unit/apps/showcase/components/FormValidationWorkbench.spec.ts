@@ -247,6 +247,7 @@ describe('FormValidationWorkbench', () => {
         await wrapper.get('input[type="number"]').setValue('7541');
 
         // Theme — SingleSelect emits the option id
+        expect(wrapper.findComponent({name: 'SingleSelect'}).props('alphabeticalSort')).toBe(true);
         (wrapper.findComponent({name: 'SingleSelect'}).vm as ComponentPublicInstance).$emit(
             'update:modelValue',
             'star-wars',

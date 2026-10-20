@@ -3,7 +3,7 @@ import type {StorageMapEntry} from '@app/types/part';
 import type {StorageOption} from '@app/types/storageOption';
 
 import {familyHttpService, familyTranslationService} from '@app/services';
-import {FormField, NumberInput, SingleSelect} from '@script-development/ui-inputs';
+import {FormField, GroupSelect, NumberInput} from '@script-development/ui-inputs';
 import ModalDialog from '@shared/components/ModalDialog.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {computed, onMounted, ref, useId} from 'vue';
@@ -79,6 +79,34 @@ onMounted(async () => {
 
 const findStorageOptionById = (id: number): StorageOption | undefined =>
     storageOptions.value.find((option) => option.id === id);
+
+const byName = (a: StorageOption, b: StorageOption): number => a.name.localeCompare(b.name);
+
+const storagePath = (storage: StorageOption, byId: Map<number, StorageOption>): string => {
+    const names = [storage.name];
+    const visited = new Set([storage.id]);
+    let parent = storage.parentId === null ? undefined : byId.get(storage.parentId);
+    while (parent && !visited.has(parent.id)) {
+        names.unshift(parent.name);
+        visited.add(parent.id);
+        parent = parent.parentId === null ? undefined : byId.get(parent.parentId);
+    }
+    return names.join(' › ');
+};
+
+const storageGroups = computed(() => {
+    const byId = new Map(storageOptions.value.map((option) => [option.id, option]));
+    const isTopLevel = (option: StorageOption) => option.parentId === null || !byId.has(option.parentId);
+    const childrenOf = (parent: StorageOption) =>
+        storageOptions.value.filter((option) => option.parentId === parent.id).sort(byName);
+
+    const parentGroups = storageOptions.value
+        .map((parent) => ({text: storagePath(parent, byId), header: true, options: childrenOf(parent)}))
+        .filter((group) => group.options.length > 0)
+        .sort((a, b) => a.text.localeCompare(b.text));
+
+    return [{text: '', header: false, options: storageOptions.value.filter(isTopLevel).sort(byName)}, ...parentGroups];
+});
 
 const handleSubmit = async () => {
     const storageId = selectedStorageId.value;
@@ -191,10 +219,10 @@ const handleSubmit = async () => {
                 <template v-else>
                     <FormField :id="storageFieldId" :label="t('sets.selectStorage').value" required :error="error">
                         <template #default="{controlId, required, invalid, describedby}">
-                            <SingleSelect
+                            <GroupSelect
                                 :id="controlId"
                                 v-model="selectedStorageId"
-                                :options="storageOptions"
+                                :groups="storageGroups"
                                 label="name"
                                 :options-label="t('sets.selectStorage').value"
                                 :placeholder="t('sets.selectStoragePlaceholder').value"

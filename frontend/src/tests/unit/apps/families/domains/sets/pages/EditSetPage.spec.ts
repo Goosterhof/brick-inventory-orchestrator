@@ -145,6 +145,7 @@ describe('EditSetPage', () => {
         // renders its current value in the combobox trigger.
         expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('2');
         expect(wrapper.get('[role="combobox"]').text()).toBe('built');
+        expect(wrapper.findComponent({name: 'SingleSelect'}).props('alphabeticalSort')).toBe(true);
     });
 
     it('should show loading state initially', () => {

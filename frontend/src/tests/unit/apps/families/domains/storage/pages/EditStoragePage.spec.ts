@@ -194,6 +194,7 @@ describe('EditStoragePage', () => {
             {id: 2, label: 'Cabinet'},
             {id: 8, label: 'Other drawer'},
         ]);
+        expect(wrapper.findComponent({name: 'SingleSelect'}).props('alphabeticalSort')).toBe(true);
         expect(options).not.toContainEqual({id: 5, label: 'Lade A'});
         expect(options).not.toContainEqual({id: 6, label: 'Bin A'});
         expect(options).not.toContainEqual({id: 7, label: 'Drawer B'});

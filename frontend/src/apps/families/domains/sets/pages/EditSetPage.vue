@@ -117,6 +117,7 @@ const handleDelete = async () => {
                             v-model="adapted.mutable.status"
                             :options="statusOptions"
                             label="label"
+                            alphabetical-sort
                             :options-label="t('sets.status').value"
                             :required="required"
                             :invalid="invalid"

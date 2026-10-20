@@ -107,6 +107,7 @@ describe('AddStoragePage', () => {
         expect(wrapper.find('textarea').exists()).toBe(true);
         expect(wrapper.findAll('input[type="number"]')).toHaveLength(2);
         expect(wrapper.findComponent(SingleSelect).exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'SingleSelect'}).props('alphabeticalSort')).toBe(true);
     });
 
     it('should render submit button', () => {
