@@ -17,7 +17,7 @@ describe('StorageOptionController', function(): void {
     describe('index', function(): void {
         it('should return storage options for the authenticated user family', function(): void {
             $user = User::factory()->create();
-            $storageOption = StorageOption::factory()->create([
+            StorageOption::factory()->create([
                 'family_id' => $user->family_id,
                 'name' => 'Cabinet 1',
             ]);

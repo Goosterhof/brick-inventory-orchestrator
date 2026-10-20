@@ -129,7 +129,7 @@ describe('UpsertPartAction', function(): void {
         );
 
         // act
-        $result = $action->execute($data);
+        $action->execute($data);
 
         // assert
         expect($newPartSavedValues['category'])->toBeNull();
