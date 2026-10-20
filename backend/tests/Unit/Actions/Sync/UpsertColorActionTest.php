@@ -128,7 +128,7 @@ describe('UpsertColorAction', function(): void {
         );
 
         // act
-        $result = $action->execute($data);
+        $action->execute($data);
 
         // assert
         expect($newColorSavedValues['name'])->toBe('Trans-Red');

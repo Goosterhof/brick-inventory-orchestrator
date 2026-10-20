@@ -220,7 +220,7 @@ describe('UpsertSetAction', function(): void {
         );
 
         // act
-        $result = $action->execute($data);
+        $action->execute($data);
 
         // assert
         expect($newSetSavedValues['theme_id'])->toBeNull();

@@ -121,7 +121,6 @@ it('should define EAGER_LOAD constant when using nested ResourceData', function(
 
         // Also check for arrays that might contain ResourceData (property types)
         foreach ($reflection->getProperties() as $property) {
-            $type = $property->getType();
             // Check docblock for array types like @var SetPartResourceData[]
             $docComment = $property->getDocComment();
             if ($docComment && preg_match('/@var\s+(\w+ResourceData)\[\]/', $docComment)) {

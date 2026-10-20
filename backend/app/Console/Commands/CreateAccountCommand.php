@@ -41,16 +41,38 @@ final class CreateAccountCommand extends Command
             return self::FAILURE;
         }
 
+        $familyName = $this->stringInput('--family', $this->option('family'));
+        $name = $this->stringInput('--name', $this->option('name'));
+        $email = $this->stringInput('email', $this->argument('email'));
+
+        if ($familyName === null || $name === null || $email === null) {
+            return self::FAILURE;
+        }
+
         $user = $createAccountAction->execute(new CreateAccountData(
-            familyName: (string) $this->option('family'),
-            name: (string) $this->option('name'),
-            email: $this->argument('email'),
+            familyName: $familyName,
+            name: $name,
+            email: $email,
             password: $password,
         ));
 
         $this->info(sprintf('Account created: user=%d family=%d', $user->id, $user->family_id));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Null means the value is not a string and the reason was already printed.
+     */
+    private function stringInput(string $label, mixed $value): ?string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        $this->error(sprintf('%s needs a value; no account was created.', $label));
+
+        return null;
     }
 
     /**
