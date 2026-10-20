@@ -688,7 +688,10 @@
                         "src/apps/families/domains/parts/pages/PartsUnsortedPage.vue"
                     ],
                     "sets": ["src/apps/families/domains/sets/components/SetListItem.vue"],
-                    "storage": ["src/apps/families/domains/storage/pages/StorageOverviewPage.vue"]
+                    "storage": [
+                        "src/apps/families/domains/storage/components/StorageTreeNode.vue",
+                        "src/apps/families/domains/storage/pages/StorageOverviewPage.vue"
+                    ]
                 },
                 "showcase": {"_root": ["src/apps/showcase/components/ComponentGallery.vue"]}
             },
