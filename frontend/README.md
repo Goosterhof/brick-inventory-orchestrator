@@ -107,8 +107,8 @@ The project uses path aliases for clean imports:
 - `@app/*` → `./src/apps/{currentApp}/*` (resolved at build time)
 
 ```ts
-import NavLink from '@shared/components/NavLink.vue';
 import {familyAuthService} from '@app/services';
+import NavLink from '@shared/components/NavLink.vue';
 ```
 
 ## Contributing

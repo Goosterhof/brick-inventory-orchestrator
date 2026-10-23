@@ -58,8 +58,8 @@ npm run test:unit     # Run unit tests
 Use path aliases for clean imports:
 
 ```ts
-import NavLink from '@shared/components/NavLink.vue';
 import {familyAuthService} from '@app/services';
+import NavLink from '@shared/components/NavLink.vue';
 ```
 
 ## Project Structure

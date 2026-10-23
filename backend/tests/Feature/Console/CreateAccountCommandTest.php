@@ -49,6 +49,21 @@ describe('account:create command', function(): void {
             ->and($user->family->name)->toBe('Family');
     });
 
+    it('should refuse an option given without a value and create nothing', function(string $option): void {
+        // act
+        $exitCode = Artisan::call('account:create', [
+            'email' => 'novalue@example.com',
+            'password' => 'secret-password',
+            $option => null,
+        ]);
+
+        // assert
+        expect($exitCode)->toBe(1)
+            ->and(Artisan::output())->toContain(\sprintf('%s needs a value; no account was created.', $option))
+            ->and(User::query()->count())->toBe(0)
+            ->and(Family::query()->count())->toBe(0);
+    })->with(['--name', '--family']);
+
     describe('password off argv (WR-2123)', function(): void {
         /**
          * Runs the command non-interactively with $stdin as its input stream, as

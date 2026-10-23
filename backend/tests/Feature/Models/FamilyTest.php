@@ -31,7 +31,7 @@ describe('Family', function(): void {
 
     it('should have multiple users', function(): void {
         $family = Family::factory()->create();
-        $users = User::factory()->count(3)->create(['family_id' => $family->id]);
+        User::factory()->count(3)->create(['family_id' => $family->id]);
 
         expect($family->users)->toHaveCount(3)
             ->and($family->users->first())->toBeInstanceOf(User::class);
