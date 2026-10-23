@@ -82,20 +82,48 @@ const findStorageOptionById = (id: number): StorageOption | undefined =>
 
 const byName = (a: StorageOption, b: StorageOption): number => a.name.localeCompare(b.name);
 
-const storagePath = (storage: StorageOption, byId: Map<number, StorageOption>): string => {
-    const names = [storage.name];
-    const visited = new Set([storage.id]);
-    let parent = storage.parentId === null ? undefined : byId.get(storage.parentId);
-    while (parent && !visited.has(parent.id)) {
-        names.unshift(parent.name);
-        visited.add(parent.id);
-        parent = parent.parentId === null ? undefined : byId.get(parent.parentId);
-    }
-    return names.join(' › ');
+const PATH_SEPARATOR = ' › ';
+
+// A storage on a parent cycle is named after the cycle walked up from itself, ending at itself.
+const cyclePath = (cycle: StorageOption[], offset: number): string =>
+    [...cycle.slice(offset), ...cycle.slice(0, offset)]
+        .map((step) => step.name)
+        .reverse()
+        .join(PATH_SEPARATOR);
+
+const pathResolver = (byId: Map<number, StorageOption>) => {
+    const pathById = new Map<number, string>();
+
+    const unresolvedTrail = (storage: StorageOption) => {
+        const trail: StorageOption[] = [];
+        const trailIndexById = new Map<number, number>();
+        let node: StorageOption | undefined = storage;
+        while (node && !pathById.has(node.id) && !trailIndexById.has(node.id)) {
+            trailIndexById.set(node.id, trail.length);
+            trail.push(node);
+            node = node.parentId === null ? undefined : byId.get(node.parentId);
+        }
+        return {trail, cycleStart: node === undefined ? undefined : trailIndexById.get(node.id)};
+    };
+
+    return (storage: StorageOption): string => {
+        const {trail, cycleStart = trail.length} = unresolvedTrail(storage);
+
+        const cycle = trail.slice(cycleStart);
+        for (const [offset, member] of cycle.entries()) pathById.set(member.id, cyclePath(cycle, offset));
+
+        for (const step of trail.slice(0, cycleStart).reverse()) {
+            const parentPath = step.parentId === null ? undefined : pathById.get(step.parentId);
+            pathById.set(step.id, parentPath === undefined ? step.name : parentPath + PATH_SEPARATOR + step.name);
+        }
+
+        return pathById.get(storage.id) as string;
+    };
 };
 
 const storageGroups = computed(() => {
     const byId = new Map(storageOptions.value.map((option) => [option.id, option]));
+    const storagePath = pathResolver(byId);
     const isTopLevel = (option: StorageOption) => option.parentId === null || !byId.has(option.parentId);
     const childrenByParentId = new Map<number, StorageOption[]>();
     for (const option of storageOptions.value) {
@@ -109,7 +137,7 @@ const storageGroups = computed(() => {
         .flatMap((parent) => {
             const children = childrenByParentId.get(parent.id);
             if (!children) return [];
-            return [{text: storagePath(parent, byId), header: true, options: [...children].sort(byName)}];
+            return [{text: storagePath(parent), header: true, options: [...children].sort(byName)}];
         })
         .sort((a, b) => a.text.localeCompare(b.text));
 

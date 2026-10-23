@@ -282,6 +282,65 @@ describe('PlacePartModal', () => {
             expect(elementReads).toBeLessThan(options.length * 20);
         });
 
+        it('should name a storage hanging below a parent cycle after the cycle walked from its parent', async () => {
+            // Arrange — A, B and C form a cycle; D hangs below A, E below D.
+            mockGetRequest.mockResolvedValue({
+                data: [
+                    storage(1, 'A', 3),
+                    storage(2, 'B', 1),
+                    storage(3, 'C', 2),
+                    storage(4, 'D', 1),
+                    storage(5, 'E', 4),
+                ],
+            });
+
+            // Act
+            const wrapper = mountModal();
+            await flushPromises();
+
+            // Assert
+            expect(renderedGroups(wrapper)).toStrictEqual([
+                {text: '', header: false, names: []},
+                {text: 'A › B › C', header: true, names: ['A']},
+                {text: 'B › C › A', header: true, names: ['B', 'D']},
+                {text: 'B › C › A › D', header: true, names: ['E']},
+                {text: 'C › A › B', header: true, names: ['C']},
+            ]);
+        });
+
+        it('should build the paths of one deep chain while reading each parent a bounded number of times', async () => {
+            // Arrange — 2000 storages, each nested in the previous one; the proxies count every parent read.
+            const depth = 2000;
+            const label = (level: number) => `L${String(level).padStart(4, '0')}`;
+            let parentReads = 0;
+            const chain = Array.from(
+                {length: depth},
+                (_, index) =>
+                    new Proxy(storage(index + 1, label(index + 1), index === 0 ? null : index), {
+                        get: (target, key, receiver): unknown => {
+                            if (key === 'parentId') parentReads++;
+                            return Reflect.get(target, key, receiver);
+                        },
+                    }),
+            );
+            mockGetRequest.mockResolvedValue({data: chain});
+
+            // Act
+            const wrapper = mountModal();
+            await flushPromises();
+            const groups = renderedGroups(wrapper);
+
+            // Assert
+            expect(groups).toHaveLength(depth);
+            expect(groups[0]?.names).toStrictEqual(['L0001']);
+            expect(groups[1]).toStrictEqual({text: 'L0001', header: true, names: ['L0002']});
+            expect(groups[2]?.text).toBe('L0001 › L0002');
+            const deepest = groups.at(-1);
+            expect(deepest?.names).toStrictEqual([label(depth)]);
+            expect(deepest?.text).toBe(Array.from({length: depth - 1}, (_, index) => label(index + 1)).join(' › '));
+            expect(parentReads).toBeLessThan(depth * 20);
+        });
+
         it('should place the part in a nested storage picked from its parent group', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({
