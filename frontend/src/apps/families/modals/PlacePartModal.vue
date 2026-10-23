@@ -97,12 +97,20 @@ const storagePath = (storage: StorageOption, byId: Map<number, StorageOption>): 
 const storageGroups = computed(() => {
     const byId = new Map(storageOptions.value.map((option) => [option.id, option]));
     const isTopLevel = (option: StorageOption) => option.parentId === null || !byId.has(option.parentId);
-    const childrenOf = (parent: StorageOption) =>
-        storageOptions.value.filter((option) => option.parentId === parent.id).sort(byName);
+    const childrenByParentId = new Map<number, StorageOption[]>();
+    for (const option of storageOptions.value) {
+        if (option.parentId === null) continue;
+        const siblings = childrenByParentId.get(option.parentId);
+        if (siblings) siblings.push(option);
+        else childrenByParentId.set(option.parentId, [option]);
+    }
 
     const parentGroups = storageOptions.value
-        .map((parent) => ({text: storagePath(parent, byId), header: true, options: childrenOf(parent)}))
-        .filter((group) => group.options.length > 0)
+        .flatMap((parent) => {
+            const children = childrenByParentId.get(parent.id);
+            if (!children) return [];
+            return [{text: storagePath(parent, byId), header: true, options: [...children].sort(byName)}];
+        })
         .sort((a, b) => a.text.localeCompare(b.text));
 
     return [{text: '', header: false, options: storageOptions.value.filter(isTopLevel).sort(byName)}, ...parentGroups];

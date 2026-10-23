@@ -243,6 +243,45 @@ describe('PlacePartModal', () => {
             ]);
         });
 
+        it('should group thousands of storage options while reading the list a bounded number of times', async () => {
+            // Arrange — 200 shelves, each holding 9 bins listed out of name order; the proxy counts every element read.
+            const shelves = 200;
+            const binsPerShelf = 9;
+            const options = [];
+            for (let shelf = 1; shelf <= shelves; shelf++) {
+                options.push(storage(shelf, `Shelf ${String(shelf).padStart(3, '0')}`, null));
+                for (let bin = binsPerShelf; bin >= 1; bin--) {
+                    options.push(storage(10_000 + shelf * 10 + bin, `Bin ${bin}`, shelf));
+                }
+            }
+            let elementReads = 0;
+            const counted = new Proxy(options, {
+                get: (target, key, receiver): unknown => {
+                    if (typeof key === 'string' && /^\d+$/.test(key)) elementReads++;
+                    return Reflect.get(target, key, receiver);
+                },
+            });
+            mockGetRequest.mockResolvedValue({data: counted});
+
+            // Act
+            const wrapper = mountModal();
+            await flushPromises();
+            const groups = renderedGroups(wrapper);
+
+            // Assert
+            expect(groups).toHaveLength(shelves + 1);
+            expect(groups[0]?.names).toHaveLength(shelves);
+            expect(groups[0]?.names[0]).toBe('Shelf 001');
+            expect(groups[1]).toStrictEqual({
+                text: 'Shelf 001',
+                header: true,
+                names: Array.from({length: binsPerShelf}, (_, index) => `Bin ${index + 1}`),
+            });
+            expect(groups.at(-1)?.text).toBe('Shelf 200');
+            expect(groups.slice(1).every((group) => group.names.length === binsPerShelf)).toBe(true);
+            expect(elementReads).toBeLessThan(options.length * 20);
+        });
+
         it('should place the part in a nested storage picked from its parent group', async () => {
             // Arrange
             mockGetRequest.mockResolvedValue({
