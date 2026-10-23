@@ -155,6 +155,7 @@ const onSubmit = () => {
                         v-model="adapted.mutable.value.status"
                         :options="statusOptions"
                         label="label"
+                        alphabetical-sort
                         :options-label="t('sets.status').value"
                         :required="required"
                         :invalid="invalid"

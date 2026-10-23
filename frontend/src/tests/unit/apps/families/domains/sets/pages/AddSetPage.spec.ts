@@ -118,6 +118,7 @@ describe('AddSetPage', () => {
         expect(wrapper.find('input[type="date"]').exists()).toBe(true);
         expect(wrapper.find('textarea').exists()).toBe(true);
         expect(wrapper.find('[role="combobox"]').exists()).toBe(true);
+        expect(wrapper.findComponent({name: 'SingleSelect'}).props('alphabeticalSort')).toBe(true);
     });
 
     it('should render submit button', () => {

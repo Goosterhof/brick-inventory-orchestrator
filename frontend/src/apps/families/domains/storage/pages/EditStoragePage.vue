@@ -127,6 +127,7 @@ const handleDelete = async () => {
                             v-model="adapted.mutable.parentId"
                             :options="parentOptions"
                             label="label"
+                            alphabetical-sort
                             :clear-label="t('storage.noParent').value"
                             :options-label="t('storage.parentLocation').value"
                             :required="required"

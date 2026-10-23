@@ -193,6 +193,7 @@ const noop = () => {};
                                 v-model="demoSelect"
                                 :options="demoStatusOptions"
                                 label="label"
+                                alphabetical-sort
                                 options-label="Status"
                                 :required="required"
                                 :invalid="invalid"

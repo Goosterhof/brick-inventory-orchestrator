@@ -355,6 +355,7 @@ describe('ComponentGallery', () => {
         await wrapper.get('input[type="number"]').setValue(''); // NaN → null branch
         await wrapper.get('input[type="number"]').setValue('99');
         await wrapper.get('input[type="date"]').setValue('2025-06-15');
+        expect(wrapper.findComponent({name: 'SingleSelect'}).props('alphabeticalSort')).toBe(true);
         (wrapper.findComponent({name: 'SingleSelect'}).vm as ComponentPublicInstance).$emit(
             'update:modelValue',
             'sealed',

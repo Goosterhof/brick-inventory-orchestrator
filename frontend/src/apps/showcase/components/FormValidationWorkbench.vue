@@ -185,6 +185,7 @@ watch([name, setNumber, pieceCount, theme, purchaseDate, notes], () => {
                                 v-model="theme"
                                 :options="themeOptions"
                                 label="label"
+                                alphabetical-sort
                                 options-label="Theme"
                                 placeholder="Select a theme"
                                 :required="required"

@@ -3,7 +3,7 @@ import type {StorageMapEntry} from '@app/types/part';
 import type {StorageOption} from '@app/types/storageOption';
 
 import {familyHttpService, familyTranslationService} from '@app/services';
-import {FormField, NumberInput, SingleSelect} from '@script-development/ui-inputs';
+import {FormField, GroupSelect, NumberInput} from '@script-development/ui-inputs';
 import ModalDialog from '@shared/components/ModalDialog.vue';
 import PrimaryButton from '@shared/components/PrimaryButton.vue';
 import {computed, onMounted, ref, useId} from 'vue';
@@ -79,6 +79,70 @@ onMounted(async () => {
 
 const findStorageOptionById = (id: number): StorageOption | undefined =>
     storageOptions.value.find((option) => option.id === id);
+
+const byName = (a: StorageOption, b: StorageOption): number => a.name.localeCompare(b.name);
+
+const PATH_SEPARATOR = ' › ';
+
+// A storage on a parent cycle is named after the cycle walked up from itself, ending at itself.
+const cyclePath = (cycle: StorageOption[], offset: number): string =>
+    [...cycle.slice(offset), ...cycle.slice(0, offset)]
+        .map((step) => step.name)
+        .reverse()
+        .join(PATH_SEPARATOR);
+
+const pathResolver = (byId: Map<number, StorageOption>) => {
+    const pathById = new Map<number, string>();
+
+    const unresolvedTrail = (storage: StorageOption) => {
+        const trail: StorageOption[] = [];
+        const trailIndexById = new Map<number, number>();
+        let node: StorageOption | undefined = storage;
+        while (node && !pathById.has(node.id) && !trailIndexById.has(node.id)) {
+            trailIndexById.set(node.id, trail.length);
+            trail.push(node);
+            node = node.parentId === null ? undefined : byId.get(node.parentId);
+        }
+        return {trail, cycleStart: node === undefined ? undefined : trailIndexById.get(node.id)};
+    };
+
+    return (storage: StorageOption): string => {
+        const {trail, cycleStart = trail.length} = unresolvedTrail(storage);
+
+        const cycle = trail.slice(cycleStart);
+        for (const [offset, member] of cycle.entries()) pathById.set(member.id, cyclePath(cycle, offset));
+
+        for (const step of trail.slice(0, cycleStart).reverse()) {
+            const parentPath = step.parentId === null ? undefined : pathById.get(step.parentId);
+            pathById.set(step.id, parentPath === undefined ? step.name : parentPath + PATH_SEPARATOR + step.name);
+        }
+
+        return pathById.get(storage.id) as string;
+    };
+};
+
+const storageGroups = computed(() => {
+    const byId = new Map(storageOptions.value.map((option) => [option.id, option]));
+    const storagePath = pathResolver(byId);
+    const isTopLevel = (option: StorageOption) => option.parentId === null || !byId.has(option.parentId);
+    const childrenByParentId = new Map<number, StorageOption[]>();
+    for (const option of storageOptions.value) {
+        if (option.parentId === null) continue;
+        const siblings = childrenByParentId.get(option.parentId);
+        if (siblings) siblings.push(option);
+        else childrenByParentId.set(option.parentId, [option]);
+    }
+
+    const parentGroups = storageOptions.value
+        .flatMap((parent) => {
+            const children = childrenByParentId.get(parent.id);
+            if (!children) return [];
+            return [{text: storagePath(parent), header: true, options: [...children].sort(byName)}];
+        })
+        .sort((a, b) => a.text.localeCompare(b.text));
+
+    return [{text: '', header: false, options: storageOptions.value.filter(isTopLevel).sort(byName)}, ...parentGroups];
+});
 
 const handleSubmit = async () => {
     const storageId = selectedStorageId.value;
@@ -191,10 +255,10 @@ const handleSubmit = async () => {
                 <template v-else>
                     <FormField :id="storageFieldId" :label="t('sets.selectStorage').value" required :error="error">
                         <template #default="{controlId, required, invalid, describedby}">
-                            <SingleSelect
+                            <GroupSelect
                                 :id="controlId"
                                 v-model="selectedStorageId"
-                                :options="storageOptions"
+                                :groups="storageGroups"
                                 label="name"
                                 :options-label="t('sets.selectStorage').value"
                                 :placeholder="t('sets.selectStoragePlaceholder').value"
