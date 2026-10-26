@@ -73,7 +73,7 @@
     "devDependencies": {
         "@commitlint/cli": "^21.2.3",
         "@commitlint/config-conventional": "^21.2.3",
-        "@size-limit/file": "^13.0.3",
+        "@size-limit/file": "^14.2.0",
         "@stryker-mutator/core": "^10",
         "@stryker-mutator/vitest-runner": "^10",
         "@tsconfig/node24": "^24.0.5",
@@ -98,7 +98,7 @@
         "oxlint": "^1.88.0",
         "oxlint-tsgolint": "^7.0.2003",
         "playwright": "^1.64.0",
-        "size-limit": "^13.0.3",
+        "size-limit": "^14.2.0",
         "typescript": "~6.0.3",
         "unocss": "^66.8.1",
         "vite": "^8.3.5",
