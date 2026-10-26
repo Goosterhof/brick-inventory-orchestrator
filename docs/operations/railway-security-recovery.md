@@ -12,7 +12,7 @@ A redeploy can reuse the previous deployment's environment snapshot. Verify the 
 
 The queue worker recycles after `--max-time=3600` with a successful exit. Railway must use `restartPolicyType = "ALWAYS"` so that this normal exit does not leave mail and imports unprocessed. The same policy also restarts the web service if it stops.
 
-Resend requires both the `resend/resend-php` package and `services.resend.key` configuration. Supply a send-only RESEND_API_KEY in the shared variables, scoped to the sending domain. Resolve the real Laravel transport during validation without sending a test email. Verify the replacement at the issuer and revoke the old credential there; replacing a Railway value alone does not revoke it.
+Resend requires both the `resend/resend-php` package and `services.resend.key` configuration. Supply a send-only RESEND_API_KEY in the shared variables, scoped to the sending domain. Resolve the real Laravel transport during validation without sending a test email. The default PHPUnit run includes the `Integration` suite for this configuration check; application coverage and mutation suites retain their existing application-class scope. Verify the replacement at the issuer and revoke the old credential there; replacing a Railway value alone does not revoke it.
 
 ## Security baseline
 

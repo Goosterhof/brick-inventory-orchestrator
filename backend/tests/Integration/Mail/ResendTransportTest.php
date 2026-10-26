@@ -3,10 +3,9 @@
 declare(strict_types = 1);
 
 use Illuminate\Contracts\Mail\Factory;
-use Illuminate\Mail\MailManager;
 use Illuminate\Mail\Transport\ResendTransport;
 
-covers(MailManager::class);
+// Configuration integration: exercises the installed vendor transport, not application-class coverage.
 
 describe('Production Resend transport', function(): void {
     it('should resolve the configured transport without sending mail', function(): void {
