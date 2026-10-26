@@ -14,8 +14,8 @@
 # Laravel's Route::fallback() defined in backend/routes/web.php, which
 # returns the SPA's index.html so Vue Router takes over client-side.
 
-ARG PHP_VERSION=8.5
-ARG NODE_VERSION=24
+ARG PHP_VERSION=8.5.12
+ARG NODE_VERSION=24.22.1
 
 # ============================================================
 # Stage 1 — Frontend build

@@ -18,7 +18,7 @@ set -euo pipefail
 if [[ -n "${QUEUE_WORKER:-}" ]]; then
     # Queue worker: drain the database queue. --max-time recycles the
     # process hourly so memory leaks don't compound. Railway restarts
-    # on exit (restartPolicyType=ON_FAILURE), so the recycle is invisible.
+    # on exit (restartPolicyType=ALWAYS), so the recycle is invisible.
     exec php artisan queue:work \
         --queue=default \
         --tries=3 \

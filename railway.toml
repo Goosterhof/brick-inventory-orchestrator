@@ -31,5 +31,6 @@ dockerfilePath = "Dockerfile"
 # healthcheck is configured in the dashboard at `/api/health` with a
 # 120s timeout.
 startCommand = "bash bin/start.sh"
-restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 3
+# queue:work exits successfully after --max-time; recycle both services even
+# after a clean exit so the worker cannot remain stopped indefinitely.
+restartPolicyType = "ALWAYS"
