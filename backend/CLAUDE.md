@@ -229,7 +229,7 @@ ReportSubmissionException         → 502 (vendor — kendo-report-tool)
 Hooks are light (ADR-0028 Amendment 2); the full gauntlet runs in CI (`.github/workflows/backend-ci.yml`) behind the required `gate` check. Root `CLAUDE.md` § Git Hooks has the table.
 
 - **Pre-commit:** Pint writes the staged PHP files and re-stages them; a file that also has unstaged edits gets `pint --test` only.
-- **Pre-push**, when the range touches `backend/**`: `composer phpstan`, `composer phpstan:types`, `composer audit`.
+- **Pre-push**, when the range touches `backend/**`: `composer phpstan`, `composer phpstan:types`, `composer audit --abandoned=report`.
 - **CI only:** `rector:test`, whole-tree `pint:test`, `deptrac`, `test:arch`, `composer test`, both coverage suites, mutation, Semgrep, seed. `phpstan:types` is the one gate CI does not run — the pre-push hook is its only runner.
 
 Tool caches live in `storage/` and are git-ignored: `storage/pint.cache` (`pint.json` `cache-file`), `storage/phpstan` and `storage/phpstan-types` (each config's `tmpDir`), `storage/rector` (`rector.php` `withCache`). A cache directory per checkout keeps worktrees from evicting each other's caches through `/tmp`.
