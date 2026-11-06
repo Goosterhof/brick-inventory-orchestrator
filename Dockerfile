@@ -86,11 +86,19 @@ RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/zz-memory.ini
 # musl with a glibc system has caused Octane to silently fail to
 # launch FrankenPHP at runtime. Octane's own downloader makes the same
 # distinction (vendor/laravel/octane/src/Commands/Concerns/InstallsFrankenPhpDependencies.php).
-RUN ARCH=$(uname -m) \
-    && curl -fsSL "https://github.com/dunglas/frankenphp/releases/latest/download/frankenphp-linux-${ARCH}-gnu" \
+# Fetched from our mirror, not upstream's release asset: upstream rebuilds
+# assets in place, so a sha256 pin on its URL dies by design (WR-0652). The
+# mirror holds x86_64 only. The version assertion fails the build when the tag
+# and version desync (WR-2848).
+ARG FRANKENPHP_VERSION=1.13.5
+ARG FRANKENPHP_MIRROR_TAG=frankenphp-v1.13.5-r20261106
+ARG FRANKENPHP_SHA256=afdca5ccd41c79c891365c1efdc93f551225b7d028ffbaf1f6792b2283d11778
+RUN curl -fsSL "https://github.com/script-development/town-crier-artifacts/releases/download/${FRANKENPHP_MIRROR_TAG}/frankenphp-linux-x86_64-gnu" \
         -o /usr/local/bin/frankenphp \
+    && echo "${FRANKENPHP_SHA256}  /usr/local/bin/frankenphp" | sha256sum -c - \
     && chmod +x /usr/local/bin/frankenphp \
-    && /usr/local/bin/frankenphp version
+    && /usr/local/bin/frankenphp version \
+    && /usr/local/bin/frankenphp version | grep -qF "v${FRANKENPHP_VERSION} "
 
 # Composer at runtime for deploy-step artisan commands.
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
