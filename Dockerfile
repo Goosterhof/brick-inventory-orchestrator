@@ -76,10 +76,6 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Raise memory_limit above the cli default (128M); Octane workers need the
-# headroom (matches docker/backend.Dockerfile).
-RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/zz-memory.ini
-
 # FrankenPHP binary (Caddy + PHP, single process).
 # Use the `-gnu` variant — the base image is Debian (glibc). The
 # default `frankenphp-linux-x86_64` is the musl static build; mixing
@@ -99,6 +95,26 @@ RUN curl -fsSL "https://github.com/script-development/town-crier-artifacts/relea
     && chmod +x /usr/local/bin/frankenphp \
     && /usr/local/bin/frankenphp version \
     && /usr/local/bin/frankenphp version | grep -qF "v${FRANKENPHP_VERSION} "
+
+# One ini for two runtimes: the web service's embedded PHP scans only its
+# compiled /etc/frankenphp/php.d, the queue worker's system PHP only conf.d.
+# post_max_size holds 5 screenshots of 3 MB plus the form; upload_max_filesize
+# holds the 10 MB brick photo. The build fails if either runtime misses a value
+# (WR-2851).
+RUN printf '%s\n' \
+        'memory_limit = 512M' \
+        'display_errors = Off' \
+        'display_startup_errors = Off' \
+        'log_errors = On' \
+        'expose_php = Off' \
+        'upload_max_filesize = 10M' \
+        'post_max_size = 20M' \
+        > /usr/local/etc/php/conf.d/zz-bio.ini \
+    && mkdir -p /etc/frankenphp/php.d \
+    && ln -s /usr/local/etc/php/conf.d/zz-bio.ini /etc/frankenphp/php.d/zz-bio.ini \
+    && ASSERT='foreach (["memory_limit" => "512M", "display_errors" => "", "display_startup_errors" => "", "log_errors" => "1", "expose_php" => "", "upload_max_filesize" => "10M", "post_max_size" => "20M"] as $k => $v) { if (ini_get($k) !== $v) { fwrite(STDERR, PHP_BINARY." $k=".var_export(ini_get($k), true)."\n"); exit(1); } }' \
+    && /usr/local/bin/frankenphp php-cli -r "$ASSERT" \
+    && php -r "$ASSERT"
 
 # Composer at runtime for deploy-step artisan commands.
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
