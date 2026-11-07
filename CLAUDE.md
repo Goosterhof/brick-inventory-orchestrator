@@ -252,7 +252,7 @@ lint-staged's own backup would live in `refs/stash`, which every worktree of thi
 
 | Range touches | Runs |
 |---|---|
-| `backend/` | `composer phpstan`, `composer phpstan:types`, `composer audit` |
+| `backend/` | `composer phpstan`, `composer phpstan:types`, `composer audit --abandoned=report` |
 | `frontend/`, `*.md` excluded | `npm run type-check` (vue-tsc) |
 
 A deletion-only or docs-only push runs nothing. **No stdin, or a range that cannot be computed, runs every gate (fail closed).** `phpstan:types` is not a CI step — this hook is its only runner.

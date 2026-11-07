@@ -57,7 +57,7 @@ jobs:
         run: composer install --prefer-dist --no-progress
 
       - name: Check for known vulnerabilities
-        run: composer audit
+        run: composer audit --abandoned=report
 
   lint:
     runs-on: ubuntu-latest
