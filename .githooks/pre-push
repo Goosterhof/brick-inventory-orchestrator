@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Pre-push: type-check each side the push touches (ADR-0028 Amendment 2, light hooks).
 #
-# Range touches backend/ → PHPStan, PHPStan type coverage, composer audit. Range touches frontend/
-# outside *.md → vue-tsc. Pest, Rector, Deptrac, Vitest, knip and the Vite build run in CI only:
+# Range touches backend/ → PHPStan, PHPStan type coverage. Range touches frontend/ outside *.md →
+# vue-tsc. Pest, Rector, Deptrac, Vitest, knip, the Vite build and composer audit run in CI only:
 # CLAUDE.md § Git Hooks says where each gate runs.
 
 set -uo pipefail
@@ -72,20 +72,19 @@ if [ "$has_input" -eq 0 ]; then
     fail_closed=1
 fi
 
-# Backend. `phpstan:types` is not in backend-ci.yml; this hook is the only place it runs.
+# Backend. `phpstan:types` is not in backend-ci.yml; this hook is the only place it runs. composer
+# audit stays out of this hook by Commander ruling (ADR-0028 Amendment 3).
 if [ "$fail_closed" -eq 1 ] || printf '%s\n' "$changed_files" | grep -Eq '^backend/'; then
     if [ ! -d backend/vendor ]; then
-        echo "[skip] PHPStan + composer audit — backend/vendor/ is missing; run: composer install -d backend" >&2
+        echo "[skip] PHPStan — backend/vendor/ is missing; run: composer install -d backend" >&2
     else
         echo "=== PHPStan ==="
         composer --working-dir=backend phpstan || failed=1
         echo "=== PHPStan type coverage ==="
         composer --working-dir=backend phpstan:types || failed=1
-        echo "=== composer audit ==="
-        composer --working-dir=backend audit --abandoned=report || failed=1
     fi
 else
-    echo "[skip] PHPStan + composer audit — no backend changes in push range" >&2
+    echo "[skip] PHPStan — no backend changes in push range" >&2
 fi
 
 # Frontend. A tsconfig, Vite config or lockfile change can break the typecheck too, so the trigger

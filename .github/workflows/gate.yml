@@ -8,7 +8,8 @@ name: Gate
 # it always runs, detects which workflows should have triggered, waits for
 # their checks, and reports an aggregate pass/fail. A path-filter skip
 # (the workflow did not run at all) is treated as a pass — same as how a
-# human reviewer would interpret it.
+# human reviewer would interpret it. The one lane with no path filter is
+# composer-audit: it runs on every PR, and only its success passes.
 
 on:
     pull_request:
@@ -72,7 +73,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                check: [audit, lint, test, coverage, feature-coverage, mutation, sast, seed]
+                check: [lint, test, coverage, feature-coverage, mutation, sast, seed]
         steps:
             - uses: lewagon/wait-on-check-action@v1.9.1
               with:
@@ -110,8 +111,16 @@ jobs:
                   wait-interval: 30
                   allowed-conclusions: success
 
+    # No `needs:`, no `if:`, no path filter: a new advisory is published against a version
+    # already in the lock, so the PR that must catch it touches nothing under backend/.
+    # Called, not inlined, so composer-audit.yml's daily schedule runs the same job
+    # (ADR-0028 Amendment 3).
+    composer-audit:
+        name: composer-audit
+        uses: ./.github/workflows/composer-audit.yml
+
     gate:
-        needs: [detect, wait-backend, wait-frontend, wait-e2e]
+        needs: [detect, wait-backend, wait-frontend, wait-e2e, composer-audit]
         if: always()
         runs-on: ubuntu-latest
         steps:
@@ -121,6 +130,7 @@ jobs:
                   BACKEND: ${{ needs.wait-backend.result }}
                   FRONTEND: ${{ needs.wait-frontend.result }}
                   E2E: ${{ needs.wait-e2e.result }}
+                  COMPOSER_AUDIT: ${{ needs.composer-audit.result }}
               run: |
                   set -e
                   fail=0
@@ -135,4 +145,10 @@ jobs:
                   report wait-backend  "$BACKEND"
                   report wait-frontend "$FRONTEND"
                   report wait-e2e      "$E2E"
+                  if [ "$COMPOSER_AUDIT" = "success" ]; then
+                      echo "PASS  composer-audit: $COMPOSER_AUDIT"
+                  else
+                      echo "FAIL  composer-audit: $COMPOSER_AUDIT"
+                      fail=1
+                  fi
                   exit $fail

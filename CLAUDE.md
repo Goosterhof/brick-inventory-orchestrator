@@ -252,12 +252,12 @@ lint-staged's own backup would live in `refs/stash`, which every worktree of thi
 
 | Range touches | Runs |
 |---|---|
-| `backend/` | `composer phpstan`, `composer phpstan:types`, `composer audit --abandoned=report` |
+| `backend/` | `composer phpstan`, `composer phpstan:types` |
 | `frontend/`, `*.md` excluded | `npm run type-check` (vue-tsc) |
 
 A deletion-only or docs-only push runs nothing. **No stdin, or a range that cannot be computed, runs every gate (fail closed).** `phpstan:types` is not a CI step — this hook is its only runner.
 
-**CI only:** Rector, whole-tree Pint, Deptrac, the Pest suites (arch, all, both coverage lanes, mutation), Semgrep, the seed run; oxlint, lint:vue, knip, format:check, Vitest (coverage, Stryker, integration), the Vite build, size-limit, commitlint over the PR range.
+**CI only:** `composer audit` (`.github/workflows/composer-audit.yml`, on every PR inside `gate` and daily on a schedule; no hook runs it, ADR-0028 Amendment 3), Rector, whole-tree Pint, Deptrac, the Pest suites (arch, all, both coverage lanes, mutation), Semgrep, the seed run; oxlint, lint:vue, knip, format:check, Vitest (coverage, Stryker, integration), the Vite build, size-limit, commitlint over the PR range.
 
 **Commit-msg** runs repo-wide: `.githooks/commit-msg` lints the message with commitlint (frontend workspace binary + `.commitlintrc.json`). Skips with a notice if `frontend/node_modules` is absent (fresh clone); CI remains the backstop.
 
