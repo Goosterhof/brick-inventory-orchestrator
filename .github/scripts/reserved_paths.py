@@ -17,6 +17,11 @@ from pathlib import Path
 
 RESERVED_OWNER = "@Goosterhof"
 FILE_LIST_CAP = 3000
+CODEOWNERS_SIZE_LIMIT = 3_000_000
+# The check matches literals, `*` and `**` only. GitHub's docs exclude `\#`, `!` and `[ ]` and show no
+# other escape and no `?`. A line GitHub skips could be the one meant to reserve a path, so neither
+# match it nor skip it: refuse it.
+UNSUPPORTED_SYNTAX = re.compile(r"^!|[\\?\[\]]")
 TICKET = "WR-2887"
 
 EXIT_RESERVED = 1
@@ -64,12 +69,6 @@ def pattern_to_regex(pattern: str) -> re.Pattern[str]:
         elif body[i] == "*":
             translated += "[^/]*"
             i += 1
-        elif body[i] == "?":
-            translated += "[^/]"
-            i += 1
-        elif body[i] == "\\" and i + 1 < len(body):
-            translated += re.escape(body[i + 1])
-            i += 2
         else:
             translated += re.escape(body[i])
             i += 1
@@ -87,16 +86,14 @@ def pattern_to_regex(pattern: str) -> re.Pattern[str]:
 def parse_codeowners(text: str) -> list[Rule]:
     rules = []
     for number, raw in enumerate(text.splitlines(), start=1):
-        tokens = re.findall(r"(?:\\.|\S)+", raw)
+        tokens = raw.split()
         if not tokens or tokens[0].startswith("#"):
             continue
         pattern = tokens[0]
-        unescaped = re.sub(r"\\.", "", pattern)
-        # GitHub skips a line it cannot read; a skipped line could be the one that reserves a path.
-        if pattern.startswith("!") or "[" in unescaped or "]" in unescaped:
+        if UNSUPPORTED_SYNTAX.search(pattern):
             raise CheckFailure(
                 EXIT_CODEOWNERS_UNREADABLE,
-                f"CODEOWNERS unreadable: line {number} uses syntax CODEOWNERS does not support.",
+                f"CODEOWNERS unreadable: line {number} uses syntax this check does not read as GitHub does.",
             )
         owners = []
         for token in tokens[1:]:
@@ -109,12 +106,18 @@ def parse_codeowners(text: str) -> list[Rule]:
 
 def load_rules(path: Path) -> list[Rule]:
     try:
-        text = path.read_text(encoding="utf-8")
+        content = path.read_bytes()
+        text = content.decode("utf-8")
     except (OSError, UnicodeDecodeError) as error:
         raise CheckFailure(
             EXIT_CODEOWNERS_UNREADABLE,
             f"CODEOWNERS unreadable: could not read the base branch's copy ({type(error).__name__}).",
         ) from error
+    if len(content) >= CODEOWNERS_SIZE_LIMIT:
+        raise CheckFailure(
+            EXIT_CODEOWNERS_UNREADABLE,
+            f"CODEOWNERS unreadable: GitHub will not load a file of {CODEOWNERS_SIZE_LIMIT} bytes or more.",
+        )
     rules = parse_codeowners(text)
     if not rules:
         raise CheckFailure(EXIT_CODEOWNERS_UNREADABLE, "CODEOWNERS unreadable: it holds no rules.")

@@ -148,10 +148,6 @@ class SemanticsTest(CheckCase):
             ("a/b @Goosterhof\n", "x/a/b", PASS),
             ("a/b @Goosterhof\n", "a/b/c", RESERVED),
             ("**/logs @Goosterhof\n", "x/y/logs/z", RESERVED),
-            ("/a?c @Goosterhof\n", "abc", RESERVED),
-            ("/a?c @Goosterhof\n", "a/c", PASS),
-            ("/a\\ b @Goosterhof\n", "a b", RESERVED),
-            ("\\#x @Goosterhof\n", "#x", RESERVED),
         )
         for owners, path, code in cases:
             with self.subTest(owners=owners, path=path):
@@ -178,11 +174,41 @@ class FailClosedTest(CheckCase):
         )
         self.assert_exit(result, UNREADABLE, "could not read")
 
-    def test_unsupported_syntax_fails_rather_than_being_skipped(self):
-        for line in ("!a @Goosterhof\n", "/a[bc] @Goosterhof\n"):
+    def test_syntax_github_excludes_or_the_docs_do_not_vouch_for_fails_on_every_arm(self):
+        for line in (
+            "\\#x @Goosterhof\n",
+            "!a @Goosterhof\n",
+            "/a[bc] @Goosterhof\n",
+            "/a[b @Goosterhof\n",
+            "/a] @Goosterhof\n",
+            "/a\\[b @Goosterhof\n",
+            "\\!a @Goosterhof\n",
+            "/a\\ b @Goosterhof\n",
+            "/a?c @Goosterhof\n",
+        ):
             with self.subTest(line=line):
                 result = self.run_check([{"filename": "x"}], "/z/ @Goosterhof\n" + line)
                 self.assert_exit(result, UNREADABLE, "line 2")
+
+    def test_an_excluded_line_claims_no_path_even_when_a_shared_line_precedes_it(self):
+        result = self.run_check([{"filename": "#x"}], "* @Goosterhof @crit-ai\n/z/ @Goosterhof\n\\#x @Goosterhof\n")
+        self.assert_exit(result, UNREADABLE, "line 3")
+
+    def test_a_hash_inside_a_pattern_or_a_bang_inside_a_pattern_stays_literal(self):
+        owners = "/a#b @Goosterhof\n/c!d @Goosterhof\n"
+        self.assert_exit(self.run_check([{"filename": "a#b"}], owners), RESERVED)
+        self.assert_exit(self.run_check([{"filename": "c!d"}], owners), RESERVED)
+
+    def test_a_file_github_will_not_load_fails(self):
+        padding = "# " + "x" * 3_000_000 + "\n"
+        result = self.run_check([{"filename": "x"}], "/z/ @Goosterhof\n" + padding)
+        self.assert_exit(result, UNREADABLE, "will not load")
+
+    def test_a_file_just_under_the_size_limit_is_read(self):
+        rule = "/z/ @Goosterhof\n"
+        padding = "#" + "x" * (3_000_000 - len(rule) - 3) + "\n"
+        self.assertLess(len(rule + padding), 3_000_000)
+        self.assert_exit(self.run_check([{"filename": "z/x"}], rule + padding), RESERVED)
 
     def test_an_unreadable_file_list_fails(self):
         for text in ("not json\n", "[]\n", '{"name": "x"}\n', '{"filename": 3}\n', '{"filename": "x", "previous_filename": 3}\n'):
