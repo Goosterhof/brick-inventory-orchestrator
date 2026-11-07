@@ -1,0 +1,29 @@
+name: Reserved Paths Test
+
+# The matcher's own tests, on the pull request's copy. reserved-paths.yml runs the base copy, so a
+# change to the matcher is only ever exercised here. Not a rollup lane: a pull request reaching these
+# paths already needs the Commander's admin merge, and he reads this result.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/CODEOWNERS'
+      - '.github/scripts/**'
+      - '.github/workflows/reserved-paths*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  reserved-paths-test:
+    name: reserved-paths-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run the matcher's tests
+        run: python3 -B -m unittest discover -v -s .github/scripts
