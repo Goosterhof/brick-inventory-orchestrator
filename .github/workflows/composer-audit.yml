@@ -1,0 +1,58 @@
+# The Composer advisory audit, in one place for both of its triggers.
+#
+# gate.yml calls it as the `composer-audit` lane inside `gate`, so it runs on every
+# pull request, whichever paths it touches. The schedule runs it daily on the
+# default branch, because an advisory is published against a version that is
+# already in the lock: no commit of ours exists to hang a run on, and Dependabot
+# opens no pull request for a transitive advisory. A hook must not run this
+# (ADR-0028 Amendment 3).
+#
+# The caller carries no `needs:` and no `if:`. A failed dependency would skip this
+# lane, and a skipped audit is an audit that did not run.
+
+name: Composer Audit
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  composer-audit:
+    name: Composer Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+
+      # --locked audits composer.lock, not an installed tree. --abandoned=report:
+      # abandonment is not a vulnerability and no PR can fix it; composer >= 2.8
+      # defaults it to `fail`. Exit codes (composer 2.9): 0 clean, 1 advisories,
+      # 100 advisories API unreachable. Only 1 is a real red, so the retry cannot
+      # mask one, and an API that stays unreachable still fails. Never add
+      # --ignore-unreachable: it turns a transport failure into a green.
+      - name: Audit the lock for published advisories
+        run: |
+          set -o pipefail
+          for attempt in 1 2 3; do
+            composer audit --locked --abandoned=report --no-interaction && exit 0
+            rc=$?
+            [ "$rc" -eq 1 ] && exit 1
+            echo "::warning::composer audit could not reach the advisories API (exit ${rc}), attempt ${attempt}/3"
+            [ "$attempt" -lt 3 ] && sleep 10
+          done
+          echo "::error::composer audit could not reach the advisories API after 3 attempts"
+          exit 1
