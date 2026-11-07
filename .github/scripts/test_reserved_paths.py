@@ -253,6 +253,15 @@ class WorkflowShapeTest(unittest.TestCase):
         self.assertIn("pull_request_target:", self.text)
         self.assertNotRegex(self.text, r"(?m)^\s*pull_request:")
 
+    def test_it_runs_on_every_event_that_can_change_the_answer(self):
+        # `edited` carries a change of base branch: a pull request retargeted to main gets no run without it.
+        types = re.findall(r"(?m)^\s*types:\s*\[([^\]]*)\]", self.text)
+        self.assertEqual(len(types), 1, "the workflow states its event types once, as a flow list")
+        self.assertEqual(
+            {t.strip() for t in types[0].split(",")},
+            {"opened", "synchronize", "reopened", "ready_for_review", "edited"},
+        )
+
     def test_it_never_names_the_pull_requests_head(self):
         self.assertNotRegex(self.text, r"head_ref|pull_request\.head|refs/pull")
 

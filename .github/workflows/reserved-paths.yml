@@ -7,11 +7,12 @@ name: Reserved Paths
 # pull_request_target, so a pull request cannot edit the copy it runs under. This event carries a
 # privileged context on a public repo: never check out or execute the pull request's head.
 #
-# The job has no `if:`, because a skipped job reports success to a required check.
+# The job has no `if:`, because a skipped job reports success to a required check. So `edited` re-runs
+# on every title or body edit too, not only on the change of base branch it is here for.
 
 on:
   pull_request_target:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
     branches: [main]
 
 permissions:
