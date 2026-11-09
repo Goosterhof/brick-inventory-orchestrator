@@ -88,8 +88,8 @@ final readonly class GetFamilyMissingPartsAction
 
             /** @var Collection<string, stdClass> $storedByKey */
             $storedByKey = $storedRows->keyBy(function(stdClass $row): string {
-                $partNum = (string) $row->part_num; // @phpstan-ignore cast.string
-                $colorId = (int) $row->color_id; // @phpstan-ignore cast.int
+                $partNum = (string) $row->part_num; // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+                $colorId = (int) $row->color_id; // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
 
                 return $this->key($partNum, $colorId);
             });
@@ -113,9 +113,9 @@ final readonly class GetFamilyMissingPartsAction
         /** @var array<string, list<string>> $setNumsByKey */
         $setNumsByKey = [];
         foreach ($neededBySetRows as $needed) {
-            $partNum = (string) $needed->part_num; // @phpstan-ignore cast.string
-            $setNum = (string) $needed->set_num; // @phpstan-ignore cast.string
-            $colorId = (int) $needed->color_id; // @phpstan-ignore cast.int
+            $partNum = (string) $needed->part_num; // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+            $setNum = (string) $needed->set_num; // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+            $colorId = (int) $needed->color_id; // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
             $key = $this->key($partNum, $colorId);
             $setNumsByKey[$key] ??= [];
 
@@ -126,13 +126,13 @@ final readonly class GetFamilyMissingPartsAction
 
         $shortfalls = [];
         foreach ($neededRows as $neededRow) {
-            $partNum = (string) $neededRow->part_num; // @phpstan-ignore cast.string
-            $colorId = (int) $neededRow->color_id; // @phpstan-ignore cast.int
-            $quantityNeeded = (int) $neededRow->quantity_needed; // @phpstan-ignore cast.int
+            $partNum = (string) $neededRow->part_num; // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+            $colorId = (int) $neededRow->color_id; // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
+            $quantityNeeded = (int) $neededRow->quantity_needed; // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
             $key = $this->key($partNum, $colorId);
 
             $storedRow = $storedByKey->get($key);
-            $quantityStored = $storedRow !== null ? (int) $storedRow->quantity_stored : 0; // @phpstan-ignore cast.int
+            $quantityStored = $storedRow !== null ? (int) $storedRow->quantity_stored : 0; // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
 
             $shortfall = max(0, $quantityNeeded - $quantityStored);
 
@@ -140,10 +140,10 @@ final readonly class GetFamilyMissingPartsAction
                 continue;
             }
 
-            $partId = (int) $neededRow->part_id; // @phpstan-ignore cast.int
-            $partName = (string) $neededRow->part_name; // @phpstan-ignore cast.string
-            $colorName = (string) $neededRow->color_name; // @phpstan-ignore cast.string
-            $colorHex = (string) $neededRow->color_hex; // @phpstan-ignore cast.string
+            $partId = (int) $neededRow->part_id; // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
+            $partName = (string) $neededRow->part_name; // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+            $colorName = (string) $neededRow->color_name; // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+            $colorHex = (string) $neededRow->color_hex; // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
             /** @var string|null $partImageUrl */
             $partImageUrl = $neededRow->part_image_url;
 
@@ -176,9 +176,9 @@ final readonly class GetFamilyMissingPartsAction
 
         $unknownFamilySetIds = [];
         foreach ($familySets as $familySet) {
-            $setId = (int) $familySet->set_id; // @phpstan-ignore cast.int
+            $setId = (int) $familySet->set_id; // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
             if (!isset($knownSetIdMap[$setId])) {
-                $unknownFamilySetIds[] = (string) $familySet->family_set_id; // @phpstan-ignore cast.string
+                $unknownFamilySetIds[] = (string) $familySet->family_set_id; // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
             }
         }
 

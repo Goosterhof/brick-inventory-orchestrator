@@ -89,11 +89,11 @@ final readonly class GetBrickDnaAction
             ->toBase()
             ->get()
             ->map(static fn(stdClass $row): array => [
-                'color_id' => (int) $row->color_id, // @phpstan-ignore cast.int
-                'name' => (string) $row->name, // @phpstan-ignore cast.string
-                'rgb' => (string) $row->rgb, // @phpstan-ignore cast.string
+                'color_id' => (int) $row->color_id, // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
+                'name' => (string) $row->name, // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+                'rgb' => (string) $row->rgb, // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
                 'is_transparent' => (bool) $row->is_transparent,
-                'total_quantity' => (int) $row->total_quantity, // @phpstan-ignore cast.int
+                'total_quantity' => (int) $row->total_quantity, // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
             ])
             ->all();
     }
@@ -118,11 +118,11 @@ final readonly class GetBrickDnaAction
             ->toBase()
             ->get()
             ->map(static fn(stdClass $row): array => [
-                'part_id' => (int) $row->part_id, // @phpstan-ignore cast.int
-                'part_num' => (string) $row->part_num, // @phpstan-ignore cast.string
-                'name' => (string) $row->name, // @phpstan-ignore cast.string
-                'category' => $row->category !== null ? (string) $row->category : null, // @phpstan-ignore cast.string
-                'total_quantity' => (int) $row->total_quantity, // @phpstan-ignore cast.int
+                'part_id' => (int) $row->part_id, // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
+                'part_num' => (string) $row->part_num, // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+                'name' => (string) $row->name, // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+                'category' => $row->category !== null ? (string) $row->category : null, // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+                'total_quantity' => (int) $row->total_quantity, // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
             ])
             ->all();
     }
@@ -148,13 +148,13 @@ final readonly class GetBrickDnaAction
             ->toBase()
             ->get()
             ->map(static fn(stdClass $row): array => [
-                'part_id' => (int) $row->part_id, // @phpstan-ignore cast.int
-                'part_num' => (string) $row->part_num, // @phpstan-ignore cast.string
-                'part_name' => (string) $row->part_name, // @phpstan-ignore cast.string
-                'color_id' => $row->color_id !== null ? (int) $row->color_id : null, // @phpstan-ignore cast.int
-                'color_name' => $row->color_name !== null ? (string) $row->color_name : null, // @phpstan-ignore cast.string
-                'color_rgb' => $row->color_rgb !== null ? (string) $row->color_rgb : null, // @phpstan-ignore cast.string
-                'quantity' => (int) $row->quantity, // @phpstan-ignore cast.int
+                'part_id' => (int) $row->part_id, // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
+                'part_num' => (string) $row->part_num, // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+                'part_name' => (string) $row->part_name, // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+                'color_id' => $row->color_id !== null ? (int) $row->color_id : null, // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
+                'color_name' => $row->color_name !== null ? (string) $row->color_name : null, // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+                'color_rgb' => $row->color_rgb !== null ? (string) $row->color_rgb : null, // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+                'quantity' => (int) $row->quantity, // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
             ])
             ->all();
     }
@@ -181,7 +181,7 @@ final readonly class GetBrickDnaAction
             return 0.0;
         }
 
-        $totalQuantity = (int) $colorQuantities->sum(); // @phpstan-ignore cast.int
+        $totalQuantity = (int) $colorQuantities->sum(); // @phpstan-ignore cast.int (Collection sum without a callback is declared mixed)
 
         if ($totalQuantity === 0) {
             return 0.0;

@@ -36,7 +36,7 @@ final readonly class GetFamilyStatsAction
             ->groupBy('status')
             ->toBase()
             ->pluck('count', 'status')
-            ->map(static fn(mixed $count): int => (int) $count) // @phpstan-ignore cast.int
+            ->map(static fn(mixed $count): int => (int) $count) // @phpstan-ignore cast.int (pluck values from toBase are mixed)
             ->all();
 
         $storageOptionIds = $this->storageOption->newQuery()
