@@ -47,11 +47,11 @@ final readonly class GetSetStorageMapAction
         $entries = [];
         foreach ($rows as $row) {
             $entries[] = new StorageMapEntryData(
-                partId: (int) $row->part_id, // @phpstan-ignore cast.int
-                colorId: $row->color_id === null ? null : (int) $row->color_id, // @phpstan-ignore cast.int
-                storageOptionId: (int) $row->storage_option_id, // @phpstan-ignore cast.int
-                storageOptionName: (string) $row->storage_option_name, // @phpstan-ignore cast.string
-                quantity: (int) $row->quantity, // @phpstan-ignore cast.int
+                partId: (int) $row->part_id, // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
+                colorId: $row->color_id === null ? null : (int) $row->color_id, // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
+                storageOptionId: (int) $row->storage_option_id, // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
+                storageOptionName: (string) $row->storage_option_name, // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+                quantity: (int) $row->quantity, // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
             );
         }
 

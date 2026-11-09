@@ -99,9 +99,9 @@ final readonly class GetFamilySetCompletionAction
                 continue;
             }
 
-            $totalParts = (int) $totalPartsRow->total_parts; // @phpstan-ignore cast.int
+            $totalParts = (int) $totalPartsRow->total_parts; // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
             $storedPartsRow = $storedPartsCounts->get($setId);
-            $storedParts = $storedPartsRow !== null ? (int) $storedPartsRow->stored_parts : 0; // @phpstan-ignore cast.int
+            $storedParts = $storedPartsRow !== null ? (int) $storedPartsRow->stored_parts : 0; // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
 
             $percentage = $totalParts > 0
                 ? min(round($storedParts / $totalParts * 100, 2), 100.0)

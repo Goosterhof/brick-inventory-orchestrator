@@ -91,16 +91,16 @@ final readonly class GetFamilyPartUsageAction
             ->first();
 
         $quantityStored = $storedRow !== null
-            ? (int) ($storedRow->quantity_stored ?? 0) // @phpstan-ignore cast.int
+            ? (int) ($storedRow->quantity_stored ?? 0) // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
             : 0;
 
         /** @var Collection<int, FamilyPartUsageEntryData> $usages */
         $usages = $usageRows->map(function(stdClass $row) use ($quantityStored): FamilyPartUsageEntryData {
-            $familySetId = (int) $row->family_set_id; // @phpstan-ignore cast.int
-            $setNum = (string) $row->set_num; // @phpstan-ignore cast.string
-            $setName = (string) $row->set_name; // @phpstan-ignore cast.string
-            $statusValue = (string) $row->status; // @phpstan-ignore cast.string
-            $quantityNeeded = (int) $row->quantity_needed; // @phpstan-ignore cast.int
+            $familySetId = (int) $row->family_set_id; // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
+            $setNum = (string) $row->set_num; // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+            $setName = (string) $row->set_name; // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+            $statusValue = (string) $row->status; // @phpstan-ignore cast.string (stdClass row from toBase types every column mixed)
+            $quantityNeeded = (int) $row->quantity_needed; // @phpstan-ignore cast.int (stdClass row from toBase types every column mixed)
 
             return new FamilyPartUsageEntryData(
                 familySetId: $familySetId,
@@ -130,6 +130,6 @@ final readonly class GetFamilyPartUsageAction
             return null;
         }
 
-        return (string) $value; // @phpstan-ignore cast.string
+        return (string) $value; // @phpstan-ignore cast.string (value is a mixed stdClass row column from toBase)
     }
 }

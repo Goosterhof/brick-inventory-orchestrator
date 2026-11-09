@@ -110,9 +110,7 @@ class FamilySetController extends Controller
         $importJob = $getImportStatusAction->execute($user->family);
 
         if (!$importJob instanceof ImportJob) {
-            // Single-key 404 ack, not a domain resource; the shared MessageResponse
-            // follow-up is in the WR-0533 execution report.
-            // @phpstan-ignore forbidInlineArrayJsonResponseInControllers.arrayPayload
+            // @phpstan-ignore forbidInlineArrayJsonResponseInControllers.arrayPayload (single-key 404 ack, not a domain resource; shared MessageResponse follow-up per WR-0533)
             return response()->json(['message' => 'No import jobs found'], 404);
         }
 

@@ -26,9 +26,9 @@ return new class extends Migration {
 
         if ($duplicates->isNotEmpty()) {
             $tuples = $duplicates->map(function(\stdClass $row): string {
-                $storageOptionId = (int) $row->storage_option_id; // @phpstan-ignore cast.int
-                $partId = (int) $row->part_id; // @phpstan-ignore cast.int
-                $occurrences = (int) $row->occurrences; // @phpstan-ignore cast.int
+                $storageOptionId = (int) $row->storage_option_id; // @phpstan-ignore cast.int (query-builder stdClass row types every column mixed)
+                $partId = (int) $row->part_id; // @phpstan-ignore cast.int (query-builder stdClass row types every column mixed)
+                $occurrences = (int) $row->occurrences; // @phpstan-ignore cast.int (query-builder stdClass row types every column mixed)
 
                 return \sprintf('(storage_option_id=%d, part_id=%d, rows=%d)', $storageOptionId, $partId, $occurrences);
             })->implode(', ');

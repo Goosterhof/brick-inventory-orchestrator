@@ -151,7 +151,6 @@ final readonly class RebrickableService implements LegoDataServiceInterface
 
         /** @var list<LegoSetPartData> $parts */
         $parts = [];
-        /** @var string|null $nextUrl @phpstan-ignore varTag.nativeType */
         $nextUrl = sprintf('/lego/sets/%s/parts/', $setNum);
 
         while ($nextUrl !== null) {
@@ -206,7 +205,6 @@ final readonly class RebrickableService implements LegoDataServiceInterface
      */
     public function fetchUserSets(int $familyId, string $userToken): Generator
     {
-        /** @var string|null $nextUrl @phpstan-ignore varTag.nativeType */
         $nextUrl = sprintf('/users/%s/sets/', $userToken);
         $page = 1;
 
