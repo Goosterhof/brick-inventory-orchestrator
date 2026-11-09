@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8dab743f3cf854edaf349f6e0744674f",
+    "content-hash": "6358b760039849358938c058ce3be61f",
     "packages": [
         {
             "name": "brick/math",
@@ -9637,16 +9637,16 @@
         },
         {
             "name": "script-development/phpstan-warroom-rules",
-            "version": "v0.11.0",
+            "version": "v0.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/script-development/phpstan-warroom-rules.git",
-                "reference": "c66c6f6a17cad8ff88f91d2dca0a95f502122b3e"
+                "reference": "02244a18de5df749a261575fda03a600218da284"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/script-development/phpstan-warroom-rules/zipball/c66c6f6a17cad8ff88f91d2dca0a95f502122b3e",
-                "reference": "c66c6f6a17cad8ff88f91d2dca0a95f502122b3e",
+                "url": "https://api.github.com/repos/script-development/phpstan-warroom-rules/zipball/02244a18de5df749a261575fda03a600218da284",
+                "reference": "02244a18de5df749a261575fda03a600218da284",
                 "shasum": ""
             },
             "require": {
@@ -9692,9 +9692,9 @@
             ],
             "support": {
                 "issues": "https://github.com/script-development/phpstan-warroom-rules/issues",
-                "source": "https://github.com/script-development/phpstan-warroom-rules/tree/v0.11.0"
+                "source": "https://github.com/script-development/phpstan-warroom-rules/tree/v0.12.0"
             },
-            "time": "2026-10-01T13:48:57+00:00"
+            "time": "2026-11-09T11:42:25+00:00"
         },
         {
             "name": "sebastian/cli-parser",
