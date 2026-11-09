@@ -1,0 +1,53 @@
+name: Reserved Paths
+
+# Fails a pull request that changes a path .github/CODEOWNERS reserves to @Goosterhof alone. Nothing
+# releases it: agents author as Goosterhof, so a review, label or comment could be theirs. The way
+# through is an admin merge, which the rule suite records as a bypass. WR-2887.
+#
+# pull_request_target, so a pull request cannot edit the copy it runs under. This event carries a
+# privileged context on a public repo: never check out or execute the pull request's head.
+#
+# The job has no `if:`, because a skipped job reports success to a required check. So `edited` re-runs
+# on every title or body edit too, not only on the change of base branch it is here for.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  reserved-paths:
+    name: reserved-paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out the base branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout: .github
+
+      - name: Read the changed files from the API
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if ! gh api "repos/$REPOSITORY/pulls/$PR_NUMBER" --jq .changed_files > "$RUNNER_TEMP/expected" ||
+            ! gh api --paginate "repos/$REPOSITORY/pulls/$PR_NUMBER/files?per_page=100" \
+              --jq '.[] | {filename, previous_filename}' > "$RUNNER_TEMP/files.jsonl"; then
+            echo "::error::Reserved paths (WR-2887): File list unreadable: the API call failed. Failing closed."
+            exit 4
+          fi
+
+      - name: Check the changed files against CODEOWNERS
+        run: |
+          python3 -I .github/scripts/reserved_paths.py \
+            --codeowners .github/CODEOWNERS \
+            --files "$RUNNER_TEMP/files.jsonl" \
+            --expected "$(cat "$RUNNER_TEMP/expected")"

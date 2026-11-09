@@ -18,4 +18,5 @@
 /railway.toml                                            @Goosterhof
 /Dockerfile                                              @Goosterhof
 /.github/workflows/                                      @Goosterhof
+/.github/scripts/                                        @Goosterhof
 /.github/CODEOWNERS                                      @Goosterhof
