@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Rector\CodeQuality\Rector\If_\ExplicitNullableObjectInstanceRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
 use Rector\Naming\Rector\Assign\RenameVariableToMatchMethodCallReturnTypeRector;
@@ -13,6 +14,7 @@ use Rector\Php74\Rector\Closure\ClosureToArrowFunctionRector;
 use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
 use RectorLaravel\Rector\FuncCall\AppToResolveRector;
 use RectorLaravel\Rector\FuncCall\RemoveDumpDataDeadCodeRector;
+use RectorLaravel\Rector\FuncCall\UnlinkFuncCallToFileFacadeDeleteRector;
 use RectorLaravel\Rector\MethodCall\WhereToWhereLikeRector;
 use RectorLaravel\Rector\StaticCall\CarbonToDateFacadeRector;
 use RectorLaravel\Rector\StaticCall\EloquentMagicMethodToQueryBuilderRector;
@@ -41,6 +43,8 @@ return RectorConfig::configure()
         __DIR__ . '/public/frankenphp-worker.php',
         CarbonToDateFacadeRector::class,
         AddOverrideAttributeToOverriddenMethodsRector::class,
+        ExplicitNullableObjectInstanceRector::class,
+        UnlinkFuncCallToFileFacadeDeleteRector::class,
         RenameParamToMatchTypeRector::class,
         RenamePropertyToMatchTypeRector::class,
         RenameVariableToMatchMethodCallReturnTypeRector::class => [
