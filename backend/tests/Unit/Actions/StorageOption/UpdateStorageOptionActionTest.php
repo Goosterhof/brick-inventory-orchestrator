@@ -6,140 +6,123 @@ use App\Actions\StorageOption\UpdateStorageOptionAction;
 use App\DataTransferObjects\Input\StorageOption\StorageOptionData;
 use App\Models\StorageOption;
 use Illuminate\Database\ConnectionInterface;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Validation\ValidationException;
 
 covers(UpdateStorageOptionAction::class);
 
 describe('UpdateStorageOptionAction', function(): void {
-    beforeEach(function(): void {
-        $this->db = \Mockery::mock(ConnectionInterface::class);
-        $this->db->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback) => $callback());
-    });
+    it('should update fields within a family lock and preserve immutable grid dimensions', function(): void {
+        $events = [];
+        $connection = \Mockery::mock(ConnectionInterface::class);
+        $connection->shouldReceive('transaction')->once()->andReturnUsing(function(\Closure $callback) use (&$events): StorageOption {
+            $events[] = 'transaction:begin';
+            $result = $callback();
+            $events[] = 'transaction:end';
 
-    it('should update storage option properties', function(): void {
-        // arrange
+            return $result;
+        });
+
+        $familyQuery = \Mockery::mock(Builder::class);
+        $familyQuery->shouldReceive('where')->with('id', 7)->once()->andReturnSelf();
+        $familyQuery->shouldReceive('lockForUpdate')->once()->andReturnSelf();
+        $familyQuery->shouldReceive('first')->once()->andReturn(null);
+        $connection->shouldReceive('table')->with('families')->once()->andReturnUsing(function() use ($familyQuery, &$events): Builder {
+            $events[] = 'family:lock';
+
+            return $familyQuery;
+        });
+
         $savedValues = [];
-        $storageOption = \Mockery::mock(StorageOption::class);
-        $storageOption->allows('setAttribute')->andReturnUsing(function($key, $value) use (&$savedValues): void {
+        $option = \Mockery::mock(StorageOption::class);
+        $option->shouldReceive('getAttribute')->with('family_id')->once()->andReturn(7);
+        $option->allows('setAttribute')->andReturnUsing(function($key, $value) use (&$savedValues): void {
             $savedValues[$key] = $value;
         });
-        $storageOption->allows('getAttribute')->andReturnUsing(function($key) use (&$savedValues): mixed {
-            return $savedValues[$key] ?? null;
+        $option->shouldReceive('save')->once()->andReturnUsing(function() use (&$events): bool {
+            $events[] = 'option:save';
+
+            return true;
         });
-        $storageOption->shouldReceive('save')->once();
 
-        $action = new UpdateStorageOptionAction($this->db);
-        $data = new StorageOptionData(
-            name: 'New Name',
-            description: 'New description',
-        );
-
-        // act
-        $result = $action->execute($storageOption, $data);
-
-        // assert
-        expect($result)->toBe($storageOption)
-            ->and($savedValues['name'])->toBe('New Name')
-            ->and($savedValues['description'])->toBe('New description');
-    });
-
-    it('should update row and column', function(): void {
-        // arrange
-        $savedValues = [];
-        $storageOption = \Mockery::mock(StorageOption::class);
-        $storageOption->allows('setAttribute')->andReturnUsing(function($key, $value) use (&$savedValues): void {
-            $savedValues[$key] = $value;
-        });
-        $storageOption->allows('getAttribute')->andReturnUsing(function($key) use (&$savedValues): mixed {
-            return $savedValues[$key] ?? null;
-        });
-        $storageOption->shouldReceive('save')->once();
-
-        $action = new UpdateStorageOptionAction($this->db);
-        $data = new StorageOptionData(
-            name: 'Drawer',
-            row: 3,
-            column: 4,
-        );
-
-        // act
-        $action->execute($storageOption, $data);
-
-        // assert
-        expect($savedValues['row'])->toBe(3)
-            ->and($savedValues['column'])->toBe(4);
-    });
-
-    it('should update parent_id', function(): void {
-        // arrange
-        $savedValues = [];
-        $storageOption = \Mockery::mock(StorageOption::class);
-        $storageOption->allows('setAttribute')->andReturnUsing(function($key, $value) use (&$savedValues): void {
-            $savedValues[$key] = $value;
-        });
-        $storageOption->allows('getAttribute')->andReturnUsing(function($key) use (&$savedValues): mixed {
-            return $savedValues[$key] ?? null;
-        });
-        $storageOption->shouldReceive('save')->once();
-
-        $action = new UpdateStorageOptionAction($this->db);
-        $data = new StorageOptionData(
-            name: 'Drawer',
-            parentId: 5,
-        );
-
-        // act
-        $action->execute($storageOption, $data);
-
-        // assert
-        expect($savedValues['parent_id'])->toBe(5);
-    });
-
-    it('should ignore grid_rows and grid_columns in the DTO (immutable after create)', function(): void {
-        // arrange: pre-seed the persisted dims so we can prove they survive untouched
-        $savedValues = [
-            'grid_rows' => 5,
-            'grid_columns' => 6,
-        ];
-        $storageOption = \Mockery::mock(StorageOption::class);
-        $storageOption->allows('setAttribute')->andReturnUsing(function($key, $value) use (&$savedValues): void {
-            $savedValues[$key] = $value;
-        });
-        $storageOption->allows('getAttribute')->andReturnUsing(function($key) use (&$savedValues): mixed {
-            return $savedValues[$key] ?? null;
-        });
-        $storageOption->shouldReceive('save')->once();
-
-        $action = new UpdateStorageOptionAction($this->db);
-        $data = new StorageOptionData(
-            name: 'Resized?',
+        $result = new UpdateStorageOptionAction($connection)->execute($option, new StorageOptionData(
+            name: 'Renamed',
+            description: 'Updated',
+            row: 2,
+            column: 3,
             gridRows: 99,
             gridColumns: 99,
-        );
+        ));
 
-        // act
-        $action->execute($storageOption, $data);
-
-        // assert — the new dim values are silently dropped; the persisted dims remain
-        expect($savedValues['grid_rows'])->toBe(5)
-            ->and($savedValues['grid_columns'])->toBe(6)
-            ->and($savedValues['name'])->toBe('Resized?');
+        expect($result)->toBe($option)
+            ->and($events)->toBe(['transaction:begin', 'family:lock', 'option:save', 'transaction:end'])
+            ->and($savedValues)->toBe([
+                'name' => 'Renamed',
+                'description' => 'Updated',
+                'parent_id' => null,
+                'row' => 2,
+                'column' => 3,
+            ]);
     });
 
-    it('should call save on the storage option', function(): void {
-        // arrange
-        $storageOption = \Mockery::mock(StorageOption::class);
-        $storageOption->allows('setAttribute');
-        $storageOption->allows('getAttribute');
-        $storageOption->shouldReceive('save')->once();
+    it('checks only the proposed parent ancestry within the family', function(): void {
+        $cases = [
+            'self' => [1, [1 => null], [], 'The selected parent cannot be this location or one of its descendants.'],
+            'descendant' => [3, [1 => null, 2 => 1, 3 => 2], [3, 2], 'The selected parent cannot be this location or one of its descendants.'],
+            'existing cycle' => [2, [1 => null, 2 => 3, 3 => 2], [2, 3], 'The selected parent has a cyclic ancestry.'],
+            'missing from family' => [4, [1 => null, 2 => null], [4], 'The selected parent does not belong to your family.'],
+            'invalid ancestry' => [2, [1 => null, 2 => 'invalid'], [2], 'The selected parent has invalid ancestry.'],
+        ];
 
-        $action = new UpdateStorageOptionAction($this->db);
-        $data = new StorageOptionData(
-            name: 'Updated',
-        );
+        foreach ($cases as $case => [$parentId, $parents, $expectedQueries, $expectedError]) {
+            $connection = \Mockery::mock(ConnectionInterface::class);
+            $connection->shouldReceive('transaction')->once()->andReturnUsing(fn(\Closure $callback): StorageOption => $callback());
 
-        // act
-        $action->execute($storageOption, $data);
+            $familyQuery = \Mockery::mock(Builder::class);
+            $familyQuery->shouldReceive('where')->with('id', 7)->once()->andReturnSelf();
+            $familyQuery->shouldReceive('lockForUpdate')->once()->andReturnSelf();
+            $familyQuery->shouldReceive('first')->once()->andReturn(null);
+            $connection->shouldReceive('table')->with('families')->once()->andReturn($familyQuery);
 
-        // assert - Mockery expectations verify the interactions
+            $queriedIds = [];
+            $storageQuery = \Mockery::mock(Builder::class);
+            $storageQuery->shouldReceive('where')->with('family_id', 7)->andReturnSelf();
+            $storageQuery->shouldReceive('where')->with('id', \Mockery::type('int'))->andReturnUsing(function(string $column, int $id) use (&$queriedIds, $storageQuery): Builder {
+                $queriedIds[] = $id;
+
+                return $storageQuery;
+            });
+            $storageQuery->shouldReceive('first')->with(['parent_id'])->andReturnUsing(function() use (&$queriedIds, $parents): ?object {
+                $id = end($queriedIds);
+
+                if ($id === false) {
+                    throw new \LogicException('Expected an ancestor lookup before reading its result.');
+                }
+
+                return \array_key_exists($id, $parents) ? (object) ['parent_id' => $parents[$id]] : null;
+            });
+            $connection->shouldReceive('table')->with('storage_options')->times(\count($expectedQueries))->andReturn($storageQuery);
+
+            $option = \Mockery::mock(StorageOption::class);
+            $option->allows('getAttribute')->andReturnUsing(fn(string $key): ?int => match ($key) {
+                'family_id' => 7,
+                'id' => 1,
+                default => null,
+            });
+            $option->allows('setAttribute');
+            $option->shouldReceive('save')->never();
+
+            $action = new UpdateStorageOptionAction($connection);
+            $data = new StorageOptionData(name: 'Updated', parentId: $parentId);
+
+            try {
+                $action->execute($option, $data);
+                $this->fail("Expected {$case} to be rejected.");
+            } catch (ValidationException $exception) {
+                expect($exception->errors()['parent_id'])->toBe([$expectedError]);
+            }
+
+            expect($queriedIds)->toBe($expectedQueries);
+        }
     });
 });
