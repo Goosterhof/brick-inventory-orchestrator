@@ -7,6 +7,9 @@ namespace App\Actions\StorageOption;
 use App\DataTransferObjects\Input\StorageOption\StorageOptionData;
 use App\Models\StorageOption;
 use Illuminate\Database\ConnectionInterface;
+use Illuminate\Validation\ValidationException;
+
+use function array_key_exists;
 
 /**
  * Updates an existing StorageOption.
@@ -26,6 +29,34 @@ final readonly class UpdateStorageOptionAction
     public function execute(StorageOption $storageOption, StorageOptionData $storageOptionData): StorageOption
     {
         return $this->connection->transaction(function() use ($storageOption, $storageOptionData): StorageOption {
+            if ($storageOptionData->parentId !== null) {
+                // All reparent operations for a family take this lock before reading the
+                // hierarchy, so two requests cannot validate opposite links at once.
+                $this->connection->table('families')
+                    ->where('id', $storageOption->family_id)
+                    ->lockForUpdate()->firstOrFail();
+
+                /** @var array<int, int|null> $parents */
+                $parents = $this->connection->table('storage_options')
+                    ->where('family_id', $storageOption->family_id)
+                    ->pluck('parent_id', 'id')->all();
+
+                $ancestorId = $storageOptionData->parentId;
+                $visited = [];
+                while ($ancestorId !== null) {
+                    if ($ancestorId === $storageOption->id || isset($visited[$ancestorId])) {
+                        throw ValidationException::withMessages(['parent_id' => 'The selected parent would create a cycle.']);
+                    }
+
+                    if (!array_key_exists($ancestorId, $parents)) {
+                        throw ValidationException::withMessages(['parent_id' => 'The selected parent does not belong to your family.']);
+                    }
+
+                    $visited[$ancestorId] = true;
+                    $ancestorId = $parents[$ancestorId];
+                }
+            }
+
             $storageOption->name = $storageOptionData->name;
             $storageOption->description = $storageOptionData->description;
             $storageOption->parent_id = $storageOptionData->parentId;

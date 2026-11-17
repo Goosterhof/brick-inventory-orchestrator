@@ -4,7 +4,7 @@ import type {Adapted} from '@script-development/fs-adapter-store';
 import EditStoragePage from '@app/domains/storage/pages/EditStoragePage.vue';
 import {familyRouterService} from '@app/services';
 import {storageOptionStoreModule} from '@app/stores';
-import {mockServer} from '@integration/helpers/mock-server';
+import {mockHttpService, mockServer} from '@integration/helpers/mock-server';
 import {TextInput} from '@script-development/ui-inputs';
 import ConfirmDialog from '@shared/components/ConfirmDialog.vue';
 import DangerButton from '@shared/components/DangerButton.vue';
@@ -100,6 +100,25 @@ describe('EditStoragePage — integration', () => {
         expect(mockPatch).toHaveBeenCalled();
         // After a successful patch the page navigates back to the storage option's detail route.
         expect(goToRoute).toHaveBeenCalledWith('storage-detail', 1);
+    });
+
+    it('shows a 422 parent error beside the parent selector', async () => {
+        mockPatch.mockImplementation(async () => {
+            await mockHttpService.patchRequest('storage-options/1', {});
+        });
+        mockServer.onPatchError('storage-options/1', 422, {
+            errors: {parent_id: ['The selected parent would create a cycle.']},
+        });
+        vi.spyOn(storageOptionStoreModule, 'getOrFailById').mockResolvedValue(makeAdapted());
+        const wrapper = mount(EditStoragePage);
+        await flushPromises();
+
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        const parentField = wrapper.findAll('.ui-field').find((field) => field.text().includes('Parent location'));
+        expect(parentField?.find('[role="alert"]').text()).toBe('The selected parent would create a cycle.');
+        expect(mockServer.callsTo('PATCH', 'storage-options/1')).toHaveLength(1);
     });
 
     it('renders storage name in subtitle', async () => {
