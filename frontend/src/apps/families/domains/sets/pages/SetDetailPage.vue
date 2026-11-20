@@ -355,7 +355,7 @@ const toPartIdentity = (part: SetPart): PartIdentity => ({
                 class="brick-border brick-shadow"
                 data-testid="parts-error"
             >
-                <p font="bold">{{ partsError }}</p>
+                <p font="bold" text="brick-ink">{{ partsError }}</p>
             </div>
 
             <div v-else-if="setWithParts" m="t-8">
