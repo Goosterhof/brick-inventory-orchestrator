@@ -362,6 +362,26 @@ describe('SetDetailPage', () => {
         expect(regularPart?.props('quantity')).toBe(10);
     });
 
+    it('should show the parts error in ink on its static red-light block when the parts request fails', async () => {
+        // Arrange — brick-red-light does not follow the theme, so the dark theme's light page text would vanish on it
+        mockGetOrFailById.mockResolvedValue(createMockAdapted());
+        mockGetRequest.mockRejectedValueOnce(new Error('boom'));
+        const wrapper = shallowMount(SetDetailPage);
+        await flushPromises();
+
+        // Act
+        const loadPartsButton = wrapper
+            .findAllComponents(PrimaryButton)
+            .find((btn) => btn.text().includes('sets.loadParts'));
+        await loadPartsButton?.trigger('click');
+        await flushPromises();
+
+        // Assert
+        const message = wrapper.get('[data-testid="parts-error"] p');
+        expect(message.text()).toBe('sets.syncFailed');
+        expect(message.attributes('text')).toBe('brick-ink');
+    });
+
     it('should display spare parts in separate section', async () => {
         // Arrange
         mockGetOrFailById.mockResolvedValue(createMockAdapted());
