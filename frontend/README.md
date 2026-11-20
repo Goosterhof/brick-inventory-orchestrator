@@ -26,7 +26,7 @@ This repository is the **frontend SPA** ("the Plate") — one of three repositor
 
 ## Prerequisites
 
-- Node.js 24 or higher
+- Node.js 24.15 or higher on the 24 line, or 26 or higher
 - npm
 
 ## Getting Started
